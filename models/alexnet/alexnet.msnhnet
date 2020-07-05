@@ -1,0 +1,73 @@
+config:
+  batch: 1
+  height: 227
+  width: 227
+  channels: 3
+
+conv:
+  batchNorm: 0
+  filters: 64
+  kSize: 11
+  stride: 4
+  padding: 2
+  activation: relu
+
+maxpool:
+  kSize: 3
+  stride: 2
+
+conv:
+  batchNorm: 0
+  filters: 192
+  kSize: 5
+  stride: 1
+  padding: 2
+  activation: relu
+
+maxpool:
+  kSize: 3
+  stride: 2
+
+conv:
+  batchNorm: 0
+  filters: 384
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: relu
+
+conv:
+  batchNorm: 0
+  filters: 256
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: relu
+
+conv:
+  batchNorm: 0
+  filters: 256
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: relu
+
+maxpool:
+  kSize: 3
+  stride: 2
+
+# [avgpool]
+# size: 7
+# stride: 5
+
+connect:
+  output: 4096
+  activation: relu
+
+connect:
+  output: 4096
+  activation: relu
+
+connect:
+  output: 1000
+  activation: none

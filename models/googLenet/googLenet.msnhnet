@@ -1,0 +1,776 @@
+config:
+  batch: 1
+  width: 224
+  height: 224
+  channels: 3
+
+#0-1
+conv:
+  batchNorm: 0
+  filters: 64
+  kSize: 7
+  stride: 2
+  padding: 3
+  useBias: 0
+  activation: none
+batchnorm:
+  activation: relu
+
+maxpool:
+  kSize: 3
+  stride: 2
+  padding: 0
+  ceilMode: 1
+
+conv:
+  batchNorm: 0
+  filters: 64
+  kSize: 1
+  stride: 1
+  padding: 0
+  useBias: 0
+  activation: none
+batchnorm:
+  activation: relu
+
+conv:
+  batchNorm: 0
+  filters: 192
+  kSize: 3
+  stride: 1
+  padding: 1
+  useBias: 0
+  activation: none
+batchnorm:
+  activation: relu
+
+maxpool:
+  kSize: 3
+  stride: 2
+  padding: 0
+  ceilMode: 1
+
+#inception3a
+concatblock:
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 96
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 16
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 32
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    maxpool:
+      kSize: 3
+      stride: 1
+      padding: 1
+      ceilMode: 1
+    
+    conv:
+      batchNorm: 0
+      filters: 32
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+#inception3b
+concatblock:
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 192
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 32
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 96
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    maxpool:
+      kSize: 3
+      stride: 1
+      padding: 1
+      ceilMode: 1
+
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+maxpool:
+  kSize: 3
+  stride: 2
+  padding: 0
+  ceilMode: 1
+
+#inception4a
+concatblock:
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 192
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 96
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 208
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 16
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 48
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    maxpool:
+      kSize: 3
+      stride: 1
+      padding: 1
+      ceilMode: 1
+
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+#inception4b
+concatblock:
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 160
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 112
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 224
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 24
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    maxpool:
+      kSize: 3
+      stride: 1
+      padding: 1
+      ceilMode: 1
+
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+#inception4c
+concatblock:
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 256
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 24
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    maxpool:
+      kSize: 3
+      stride: 1
+      padding: 1
+      ceilMode: 1
+
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+
+#inception4d
+concatblock:
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 112
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 144
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 288
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 32
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    maxpool:
+      kSize: 3
+      stride: 1
+      padding: 1
+      ceilMode: 1
+      
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+#inception4e
+concatblock:
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 256
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 160
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 320
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 32
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    maxpool:
+      kSize: 3
+      stride: 1
+      padding: 1
+      ceilMode: 1
+
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+maxpool:
+  kSize: 2
+  stride: 2
+  padding: 0
+  ceilMode: 1
+
+#inception5a
+concatblock:
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 256
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 160
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 320
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 32
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    maxpool:
+      kSize: 3
+      stride: 1
+      padding: 1
+      ceilMode: 1
+
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+#inception5b
+concatblock:
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 384
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 192
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 384
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 48
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+  branch:
+    maxpool:
+      kSize: 3
+      stride: 1
+      padding: 1
+      ceilMode: 1
+      
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 1
+      stride: 1
+      padding: 0
+      useBias: 0
+      activation: none
+    batchnorm:
+      activation: relu
+
+# output
+localavgpool:
+  kSize: 7
+  stride: 1
+  padding: 0
+
+connect:
+  output: 1000
+  activation: none

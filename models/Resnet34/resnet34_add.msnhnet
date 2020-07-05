@@ -1,0 +1,294 @@
+config:
+  batch: 1
+  width: 224
+  height: 224
+  channels: 3
+
+#0-1
+conv:
+  batchNorm: 0
+  filters: 64
+  kSize: 7
+  stride: 2
+  padding: 3
+  useBias: 0
+  activation: none
+batchnorm:
+  activation: relu
+
+maxpool:
+  kSize: 3
+  stride: 2
+  padding: 1
+
+# Layer1
+addblock:
+  size: 3
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 64
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: none
+
+  branch:
+    empty:
+  
+  activation: relu
+
+#Layer2
+addblock:
+  size: 1
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 3
+      stride: 2
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: none
+
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 1
+      stride: 2
+      padding: 0
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: none
+
+  activation: relu
+
+
+addblock:
+  size: 3
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 128
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: none
+
+  branch:
+    empty:
+
+  activation: relu
+  
+#Layer3 
+addblock:
+  size: 1
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 256
+      kSize: 3
+      stride: 2
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 256
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: none
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 256
+      kSize: 1
+      stride: 2
+      padding: 0
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: none
+  
+  activation: relu
+
+addblock:
+  size: 5
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 256
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 256
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: none
+  
+  branch:
+    empty:
+
+  activation: relu
+
+#Layer4 
+addblock:
+  size: 1
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 512
+      kSize: 3
+      stride: 2
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 512
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: none
+
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 512
+      kSize: 1
+      stride: 2
+      padding: 0
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: none
+  
+  activation: relu
+
+
+addblock:
+  size: 2
+  branch:
+    conv:
+      batchNorm: 0
+      filters: 512
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: relu
+
+    conv:
+      batchNorm: 0
+      filters: 512
+      kSize: 3
+      stride: 1
+      padding: 1
+      useBias: 0
+      activation: none
+
+    batchnorm:
+      activation: none
+
+  branch:
+    empty:
+
+  activation: relu
+
+# output
+
+localavgpool:
+  kSize: 7
+  stride: 1
+  padding: 0
+
+connect:
+  output: 1000
+  activation: none

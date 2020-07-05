@@ -1,0 +1,169 @@
+config:
+  batch: 1
+  width: 224
+  height: 224
+  channels: 3
+
+#0-1
+conv:
+  batchNorm: 0
+  filters: 64
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#2-3
+conv:
+  batchNorm: 0
+  filters: 64
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#4
+maxpool:
+  kSize: 2
+  stride: 2
+#5-6
+conv:
+  batchNorm: 0
+  filters: 128
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#7-8
+conv:
+  batchNorm: 0
+  filters: 128
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#9
+maxpool:
+  kSize: 2
+  stride: 2
+#10-11
+conv:
+  batchNorm: 0
+  filters: 256
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#12-13
+conv:
+  batchNorm: 0
+  filters: 256
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#14-15
+conv:
+  batchNorm: 0
+  filters: 256
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#16
+maxpool:
+  kSize: 2
+  stride: 2
+#17-18
+conv:
+  batchNorm: 0
+  filters: 512
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#19-20
+conv:
+  batchNorm: 0
+  filters: 512
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#21-22
+conv:
+  batchNorm: 0
+  filters: 512
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#23
+maxpool:
+  kSize: 2
+  stride: 2
+#24-25
+conv:
+  batchNorm: 0
+  filters: 512
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#26-27
+conv:
+  batchNorm: 0
+  filters: 512
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#28-29
+conv:
+  batchNorm: 0
+  filters: 512
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: none
+batchnorm:
+  activation: relu
+#30
+maxpool:
+  kSize: 2
+  stride: 2
+# classifier====
+# 1
+connect:
+  output: 4096
+  activation: relu
+# 2
+connect:
+  output: 4096
+  activation: relu
+# 3
+connect:
+  output: 1000
+  activation: none

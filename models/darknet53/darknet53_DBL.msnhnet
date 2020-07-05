@@ -1,0 +1,178 @@
+config:
+  batch: 1
+  width: 224
+  height: 224
+  channels: 3
+
+# conv1
+conv:
+  batchNorm: 1
+  filters: 32
+  kSize: 3
+  stride: 1
+  padding: 1
+  activation: leaky,0.01
+
+# conv2
+conv:
+  batchNorm: 1
+  filters: 64
+  kSize: 3
+  stride: 2
+  padding: 1
+  activation: leaky,0.01
+
+
+# residual_block1
+resblock:
+  size: 1
+  conv:
+    batchNorm: 1
+    filters: 32
+    kSize: 1
+    stride: 1
+    padding: 0
+    activation: leaky,0.01
+
+  conv:
+    batchNorm: 1
+    filters: 64
+    kSize: 3
+    stride: 1
+    padding: 1
+    activation: leaky,0.01
+
+  activation: none
+
+# conv3
+conv:
+  batchNorm: 1
+  filters: 128
+  kSize: 3
+  stride: 2
+  padding: 1
+  activation: leaky,0.01
+
+
+# residual_block2
+resblock:
+  size: 2
+  conv:
+    batchNorm: 1
+    filters: 64
+    kSize: 1
+    stride: 1
+    padding: 0
+    activation: leaky,0.01
+
+  conv:
+    batchNorm: 1
+    filters: 128
+    kSize: 3
+    stride: 1
+    padding: 1
+    activation: leaky,0.01
+  
+  activation: none
+
+# conv4
+conv:
+  batchNorm: 1
+  filters: 256
+  kSize: 3
+  stride: 2
+  padding: 1
+  activation: leaky,0.01
+
+# residual_block3
+resblock:
+  size: 8
+  conv:
+    batchNorm: 1
+    filters: 128
+    kSize: 1
+    stride: 1
+    padding: 0
+    activation: leaky,0.01
+
+  conv:
+    batchNorm: 1
+    filters: 256
+    kSize: 3
+    stride: 1
+    padding: 1
+    activation: leaky,0.01
+  
+  activation: none
+
+# conv5
+conv:
+  batchNorm: 1
+  filters: 512
+  kSize: 3
+  stride: 2
+  padding: 1
+  activation: leaky,0.01
+
+# residual_block4
+resblock:
+  size: 8
+  conv:
+    batchNorm: 1
+    filters: 256
+    kSize: 1
+    stride: 1
+    padding: 0
+    activation: leaky,0.01
+
+  conv:
+    batchNorm: 1
+    filters: 512
+    kSize: 3
+    stride: 1
+    padding: 1
+    activation: leaky,0.01
+  
+  activation: none
+
+# conv5
+conv:
+  batchNorm: 1
+  filters: 1024
+  kSize: 3
+  stride: 2
+  padding: 1
+  activation: leaky,0.01
+
+# residual_block5
+resblock:
+  size: 4
+  conv:
+    batchNorm: 1
+    filters: 512
+    kSize: 1
+    stride: 1
+    padding: 0
+    activation: leaky,0.01
+
+  conv:
+    batchNorm: 1
+    filters: 1024
+    kSize: 3
+    stride: 1
+    padding: 1
+    activation: leaky,0.01
+  
+  activation: none
+
+
+# output
+
+localavgpool:
+  kSize: 7
+  stride: 1
+  padding: 0
+
+connect:
+  output: 1000
+  activation: none
