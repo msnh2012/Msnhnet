@@ -5,7 +5,7 @@
 ###  A pytorch inference framework which inspired from darknet.
 
 ![](readme_imgs/msnhnetviewer.png)
-**TODO:**
+**TODO:**</br>
 1.GPU</br>
 2.neon</br>
 
@@ -13,8 +13,28 @@
 
 | |windows|linux|mac|
 |---|---|---|---|
-|checked|<center>√</center>|<center>√</center>|<center>√</center>|
+|checked|<center>√</center>|<center>√</center>|<center>x</center>|
 |gpu|<center>x</center>|<center>x</center>|<center>x</center>|
+
+**Tested networks**
+- lenet5
+- lenet5_bn
+- alexnet
+- vgg16
+- vgg16_bn
+- resnet18
+- resnet34
+- resnet50
+- resnet101
+- resnet152
+- darknet53
+- googLenet
+- yolov3
+- yolov3_spp
+- yolov3_tiny
+- yolov4
+- **pretrained models** 链接：https://pan.baidu.com/s/1WElMhBhaN5EnPJnD8S1P3w 
+提取码：1hlm
 
 **Requirements**
   * OpenCV4 https://github.com/opencv/opencv
@@ -24,7 +44,7 @@
 **How to build**
 - With CMake 3.10+
 - Options</br>
-![](readme_imgs/cmake_option.png)
+![](readme_imgs/cmake_option.png)</br>
 **ps. You can change omp threads by unchecking OMP_MAX_THREAD and modifying "num" val at CMakeLists.txt:43** </br>
 
 - Windows
@@ -39,6 +59,7 @@ sudo apt-get install qt5-default      #optional
 sudo apt-get install libqt5svg5-dev   #optional
 sudo apt-get install libopencv-dev
 
+# build yaml-cpp
 git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp
 mdir build 
@@ -47,8 +68,19 @@ cmake ..
 make -j4
 sudo make install 
 
+#config 
 sudo echo /usr/local/lib > /etc/ld.so.conf/usrlib.conf
+sudo ldconfig
 
-vim ~/.bashrc
+# build Msnhnet
+git clone https://github.com/msnh2012/Msnhnet.git
+
+cd Msnhnet/build
+cmake -DCMAKE_BUILD_TYPE=Release ..  
+make -j4
+sudo make install
+
+vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
+
 
 ```
