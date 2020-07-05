@@ -21,6 +21,7 @@
 |yolov3|465ms|
 |yolov3_tiny|75ms|
 |yolov4|600ms|
+
 **Tested networks**
 - lenet5
 - lenet5_bn
