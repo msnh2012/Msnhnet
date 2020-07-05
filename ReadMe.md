@@ -105,14 +105,16 @@ vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
 ![](readme_imgs/viewer.png)</br>
 
 **PS. You can double click "ResBlock Res2Block AddBlock ConcatBlock"  node to view more detail**</br>
-
-**ResBlock**
+**ResBlock**</br>
 ![](readme_imgs/resBlock.png)</br>
-**Res2Block**
+
+**Res2Block**</br>
 ![](readme_imgs/Res2Block.png)</br>
-**AddBlock**
+
+**AddBlock**</br>
 ![](readme_imgs/AddBlock.png)</br>
-**ConcatBlock**
+
+**ConcatBlock**</br>
 ![](readme_imgs/ConcatBlock.png)</br>
 
 **How to convert your own pytorch network**
