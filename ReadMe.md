@@ -115,7 +115,7 @@ vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
 ![](readme_imgs/AddBlock.png)</br>
 
 **ConcatBlock**
-![](readme_imgs/concatBlock.png)</br>
+![](readme_imgs/ConcatBlock.png)</br>
 
 **How to convert your own pytorch network**
 1. Use pytorch to load network
