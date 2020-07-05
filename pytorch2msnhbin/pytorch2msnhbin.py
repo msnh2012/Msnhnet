@@ -3,7 +3,7 @@ import torch
 from torchsummary import summary
 from struct import pack
 
-md = models.alexnet(pretrained = True)
+md = models.resnet18(pretrained = True)
 md.to("cpu")
 md.eval()
 
