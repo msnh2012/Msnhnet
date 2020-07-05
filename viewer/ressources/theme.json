@@ -1,0 +1,120 @@
+﻿{
+    "node":
+    {
+        "name":
+        {
+            "font":
+            {
+                "name": "Tahoma",
+                "weight": "Bold",
+                "size": 10,
+                "rgba": [255, 255,255, 255]
+            }
+        },
+        "border":
+        {
+            "normal":
+            {
+                "rgba": [50, 50, 50, 255]
+            },
+            "selected":
+            {
+                "rgba": [170, 80, 80, 255]
+            }
+        },
+        "background":
+        {
+            "rgba": [80, 80, 80, 255]
+        },
+        "type":
+        {
+            "font":
+            {
+                "name": "Tahoma",
+                "weight": "Bold",
+                "size": 12,
+                "rgba": [220, 220, 220, 255]
+            },
+            "background":
+            {
+                "rgba": [50, 50, 50, 160]
+            }
+        }
+    },
+    "attribute":
+    {
+        "minimize":
+        {
+            "font":
+            {
+                "name": "Tahoma",
+                "weight": "Light",
+                "size": 12,
+                "rgba": [220, 220, 220, 255]
+            },
+            "connector":
+            {
+                "rgba": [0, 0, 0, 255],
+                "width": 1
+            }
+        },
+        "normal":
+        {
+            "font":
+            {
+                "name": "Tahoma",
+                "weight": "Normal",
+                "size": 12,
+                "rgba": [220, 220, 220, 255]
+            },
+            "connector":
+            {
+                "rgba": [0, 0, 0, 255],
+                "width": 1
+            }
+        },
+        "highlight":
+        {
+            "font":
+            {
+                "name": "Tahoma",
+                "weight": "Bold",
+                "size": 12,
+                "rgba": [220, 220, 220, 255]
+            },
+            "connector":
+            {
+                "rgba": [250, 250, 250, 255],
+                "width": 2
+            }
+        },
+        "background":
+        {
+            "rgba": [80, 80, 80, 240]
+        },
+        "background_alt":
+        {
+            "rgba": [50, 50, 50, 240]
+        }
+    },
+    "data_type":
+    {
+        "enable_default":
+        {
+            "rgba": [255, 155, 0, 255]
+        },
+        "disable":
+        {
+            "rgba": [80,  80,  80, 255]
+        },
+        "neutral":
+        {
+            "rgba": [51, 190, 255, 255]
+        },
+
+        "enable_custom":
+        {
+            "customType": { "rgba": [ 0, 179, 57, 255] }
+        }
+    }
+}

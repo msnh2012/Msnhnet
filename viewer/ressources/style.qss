@@ -1,0 +1,82 @@
+QLineEdit
+{
+    background-color: rgba(0, 0, 0, 0);
+    border: 0.1ex;
+    padding: 0.3ex;
+    border-radius: 0.15ex;
+}
+
+QAbstractSpinBox
+{
+    background-color: rgba(0, 0, 0, 0);
+    border: 0.1ex;
+    padding: 0.3ex;
+    min-width: 7.5ex;
+    border-radius: 0.2ex;
+}
+
+QSpinBox::up-button,
+QDoubleSpinBox::up-button
+{
+    subcontrol-origin: content;
+    subcontrol-position: right top;
+    width: 10px;
+    height: 7px;
+    border-width: 1px;
+}
+
+QSpinBox::down-button,
+QDoubleSpinBox::down-button
+{
+    subcontrol-origin: content;
+    subcontrol-position: right bottom;
+
+    width: 10px;
+    height: 7px;
+    border-width: 1px;
+    border-top-width: 0;
+}
+
+QSpinBox::up-arrow,
+QDoubleSpinBox::up-arrow
+{
+    border-image: url(:/arrow-up.svg);
+}
+
+QSpinBox::up-arrow:hover,
+QSpinBox::up-arrow:pressed,
+QDoubleSpinBox::up-arrow:hover,
+QDoubleSpinBox::up-arrow:pressed
+{
+    border-image: url(:/arrow-up-hover.svg);
+}
+
+QSpinBox::up-arrow:disabled,
+QSpinBox::up-arrow:off,
+QDoubleSpinBox::up-arrow:disabled,
+QDoubleSpinBox::up-arrow:off
+{
+   border-image: url(:/arrow-up-disabled.svg);
+}
+
+QSpinBox::down-arrow,
+QDoubleSpinBox::down-arrow
+{
+    border-image: url(:/arrow-down.svg);
+}
+
+QSpinBox::down-arrow:hover,
+QSpinBox::down-arrow:pressed,
+QDoubleSpinBox::down-arrow:hover,
+QDoubleSpinBox::down-arrow:pressed
+{
+    border-image: url(:/arrow-down-hover.svg);
+}
+
+QSpinBox::down-arrow:disabled,
+QSpinBox::down-arrow:off,
+QDoubleSpinBox::down-arrow:disabled,
+QDoubleSpinBox::down-arrow:off
+{
+   border-image: url(:/arrow-down-disabled.svg);
+}
