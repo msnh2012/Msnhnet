@@ -1,7 +1,5 @@
 # Msnhnet
 
----
-
 ###  A pytorch inference framework which inspired from darknet.
 
 ![](readme_imgs/msnhnetviewer.png)
@@ -9,13 +7,20 @@
 1.GPU</br>
 2.neon</br>
 
-**OS supported**
+**OS supported** (you can check other OS by yourself)
 
 | |windows|linux|mac|
 |---|---|---|---|
 |checked|<center>√</center>|<center>√</center>|<center>x</center>|
 |gpu|<center>x</center>|<center>x</center>|<center>x</center>|
 
+**Yolo Test** (Win10 MSVC 2017 I7-10700F)
+
+|net|time|
+|---|---|
+|yolov3|465ms|
+|yolov3_tiny|75ms|
+|yolov4|600ms|
 **Tested networks**
 - lenet5
 - lenet5_bn
@@ -82,5 +87,66 @@ sudo make install
 
 vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
 
-
 ```
+**Test Msnhnet**
+- 1. Download pretrained model and extract. eg.D:/models. 
+- 2. Open terminal and cd "Msnhnet install bin". eg. D:/Msnhnet/bin
+- 3. Test yolov3 "yolov3 D:/models".
+- 4. Test yolov3tiny_video "yolov3tiny_video D:/models".
+- 5. Test classify "classify D:/models".</br>
+
+![](readme_imgs/dog.png)</br>
+
+**View Msnhnet**
+- 1. Open terminal and cd "Msnhnet install bin" eg. D:/Msnhnet/bin
+- 2. run "MsnhnetViewer"
+
+![](readme_imgs/viewer.png)</br>
+
+**PS. You can double click "ResBlock Res2Block AddBlock ConcatBlock"  node to view more detail**</br>
+**ResBlock**
+![](readme_imgs/resBlock.png)</br>
+
+**Res2Block**
+![](readme_imgs/Res2Block.png)</br>
+
+**AddBlock**
+![](readme_imgs/AddBlock.png)</br>
+
+**ConcatBlock**
+![](readme_imgs/ConcatBlock.png)</br>
+
+**How to convert your own pytorch network**
+1. Use pytorch to load network
+```
+import torchvision.models as models
+import torch
+from torchsummary import summary 
+
+md = models.resnet18(pretrained = True)
+md.to("cpu")
+md.eval()
+
+print(md, file = open("net.txt", "a"))
+
+summary(md, (3, 224, 224),device='cpu')
+```
+2. Write msnhnet file according to net.txt and summary result.(Manually :o. Like darnet cfg)
+3. Export msnhbin 
+```
+val = []
+dd = 0
+for name in md.state_dict():
+        if "num_batches_tracked" not in name:
+                c = md.state_dict()[name].data.flatten().numpy().tolist()
+                dd = dd + len(c)
+                print(name, ":", len(c))
+                val.extend(c)
+
+with open("alexnet.msnhbin","wb") as f:
+    for i in val :
+        f.write(pack('f',i))
+```
+**Ps. More detail in file "pytorch2msnhbin/pytorch2msnhbin.py"**
+
+Enjoy it! :D
