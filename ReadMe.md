@@ -106,7 +106,7 @@ vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
 
 **PS. You can double click "ResBlock Res2Block AddBlock ConcatBlock"  node to view more detail**</br>
 **ResBlock**</br>
-![](readme_imgs/resBlock.png)</br>
+![](readme_imgs/ResBlock.png)</br>
 
 **Res2Block**</br>
 ![](readme_imgs/Res2Block.png)</br>
