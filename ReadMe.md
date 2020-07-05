@@ -6,8 +6,8 @@
 
 ![](readme_imgs/msnhnetviewer.png)
 **TODO:**
-1.GPU
-2.neon
+1.GPU</br>
+2.neon</br>
 
 **OS supported**
 
@@ -23,9 +23,9 @@
 
 **How to build**
 - With CMake 3.10+
-- Options
+- Options</br>
 ![](readme_imgs/cmake_option.png)
-**ps. You can change omp threads by unchecking OMP_MAX_THREAD and modifying "num" val at CMakeLists.txt:43** 
+**ps. You can change omp threads by unchecking OMP_MAX_THREAD and modifying "num" val at CMakeLists.txt:43** </br>
 
 - Windows
 1. Compile opencv4 and yaml-cpp.
@@ -44,8 +44,11 @@ cd yaml-cpp
 mdir build 
 cd build 
 cmake ..
-make -j10
+make -j4
 sudo make install 
 
+sudo echo /usr/local/lib > /etc/ld.so.conf/usrlib.conf
+
+vim ~/.bashrc
 
 ```
