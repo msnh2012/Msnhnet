@@ -1,6 +1,6 @@
 # Msnhnet
 
-###  A pytorch inference framework which inspired from darknet.
+###  A mini pytorch inference framework which inspired from darknet.
 
 ![](readme_imgs/msnhnetviewer.png)
 **TODO:**</br>
