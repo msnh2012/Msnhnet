@@ -105,15 +105,13 @@ vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
 ![](readme_imgs/viewer.png)</br>
 
 **PS. You can double click "ResBlock Res2Block AddBlock ConcatBlock"  node to view more detail**</br>
+
 **ResBlock**
 ![](readme_imgs/resBlock.png)</br>
-
 **Res2Block**
 ![](readme_imgs/Res2Block.png)</br>
-
 **AddBlock**
 ![](readme_imgs/AddBlock.png)</br>
-
 **ConcatBlock**
 ![](readme_imgs/ConcatBlock.png)</br>
 
