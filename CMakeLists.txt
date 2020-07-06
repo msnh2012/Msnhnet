@@ -15,13 +15,15 @@ option(BUILD_SHARED_LIBS    "Build shared lib"          ON )
 option(BUILD_EXAMPLES       "Build examples"            ON )
 option(BUILD_VIEWER         "Build MsnhnetViewer"       ON )
 
+
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_Release} -O3")
 
 #use omp
-if(ENABLE_OMP)
+if(ENABLE_OMP MATCHES ON)
     add_definitions(-DUSE_OMP)
     set(USE_OMP_MACRO "#define USE_OMP\n") #===============
+    set(OMP_LIB OpenMP::OpenMP_CXX)
     message(STATUS "Use OMP")
     #find open mp
     find_package(OpenMP REQUIRED)
@@ -35,10 +37,11 @@ if(ENABLE_OMP)
     endif()
 else()
     set(USE_OMP_MACRO "")
+    set(OMP_LIB )
 endif()
 
 # You can set thread num for omp
-if(ENABLE_OMP AND (NOT OMP_MAX_THREAD) )
+if((ENABLE_OMP MATCHES ON) AND ( OMP_MAX_THREAD MATCHES OFF) )
     message(WARNING "Please check OMP_THREAD num as OMP_MAX_THREAD is not be checked ")
     set(num 7)
     add_definitions(-DOMP_THREAD=${num})
@@ -47,7 +50,7 @@ else()
     set(OMP_THREAD_MACRO "")
 endif()
 
-if(ENABLE_OPEN_BLAS)
+if(ENABLE_OPEN_BLAS MATCHES ON)
     add_definitions(-DUSE_OPEN_BLAS)
     set(USE_OPEN_BLAS_MACRO "#define USE_OPEN_BLAS\n") #===============
     message(STATUS "Use open blas")
@@ -115,16 +118,17 @@ endif()
 
 
 # ARM config
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(aarch32)")
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(aarch32)|(armv7l)")
     add_definitions(-DUSE_ARM) #===============
     set(USE_ARM_MACRO "#define USE_ARM\n")
 
     message(STATUS "Use arm arch")
 
    option(ENABLE_NEON "Use neon" ON)
-    if(ENABLE_NEON)
+    if(ENABLE_NEON MATCHES ON)
         add_definitions(-DUSE_NEON)
         set(USE_NEON_MACRO "#define USE_NEON\n")
+        set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -mfpu=neon")
         message(STATUS "Use neon")
     else()
         set(USE_NEON_MACRO "")
@@ -144,7 +148,7 @@ message(STATUS "Yaml version ${yaml-cpp_VERSION}")
 message(STATUS "yaml include dir ${YAML_CPP_INCLUDE_DIR}")
 message(STATUS "yaml libs ${YAML_CPP_LIBRARIES}")
 
-if(BUILD_SHARED_LIBS)
+if(BUILD_SHARED_LIBS MATCHES ON)
     add_library(${PROJECT_NAME} SHARED ${SRCS})   #generate libs
     set(USE_SHARED_MSNHNET_MACRO "#define USE_SHARED_MSNHNET\n") #===============
     message("shared--------------------")
@@ -156,7 +160,7 @@ endif()
 
 #add_library(${PROJECT_NAME}::Msnhnet ALIAS Msnhnet)
 
-if(BUILD_SHARED_LIBS)
+if(BUILD_SHARED_LIBS MATCHES ON)
     # add definitions for target
     target_compile_definitions(${PROJECT_NAME}
                                PRIVATE EXPORT_MSNHNET) # private definitions will not affect other target eg. examples
@@ -179,18 +183,18 @@ target_sources(${PROJECT_NAME}
     )
 
 #openblas
-if(ENABLE_OPEN_BLAS)
+if(ENABLE_OPEN_BLAS MATCHES ON)
     target_link_libraries(${PROJECT_NAME} ${OpenBLAS_LIBRARIES})
 endif()
 
 #link 3rdparty libs
-target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX ${OpenCV_LIBS} yaml-cpp)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp)
 
-if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES MATCHES ON)
     add_subdirectory(examples)
 endif()
 
-if(BUILD_EXAMPLES)
+if(BUILD_VIEWER MATCHES ON)
     add_subdirectory(viewer)
 endif()
 
@@ -243,3 +247,4 @@ file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMAC
 install(FILES MsnhnetTmp/MsnhnetMacro.h
         DESTINATION include/${PROJECT_NAME}/config
 )
+
