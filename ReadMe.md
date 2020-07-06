@@ -1,6 +1,6 @@
 # Msnhnet
 
-###  A mini pytorch inference framework which inspired from darknet.
+###  A pytorch inference framework which inspired from darknet.
 
 ![](readme_imgs/msnhnetviewer.png)
 **TODO:**</br>
@@ -57,7 +57,8 @@
 1. Compile opencv4 and yaml-cpp.
 2. Config environment. Add "OpenCV_DIR" and "yaml-cpp_DIR" 
 3. Get qt5 and install. http://download.qt.io/ **(optional)**
-4. Then use cmake-gui tool and visual studio to make or use vcpkg.
+4. Add qt5 bin path to environment.
+5. Then use cmake-gui tool and visual studio to make or use vcpkg.
 
 - Linux(Ubuntu)
 ```
