@@ -12,10 +12,6 @@
 #include <omp.h>
 #endif
 
-#ifdef USE_ARM
-#define USE_NEON
-#endif
-
 #ifdef USE_NEON
 #include <arm_neon.h>
 #endif
