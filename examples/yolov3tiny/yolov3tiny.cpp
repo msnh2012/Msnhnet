@@ -8,13 +8,13 @@ int main(int argc, char** argv)
 {
     if(argc != 2)
     {
-        std::cout<<"\nYou need to give models dir path.\neg: yolov3 /your/models/dir/path/ \n\nModels folder must be like this:\nmodels\n  |-Lenet5\n    |-Lenet5.msnhnet\n    |-Lenet5.msnhbin";
+        std::cout<<"\nYou need to give models dir path.\neg: yolov3tiny /your/models/dir/path/ \n\nModels folder must be like this:\nmodels\n  |-Lenet5\n    |-Lenet5.msnhnet\n    |-Lenet5.msnhbin";
         getchar();
         return 0;
     }
 
-    std::string msnhnetPath = std::string(argv[1]) + "/yolov3/yolov3.msnhnet";
-    std::string msnhbinPath = std::string(argv[1]) + "/yolov3/yolov3.msnhbin";
+    std::string msnhnetPath = std::string(argv[1]) + "/yolov3_tiny/yolov3_tiny.msnhnet";
+    std::string msnhbinPath = std::string(argv[1]) + "/yolov3_tiny/yolov3_tiny.msnhbin";
     std::string labelsPath  = "../labels/coco.names";
     std::string imgPath = "../images/dog.jpg";
     try

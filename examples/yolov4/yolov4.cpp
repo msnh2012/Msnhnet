@@ -29,7 +29,7 @@ int main(int argc, char** argv)
         cv::Mat org = cv::imread(imgPath);
         std::vector<std::vector<Msnhnet::Yolov3Box>> result = msnhNet.runYolov3(img);
         Msnhnet::OpencvUtil::drawYolov3Box(org,labels,result);
-        std::cout<<msnhNet.getTimeDetail();
+        std::cout<<msnhNet.getTimeDetail()<<std::endl<<std::flush;
         cv::imshow("test",org);
         cv::waitKey();
     }
