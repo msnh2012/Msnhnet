@@ -153,4 +153,4 @@ with open("alexnet.msnhbin","wb") as f:
 
 Enjoy it! :D</br>
 **加群交流**</br>
-![](readme_imgs/QQ.jpg)</br>
+![](readme_imgs/qq.png)</br>
