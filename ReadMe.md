@@ -152,3 +152,5 @@ with open("alexnet.msnhbin","wb") as f:
 **Ps. More detail in file "pytorch2msnhbin/pytorch2msnhbin.py"**
 
 Enjoy it! :D
+**加群交流**
+![](readme_imgs/QQ.jpg)</br>
