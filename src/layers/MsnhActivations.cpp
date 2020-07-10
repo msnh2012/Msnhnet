@@ -110,12 +110,12 @@ void Activations::activateArrayNormCh(float * const &x, const int &numX, const i
         int whIndex = i % whStep;
         int b       = i / whStep;
 
-       const float eps = 0.0001f;
+        const float eps = 0.0001f;
         if(i<size)
         {
             float sum = eps;
 
-           for (int k = 0; k < channels; ++k)
+            for (int k = 0; k < channels; ++k)
             {
                 float val = x[whIndex + k*whStep + b*whStep*channels];
                 if(val > 0)
@@ -124,7 +124,7 @@ void Activations::activateArrayNormCh(float * const &x, const int &numX, const i
                 }
             }
 
-           for (int k = 0; k < channels; ++k)
+            for (int k = 0; k < channels; ++k)
             {
                 float val = x[whIndex + k*whStep + b*whStep*channels];
                 if(val >0)
@@ -154,13 +154,13 @@ void Activations::activateArrayNormChSoftMax(float * const &x, const int &numX, 
         int whIndex = i % whStep;
         int b       = i / whStep;
 
-       const float eps = 0.0001f;
+        const float eps = 0.0001f;
         if(i<size)
         {
             float sum    = eps;
             float maxVal = -FLT_MAX;
 
-           if(useMaxVal)
+            if(useMaxVal)
             {
                 for (int k = 0; k < channels; ++k)
                 {
@@ -176,13 +176,13 @@ void Activations::activateArrayNormChSoftMax(float * const &x, const int &numX, 
                 maxVal = 0;
             }
 
-           for (int k = 0; k < channels; ++k)
+            for (int k = 0; k < channels; ++k)
             {
                 float val = x[whIndex + k*whStep + b*whStep*channels];
                 sum += expf(val - maxVal);
             }
 
-           for (int k = 0; k < channels; ++k)
+            for (int k = 0; k < channels; ++k)
             {
                 float val = x[whIndex + k*whStep + b*whStep*channels];
                 val = expf(val - maxVal) / sum;

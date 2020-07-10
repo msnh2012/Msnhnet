@@ -21,7 +21,7 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
 
     for (size_t i = 0; i < branchParams.size(); ++i)
     {
-        branchBuildParams = params;  
+        branchBuildParams = params;
 
         std::vector<BaseLayer* > tmpLayers;
         for (size_t j = 0; j < branchParams[i].size(); ++j)

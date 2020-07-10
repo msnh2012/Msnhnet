@@ -7,21 +7,21 @@ Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int 
     this->type              =   LayerType::YOLOV3_OUT;
     this->layerName         =   "Yolov3Out       ";
 
-   this->batch             =   batch;
+    this->batch             =   batch;
     this->confThresh        =   confThresh;
     this->nmsThresh         =   nmsThresh;
     this->useSoftNms        =   useSotfNms;
 
-   this->orgHeight         =   orgHeight;
+    this->orgHeight         =   orgHeight;
     this->orgWidth          =   orgWidth;
 
-   this->layerDetail.append("yolov3out  ");
+    this->layerDetail.append("yolov3out  ");
     char msg[100];
 
-   this->yolov3Indexes     =   yolov3Indexes;
+    this->yolov3Indexes     =   yolov3Indexes;
     this->yolov3LayersInfo  =   yolov3LayersInfo;
 
-   for (size_t i = 0; i < yolov3Indexes.size(); ++i)
+    for (size_t i = 0; i < yolov3Indexes.size(); ++i)
     {
         this->width         +=   yolov3LayersInfo[i].outWidth;
         this->height        +=   yolov3LayersInfo[i].outHeight;
@@ -33,16 +33,16 @@ Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int 
 #endif
         this->layerDetail.append(msg);
 
-       this->yolov3AllInputNum += yolov3LayersInfo[i].getOutputNum();
+        this->yolov3AllInputNum += yolov3LayersInfo[i].getOutputNum();
     }
 
-   this->channel           =   yolov3LayersInfo[0].outChannel/3;    
+    this->channel           =   yolov3LayersInfo[0].outChannel/3;
 
-   this->pixels            =   this->yolov3AllInputNum / channel; 
+    this->pixels            =   this->yolov3AllInputNum / channel;
 
-   this->layerDetail.append("\n");
+    this->layerDetail.append("\n");
 
-   if(!BaseLayer::isPreviewMode)
+    if(!BaseLayer::isPreviewMode)
     {
         this->allInput             =   new float[static_cast<size_t>(this->yolov3AllInputNum * this->batch)]();
         this->shuffleInput         =   new float[static_cast<size_t>(this->yolov3AllInputNum * this->batch)]();
@@ -62,7 +62,7 @@ void Yolov3OutLayer::forward(NetworkState &netState)
     auto st = std::chrono::system_clock::now();
     std::vector<bool> tmpBatchHasBox(static_cast<size_t>(this->batch),false);
 
-   int offset          =   0;
+    int offset          =   0;
     for (int b = 0; b < this->batch; ++b)
     {
         for (size_t i = 0; i < this->yolov3Indexes.size(); ++i)
@@ -71,12 +71,12 @@ void Yolov3OutLayer::forward(NetworkState &netState)
             float *mInput       =   netState.net->layers[index]->output;
             int yolov3InputNum  =   netState.net->layers[index]->outputNum;
 
-           Blas::cpuCopy(yolov3InputNum, mInput, 1, this->allInput+offset,1);
+            Blas::cpuCopy(yolov3InputNum, mInput, 1, this->allInput+offset,1);
 
-           int WxH             =   netState.net->layers[index]->outWidth*netState.net->layers[index]->outHeight;
+            int WxH             =   netState.net->layers[index]->outWidth*netState.net->layers[index]->outHeight;
             int chn             =   netState.net->layers[index]->outChannel/3;
 
-           for (int k = 0; k < 3; ++k)
+            for (int k = 0; k < 3; ++k)
             {
                 for (int n = 0; n < WxH; ++n)
                 {
@@ -87,65 +87,65 @@ void Yolov3OutLayer::forward(NetworkState &netState)
                 }
             }
 
-           offset              =   offset + yolov3InputNum;
+            offset              =   offset + yolov3InputNum;
         }
 
-       std::vector<Yolov3Box> tmpBox;
+        std::vector<Yolov3Box> tmpBox;
 
-       for (int i = 0; i < this->pixels; ++i)
+        for (int i = 0; i < this->pixels; ++i)
         {
             int ptr             =   this->yolov3AllInputNum*b;
 
-           if(this->shuffleInput[ptr + i*this->channel + 4] > this->confThresh)
+            if(this->shuffleInput[ptr + i*this->channel + 4] > this->confThresh)
             {
                 Yolov3Box box;
 
-               box.xywhBox         =   Box::XYWHBox(this->shuffleInput[ptr + i*this->channel],
+                box.xywhBox         =   Box::XYWHBox(this->shuffleInput[ptr + i*this->channel],
                         this->shuffleInput[ptr + i*this->channel + 1],
                         this->shuffleInput[ptr + i*this->channel + 2],
                         this->shuffleInput[ptr + i*this->channel + 3]);
                 box.conf            =   this->shuffleInput[ptr + i*this->channel + 4];
 
-               for (int j = 0; j < this->channel - 5; ++j)
+                for (int j = 0; j < this->channel - 5; ++j)
                 {
                     box.classesVal.push_back(this->shuffleInput[ptr + i*this->channel + 5 + j]);
                 }
 
-               box.bestClsConf     =   ExVector::max<float>(box.classesVal);
+                box.bestClsConf     =   ExVector::max<float>(box.classesVal);
                 box.bestClsIdx      =   static_cast<int>(ExVector::maxIndex(box.classesVal));
 
-               tmpBatchHasBox[b]   =   true;
+                tmpBatchHasBox[b]   =   true;
                 tmpBox.push_back(box);
             }
         }
 
-       if(tmpBatchHasBox[b]) 
+        if(tmpBatchHasBox[b])
 
-       {
+        {
 
-           std::vector<float> confs;
+            std::vector<float> confs;
             for (int i = 0; i < tmpBox.size(); ++i)
             {
                 float conf = tmpBox[i].conf * tmpBox[i].bestClsConf;
                 confs.push_back(conf);
             }
 
-           std::vector<int> confIndex = ExVector::argsort(confs, true);
+            std::vector<int> confIndex = ExVector::argsort(confs, true);
 
-           std::vector<Yolov3Box> tmpBox1 = tmpBox;
+            std::vector<Yolov3Box> tmpBox1 = tmpBox;
 
-           for (size_t i = 0; i < confIndex.size(); ++i)
+            for (size_t i = 0; i < confIndex.size(); ++i)
             {
                 tmpBox[i]  =   tmpBox1[static_cast<size_t>(confIndex[i])];
             }
         }
 
-       finalOut.push_back(nms(tmpBox, this->nmsThresh, this->useSoftNms));
+        finalOut.push_back(nms(tmpBox, this->nmsThresh, this->useSoftNms));
     }
 
-   this->batchHasBox   =   tmpBatchHasBox;
+    this->batchHasBox   =   tmpBatchHasBox;
 
-   auto so = std::chrono::system_clock::now();
+    auto so = std::chrono::system_clock::now();
     this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 
 }
@@ -153,7 +153,7 @@ void Yolov3OutLayer::forward(NetworkState &netState)
 Yolov3Box Yolov3OutLayer::bboxResize2org( Yolov3Box &box, const Point2I &currentShape, const Point2I &orgShape)
 {
 
-   /*
+    /*
          w > h       w < h
         =padwh=     =padxy=
         0 0 0 0     0 x x 0
@@ -162,13 +162,13 @@ Yolov3Box Yolov3OutLayer::bboxResize2org( Yolov3Box &box, const Point2I &current
         0 0 0 0     0 x x 0
        */
 
-   int orgW    =   orgShape.x;
+    int orgW    =   orgShape.x;
     int orgH    =   orgShape.y;
 
-   int curW    =   currentShape.x;
+    int curW    =   currentShape.x;
     int curH    =   currentShape.y;
 
-   if(orgW > orgH)
+    if(orgW > orgH)
     {
         float scaledRatio   =   1.0f * curW / orgW;
         int   padUp         =   static_cast<int>((curH - orgH * scaledRatio)/2);
@@ -186,17 +186,17 @@ Yolov3Box Yolov3OutLayer::bboxResize2org( Yolov3Box &box, const Point2I &current
         box.xywhBox.y       =   box.xywhBox.y / scaledRatio;
         box.xywhBox.h       =   box.xywhBox.h / scaledRatio;
 
-   }
+    }
 
-   return box;
+    return box;
 }
 
 std::vector<Yolov3Box> Yolov3OutLayer::nms(const std::vector<Yolov3Box> &bboxes, const float &nmsThresh, const bool &useSoftNms, const float &sigma)
 {
 
-   std::vector<Yolov3Box> bestBoxes;
+    std::vector<Yolov3Box> bestBoxes;
 
-   std::vector<int> classes;
+    std::vector<int> classes;
     for (size_t i = 0; i < bboxes.size(); ++i)
     {
         int index = bboxes[i].bestClsIdx;
@@ -206,11 +206,11 @@ std::vector<Yolov3Box> Yolov3OutLayer::nms(const std::vector<Yolov3Box> &bboxes,
         }
     }
 
-   for (size_t i = 0; i < classes.size(); ++i)
+    for (size_t i = 0; i < classes.size(); ++i)
     {
         std::vector<Yolov3Box> classIBboxes;
 
-       for (size_t j = 0; j < bboxes.size(); ++j)
+        for (size_t j = 0; j < bboxes.size(); ++j)
         {
             if(bboxes[j].bestClsIdx == classes[i])
             {
@@ -218,13 +218,13 @@ std::vector<Yolov3Box> Yolov3OutLayer::nms(const std::vector<Yolov3Box> &bboxes,
             }
         }
 
-       if(classIBboxes.size() == 1)
+        if(classIBboxes.size() == 1)
         {
             bestBoxes.push_back(classIBboxes[0]);
             continue;
         }
 
-       while(classIBboxes.size()>0)
+        while(classIBboxes.size()>0)
         {
             size_t bestIndex   =   0;
             float bestConf  =   -FLT_MAX;
@@ -237,22 +237,22 @@ std::vector<Yolov3Box> Yolov3OutLayer::nms(const std::vector<Yolov3Box> &bboxes,
                 }
             }
 
-           Yolov3Box bestIBox  =   classIBboxes[bestIndex];
+            Yolov3Box bestIBox  =   classIBboxes[bestIndex];
 
-           bestBoxes.push_back(bestIBox);
+            bestBoxes.push_back(bestIBox);
 
-           classIBboxes.erase(classIBboxes.begin()+bestIndex);
+            classIBboxes.erase(classIBboxes.begin()+bestIndex);
 
-           for (size_t j = 0; j < classIBboxes.size(); ++j)
+            for (size_t j = 0; j < classIBboxes.size(); ++j)
             {
                 float iou       =   Box::iou(classIBboxes[j].xywhBox,bestIBox.xywhBox);
 
-               if(useSoftNms == 1)
+                if(useSoftNms == 1)
                 {
                     float weight =  expf(-(1.f*iou*iou/sigma));
                     float conf   =  classIBboxes[j].conf*weight;
 
-                   if(conf <= 0)
+                    if(conf <= 0)
                     {
                         classIBboxes.erase(classIBboxes.begin() + (j));
                         j--;
@@ -268,7 +268,7 @@ std::vector<Yolov3Box> Yolov3OutLayer::nms(const std::vector<Yolov3Box> &bboxes,
                 }
             }
 
-       }
+        }
     }
     return bestBoxes;
 }

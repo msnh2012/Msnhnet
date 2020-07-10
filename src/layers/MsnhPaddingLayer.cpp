@@ -12,27 +12,27 @@ PaddingLayer::PaddingLayer(const int &batch, const int &height, const int &width
     this->width         =   width;
     this->channel       =   channel;
 
-   this->inputNum      =   width * height * channel;
+    this->inputNum      =   width * height * channel;
 
-   this->top           =   top;
+    this->top           =   top;
     this->down          =   down;
     this->left          =   left;
     this->right         =   right;
 
-   this->paddingVal    =   paddingVal;
+    this->paddingVal    =   paddingVal;
 
-   this->outHeight     =   this->height + this->top + this->down;
+    this->outHeight     =   this->height + this->top + this->down;
     this->outWidth      =   this->width   + this->left + this->right;
     this->outChannel    =   this->channel;
 
-   this->outputNum     =   this->outHeight * this->outWidth * this->outChannel;
+    this->outputNum     =   this->outHeight * this->outWidth * this->outChannel;
 
-   if(!BaseLayer::isPreviewMode)
+    if(!BaseLayer::isPreviewMode)
     {
         this->output        =   new float[static_cast<size_t>(this->outputNum * this->batch)]();
     }
 
-   char msg[100];
+    char msg[100];
 
 #ifdef WIN32
     sprintf_s(msg, "padding                      %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->width, this->height, this->channel,
@@ -59,7 +59,7 @@ void PaddingLayer::forward(NetworkState &netState)
                 {
                     float val = 0;
 
-                   if(m < this->top || (m >= (this->height + this->top)))
+                    if(m < this->top || (m >= (this->height + this->top)))
                     {
                         val     =   this->paddingVal;
                     }
@@ -75,9 +75,9 @@ void PaddingLayer::forward(NetworkState &netState)
                         }
                     }
 
-                   this->output[i*this->outChannel*this->outHeight*this->outHeight + j*this->outHeight*this->outWidth + m*this->outWidth + n] = val;
+                    this->output[i*this->outChannel*this->outHeight*this->outHeight + j*this->outHeight*this->outWidth + m*this->outWidth + n] = val;
 
-               }
+                }
             }
         }
     }

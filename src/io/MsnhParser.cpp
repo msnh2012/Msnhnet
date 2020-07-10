@@ -17,16 +17,16 @@ void Parser::clearParams()
 {
     BaseParams::index = 0;
 
-   for (size_t i = 0; i < params.size(); ++i)
+    for (size_t i = 0; i < params.size(); ++i)
     {
         if(params[i]!=nullptr)
         {
 
-           if(params[i]->type == LayerType::CONFIG)
+            if(params[i]->type == LayerType::CONFIG)
             {
                 delete reinterpret_cast<NetConfigParams*>(params[i]);
 
-           }
+            }
             else if(params[i]->type == LayerType::CONVOLUTIONAL)
             {
                 delete reinterpret_cast<ConvParams*>(params[i]);
@@ -90,7 +90,7 @@ void Parser::clearParams()
             params[i] = nullptr;
         }
 
-       if(i == (params.size()-1))
+        if(i == (params.size()-1))
         {
             params.clear();
         }
@@ -101,27 +101,27 @@ void Parser::readCfg(const std::string &path)
 {
     clearParams();
 
-   try
+    try
     {
         YAML::Node root = YAML::LoadFile(path);
 
-       int index = 0;
+        int index = 0;
 
-       for (YAML::const_iterator it = root.begin(); it != root.end(); ++it)
+        for (YAML::const_iterator it = root.begin(); it != root.end(); ++it)
         {
             index++;
 
-           std::string node = it->first.as<std::string>();
+            std::string node = it->first.as<std::string>();
 
-           if(index == 1)
+            if(index == 1)
             {
                 if(node == "config")
                 {
                     if(it->second.Type() == YAML::NodeType::Map)
                     {
-                        NetConfigParams *netConfigParams = new NetConfigParams(false); 
+                        NetConfigParams *netConfigParams = new NetConfigParams(false);
 
-                       parseConfigParams(netConfigParams, it);
+                        parseConfigParams(netConfigParams, it);
                         params.push_back(netConfigParams);
                         continue;
                     }
@@ -136,7 +136,7 @@ void Parser::readCfg(const std::string &path)
                 }
             }
 
-           if(node == "maxpool")
+            if(node == "maxpool")
             {
                 if(it->second.Type() == YAML::NodeType::Map)
                 {
@@ -220,32 +220,32 @@ void Parser::readCfg(const std::string &path)
                 {
                     int size = 1;
 
-                   ActivationType act = ActivationType::NONE;
+                    ActivationType act = ActivationType::NONE;
                     std::vector<float> tmpActParams;
 
-                   for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+                    for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                     {
                         std::string key     =   it2->first.as<std::string>();
 
-                       if(key == "size")
+                        if(key == "size")
                         {
-                            std::string value   =   it2->second.as<std::string>(); 
+                            std::string value   =   it2->second.as<std::string>();
 
-                           if(!ExString::strToInt(value, size))
+                            if(!ExString::strToInt(value, size))
                             {
                                 throw Exception(1,"[resblock] size can't convert to int", __FILE__, __LINE__);
                             }
                         }
 
-                       if(key == "activation")
+                        if(key == "activation")
                         {
-                            std::string value   =   it2->second.as<std::string>(); 
+                            std::string value   =   it2->second.as<std::string>();
 
-                           std::vector<std::string> splits;
+                            std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
                             act = Activations::getActivation(splits[0]);
 
-                           if(splits.size()>1)
+                            if(splits.size()>1)
                             {
                                 for (size_t i = 1; i < splits.size(); ++i)
                                 {
@@ -257,10 +257,10 @@ void Parser::readCfg(const std::string &path)
                         }
                     }
 
-                   for (int i = 0; i < size; ++i)
+                    for (int i = 0; i < size; ++i)
                     {
 
-                       ResBlockParams *resBlockParams = new ResBlockParams(true);
+                        ResBlockParams *resBlockParams = new ResBlockParams(true);
                         parseResBlockParams(resBlockParams, it);
                         resBlockParams->activation = act;
                         params.push_back(resBlockParams);
@@ -277,32 +277,32 @@ void Parser::readCfg(const std::string &path)
                 {
                     int size = 1;
 
-                   ActivationType act = ActivationType::NONE;
+                    ActivationType act = ActivationType::NONE;
                     std::vector<float> tmpActParams;
 
-                   for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+                    for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                     {
                         std::string key     =   it2->first.as<std::string>();
 
-                       if(key == "size")
+                        if(key == "size")
                         {
-                            std::string value   =   it2->second.as<std::string>(); 
+                            std::string value   =   it2->second.as<std::string>();
 
-                           if(!ExString::strToInt(value, size))
+                            if(!ExString::strToInt(value, size))
                             {
                                 throw Exception(1,"[res2block] size can't convert to int", __FILE__, __LINE__);
                             }
                         }
 
-                       if(key == "activation")
+                        if(key == "activation")
                         {
-                            std::string value   =   it2->second.as<std::string>(); 
+                            std::string value   =   it2->second.as<std::string>();
 
-                           std::vector<std::string> splits;
+                            std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
                             act = Activations::getActivation(splits[0]);
 
-                           if(splits.size()>1)
+                            if(splits.size()>1)
                             {
                                 for (size_t i = 1; i < splits.size(); ++i)
                                 {
@@ -314,7 +314,7 @@ void Parser::readCfg(const std::string &path)
                         }
                     }
 
-                   for (int i = 0; i < size; ++i)
+                    for (int i = 0; i < size; ++i)
                     {
                         Res2BlockParams *res2BlockParams  = new Res2BlockParams(true);
                         parseRes2BlockParams(res2BlockParams, it);
@@ -334,32 +334,32 @@ void Parser::readCfg(const std::string &path)
                 {
                     int size = 1;
 
-                   ActivationType act = ActivationType::NONE;
+                    ActivationType act = ActivationType::NONE;
                     std::vector<float> tmpActParams;
 
-                   for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+                    for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                     {
                         std::string key     =   it2->first.as<std::string>();
 
-                       if(key == "size")
+                        if(key == "size")
                         {
-                            std::string value   =   it2->second.as<std::string>(); 
+                            std::string value   =   it2->second.as<std::string>();
 
-                           if(!ExString::strToInt(value, size))
+                            if(!ExString::strToInt(value, size))
                             {
                                 throw Exception(1,"[addblock] size can't convert to int", __FILE__, __LINE__);
                             }
                         }
 
-                       if(key == "activation")
+                        if(key == "activation")
                         {
-                            std::string value   =   it2->second.as<std::string>(); 
+                            std::string value   =   it2->second.as<std::string>();
 
-                           std::vector<std::string> splits;
+                            std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
                             act = Activations::getActivation(splits[0]);
 
-                           if(splits.size()>1)
+                            if(splits.size()>1)
                             {
                                 for (size_t i = 1; i < splits.size(); ++i)
                                 {
@@ -371,7 +371,7 @@ void Parser::readCfg(const std::string &path)
                         }
                     }
 
-                   for (int i = 0; i < size; ++i)
+                    for (int i = 0; i < size; ++i)
                     {
                         AddBlockParams *addBlockParams  = new AddBlockParams(true);
                         parseAddBlockParams(addBlockParams, it);
@@ -387,32 +387,32 @@ void Parser::readCfg(const std::string &path)
                 {
                     int size = 1;
 
-                   ActivationType act = ActivationType::NONE;
+                    ActivationType act = ActivationType::NONE;
                     std::vector<float> tmpActParams;
 
-                   for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+                    for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                     {
                         std::string key     =   it2->first.as<std::string>();
 
-                       if(key == "size")
+                        if(key == "size")
                         {
-                            std::string value   =   it2->second.as<std::string>(); 
+                            std::string value   =   it2->second.as<std::string>();
 
-                           if(!ExString::strToInt(value, size))
+                            if(!ExString::strToInt(value, size))
                             {
                                 throw Exception(1,"[concatblock] size can't convert to int", __FILE__, __LINE__);
                             }
                         }
 
-                       if(key == "activation")
+                        if(key == "activation")
                         {
-                            std::string value   =   it2->second.as<std::string>(); 
+                            std::string value   =   it2->second.as<std::string>();
 
-                           std::vector<std::string> splits;
+                            std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
                             act = Activations::getActivation(splits[0]);
 
-                           if(splits.size()>1)
+                            if(splits.size()>1)
                             {
                                 for (size_t i = 1; i < splits.size(); ++i)
                                 {
@@ -424,7 +424,7 @@ void Parser::readCfg(const std::string &path)
                         }
                     }
 
-                   for (int i = 0; i < size; ++i)
+                    for (int i = 0; i < size; ++i)
                     {
                         ConcatBlockParams *concatBlockParams  = new ConcatBlockParams(true);
                         parseConcatBlockParams(concatBlockParams, it);
@@ -512,33 +512,33 @@ void Parser::readMsnhBin(const std::string &path)
     std::ifstream readFile;
     readFile.open(path,std::ios::in|std::ios::binary);
 
-   if(!readFile.is_open())
+    if(!readFile.is_open())
     {
         throw Exception(0,std::string(path) + " open filed!", __FILE__, __LINE__);
     }
 
-   readFile.seekg(0, std::ios::end);
+    readFile.seekg(0, std::ios::end);
     auto fsize = readFile.tellg();
     readFile.seekg(0, std::ios::beg);
 
-   if (fsize < 1)
+    if (fsize < 1)
     {
         throw Exception(0,std::string(path) + " read filed!", __FILE__, __LINE__);
     }
 
-   if (fsize % 4 != 0)
+    if (fsize % 4 != 0)
     {
         throw Exception(0,std::string(path) + " file error!", __FILE__, __LINE__);
     }
 
-   char *data = new char[static_cast<size_t>(fsize)]();
+    char *data = new char[static_cast<size_t>(fsize)]();
     readFile.read(data, fsize);
 
-   Float32 float32;
+    Float32 float32;
 
-   msnhF32Weights.clear();
+    msnhF32Weights.clear();
 
-   for (int i = 0;  i < fsize; i+=4)
+    for (int i = 0;  i < fsize; i+=4)
     {
         float32.bytes[0] = static_cast<uint8_t>(data[i + 0]);
         float32.bytes[1] = static_cast<uint8_t>(data[i + 1]);
@@ -547,7 +547,7 @@ void Parser::readMsnhBin(const std::string &path)
         msnhF32Weights.push_back(float32.val);
     }
 
-   delete[] data;
+    delete[] data;
     data = nullptr;
 }
 
@@ -558,7 +558,7 @@ void Parser::parseConfigParams(NetConfigParams *netConfigParams, YAML::const_ite
         std::string key         =   it->first.as<std::string>();
         std::string value       =   it->second.as<std::string>();
 
-       if(key == "batch")
+        if(key == "batch")
         {
             if(!ExString::strToInt(value, netConfigParams->batch))
             {
@@ -598,10 +598,10 @@ void Parser::parseMaxPoolParams(MaxPoolParams *maxPoolParams, YAML::const_iterat
     for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
 
-       std::string key     =   it->first.as<std::string>();
+        std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "kSize")
+        if(key == "kSize")
         {
             if(!ExString::strToInt(value, maxPoolParams->kSize))
             {
@@ -691,40 +691,40 @@ void Parser::parseMaxPoolParams(MaxPoolParams *maxPoolParams, YAML::const_iterat
         }
     }
 
-   if(maxPoolParams->strideX < 0 || maxPoolParams->strideY < 0)
+    if(maxPoolParams->strideX < 0 || maxPoolParams->strideY < 0)
     {
         if(maxPoolParams->strideX < 0 )
         {
             maxPoolParams->strideX = maxPoolParams->stride;
         }
 
-       if(maxPoolParams->strideY < 0 )
+        if(maxPoolParams->strideY < 0 )
         {
             maxPoolParams->strideY = maxPoolParams->stride;
         }
     }
 
-   if(maxPoolParams->kSizeX < 0 || maxPoolParams->kSizeY < 0)
+    if(maxPoolParams->kSizeX < 0 || maxPoolParams->kSizeY < 0)
     {
         if(maxPoolParams->kSizeX < 0 )
         {
             maxPoolParams->kSizeX = maxPoolParams->kSize;
         }
 
-       if(maxPoolParams->kSizeY < 0 )
+        if(maxPoolParams->kSizeY < 0 )
         {
             maxPoolParams->kSizeY = maxPoolParams->kSize;
         }
     }
 
-   if(maxPoolParams->paddingX < 0 || maxPoolParams->paddingY < 0)
+    if(maxPoolParams->paddingX < 0 || maxPoolParams->paddingY < 0)
     {
         if(maxPoolParams->paddingX < 0 )
         {
             maxPoolParams->paddingX = maxPoolParams->padding;
         }
 
-       if(maxPoolParams->paddingY < 0 )
+        if(maxPoolParams->paddingY < 0 )
         {
             maxPoolParams->paddingY = maxPoolParams->padding;
         }
@@ -738,7 +738,7 @@ void Parser::parseLocalAvgPoolParams(LocalAvgPoolParams *localAvgPoolParams, YAM
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "kSize")
+        if(key == "kSize")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->kSize))
             {
@@ -814,40 +814,40 @@ void Parser::parseLocalAvgPoolParams(LocalAvgPoolParams *localAvgPoolParams, YAM
         }
     }
 
-   if(localAvgPoolParams->strideX < 1 || localAvgPoolParams->strideY < 1)
+    if(localAvgPoolParams->strideX < 1 || localAvgPoolParams->strideY < 1)
     {
         if(localAvgPoolParams->strideX < 1 )
         {
             localAvgPoolParams->strideX = localAvgPoolParams->stride;
         }
 
-       if(localAvgPoolParams->strideY < 1 )
+        if(localAvgPoolParams->strideY < 1 )
         {
             localAvgPoolParams->strideY = localAvgPoolParams->stride;
         }
     }
 
-   if(localAvgPoolParams->paddingX < 1 || localAvgPoolParams->paddingY < 1)
+    if(localAvgPoolParams->paddingX < 1 || localAvgPoolParams->paddingY < 1)
     {
         if(localAvgPoolParams->paddingX < 1 )
         {
             localAvgPoolParams->paddingX = localAvgPoolParams->padding;
         }
 
-       if(localAvgPoolParams->paddingY < 1 )
+        if(localAvgPoolParams->paddingY < 1 )
         {
             localAvgPoolParams->paddingY = localAvgPoolParams->padding;
         }
     }
 
-   if(localAvgPoolParams->kSizeX < 1 || localAvgPoolParams->kSizeY < 1)
+    if(localAvgPoolParams->kSizeX < 1 || localAvgPoolParams->kSizeY < 1)
     {
         if(localAvgPoolParams->kSizeX < 1 )
         {
             localAvgPoolParams->kSizeX = localAvgPoolParams->kSize;
         }
 
-       if(localAvgPoolParams->kSizeY < 1 )
+        if(localAvgPoolParams->kSizeY < 1 )
         {
             localAvgPoolParams->kSizeY = localAvgPoolParams->kSize;
         }
@@ -861,7 +861,7 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "batchNorm")
+        if(key == "batchNorm")
         {
             if(!ExString::strToInt(value, convParams->batchNorm))
             {
@@ -986,7 +986,7 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
             ExString::split(splits, value, ",");
             convParams->activation = Activations::getActivation(splits[0]);
 
-           if(splits.size()>1)
+            if(splits.size()>1)
             {
                 for (size_t i = 1; i < splits.size(); ++i)
                 {
@@ -1002,59 +1002,59 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
         }
     }
 
-   if(convParams->strideX < 0 || convParams->strideY < 0)
+    if(convParams->strideX < 0 || convParams->strideY < 0)
     {
         if(convParams->strideX < 0 )
         {
             convParams->strideX = convParams->stride;
         }
 
-       if(convParams->strideY < 0 )
+        if(convParams->strideY < 0 )
         {
             convParams->strideY = convParams->stride;
         }
     }
 
-   if(convParams->kSizeX < 0 || convParams->kSizeY < 0)
+    if(convParams->kSizeX < 0 || convParams->kSizeY < 0)
     {
         if(convParams->kSizeX < 0 )
         {
             convParams->kSizeX = convParams->kSize;
         }
 
-       if(convParams->kSizeY < 0 )
+        if(convParams->kSizeY < 0 )
         {
             convParams->kSizeY = convParams->kSize;
         }
     }
 
-   if(convParams->paddingX < 0 || convParams->paddingY < 0)
+    if(convParams->paddingX < 0 || convParams->paddingY < 0)
     {
         if(convParams->paddingX < 0 )
         {
             convParams->paddingX = convParams->padding;
         }
 
-       if(convParams->paddingY < 0 )
+        if(convParams->paddingY < 0 )
         {
             convParams->paddingY = convParams->padding;
         }
     }
 
-   if(convParams->dilationX < 0 || convParams->dilationY < 0)
+    if(convParams->dilationX < 0 || convParams->dilationY < 0)
     {
         if(convParams->dilationX < 0 )
         {
             convParams->dilationX = convParams->dilation;
         }
 
-       if(convParams->dilationY < 0 )
+        if(convParams->dilationY < 0 )
         {
             convParams->dilationY = convParams->dilation;
         }
     }
 
-   if(convParams->kSizeX == 1)
+    if(convParams->kSizeX == 1)
     {
         if(convParams->dilationX > 1)
         {
@@ -1062,7 +1062,7 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
         }
     }
 
-   if(convParams->kSizeY == 1)
+    if(convParams->kSizeY == 1)
     {
         if(convParams->dilationY > 1)
         {
@@ -1079,7 +1079,7 @@ void Parser::parseConnectParams(ConnectParams *connectParams, YAML::const_iterat
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "output")
+        if(key == "output")
         {
             if(!ExString::strToInt(value, connectParams->output))
             {
@@ -1099,7 +1099,7 @@ void Parser::parseConnectParams(ConnectParams *connectParams, YAML::const_iterat
             ExString::split(splits, value, ",");
             connectParams->activation = Activations::getActivation(splits[0]);
 
-           if(splits.size()>1)
+            if(splits.size()>1)
             {
                 for (size_t i = 1; i < splits.size(); ++i)
                 {
@@ -1123,13 +1123,13 @@ void Parser::parseBatchNormParams(BatchNormParams *batchNormParams, YAML::const_
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "activation")
+        if(key == "activation")
         {
             std::vector<std::string> splits;
             ExString::split(splits, value, ",");
             batchNormParams->activation = Activations::getActivation(splits[0]);
 
-           if(splits.size()>1)
+            if(splits.size()>1)
             {
                 for (size_t i = 1; i < splits.size(); ++i)
                 {
@@ -1159,7 +1159,7 @@ void Parser::parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterat
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "top")
+        if(key == "top")
         {
             if(!ExString::strToInt(value, paddingParams->top))
             {
@@ -1204,16 +1204,16 @@ void Parser::parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterat
 void Parser::parseResBlockParams(ResBlockParams *resBlockParams, YAML::const_iterator &iter)
 {
 
-   for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
         std::string key     =   it->first.as<std::string>();
 
-       if(iter->second.Type() == YAML::NodeType::Map)
+        if(iter->second.Type() == YAML::NodeType::Map)
         {
             if(key == "size" || key == "activation")
             {
 
-           }
+            }
             else if(key == "maxpool")
             {
                 MaxPoolParams *maxPoolParams = new MaxPoolParams(false);
@@ -1264,7 +1264,7 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
     {
         std::string key     =   it->first.as<std::string>();
 
-       if(iter->second.Type() == YAML::NodeType::Map)
+        if(iter->second.Type() == YAML::NodeType::Map)
         {
             if(key == "base")
             {
@@ -1272,7 +1272,7 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
                 {
                     std::string key2     =   it2->first.as<std::string>();
 
-                   if(key2 == "maxpool")
+                    if(key2 == "maxpool")
                     {
                         MaxPoolParams *maxPoolParams = new MaxPoolParams(false);
                         parseMaxPoolParams(maxPoolParams, it2);
@@ -1320,7 +1320,7 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
                 {
                     std::string key2     =   it2->first.as<std::string>();
 
-                   if(key2 == "maxpool")
+                    if(key2 == "maxpool")
                     {
                         MaxPoolParams *maxPoolParams = new MaxPoolParams(false);
                         parseMaxPoolParams(maxPoolParams, it2);
@@ -1369,22 +1369,22 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
 void Parser::parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::const_iterator &iter)
 {
 
-   for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
         std::string key     =   it->first.as<std::string>();
 
-       if(iter->second.Type() == YAML::NodeType::Map)
+        if(iter->second.Type() == YAML::NodeType::Map)
         {
 
-           std::vector<BaseParams*> tmpParams;
+            std::vector<BaseParams*> tmpParams;
 
-           if(key == "branch")
+            if(key == "branch")
             {
                 for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                 {
                     std::string key2     =   it2->first.as<std::string>();
 
-                   if(key2 == "maxpool")
+                    if(key2 == "maxpool")
                     {
                         MaxPoolParams *maxPoolParams = new MaxPoolParams(false);
                         parseMaxPoolParams(maxPoolParams, it2);
@@ -1445,7 +1445,7 @@ void Parser::parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::
                 }
             }
 
-           concatBlockParams->branchParams.push_back(tmpParams);
+            concatBlockParams->branchParams.push_back(tmpParams);
         }
     }
 }
@@ -1453,22 +1453,22 @@ void Parser::parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::
 void Parser::parseAddBlockParams(AddBlockParams *addBlockParams, YAML::const_iterator &iter)
 {
 
-   for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
         std::string key     =   it->first.as<std::string>();
 
-       if(iter->second.Type() == YAML::NodeType::Map)
+        if(iter->second.Type() == YAML::NodeType::Map)
         {
 
-           std::vector<BaseParams*> tmpParams;
+            std::vector<BaseParams*> tmpParams;
 
-           if(key == "branch")
+            if(key == "branch")
             {
                 for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                 {
                     std::string key2     =   it2->first.as<std::string>();
 
-                   if(key2 == "maxpool")
+                    if(key2 == "maxpool")
                     {
                         MaxPoolParams *maxPoolParams = new MaxPoolParams(false);
                         parseMaxPoolParams(maxPoolParams, it2);
@@ -1528,10 +1528,10 @@ void Parser::parseAddBlockParams(AddBlockParams *addBlockParams, YAML::const_ite
                     }
                 }
 
-               addBlockParams->branchParams.push_back(tmpParams);
+                addBlockParams->branchParams.push_back(tmpParams);
             }
 
-       }
+        }
     }
 }
 
@@ -1542,26 +1542,26 @@ void Parser::parseRouteParams(RouteParams *routeParams, YAML::const_iterator &it
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "layers")
+        if(key == "layers")
         {
             std::vector<std::string> layerIndexes;
             ExString::split(layerIndexes, value, ",");
 
-           for (size_t i = 0; i < layerIndexes.size(); ++i)
+            for (size_t i = 0; i < layerIndexes.size(); ++i)
             {
                 int index   =  0;
 
-               if(!ExString::strToInt(layerIndexes[i], index))
+                if(!ExString::strToInt(layerIndexes[i], index))
                 {
                     throw Exception(1,"[route] kSize can't convert to int", __FILE__, __LINE__);
                 }
 
-               if(index < 0)
+                if(index < 0)
                 {
                     index   = index + routeParams->index - 1;
                 }
 
-               routeParams->layerIndexes.push_back(index);
+                routeParams->layerIndexes.push_back(index);
             }
         }
         else if(key == "groups")
@@ -1592,7 +1592,7 @@ void Parser::parseUpSampleParams(UpSampleParams *upSampleParams, YAML::const_ite
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "stride")
+        if(key == "stride")
         {
             if(!ExString::strToInt(value, upSampleParams->stride))
             {
@@ -1620,18 +1620,18 @@ void Parser::parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator 
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "anchors")
+        if(key == "anchors")
         {
             std::vector<std::string> tmpAnchors;
 
-           ExString::split(tmpAnchors, value, ",");
+            ExString::split(tmpAnchors, value, ",");
 
-           if(tmpAnchors.size()!=6)
+            if(tmpAnchors.size()!=6)
             {
                 throw Exception(1,"[yolov3] anchor num should be 6", __FILE__, __LINE__);
             }
 
-           for (size_t i = 0; i < tmpAnchors.size(); ++i)
+            for (size_t i = 0; i < tmpAnchors.size(); ++i)
             {
                 float tmp = 0;
                 ExString::trim(tmpAnchors[i]);
@@ -1640,10 +1640,10 @@ void Parser::parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator 
                     throw Exception(1,"[yolov3] anchors can't convert to float", __FILE__, __LINE__);
                 }
 
-               yolov3Params->anchors.push_back(tmp);
+                yolov3Params->anchors.push_back(tmp);
             }
 
-       }
+        }
         else if(key == "classNum")
         {
             if(!ExString::strToInt(value, yolov3Params->classNum))
@@ -1665,26 +1665,26 @@ void Parser::parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "layers")
+        if(key == "layers")
         {
             std::vector<std::string> layerIndexes;
             ExString::split(layerIndexes, value, ",");
 
-           for (size_t i = 0; i < layerIndexes.size(); ++i)
+            for (size_t i = 0; i < layerIndexes.size(); ++i)
             {
                 int index   =  0;
 
-               if(!ExString::strToInt(layerIndexes[i], index))
+                if(!ExString::strToInt(layerIndexes[i], index))
                 {
                     throw Exception(1,"[yolov3out] kSize can't convert to int", __FILE__, __LINE__);
                 }
 
-               if(index < 0)
+                if(index < 0)
                 {
                     index   = index + yolov3OutParams->index - 1;
                 }
 
-               yolov3OutParams->layerIndexes.push_back(index);
+                yolov3OutParams->layerIndexes.push_back(index);
             }
         }
         else if(key == "confThresh")
@@ -1724,7 +1724,7 @@ ConcatBlockParams::~ConcatBlockParams()
             if(branchParams[i][j]!=nullptr)
             {
 
-               if(branchParams[i][j]->type == LayerType::CONFIG)
+                if(branchParams[i][j]->type == LayerType::CONFIG)
                 {
                     delete reinterpret_cast<NetConfigParams*>(branchParams[i][j]);
                 }
@@ -1765,11 +1765,11 @@ ConcatBlockParams::~ConcatBlockParams()
                     delete reinterpret_cast<PaddingParams*>(branchParams[i][j]);
                 }
 
-               branchParams[i][j] = nullptr;
+                branchParams[i][j] = nullptr;
             }
         }
 
-       if(i == (branchParams.size()-1))
+        if(i == (branchParams.size()-1))
         {
             branchParams.clear();
         }
@@ -1785,7 +1785,7 @@ AddBlockParams::~AddBlockParams()
             if(branchParams[i][j]!=nullptr)
             {
 
-               if(branchParams[i][j]->type == LayerType::CONFIG)
+                if(branchParams[i][j]->type == LayerType::CONFIG)
                 {
                     delete reinterpret_cast<NetConfigParams*>(branchParams[i][j]);
                 }
@@ -1826,11 +1826,11 @@ AddBlockParams::~AddBlockParams()
                     delete reinterpret_cast<PaddingParams*>(branchParams[i][j]);
                 }
 
-               branchParams[i][j] = nullptr;
+                branchParams[i][j] = nullptr;
             }
         }
 
-       if(i == (branchParams.size()-1))
+        if(i == (branchParams.size()-1))
         {
             branchParams.clear();
         }
@@ -1844,7 +1844,7 @@ Res2BlockParams::~Res2BlockParams()
         if(baseParams[i]!=nullptr)
         {
 
-           if(baseParams[i]->type == LayerType::CONFIG)
+            if(baseParams[i]->type == LayerType::CONFIG)
             {
                 delete reinterpret_cast<NetConfigParams*>(baseParams[i]);
             }
@@ -1873,21 +1873,21 @@ Res2BlockParams::~Res2BlockParams()
                 delete reinterpret_cast<PaddingParams*>(baseParams[i]);
             }
 
-           baseParams[i] = nullptr;
+            baseParams[i] = nullptr;
         }
 
-       if(i == (baseParams.size()-1))
+        if(i == (baseParams.size()-1))
         {
             baseParams.clear();
         }
     }
 
-   for (size_t i = 0; i < branchParams.size(); ++i)
+    for (size_t i = 0; i < branchParams.size(); ++i)
     {
         if(branchParams[i]!=nullptr)
         {
 
-           if(branchParams[i]->type == LayerType::CONFIG)
+            if(branchParams[i]->type == LayerType::CONFIG)
             {
                 delete reinterpret_cast<NetConfigParams*>(branchParams[i]);
             }
@@ -1912,10 +1912,10 @@ Res2BlockParams::~Res2BlockParams()
                 delete reinterpret_cast<BatchNormParams*>(branchParams[i]);
             }
 
-           branchParams[i] = nullptr;
+            branchParams[i] = nullptr;
         }
 
-       if(i == (branchParams.size()-1))
+        if(i == (branchParams.size()-1))
         {
             branchParams.clear();
         }
@@ -1929,7 +1929,7 @@ ResBlockParams::~ResBlockParams()
         if(baseParams[i]!=nullptr)
         {
 
-           if(baseParams[i]->type == LayerType::CONFIG)
+            if(baseParams[i]->type == LayerType::CONFIG)
             {
                 delete reinterpret_cast<NetConfigParams*>(baseParams[i]);
             }
@@ -1958,10 +1958,10 @@ ResBlockParams::~ResBlockParams()
                 delete reinterpret_cast<PaddingParams*>(baseParams[i]);
             }
 
-           baseParams[i] = nullptr;
+            baseParams[i] = nullptr;
         }
 
-       if(i == (baseParams.size()-1))
+        if(i == (baseParams.size()-1))
         {
             baseParams.clear();
         }

@@ -39,7 +39,7 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
     cblas_saxpy(inputN, alpha, x, stepX, y ,stepY);
 #else
 
-   if(stepX == stepY && stepX == 1)
+    if(stepX == stepY && stepX == 1)
     {
 #ifdef USE_NEON
         int i=0;
@@ -57,7 +57,7 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
             vst1q_f32(y+(i<<2),result);
         }
 
-       for(int j=(i<<2);j<inputN;j++)
+        for(int j=(i<<2);j<inputN;j++)
         {
             y[i]  = y[i] + alpha * x[i];
         }
@@ -68,7 +68,7 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
         }
 #endif
 
-   }
+    }
     else
     {
         for(int i=0; i<inputN; i++)
@@ -96,29 +96,29 @@ void Blas::cpuScale(const int &inputN, const float &alpha, float *const &x, cons
 
 void Blas::cpuMean(float *const &x, const int &batch, const int &filters, const int &outSize, float *const &mean)
 {
-    float scale  =  1.f/(batch * outSize); 
+    float scale  =  1.f/(batch * outSize);
 
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-    for(int i=0; i<filters; ++i) 
+    for(int i=0; i<filters; ++i)
 
-   {
+    {
         mean[i]  = 0;
 
-       for(int j=0; j<batch; ++j) 
+        for(int j=0; j<batch; ++j)
 
-       {
-            for(int k=0; k<outSize; ++k) 
+        {
+            for(int k=0; k<outSize; ++k)
 
-           {
+            {
 
-               int index = j*filters*outSize + i*outSize + k;
+                int index = j*filters*outSize + i*outSize + k;
                 mean[index] += x[index];
             }
         }
 
-       mean[i] = mean[i]*scale;
+        mean[i] = mean[i]*scale;
     }
 
 }
@@ -135,13 +135,13 @@ void Blas::cpuVariance(float *const &x, float *const &mean, const int &batch,
     {
         variance[i] = 0;
 
-       for(int j=0; j<batch; ++j)
+        for(int j=0; j<batch; ++j)
         {
             for(int k=0; k<outSize;++k)
             {
                 int index = j*filters*outSize + i*outSize + k;
 
-               variance[i] = variance[i] + pow((x[index] - mean[i]),2);
+                variance[i] = variance[i] + pow((x[index] - mean[i]),2);
             }
         }
         variance[i] = variance[i] * scale;
@@ -153,7 +153,7 @@ void Blas::cpuNorm(float *const &x, float *const &mean, float *const &variance,
                    const int &batch, const int &filters, const int &outSize)
 {
 
-   for(int b=0; b<batch; ++b)
+    for(int b=0; b<batch; ++b)
     {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
@@ -164,7 +164,7 @@ void Blas::cpuNorm(float *const &x, float *const &mean, float *const &variance,
             {
                 int index = b*filters*outSize + f*outSize + i;
 
-               x[index]  = (x[index] - mean[f])/(sqrt(variance[f] + 0.00001f));
+                x[index]  = (x[index] - mean[f])/(sqrt(variance[f] + 0.00001f));
             }
         }
     }
@@ -180,7 +180,7 @@ void Blas::cpuSmoothL1(const int &n, float * const &pred, float * const &truth, 
         float diff      = truth[i] - pred[i];
         float absVal    = fabs(diff);
 
-       if(absVal < 1)
+        if(absVal < 1)
         {
             error[i] = diff * diff;
             delta[i] = diff;
@@ -223,7 +223,7 @@ void Blas::cpuFlatten(float * const &x, const int &size, const int &layers, cons
 {
     float *swapVal  =   new float[static_cast<size_t>(size*layers*batch)]();
 
-   for (int b = 0; b < batch; ++b)
+    for (int b = 0; b < batch; ++b)
     {
         for (int c = 0; c < layers; ++c)
         {
@@ -232,7 +232,7 @@ void Blas::cpuFlatten(float * const &x, const int &size, const int &layers, cons
                 int i1  =   b*layers*size + c*size + i;
                 int i2  =   b*layers*size + i*layers + c;
 
-               if(forward!=0)
+                if(forward!=0)
                 {
                     swapVal[i2] = x[i1];
                 }
@@ -244,9 +244,9 @@ void Blas::cpuFlatten(float * const &x, const int &size, const int &layers, cons
         }
     }
 
-   memcpy(x, swapVal, static_cast<size_t>(size*layers*batch)*sizeof(float));
+    memcpy(x, swapVal, static_cast<size_t>(size*layers*batch)*sizeof(float));
 
-   delete[] swapVal;
+    delete[] swapVal;
 }
 
 void Blas::softmax(float * const &input, const int &num, const float &temprature,  const int &stride, float * const &output)
@@ -254,7 +254,7 @@ void Blas::softmax(float * const &input, const int &num, const float &temprature
     float sum       =   0;
     float largest   =   -FLT_MAX;
 
-   for (int i = 0; i < num; ++i)
+    for (int i = 0; i < num; ++i)
     {
         if(input[i*stride] > largest)
         {
@@ -262,14 +262,14 @@ void Blas::softmax(float * const &input, const int &num, const float &temprature
         }
     }
 
-   for (int i = 0; i < num; ++i)
+    for (int i = 0; i < num; ++i)
     {
         float e         =   exp(input[i*stride]/temprature - largest/temprature);
         sum             +=  e;
         input[i*stride] =   e;
     }
 
-   for (int i = 0; i < num; ++i)
+    for (int i = 0; i < num; ++i)
     {
         output[i*stride] /= sum;
     }
@@ -293,7 +293,7 @@ void Blas::cpuSoftMaxCrossEntropy(const int &num, float * const &pred, float * c
         float t     =   truth[i];
         float p     =   pred[i];
 
-       error[i]    =   (t >0 ) ? -log(p) : 0;
+        error[i]    =   (t >0 ) ? -log(p) : 0;
         delta[i]    =   t - p;
     }
 }
@@ -305,7 +305,7 @@ void Blas::cpuLogisticCorssEntropy(const int &num, float * const &pred, float * 
         float t     =   truth[i];
         float p     =   pred[i];
 
-       error[i]    =   -t*log(p) - (1-t)*log(1-p);
+        error[i]    =   -t*log(p) - (1-t)*log(1-p);
         delta[i]    =   t - p;
     }
 }
@@ -327,7 +327,7 @@ void Blas::cpuUpSample(float * const &in, const int &width, const int &height, c
                     int inIndex     =   b*width*height*channel + k*width*height + (j/stride)*width + i/stride;
                     int outIndex    =   b*width*height*channel*stride*stride + k*width*height*stride*stride + j*width*stride + i;
 
-                   if(forward)
+                    if(forward)
                     {
                         out[outIndex]   =   scale*in[inIndex];
                     }

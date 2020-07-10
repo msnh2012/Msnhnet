@@ -8,33 +8,33 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
     this->activation    =   activation;
     this->actParams     =   actParams;
 
-   this->batch         =   batch;
+    this->batch         =   batch;
     this->width         =   params.width;
     this->height        =   params.height;
     this->channel       =   params.channels;
 
-   BaseLayer *layer    =   nullptr;
+    BaseLayer *layer    =   nullptr;
 
-   NetBuildParams  branchBuildParams = params;
+    NetBuildParams  branchBuildParams = params;
 
-   this->layerDetail.append("=============================== AddBlock ===============================\n");
+    this->layerDetail.append("=============================== AddBlock ===============================\n");
 
-   for (size_t i = 0; i < branchParams.size(); ++i)
+    for (size_t i = 0; i < branchParams.size(); ++i)
     {
-        branchBuildParams = params;  
+        branchBuildParams = params;
 
-       std::vector<BaseLayer* > tmpLayers;
+        std::vector<BaseLayer* > tmpLayers;
         for (size_t j = 0; j < branchParams[i].size(); ++j)
         {
 
-           if(branchParams[i][j]->type == LayerType::CONVOLUTIONAL)
+            if(branchParams[i][j]->type == LayerType::CONVOLUTIONAL)
             {
                 if(branchBuildParams.height ==0 || branchBuildParams.width == 0 || branchBuildParams.channels == 0)
                 {
                     throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__);
                 }
 
-               ConvParams* convParams      =   reinterpret_cast<ConvParams*>(branchParams[i][j]);
+                ConvParams* convParams      =   reinterpret_cast<ConvParams*>(branchParams[i][j]);
                 layer                       =   new ConvolutionalLayer(branchBuildParams.batch, 1, branchBuildParams.height, branchBuildParams.width, branchBuildParams.channels,
                                                                        convParams->filters,convParams->groups,convParams->kSizeX, convParams->kSizeY,convParams->strideX, convParams->strideY,
                                                                        convParams->dilationX,convParams->dilationY,convParams->paddingX, convParams->paddingY, convParams->activation, convParams->actParams, convParams->batchNorm, convParams->useBias,
@@ -44,7 +44,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                     this->inputNum = layer->inputNum;
                 }
 
-           }
+            }
             else if(branchParams[i][j]->type == LayerType::PADDING)
             {
                 PaddingParams *paddingParams =   reinterpret_cast<PaddingParams*>(branchParams[i][j]);
@@ -127,28 +127,28 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                 throw Exception(1, "layer type is not supported by [AddBlockLayer]", __FILE__, __LINE__);
             }
 
-           branchBuildParams.height       =   layer->outHeight;
+            branchBuildParams.height       =   layer->outHeight;
             branchBuildParams.width        =   layer->outWidth;
             branchBuildParams.channels     =   layer->outChannel;
             branchBuildParams.inputNums    =   layer->outputNum;
 
-           if(layer->workSpaceSize > this->workSpaceSize)
+            if(layer->workSpaceSize > this->workSpaceSize)
             {
                 this->workSpaceSize = layer->workSpaceSize;
             }
 
-           this->numWeights    =   this->numWeights + layer->numWeights;
+            this->numWeights    =   this->numWeights + layer->numWeights;
             this->layerDetail   =   this->layerDetail.append(layer->layerDetail);
 
-           tmpLayers.push_back(layer);
+            tmpLayers.push_back(layer);
         }
         this->layerDetail.append("\n");
 
-       branchLayers.push_back(tmpLayers);
+        branchLayers.push_back(tmpLayers);
 
-   }
+    }
 
-   for (size_t i = 1; i < branchLayers.size(); ++i)
+    for (size_t i = 1; i < branchLayers.size(); ++i)
     {
         if(branchLayers[i][branchLayers[i].size()-1]->height     != branchLayers[i-1][branchLayers[i-1].size()-1]->height||
                 branchLayers[i][branchLayers[i].size()-1]->width      != branchLayers[i-1][branchLayers[i-1].size()-1]->width||
@@ -159,17 +159,17 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
         }
     }
 
-   this->outHeight         =   branchBuildParams.height;
+    this->outHeight         =   branchBuildParams.height;
     this->outWidth          =   branchBuildParams.width;
     this->outChannel        =   branchBuildParams.channels;
     this->outputNum         =   branchBuildParams.inputNums;
 
-   if(!BaseLayer::isPreviewMode)
+    if(!BaseLayer::isPreviewMode)
     {
         this->output            =   new float[static_cast<size_t>(outputNum * this->batch)]();
     }
 
-   this->layerDetail.append("========================================================================\n");
+    this->layerDetail.append("========================================================================\n");
 }
 
 void AddBlockLayer::loadAllWeigths(std::vector<float> &weights)
@@ -179,10 +179,10 @@ void AddBlockLayer::loadAllWeigths(std::vector<float> &weights)
         throw Exception(1,"AddBlockLayer weights load err. needed : " + std::to_string(this->numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
     }
 
-   size_t ptr = 0;
+    size_t ptr = 0;
     std::vector<float>::const_iterator first = weights.begin();
 
-   for (size_t i = 0; i < branchLayers.size(); ++i)
+    for (size_t i = 0; i < branchLayers.size(); ++i)
     {
         for (size_t j = 0; j < branchLayers[i].size(); ++j)
         {
@@ -191,11 +191,11 @@ void AddBlockLayer::loadAllWeigths(std::vector<float> &weights)
             {
                 size_t nums = branchLayers[i][j]->numWeights;
 
-               std::vector<float> weights(first + static_cast<long long>(ptr), first + static_cast<long long>(ptr + nums));
+                std::vector<float> weights(first + static_cast<long long>(ptr), first + static_cast<long long>(ptr + nums));
 
-               branchLayers[i][j]->loadAllWeigths(weights);
+                branchLayers[i][j]->loadAllWeigths(weights);
 
-               ptr         =   ptr + nums;
+                ptr         =   ptr + nums;
             }
         }
     }
@@ -204,34 +204,34 @@ void AddBlockLayer::loadAllWeigths(std::vector<float> &weights)
 void AddBlockLayer::forward(NetworkState &netState)
 {
 
-   /* TODO: batch */
+    /* TODO: batch */
     std::vector<float> inputX{netState.input, netState.input + netState.inputNum};
 
-   for (size_t i = 0; i < branchLayers.size(); ++i)
+    for (size_t i = 0; i < branchLayers.size(); ++i)
     {
         netState.input         =    inputX.data();
         netState.inputNum      =    static_cast<int>(inputX.size());
 
-       for (size_t j = 0; j < branchLayers[i].size(); ++j)
+        for (size_t j = 0; j < branchLayers[i].size(); ++j)
         {
             branchLayers[i][j]->forward(netState);
 
-           netState.input     =   branchLayers[i][j]->output;
+            netState.input     =   branchLayers[i][j]->output;
             netState.inputNum  =   branchLayers[i][j]->outputNum;
         }
 
-   }
+    }
 
-   for (size_t i = 1; i < branchLayers.size(); ++i)
+    for (size_t i = 1; i < branchLayers.size(); ++i)
     {
 
-       Blas::cpuAxpy(netState.inputNum, 1.f, branchLayers[i-1][branchLayers[i-1].size()-1]->output,
+        Blas::cpuAxpy(netState.inputNum, 1.f, branchLayers[i-1][branchLayers[i-1].size()-1]->output,
                 1, branchLayers[i][branchLayers[i].size()-1]->output, 1);
 
-   }
+    }
     Blas::cpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1][branchLayers[branchLayers.size()-1].size()-1]->output, 1, this->output, 1);
 
-   if(this->activation == ActivationType::NORM_CHAN)
+    if(this->activation == ActivationType::NORM_CHAN)
     {
         Activations::activateArrayNormCh(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
                                          this->outWidth*this->outHeight, this->output);
@@ -249,7 +249,7 @@ void AddBlockLayer::forward(NetworkState &netState)
     else if(this->activation == ActivationType::NONE)
     {
 
-   }
+    }
     else
     {
         if(actParams.size() > 0)
@@ -262,9 +262,9 @@ void AddBlockLayer::forward(NetworkState &netState)
         }
     }
 
-   this->forwardTime = 0;
+    this->forwardTime = 0;
 
-   for (size_t i = 0; i < branchLayers.size(); ++i)
+    for (size_t i = 0; i < branchLayers.size(); ++i)
     {
         for (size_t j = 0; j < branchLayers[i].size(); ++j)
         {
@@ -310,11 +310,11 @@ AddBlockLayer::~AddBlockLayer()
                     delete reinterpret_cast<PaddingLayer*>(branchLayers[i][j]);
                 }
 
-               branchLayers[i][j] = nullptr;
+                branchLayers[i][j] = nullptr;
             }
         }
 
-       if(i == (branchLayers.size()-1))
+        if(i == (branchLayers.size()-1))
         {
             branchLayers.clear();
         }

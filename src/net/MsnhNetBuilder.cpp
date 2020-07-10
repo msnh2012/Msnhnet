@@ -8,20 +8,20 @@ NetBuilder::NetBuilder()
     netState        =   new NetworkState();
     netState->net   =   net;
 
-   BaseLayer::initSimd();
+    BaseLayer::initSimd();
 }
 
 NetBuilder::~NetBuilder()
 {
     clearLayers();
 
-   delete parser;
+    delete parser;
     parser      =   nullptr;
 
-   delete netState;
+    delete netState;
     netState    =   nullptr;
 
-   delete net;
+    delete net;
     net         =   nullptr;
 
 }
@@ -31,7 +31,7 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
     parser->readCfg(path);
     clearLayers();
 
-   NetBuildParams      params;
+    NetBuildParams      params;
     size_t      maxWorkSpace = 0;
     for (size_t i = 0; i < parser->params.size(); ++i)
     {
@@ -44,7 +44,7 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             net->width                  =   netCfgParams->width;
             net->height                 =   netCfgParams->height;
 
-           if(netCfgParams->height == 0    || netCfgParams->height < 0||
+            if(netCfgParams->height == 0    || netCfgParams->height < 0||
                     netCfgParams->width == 0     || netCfgParams->width < 0 ||
                     netCfgParams->channels == 0  || netCfgParams->width < 0)
             {
@@ -52,7 +52,7 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             }
             net->inputNum               =   net->batch * net->channels * net->width * net->height;
 
-           params.height               =   net->height;
+            params.height               =   net->height;
             params.batch                =   net->batch;
             params.width                =   net->width;
             params.channels             =   net->channels;
@@ -60,14 +60,14 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             continue;
         }
 
-       if(parser->params[i]->type == LayerType::CONVOLUTIONAL)
+        if(parser->params[i]->type == LayerType::CONVOLUTIONAL)
         {
             if(params.height ==0 || params.width == 0 || params.channels == 0)
             {
                 throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__);
             }
 
-           ConvParams* convParams                  =   reinterpret_cast<ConvParams*>(parser->params[i]);
+            ConvParams* convParams                  =   reinterpret_cast<ConvParams*>(parser->params[i]);
             layer                                   =   new ConvolutionalLayer(params.batch, 1, params.height, params.width, params.channels, convParams->filters,convParams->groups,
                                                                                convParams->kSizeX, convParams->kSizeY, convParams->strideX, convParams->strideY, convParams->dilationX,
                                                                                convParams->dilationY,convParams->paddingX, convParams->paddingY,
@@ -129,29 +129,29 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             RouteParams     *routeParams            =   reinterpret_cast<RouteParams*>(parser->params[i]);
             std::vector<int> layersOutputNum;
 
-           if(routeParams->layerIndexes.size() < 1)
+            if(routeParams->layerIndexes.size() < 1)
             {
                 throw Exception(1, "route layer error, no route layers", __FILE__, __LINE__);
             }
             int outChannel  =   0;
 
-           size_t routeIndex = static_cast<size_t>(routeParams->layerIndexes[0]);
+            size_t routeIndex = static_cast<size_t>(routeParams->layerIndexes[0]);
 
-           if(routeIndex >= net->layers.size())
+            if(routeIndex >= net->layers.size())
             {
                 throw Exception(1, "route layer error, route layers index should < size of layers", __FILE__, __LINE__);
             }
 
-           int outHeight   =   net->layers[routeIndex]->outHeight;
+            int outHeight   =   net->layers[routeIndex]->outHeight;
             int outWidth    =   net->layers[routeIndex]->outWidth;
 
-           for (size_t i = 0; i < routeParams->layerIndexes.size(); ++i)
+            for (size_t i = 0; i < routeParams->layerIndexes.size(); ++i)
             {
                 size_t index   = static_cast<size_t>(routeParams->layerIndexes[i]);
                 layersOutputNum.push_back(net->layers[index]->outputNum);
                 outChannel +=   net->layers[index]->outChannel;
 
-               if(outHeight != net->layers[index]->outHeight || outWidth != net->layers[index]->outWidth)
+                if(outHeight != net->layers[index]->outHeight || outWidth != net->layers[index]->outWidth)
                 {
                     throw Exception(1, "[route] layers height or width not equal", __FILE__, __LINE__);
                 }
@@ -177,38 +177,38 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
         {
             Yolov3OutParams     *yolov3OutParams    =   reinterpret_cast<Yolov3OutParams*>(parser->params[i]);
 
-           std::vector<Yolov3Info> yolov3LayersInfo;
+            std::vector<Yolov3Info> yolov3LayersInfo;
 
-           if(yolov3OutParams->layerIndexes.size() < 1)
+            if(yolov3OutParams->layerIndexes.size() < 1)
             {
                 throw Exception(1, "yolov3out layer error, no yolov3 layers", __FILE__, __LINE__);
             }
 
-           for (size_t i = 0; i < yolov3OutParams->layerIndexes.size(); ++i)
+            for (size_t i = 0; i < yolov3OutParams->layerIndexes.size(); ++i)
             {
                 size_t index   =   static_cast<size_t>(yolov3OutParams->layerIndexes[i]);
 
-               if(net->layers[index]->type != LayerType::YOLOV3)
+                if(net->layers[index]->type != LayerType::YOLOV3)
                 {
                     throw Exception(1, "yolov3out layer error, not a yolov3 layer", __FILE__, __LINE__);
                 }
 
-               yolov3LayersInfo.push_back(Yolov3Info(net->layers[index]->outHeight,
+                yolov3LayersInfo.push_back(Yolov3Info(net->layers[index]->outHeight,
                                                       net->layers[index]->outWidth,
                                                       net->layers[index]->outChannel
                                                       ));
             }
 
-           layer                                   =   new Yolov3OutLayer(params.batch, yolov3OutParams->orgWidth, yolov3OutParams->orgHeight, yolov3OutParams->layerIndexes,
+            layer                                   =   new Yolov3OutLayer(params.batch, yolov3OutParams->orgWidth, yolov3OutParams->orgHeight, yolov3OutParams->layerIndexes,
                                                                            yolov3LayersInfo,yolov3OutParams->confThresh, yolov3OutParams->nmsThresh, yolov3OutParams->useSoftNms);
         }
 
-       params.height       =   layer->outHeight;
+        params.height       =   layer->outHeight;
         params.width        =   layer->outWidth;
         params.channels     =   layer->outChannel;
         params.inputNums    =   layer->outputNum;
 
-       if(layer->workSpaceSize > maxWorkSpace)
+        if(layer->workSpaceSize > maxWorkSpace)
         {
             maxWorkSpace = layer->workSpaceSize;
         }
@@ -224,11 +224,11 @@ void NetBuilder::loadWeightsFromMsnhBin(const string &path)
         throw Exception(1, "Can not load weights in preview mode !",__FILE__, __LINE__);
     }
 
-   parser->readMsnhBin(path);
+    parser->readMsnhBin(path);
     size_t ptr = 0;
     std::vector<float>::const_iterator first = parser->msnhF32Weights.begin();
 
-   for (size_t i = 0; i < net->layers.size(); ++i)
+    for (size_t i = 0; i < net->layers.size(); ++i)
     {
         if(net->layers[i]->type == LayerType::CONVOLUTIONAL || net->layers[i]->type == LayerType::CONNECTED || net->layers[i]->type == LayerType::BATCHNORM ||
                 net->layers[i]->type == LayerType::RES_BLOCK   || net->layers[i]->type == LayerType::RES_2_BLOCK || net->layers[i]->type == LayerType::ADD_BLOCK ||
@@ -236,21 +236,21 @@ void NetBuilder::loadWeightsFromMsnhBin(const string &path)
         {
             size_t nums = net->layers[i]->numWeights;
 
-           if((ptr + nums) > (parser->msnhF32Weights.size()))
+            if((ptr + nums) > (parser->msnhF32Weights.size()))
             {
                 throw Exception(1,"Load weights err, need > given. Needed :" + std::to_string(ptr + nums) + "given :" +
                                 std::to_string(parser->msnhF32Weights.size()),__FILE__,__LINE__);
             }
 
-           std::vector<float> weights(first +  static_cast<long long>(ptr), first + static_cast<long long>(ptr + nums));
+            std::vector<float> weights(first +  static_cast<long long>(ptr), first + static_cast<long long>(ptr + nums));
 
-           net->layers[i]->loadAllWeigths(weights);
+            net->layers[i]->loadAllWeigths(weights);
 
-           ptr         =   ptr + nums;
+            ptr         =   ptr + nums;
         }
     }
 
-   if(ptr != parser->msnhF32Weights.size())
+    if(ptr != parser->msnhF32Weights.size())
     {
         throw Exception(1,"Load weights err, need != given. Needed :" + std::to_string(ptr) + "given :" +
                         std::to_string(parser->msnhF32Weights.size()),__FILE__,__LINE__);
@@ -270,7 +270,11 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
         throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__);
     }
 
-   netState->input     =   img.data();
+#ifdef USE_NNPACK
+    nnp_initialize();
+#endif
+
+    netState->input     =   img.data();
     netState->inputNum  =   static_cast<int>(img.size());
     if(net->layers[0]->inputNum != netState->inputNum)
     {
@@ -278,18 +282,21 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
                 std::to_string(img.size()),__FILE__,__LINE__);
     }
 
-   for (size_t i = 0; i < net->layers.size(); ++i)
+    for (size_t i = 0; i < net->layers.size(); ++i)
     {
         net->layers[i]->forward(*netState);
 
-       netState->input     =   net->layers[i]->output;
+        netState->input     =   net->layers[i]->output;
         netState->inputNum  =   net->layers[i]->outputNum;
 
-   }
+    }
 
-   std::vector<float> pred(netState->input, netState->input + netState->inputNum);
+#ifdef USE_NNPACK
+    nnp_deinitialize();
+#endif
+    std::vector<float> pred(netState->input, netState->input + netState->inputNum);
 
-   return pred;
+    return pred;
 }
 
 std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img)
@@ -299,7 +306,11 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img
         throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__);
     }
 
-   netState->input     =   img.data();
+#ifdef USE_NNPACK
+    nnp_initialize();
+#endif
+
+    netState->input     =   img.data();
     netState->inputNum  =   static_cast<int>(img.size());
     if(net->layers[0]->inputNum != netState->inputNum)
     {
@@ -307,12 +318,12 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img
                 std::to_string(img.size()),__FILE__,__LINE__);
     }
 
-   for (size_t i = 0; i < net->layers.size(); ++i)
+    for (size_t i = 0; i < net->layers.size(); ++i)
     {
 
-       if(net->layers[i]->type != LayerType::ROUTE && net->layers[i]->type != LayerType::YOLOV3_OUT) 
+        if(net->layers[i]->type != LayerType::ROUTE && net->layers[i]->type != LayerType::YOLOV3_OUT)
 
-       {
+        {
             if(netState->inputNum != net->layers[i]->inputNum)
             {
                 throw Exception(1, "layer " + to_string(i) + " inputNum needed : " + std::to_string(net->layers[i]->inputNum) +
@@ -320,14 +331,18 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img
             }
         }
 
-       net->layers[i]->forward(*netState);
+        net->layers[i]->forward(*netState);
 
-       netState->input     =   net->layers[i]->output;
+        netState->input     =   net->layers[i]->output;
         netState->inputNum  =   net->layers[i]->outputNum;
 
-   }
+    }
 
-   if((net->layers[net->layers.size()-1])->type == LayerType::YOLOV3_OUT)
+#ifdef USE_NNPACK
+    nnp_deinitialize();
+#endif
+
+    if((net->layers[net->layers.size()-1])->type == LayerType::YOLOV3_OUT)
     {
         return (reinterpret_cast<Yolov3OutLayer*>((net->layers[net->layers.size()-1])))->finalOut;
     }
@@ -400,10 +415,10 @@ void NetBuilder::clearLayers()
                 delete reinterpret_cast<PaddingLayer*>(net->layers[i]);
             }
 
-           net->layers[i] = nullptr;
+            net->layers[i] = nullptr;
         }
 
-       if(i == (net->layers.size()-1))
+        if(i == (net->layers.size()-1))
         {
             net->layers.clear();
         }
@@ -418,7 +433,7 @@ float NetBuilder::getInferenceTime()
         inferTime       +=  this->net->layers[i]->forwardTime;
     }
 
-   return inferTime;
+    return inferTime;
 }
 
 string NetBuilder::getLayerDetail()
@@ -431,7 +446,7 @@ string NetBuilder::getLayerDetail()
         detail = detail + this->net->layers[i]->layerDetail  + "weights : "+
                 std::to_string(this->net->layers[i]->numWeights) + "\n\n";
 
-   }
+    }
     return detail;
 }
 
@@ -442,7 +457,7 @@ string NetBuilder::getTimeDetail()
     detail     = detail + "LAYER            INDEX       TIME         LAYER_t/TOTAL_t\n"
             + "=========================================================\n";
 
-   for(size_t i=0;i<this->net->layers.size();++i)
+    for(size_t i=0;i<this->net->layers.size();++i)
     {
         detail = detail + this->net->layers[i]->layerName + " : ";
         detail = detail + ((i<10)?("00"+std::to_string(i)):((i<100)?("0"+std::to_string(i)):std::to_string(i))) + "     ";

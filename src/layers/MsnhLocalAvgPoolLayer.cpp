@@ -7,25 +7,25 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
                                      const int &antialiasing)
 {
 
-   this->type              = LayerType::LOCAL_AVGPOOL;
+    this->type              = LayerType::LOCAL_AVGPOOL;
     this->layerName         = "LocalAvgPool    ";
 
-   this->batch             = batch;
+    this->batch             = batch;
     this->height            = height;
     this->width             = width;
     this->channel           = channel;
     this->paddingX          = paddingX;
     this->paddingY          = paddingY;
 
-   this->kSizeX            = kSizeX;  
+    this->kSizeX            = kSizeX;
 
-   this->kSizeY            = kSizeY;
+    this->kSizeY            = kSizeY;
 
-   this->ceilMode          = ceilMode;
+    this->ceilMode          = ceilMode;
 
-   this->antialiasing      = antialiasing;
+    this->antialiasing      = antialiasing;
 
-   if(antialiasing)
+    if(antialiasing)
     {
         this->strideX       = 1;
         this->strideY       = 1;
@@ -34,79 +34,79 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
     {
         this->strideX       = strideX;
 
-       this->strideY       = strideY;
+        this->strideY       = strideY;
 
-   }
+    }
 
-   if(this->ceilMode == 1)
+    if(this->ceilMode == 1)
     {
-        int tmpW = (width  + paddingX*2 - kSizeX) % strideX; 
+        int tmpW = (width  + paddingX*2 - kSizeX) % strideX;
 
-       int tmpH = (height + paddingY*2 - kSizeY) % strideY; 
+        int tmpH = (height + paddingY*2 - kSizeY) % strideY;
 
-       if(tmpW >= kSizeX)
+        if(tmpW >= kSizeX)
         {
             throw Exception(1,"localavgpool padding error ", __FILE__, __LINE__);
         }
 
-       if(tmpH >= kSizeY)
+        if(tmpH >= kSizeY)
         {
             throw Exception(1,"localavgpool padding error ", __FILE__, __LINE__);
         }
 
-       if(tmpW <= paddingX)
+        if(tmpW <= paddingX)
         {
-            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1; 
+            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1;
 
-       }
+        }
         else
         {
-            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 2; 
+            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 2;
 
-       }
+        }
 
-       if(tmpH <= paddingY)
+        if(tmpH <= paddingY)
         {
-            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1; 
+            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1;
 
-       }
+        }
         else
         {
-            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 2; 
+            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 2;
 
-       }
+        }
     }
     else if(this->ceilMode == 0)
     {
-        this->outWidth   = (width  + 2*paddingX - kSizeX) / strideX + 1; 
+        this->outWidth   = (width  + 2*paddingX - kSizeX) / strideX + 1;
 
-       this->outHeight  = (height + 2*paddingY - kSizeY) / strideY + 1; 
+        this->outHeight  = (height + 2*paddingY - kSizeY) / strideY + 1;
 
-   }
+    }
     else
     {
-        this->outWidth   = (width  + paddingX - kSizeX) / strideX + 1; 
+        this->outWidth   = (width  + paddingX - kSizeX) / strideX + 1;
 
-       this->outHeight  = (height + paddingY - kSizeY) / strideY + 1; 
+        this->outHeight  = (height + paddingY - kSizeY) / strideY + 1;
 
-   }
+    }
 
-   this->outChannel        = channel;                                  
+    this->outChannel        = channel;
 
-   this->outputNum         = this->outHeight * this->outWidth * this->outChannel; 
+    this->outputNum         = this->outHeight * this->outWidth * this->outChannel;
 
-   this->inputNum          = height * width * channel; 
+    this->inputNum          = height * width * channel;
 
-   if(!BaseLayer::isPreviewMode)
+    if(!BaseLayer::isPreviewMode)
     {
         this->output            = new float[static_cast<size_t>(outputNum * this->batch)]();
     }
 
-   this->bFlops            = (this->kSizeX*this->kSizeY* this->channel*this->outHeight*this->outWidth)/ 1000000000.f;
+    this->bFlops            = (this->kSizeX*this->kSizeY* this->channel*this->outHeight*this->outWidth)/ 1000000000.f;
 
-   char msg[100];
+    char msg[100];
 
-   if(strideX == strideY)
+    if(strideX == strideY)
     {
 #ifdef WIN32
         sprintf_s(msg, "avg               %2dx%2d/%2d   %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n",
@@ -131,7 +131,7 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
 #endif
     }
 
-   this->layerDetail       = msg;
+    this->layerDetail       = msg;
 
 }
 
@@ -144,51 +144,51 @@ void LocalAvgPoolLayer::forward(NetworkState &netState)
 {
     auto st = std::chrono::system_clock::now();
 
-   int widthOffset  =     -(this->paddingX + 1) / 2;
+    int widthOffset  =     -(this->paddingX + 1) / 2;
     int heightOffset =     -(this->paddingY + 1) / 2;
 
-   int mHeight         =   this->outHeight;
+    int mHeight         =   this->outHeight;
     int mWidth          =   this->outWidth;
 
-   int mChannel        =   this->channel;
+    int mChannel        =   this->channel;
 
-   for(int b=0; b<this->batch; ++b)                
+    for(int b=0; b<this->batch; ++b)
 
-   {
+    {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-        for(int k=0; k<mChannel; ++k)               
+        for(int k=0; k<mChannel; ++k)
 
-       {
-            for(int i=0; i<mHeight; ++i)            
+        {
+            for(int i=0; i<mHeight; ++i)
 
-           {
-                for(int j=0; j<mWidth; ++j)         
+            {
+                for(int j=0; j<mWidth; ++j)
 
-               {
+                {
 
-                   int outIndex = j + mWidth*(i + mHeight*(k + channel*b));
+                    int outIndex = j + mWidth*(i + mHeight*(k + channel*b));
 
-                   float avg    = 0;
+                    float avg    = 0;
 
-                   int counter  = 0;
+                    int counter  = 0;
 
-                   for(int n=0; n<this->kSizeY; ++n)
+                    for(int n=0; n<this->kSizeY; ++n)
                     {
                         for(int m=0; m<this->kSizeX; ++m)
                         {
 
-                           int curHeight =  heightOffset + i*this->strideY + n;
+                            int curHeight =  heightOffset + i*this->strideY + n;
 
-                           int curWidth  =  widthOffset  + j*this->strideX + m;
+                            int curWidth  =  widthOffset  + j*this->strideX + m;
 
-                           int index     =  curWidth + this->width*(curHeight + this->height*(k + b*this->channel));
+                            int index     =  curWidth + this->width*(curHeight + this->height*(k + b*this->channel));
 
-                           bool valid    =  (curHeight >=0 && curHeight < this->height &&
+                            bool valid    =  (curHeight >=0 && curHeight < this->height &&
                                               curWidth  >=0 && curWidth  < this->width);
 
-                           if(valid)
+                            if(valid)
                             {
                                 counter++;
                                 avg += netState.input[index];
@@ -196,15 +196,15 @@ void LocalAvgPoolLayer::forward(NetworkState &netState)
                         }
                     }
 
-                   this->output[outIndex] = avg / counter;  
+                    this->output[outIndex] = avg / counter;
 
-               }
+                }
 
-           }
+            }
         }
     }
 
-   auto so = std::chrono::system_clock::now();
+    auto so = std::chrono::system_clock::now();
     this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 
 }

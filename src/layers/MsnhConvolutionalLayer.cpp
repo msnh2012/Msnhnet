@@ -8,15 +8,15 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
                                        ConvolutionalLayer * const &shareLayer, const int &assistedExcitation, const int &deform)
 {
 
-   (void) deform;
+    (void) deform;
     int totalBatch          = batch * steps;
     this->type              = LayerType::CONVOLUTIONAL;
 
-   if(xnor)
+    if(xnor)
     {
-        this->groups        = 1; 
+        this->groups        = 1;
 
-   }
+    }
     else
     {
         if(groups<1)
@@ -29,9 +29,9 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         }
     }
 
-   this->antialiasing      = antialiasing;
+    this->antialiasing      = antialiasing;
 
-   if(antialiasing)
+    if(antialiasing)
     {
         this->stride        = 1;
         this->strideY       = 1;
@@ -44,7 +44,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         this->strideY       = strideY;
     }
 
-   this->assistedExcite    = assistedExcitation;
+    this->assistedExcite    = assistedExcitation;
     this->shareLayer        = shareLayer;
     this->groupIndex        = groupIndex;
     this->height            = height;
@@ -63,11 +63,11 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     this->paddingX          = paddingX;
     this->paddingY          = paddingY;
     this->batchNorm         = batchNorm;
-    this->nWeights          = (this->channel / groups) * num * kSizeX * kSizeY; 
+    this->nWeights          = (this->channel / groups) * num * kSizeX * kSizeY;
 
-   this->useBias           = useBias;
+    this->useBias           = useBias;
 
-   if(this->useBias)
+    if(this->useBias)
     {
         this->nBiases       = this->num;
     }
@@ -76,7 +76,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         this->nBiases       =   0;
     }
 
-   if(this->shareLayer != nullptr)
+    if(this->shareLayer != nullptr)
     {
         if(     this->kSizeX    != this->shareLayer->kSizeX ||
                 this->kSizeY    != this->shareLayer->kSizeY ||
@@ -87,7 +87,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
             throw Exception(1, "Layer size, nweights, channels or filters don't match for the share_layer", __FILE__, __LINE__);
         }
 
-       this->weights       = this->shareLayer->weights;
+        this->weights       = this->shareLayer->weights;
         this->biases        = this->shareLayer->biases;
     }
     else
@@ -96,22 +96,25 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         {
             this->weights       = new float[static_cast<size_t>(this->nWeights)]();
             this->biases        = new float[static_cast<size_t>(this->num)]();
+#ifdef USE_NNPACK
+            this->nnBiases      = new float[static_cast<size_t>(this->num)]();
+#endif
         }
     }
 
-   this->outHeight         = convOutHeight();
+    this->outHeight         = convOutHeight();
     this->outWidth          = convOutWidth();
-    this->outChannel        = num;      
+    this->outChannel        = num;
 
-   this->outputNum         = this->outHeight * this->outWidth * this->outChannel;
+    this->outputNum         = this->outHeight * this->outWidth * this->outChannel;
     this->inputNum          = height * width * channel;
 
-   this->activation        = activation;
+    this->activation        = activation;
     this->actParams         = actParams;
 
-   this->output            = new float[static_cast<size_t>(outputNum * this->batch)]();
+    this->output            = new float[static_cast<size_t>(outputNum * this->batch)]();
 
-   if(binary)
+    if(binary)
     {
         if(!BaseLayer::isPreviewMode)
         {
@@ -121,33 +124,33 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         }
     }
 
-   if(xnor)
+    if(xnor)
     {
 
-       int align           = 32; 
+        int align           = 32;
 
-       int srcAlign        = this->outHeight * this->outWidth;
+        int srcAlign        = this->outHeight * this->outWidth;
         this->bitAlign      = srcAlign + (align - srcAlign % align);
         this->ldaAlign      = 256;
 
-       if(!BaseLayer::isPreviewMode)
+        if(!BaseLayer::isPreviewMode)
         {
             this->binaryWeights = new float[static_cast<size_t>(this->nWeights)]();
             this->binaryInputs  = new float[static_cast<size_t>(this->inputNum * this->batch)]();
             this->meanArr       = new float[static_cast<size_t>(this->num)]();
 
-           const int newCh     = this->channel / 32;
+            const int newCh     = this->channel / 32;
             int rePackedISize   = newCh * this->width * this->height + 1;
             this->binRePackedIn = new uint32_t[static_cast<size_t>(rePackedISize)]();
 
-           int k               = this->kSizeX * this->kSizeY * this->channel;
+            int k               = this->kSizeX * this->kSizeY * this->channel;
             int kAligned        = k + (this->ldaAlign - k%this->ldaAlign);
             int tBitInSize      = kAligned * this->bitAlign / 8;
             this->tBitInput     = new char[static_cast<size_t>(tBitInSize)]();
         }
     }
 
-   if(batchNorm)
+    if(batchNorm)
     {
         if(this->shareLayer!=nullptr)
         {
@@ -165,12 +168,12 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
             }
         }
 
-       this->nScales           =   num;
+        this->nScales           =   num;
         this->nRollMean         =   num;
         this->nRollVariance     =   num;
     }
 
-   this->numWeights            =   static_cast<size_t>(this->nWeights + this->nScales + this->nRollMean + this->nRollVariance + this->nBiases);
+    this->numWeights            =   static_cast<size_t>(this->nWeights + this->nScales + this->nRollMean + this->nRollVariance + this->nBiases);
 
 #ifndef GPU
     if(this->activation == ActivationType::SWISH || this->activation == ActivationType::MISH)
@@ -179,16 +182,16 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     }
 #endif
 
-   this->workSpaceSize = getConvWorkSpaceSize();
+    this->workSpaceSize = getConvWorkSpaceSize();
 
-   this->bFlops        = (2.0f * this->nWeights * this->outHeight * this->outWidth) / 1000000000.f;
+    this->bFlops        = (2.0f * this->nWeights * this->outHeight * this->outWidth) / 1000000000.f;
 
-   if(this->xnor)
+    if(this->xnor)
     {
         this->bFlops    = this->bFlops / 32;
     }
 
-   if(this->xnor && this->useBinOutput)
+    if(this->xnor && this->useBinOutput)
     {
         this->layerName = "ConvXB          ";
         this->layerDetail.append("convXB");
@@ -224,7 +227,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         this->layerDetail.append("conv  ");
     }
 
-   char str[100];
+    char str[100];
     if(this->groups > 1)
     {
 #ifdef WIN32
@@ -242,9 +245,9 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 #endif
     }
 
-   this->layerDetail.append(std::string(str));
+    this->layerDetail.append(std::string(str));
 
-   if(this->strideX != this->strideY)
+    if(this->strideX != this->strideY)
     {
 #ifdef WIN32
         sprintf_s(str,"%2dx%2d/%2dx%2d ", this->kSizeX, this->kSizeY, this->strideX, this->strideY);
@@ -272,7 +275,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         }
     }
 
-   this->layerDetail.append(std::string(str));
+    this->layerDetail.append(std::string(str));
 
 #ifdef WIN32
     sprintf_s(str, "%4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->width, this->height, this->channel,
@@ -282,7 +285,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
             this->outWidth, this->outHeight, this->outChannel, static_cast<double>(this->bFlops));
 #endif
 
-   this->layerDetail.append(std::string(str));
+    this->layerDetail.append(std::string(str));
 
 }
 
@@ -326,7 +329,7 @@ int ConvolutionalLayer::getWorkSpaceSize32()
         }
     }
 
-   return this->outHeight * this->outWidth * this->kSizeX * this->kSizeY * (this->channel / this->groups)*static_cast<int>(sizeof(float));
+    return this->outHeight * this->outWidth * this->kSizeX * this->kSizeY * (this->channel / this->groups)*static_cast<int>(sizeof(float));
 }
 
 int ConvolutionalLayer::getWorkSpaceSize16()
@@ -373,12 +376,12 @@ int ConvolutionalLayer::getConvWorkSpaceSize()
     int workSpaceSize32 = getWorkSpaceSize32();
     int workSpaceSize16 = getWorkSpaceSize16();
 
-   if(workSpaceSize16 > workSpaceSize32)
+    if(workSpaceSize16 > workSpaceSize32)
     {
         workSpaceSize32 = workSpaceSize16;
     }
 
-   return workSpaceSize32;
+    return workSpaceSize32;
 }
 
 void ConvolutionalLayer::binarizeWeights(float * const &weights, const int &num, const int &wtSize, float * const &binary)
@@ -387,14 +390,14 @@ void ConvolutionalLayer::binarizeWeights(float * const &weights, const int &num,
     {
         float mean  = 0;
 
-       for (int i = 0; i < wtSize; ++i)
+        for (int i = 0; i < wtSize; ++i)
         {
             mean += fabs(weights[f*wtSize + i]);
         }
 
-       mean    = mean / wtSize;
+        mean    = mean / wtSize;
 
-       for (int i = 0; i < wtSize; ++i)
+        for (int i = 0; i < wtSize; ++i)
         {
             binary[f*wtSize + i] = (weights[f*wtSize + i] > 0) ? mean :-mean;
         }
@@ -420,76 +423,112 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 {
     auto st = std::chrono::system_clock::now();
 
-   int mOutHeight      = convOutHeight();
+    int mOutHeight      = convOutHeight();
     int mOutWidth       = convOutWidth();
 
-   Blas::cpuFill(this->outputNum * this->batch, 0, this->output, 1);
+#ifdef USE_NNPACK
+    struct nnp_size     nnInSize    = {static_cast<size_t>(this->width),static_cast<size_t>(this->height)};
+    struct nnp_padding  nnInPadding = {static_cast<size_t>(this->paddingX),static_cast<size_t>(this->paddingX),
+                                      static_cast<size_t>(this->paddingY),static_cast<size_t>(this->paddingY)
+                                      };
+    struct nnp_size     nnKSize     = {static_cast<size_t>(this->kSizeX),static_cast<size_t>(this->kSizeY)};
+    struct nnp_size     nnStride    = {static_cast<size_t>(this->strideX),static_cast<size_t>(this->strideY)};
+#endif
 
-   if(this->xnor && (!this->alignBitWeights))
+    Blas::cpuFill(this->outputNum * this->batch, 0, this->output, 1);
+
+    if(this->xnor && (!this->alignBitWeights))
     {
         if(!this->alignBitWeights)
         {
             binarizeWeights(this->weights,this->num, this->nWeights,this->binaryWeights);
         }
-        swapBinary(); 
+        swapBinary();
 
-       cpuBinarize(netState.input, this->channel * this->height * this->width * this->batch, this->binaryInputs);
+        cpuBinarize(netState.input, this->channel * this->height * this->width * this->batch, this->binaryInputs);
         netState.input = this->binaryInputs;
     }
 
-   int m       =  this->num / this->groups; 
+    int m       =  this->num / this->groups;
 
-   int k       =  this->kSizeX * this->kSizeY *this->channel / this->groups; 
+    int k       =  this->kSizeX * this->kSizeY *this->channel / this->groups;
 
-   int n       =  mOutHeight * mOutWidth; 
+    int n       =  mOutHeight * mOutWidth;
 
-   for (int i = 0; i < this->batch; ++i)
+    for (int i = 0; i < this->batch; ++i)
     {
 
-       for (int j = 0; j < this->groups; ++j)
+        for (int j = 0; j < this->groups; ++j)
         {
 
-           float *a    =  this->weights + j*this->nWeights /this->groups;
+            float *a    =  this->weights + j*this->nWeights /this->groups;
 
-           float *b    =  netState.workspace;
+            float *b    =  netState.workspace;
 
-           float *c    =  this->output + (i*this->groups +j)*n*m;
+            float *c    =  this->output + (i*this->groups +j)*n*m;
 
-           if(this->xnor && this->alignBitWeights && this->strideX == this->strideY)
+            if(this->xnor && this->alignBitWeights && this->strideX == this->strideY)
             {
                 /* TODO: */
 
-           }
+            }
             else
             {
 
-               float *im = netState.input + (i*this->groups + j)*(this->channel / this->groups)*this->height*this->width;
+                float *im = netState.input + (i*this->groups + j)*(this->channel / this->groups)*this->height*this->width;
 
-               if(this->kSizeX == 1 && this->kSizeY == 1 &&  this->strideX == 1  &&  this->strideY == 1&& this->paddingX == 0 && this->paddingY == 0)
+#ifdef USE_NNPACK
+                nnp_status status;
+                status = nnp_convolution_inference(nnp_convolution_algorithm_implicit_gemm,
+                                          nnp_convolution_transform_strategy_tuple_based,
+                                          static_cast<size_t>(this->channel/this->groups),
+                                          static_cast<size_t>(m),
+                                          nnInSize,
+                                          nnInPadding,
+                                          nnKSize,
+                                          nnStride,
+                                          im,
+                                          a,
+                                          nullptr,
+                                          c,
+                                          nullptr,
+                                          nullptr,
+                                          nnp_activation_identity,
+                                          nullptr,
+                                          nullptr,
+                                          nullptr
+                                          );
+                if(status !=0 )
+                {
+                    throw Exception(1,"NNPack error, code : "+std::to_string(status),__FILE__,__LINE__);
+                }
+#else
+                if(this->kSizeX == 1 && this->kSizeY == 1 &&  this->strideX == 1  &&  this->strideY == 1&& this->paddingX == 0 && this->paddingY == 0)
                 {
                     b = im;
 
-               }
+                }
                 else
                 {
 
-                   Gemm::cpuIm2colEx(im, this->channel/this->groups, this->height, this->width, this->kSizeX, this->kSizeY,
+                    Gemm::cpuIm2colEx(im, this->channel/this->groups, this->height, this->width, this->kSizeX, this->kSizeY,
                                       this->paddingX, this->paddingY, this->strideX, this->strideY, this->dilationX, this->dilationY,
                                       b);
 
-               }
+                }
 
-               Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
+                Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
+#endif
             }
 
-       }
+        }
 
-   }
+    }
 
-   if(this->batchNorm==1)
+    if(this->batchNorm==1)
     {
 
-       for (int b = 0; b < this->batch; ++b)
+        for (int b = 0; b < this->batch; ++b)
         {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
@@ -501,7 +540,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                 {
                     int index = b*this->outChannel*this->outHeight*this->outWidth + c*this->outHeight*this->outWidth + i;
 
-                   this->output[index]  = this->scales[c]*(this->output[index] - this->rollMean[c])/sqrt(this->rollVariance[c] + 0.00001f) + this->biases[c];
+                    this->output[index]  = this->scales[c]*(this->output[index] - this->rollMean[c])/sqrt(this->rollVariance[c] + 0.00001f) + this->biases[c];
                 }
 #endif
 
@@ -512,9 +551,9 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                     for (; i < (this->outHeight*this->outWidth)/8; ++i)
                     {
 
-                       int index = b*this->outChannel*this->outHeight*this->outWidth + c*this->outHeight*this->outWidth + i*8;
+                        int index = b*this->outChannel*this->outHeight*this->outWidth + c*this->outHeight*this->outWidth + i*8;
 
-                       __m256 mScale;
+                        __m256 mScale;
                         __m256 mInput;
                         __m256 mMean;
                         __m256 mVariance;
@@ -523,7 +562,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                         __m256 mResult1;
                         __m256 mResult2;
 
-                       mScale      =   _mm256_set1_ps(this->scales[c]);
+                        mScale      =   _mm256_set1_ps(this->scales[c]);
                         mInput      =   _mm256_loadu_ps(this->output+index);
                         mMean       =   _mm256_set1_ps(this->rollMean[c]);
                         mVariance   =   _mm256_set1_ps(this->rollVariance[c]);
@@ -534,14 +573,14 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                         mResult2    =   _mm256_add_ps(mVariance,mEsp);
                         mResult2    =   _mm256_sqrt_ps(mResult2);
 
-                       mResult2    =   _mm256_div_ps(mResult1,mResult2);
+                        mResult2    =   _mm256_div_ps(mResult1,mResult2);
                         mResult2    =   _mm256_add_ps(mResult2,mBias);
 
-                       _mm256_storeu_ps(this->output+index, mResult2);
+                        _mm256_storeu_ps(this->output+index, mResult2);
 
-                   }
+                    }
 
-                   for (int j = i*8; j < this->outHeight*this->outWidth; ++j)
+                    for (int j = i*8; j < this->outHeight*this->outWidth; ++j)
                     {
                         int index = b*this->outChannel*this->outHeight*this->outWidth + c*this->outHeight*this->outWidth + j;
                         this->output[index]  = this->scales[c]*(this->output[index] - this->rollMean[c])/sqrt(this->rollVariance[c] + 0.00001f) + this->biases[c];
@@ -553,21 +592,21 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                     {
                         int index = b*this->outChannel*this->outHeight*this->outWidth + c*this->outHeight*this->outWidth + i;
 
-                       this->output[index]  = this->scales[c]*(this->output[index] - this->rollMean[c])/sqrt(this->rollVariance[c] + 0.00001f) + this->biases[c];
+                        this->output[index]  = this->scales[c]*(this->output[index] - this->rollMean[c])/sqrt(this->rollVariance[c] + 0.00001f) + this->biases[c];
                     }
                 }
 #endif
             }
         }
 
-   }
+    }
     else
     {
         if(useBias == 1)
             addBias(this->output, this->biases, this->batch, this->num, mOutHeight*mOutWidth);
     }
 
-   if(this->activation == ActivationType::NORM_CHAN)
+    if(this->activation == ActivationType::NORM_CHAN)
     {
         Activations::activateArrayNormCh(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
                                          this->outWidth*this->outHeight, this->output);
@@ -585,7 +624,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
     else if(this->activation == ActivationType::NONE)
     {
 
-   }
+    }
     else
     {
         if(actParams.size() > 0)
@@ -598,14 +637,14 @@ void ConvolutionalLayer::forward(NetworkState &netState)
         }
     }
 
-   if(this->binary || this->xnor)
+    if(this->binary || this->xnor)
     {
         swapBinary();
     }
 
-   auto so = std::chrono::system_clock::now();
+    auto so = std::chrono::system_clock::now();
 
-   this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 
 }
 
@@ -616,9 +655,9 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
         throw Exception(1,"Conv weights load err. needed : " + std::to_string(this->numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
     }
 
-   loadWeights(weights.data(), nWeights);
+    loadWeights(weights.data(), nWeights);
 
-   if(this->batchNorm)
+    if(this->batchNorm)
     {
         loadScales(weights.data() + nWeights, nScales);
         loadBias(weights.data() + nWeights + nScales, nBiases);

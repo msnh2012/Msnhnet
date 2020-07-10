@@ -6,20 +6,20 @@ UpSampleLayer::UpSampleLayer(const int &batch, const int &width, const int &heig
     this->type          =   LayerType::UPSAMPLE;
     this->layerName     =   "UpSample        ";
 
-   this->batch         =   batch;
+    this->batch         =   batch;
     this->width         =   width;
     this->height        =   height;
     this->channel       =   channel;
 
-   this->outWidth      =   width*stride;
+    this->outWidth      =   width*stride;
     this->outHeight     =   height*stride;
     this->outChannel    =   channel;
 
-   this->scale         =   scale;
+    this->scale         =   scale;
 
-   int mStride         =   stride;
+    int mStride         =   stride;
 
-   if(stride < 0)
+    if(stride < 0)
     {
         mStride         =   -stride;
         this->reverse   =   1;
@@ -30,12 +30,12 @@ UpSampleLayer::UpSampleLayer(const int &batch, const int &width, const int &heig
     this->outputNum     =   this->outWidth * this->outHeight * this->outChannel;
     this->inputNum      =   this->width * this->height  * this->channel;
 
-   if(!BaseLayer::isPreviewMode)
+    if(!BaseLayer::isPreviewMode)
     {
         this->output        =   new float[static_cast<size_t>(this->outputNum * this->batch)]();
     }
 
-   char msg[100];
+    char msg[100];
     if(this->reverse)
     {
 #ifdef WIN32
@@ -57,15 +57,15 @@ UpSampleLayer::UpSampleLayer(const int &batch, const int &width, const int &heig
 #endif
     }
 
-   this->layerDetail   = msg;
+    this->layerDetail   = msg;
 }
 
 void UpSampleLayer::forward(NetworkState &netState)
 {
 
-   auto st = std::chrono::system_clock::now();
+    auto st = std::chrono::system_clock::now();
 
-   if(this->reverse)
+    if(this->reverse)
     {
         Blas::cpuUpSample(this->output, this->outWidth, this->outHeight, this->channel, this->batch, this->stride, 0, this->scale, netState.input);
     }
@@ -74,7 +74,7 @@ void UpSampleLayer::forward(NetworkState &netState)
         Blas::cpuUpSample(netState.input, this->width, this->height, this->channel, this->batch, this->stride, 1, this->scale, this->output);
     }
 
-   auto so = std::chrono::system_clock::now();
+    auto so = std::chrono::system_clock::now();
     this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 
 }
@@ -86,19 +86,19 @@ void UpSampleLayer::resize(const int &width, const int &height)
     this->outWidth      =   width*this->stride;
     this->outHeight     =   height*this->stride;
 
-   if(this->reverse)
+    if(this->reverse)
     {
         this->outWidth  =   width/this->stride;
         this->outHeight =   height/this->stride;
     }
 
-   this->outputNum     =   this->outWidth * this->outHeight * this->outChannel;
+    this->outputNum     =   this->outWidth * this->outHeight * this->outChannel;
 
-   if(this->output == nullptr)
+    if(this->output == nullptr)
     {
         throw Exception(1,"output can't be null", __FILE__, __LINE__);
     }
 
-   this->output    = static_cast<float *>(realloc(this->output, static_cast<size_t>(this->outputNum * this->batch) *sizeof(float)));
+    this->output    = static_cast<float *>(realloc(this->output, static_cast<size_t>(this->outputNum * this->batch) *sizeof(float)));
 }
 }

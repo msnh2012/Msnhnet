@@ -8,18 +8,18 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
     this->type              =   LayerType::ROUTE;
     this->layerName         =   "Route           ";
 
-   this->batch             =   batch;
+    this->batch             =   batch;
     this->groups            =   groups;
     this->groupIndex        =   groupIndex;
     int mOutputNum          =   0;
 
-   this->layerDetail.append("route ");
+    this->layerDetail.append("route ");
     char msg[100];
 
-   this->inputLayerIndexes =   inputLayerIndexes;
+    this->inputLayerIndexes =   inputLayerIndexes;
     this->inputLayerOutputs =   inputLayerOutputs;
 
-   for (size_t i = 0; i < inputLayerIndexes.size(); ++i)
+    for (size_t i = 0; i < inputLayerIndexes.size(); ++i)
     {
 #ifdef WIN32
         sprintf_s(msg, " %d", inputLayerIndexes[i]);
@@ -28,16 +28,16 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
 #endif
         this->layerDetail.append(msg);
 
-       mOutputNum      =   mOutputNum + inputLayerOutputs[i];
+        mOutputNum      =   mOutputNum + inputLayerOutputs[i];
     }
 
-   this->layerDetail.append("\n");
+    this->layerDetail.append("\n");
 
-   mOutputNum          =   mOutputNum / groups;
+    mOutputNum          =   mOutputNum / groups;
     this->outputNum     =   mOutputNum;
     this->inputNum      =   mOutputNum;
 
-   if(!BaseLayer::isPreviewMode)
+    if(!BaseLayer::isPreviewMode)
     {
         this->output        =   new float[static_cast<size_t>(this->outputNum*this->batch)]();
     }
@@ -61,7 +61,7 @@ void RouteLayer::forward(NetworkState &netState)
                           this->output + offset + j*this->outputNum,1);
         }
 
-       offset          = offset + partInSize;
+        offset          = offset + partInSize;
     }
     auto so = std::chrono::system_clock::now();
     this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
@@ -77,14 +77,14 @@ void RouteLayer::resize(Network &net)
     this->outputNum                 =   first.outputNum;
     this->inputLayerOutputs[0]      =   first.outputNum;
 
-   for (size_t i = 0; i < static_cast<size_t>(this->num); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(this->num); ++i)
     {
         size_t index                =   static_cast<size_t>(this->inputLayerIndexes[i]);
         BaseLayer next              =   *net.layers[index];
         this->outputNum             +=  next.outputNum;
         this->inputLayerOutputs[i]  = next.outputNum;
 
-       if(next.outWidth == first.outWidth && next.outHeight == first.outHeight)
+        if(next.outWidth == first.outWidth && next.outHeight == first.outHeight)
         {
             this->outChannel    +=  next.outChannel;
         }
@@ -97,7 +97,7 @@ void RouteLayer::resize(Network &net)
         }
     }
 
-   this->outChannel    =   this->outChannel/this->groups;
+    this->outChannel    =   this->outChannel/this->groups;
     this->outputNum     =   this->outputNum / this->groups;
     this->inputNum      =   this->outputNum;
     if(this->output == nullptr)
@@ -105,6 +105,6 @@ void RouteLayer::resize(Network &net)
         throw Exception(1,"output can't be null", __FILE__, __LINE__);
     }
 
-   this->output    = static_cast<float *>(realloc(this->output, static_cast<size_t>(this->outputNum *this->batch)*sizeof(float)));
+    this->output    = static_cast<float *>(realloc(this->output, static_cast<size_t>(this->outputNum *this->batch)*sizeof(float)));
 }
 }

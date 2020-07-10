@@ -42,7 +42,7 @@ OpencvUtil::OpencvUtil()
 std::vector<float> OpencvUtil::getImgDataF32C1(const std::string &path, const cv::Size &size)
 {
 
-   cv::Mat mat = cv::imread(path.data());
+    cv::Mat mat = cv::imread(path.data());
     return getImgDataF32C1(mat, size);
 
 }
@@ -54,16 +54,16 @@ std::vector<float> OpencvUtil::getImgDataF32C1(cv::Mat &mat, const cv::Size &siz
         throw Exception(1,"img empty", __FILE__, __LINE__);
     }
 
-   std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols));
+    std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols));
 
-   cv::resize(mat, mat, size);
+    cv::resize(mat, mat, size);
 
-   if(mat.channels()==3)
+    if(mat.channels()==3)
     {
         cv::cvtColor(mat,mat,cv::COLOR_RGB2GRAY);
     }
 
-   int width = mat.cols;
+    int width = mat.cols;
     int height = mat.rows;
 
 #ifdef USE_OMP
@@ -93,15 +93,15 @@ std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &siz
         throw Exception(1,"img empty", __FILE__, __LINE__);
     }
 
-   cv::resize(mat, mat, size);
+    cv::resize(mat, mat, size);
 
-   std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols*3));
+    std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols*3));
 
-   int width   = mat.cols;
+    int width   = mat.cols;
     int height  = mat.rows;
     int channel = mat.channels();
 
-   int step    = static_cast<int>(mat.step);
+    int step    = static_cast<int>(mat.step);
 
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
@@ -114,11 +114,11 @@ std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &siz
             {
                 imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.data[y*step + x*channel + k] / 255.0f;
 
-           }
+            }
         }
     }
 
-   mat.release();
+    mat.release();
     return imgs;
 }
 
@@ -135,15 +135,15 @@ std::vector<float> OpencvUtil::getGoogLenetF32C3(cv::Mat &mat, const cv::Size &s
         throw Exception(1,"img empty", __FILE__, __LINE__);
     }
 
-   cv::resize(mat, mat, size);
+    cv::resize(mat, mat, size);
 
-   std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols*3));
+    std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols*3));
 
-   int width   = mat.cols;
+    int width   = mat.cols;
     int height  = mat.rows;
     int channel = mat.channels();
 
-   int step    = static_cast<int>(mat.step);
+    int step    = static_cast<int>(mat.step);
 
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
@@ -170,7 +170,7 @@ std::vector<float> OpencvUtil::getGoogLenetF32C3(cv::Mat &mat, const cv::Size &s
         }
     }
 
-   mat.release();
+    mat.release();
     return imgs;
 }
 
@@ -187,15 +187,15 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
         throw Exception(1,"img empty", __FILE__, __LINE__);
     }
 
-   int width   = mat.cols;
+    int width   = mat.cols;
     int height  = mat.rows;
     int channel = mat.channels();
 
-   std::vector<float> imgs(static_cast<size_t>(size.height*size.width*3));
+    std::vector<float> imgs(static_cast<size_t>(size.height*size.width*3));
 
-   int diff    =   abs(width - height);
+    int diff    =   abs(width - height);
 
-   if(width > height)
+    if(width > height)
     {
         cv::copyMakeBorder(mat, mat, diff/2, diff - diff/2, 0, 0, cv::BORDER_CONSTANT, cv::Scalar(127,127,127));
     }
@@ -204,14 +204,14 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
         cv::copyMakeBorder(mat, mat, 0, 0, diff/2, diff - diff/2, cv::BORDER_CONSTANT, cv::Scalar(127,127,127));
     }
 
-   cv::resize(mat, mat, size);
+    cv::resize(mat, mat, size);
 
-   cv::cvtColor(mat,mat,cv::COLOR_RGB2BGR);
+    cv::cvtColor(mat,mat,cv::COLOR_RGB2BGR);
 
-   width   = mat.cols;
+    width   = mat.cols;
     height  = mat.rows;
 
-   int step    = static_cast<int>(mat.step);
+    int step    = static_cast<int>(mat.step);
 
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
@@ -224,11 +224,11 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
             {
                 imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.data[y*step + x*channel + k] / 255.0f;
 
-           }
+            }
         }
     }
 
-   mat.release();
+    mat.release();
     return imgs;
 
 }
@@ -243,11 +243,11 @@ void OpencvUtil::drawYolov3Box(cv::Mat &mat, std::vector<std::string> &labels, s
                       Msnhnet::OpencvUtil::colorTable[static_cast<size_t>(box.bestClsIdx)],2,cv::LineTypes::LINE_AA);
         std::string label = std::to_string(static_cast<int>(box.conf*100)) + "% "+labels[static_cast<size_t>(box.bestClsIdx)];
 
-       cv::rectangle(mat,cv::Point(static_cast<int>(box.xywhBox.x - box.xywhBox.w/2),static_cast<int>(box.xywhBox.y - box.xywhBox.h/2-20)),
+        cv::rectangle(mat,cv::Point(static_cast<int>(box.xywhBox.x - box.xywhBox.w/2),static_cast<int>(box.xywhBox.y - box.xywhBox.h/2-20)),
                       cv::Point(static_cast<int>(box.xywhBox.x - box.xywhBox.w/2 + label.length()*12),static_cast<int>(box.xywhBox.y - box.xywhBox.h/2)),
                       Msnhnet::OpencvUtil::colorTable[static_cast<size_t>(box.bestClsIdx)],-2,cv::LineTypes::LINE_AA);
 
-       cv::putText(mat,
+        cv::putText(mat,
                     label,
                     cv::Point(static_cast<int>(box.xywhBox.x - box.xywhBox.w/2),
                               static_cast<int>(box.xywhBox.y - box.xywhBox.h/2 - 2)),
