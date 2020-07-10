@@ -24,6 +24,10 @@
 #include "Msnhnet/io/MsnhIO.h"
 #include "Msnhnet/utils/MsnhExport.h"
 
+#ifdef USE_NNPACK
+#include <nnpack.h>
+#endif
+
 namespace Msnhnet
 {
 class NetBuildParams
@@ -47,12 +51,12 @@ public:
     std::vector<float> runClassify(std::vector<float> img);
     std::vector<std::vector<Yolov3Box>> runYolov3(std::vector<float> img);
 
-   void  clearLayers();
+    void  clearLayers();
     float getInferenceTime();
     std::string getLayerDetail();
     std::string getTimeDetail();
 
-   Parser          *parser;
+    Parser          *parser;
     Network         *net;
     NetworkState    *netState;
 };

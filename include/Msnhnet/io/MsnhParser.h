@@ -60,25 +60,25 @@ public:
     int             filters     =   1;
     int             groups      =   1;
 
-   int             kSize       =   1;
+    int             kSize       =   1;
     int             kSizeX      =   -1;
     int             kSizeY      =   -1;
 
-   int             stride      =   1;
+    int             stride      =   1;
     int             strideX     =   -1;
     int             strideY     =   -1;
     int             antialiasing=   0;
 
-   int             padding     =   0;
+    int             padding     =   0;
     int             paddingX    =   -1;
     int             paddingY    =   -1;
 
-   int             dilation    =   1;
+    int             dilation    =   1;
     int             dilationX   =   -1;
     int             dilationY   =   -1;
-    int             useBias     =   1; 
+    int             useBias     =   1;
 
-   ActivationType  activation  =   ActivationType::NONE;
+    ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
 };
 
@@ -93,18 +93,18 @@ public:
     int             kSizeX      =   -1;
     int             kSizeY      =   -1;
 
-   int             stride      =   1;
+    int             stride      =   1;
     int             strideX     =   -1;
     int             strideY     =   -1;
 
-   int             padding     =   0;
+    int             padding     =   0;
     int             paddingX    =   -1;
     int             paddingY    =   -1;
 
-   int             maxPoolDepth=   0;
+    int             maxPoolDepth=   0;
     int             outChannels =   1;
 
-   int             ceilMode   =   0;
+    int             ceilMode   =   0;
 };
 
 class LocalAvgPoolParams : public BaseParams
@@ -118,15 +118,15 @@ public:
     int             kSizeX      =   -1;
     int             kSizeY      =   -1;
 
-   int             stride      =   1;
+    int             stride      =   1;
     int             strideX     =   -1;
     int             strideY     =   -1;
 
-   int             padding     =   0;
+    int             padding     =   0;
     int             paddingX    =   -1;
     int             paddingY    =   -1;
 
-   int             ceilMode    =   0;
+    int             ceilMode    =   0;
 };
 
 class ConnectParams : public BaseParams
@@ -161,7 +161,7 @@ public:
         this->type = LayerType::RES_BLOCK;
     }
 
-   std::vector<BaseParams* > baseParams;
+    std::vector<BaseParams* > baseParams;
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
     ~ResBlockParams();
@@ -176,12 +176,12 @@ public:
         this->type= LayerType::RES_2_BLOCK;
     }
 
-   std::vector<BaseParams* > baseParams;
+    std::vector<BaseParams* > baseParams;
     std::vector<BaseParams* > branchParams;
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
 
-   ~Res2BlockParams();
+    ~Res2BlockParams();
 };
 
 class MsnhNet_API ConcatBlockParams : public BaseParams
@@ -194,9 +194,9 @@ public:
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
 
-   std::vector<std::vector<BaseParams* >> branchParams;
+    std::vector<std::vector<BaseParams* >> branchParams;
 
-   ~ConcatBlockParams();
+    ~ConcatBlockParams();
 };
 
 class MsnhNet_API AddBlockParams : public BaseParams
@@ -209,9 +209,9 @@ public:
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
 
-   std::vector<std::vector<BaseParams* >> branchParams;
+    std::vector<std::vector<BaseParams* >> branchParams;
 
-   ~AddBlockParams();
+    ~AddBlockParams();
 };
 
 class RouteParams : public BaseParams
@@ -223,7 +223,7 @@ public:
     }
     std::vector<int> layerIndexes;
 
-   int     groups      =   1;
+    int     groups      =   1;
     int     groupsId    =   0;
 };
 
@@ -246,7 +246,7 @@ public:
         this->type = LayerType::YOLOV3;
     }
 
-   int     orgWidth    =   0;
+    int     orgWidth    =   0;
     int     orgHeight   =   0;
     int     classNum    =   1;
     std::vector<float> anchors;
@@ -260,7 +260,7 @@ public:
         this->type = LayerType::YOLOV3_OUT;
     }
 
-   int     orgWidth    =   0;
+    int     orgWidth    =   0;
     int     orgHeight   =   0;
     float   confThresh  =   0;
     float   nmsThresh   =   0;
@@ -276,7 +276,7 @@ public:
         this->type = LayerType::PADDING;
     }
 
-   int     top         =   0;
+    int     top         =   0;
     int     down        =   0;
     int     left        =   0;
     int     right       =   0;
@@ -289,14 +289,14 @@ public:
     Parser();
     ~Parser();
 
-   std::vector<BaseParams* >   params;
+    std::vector<BaseParams* >   params;
     std::vector<float>          msnhF32Weights;
 
-   void clearParams();
+    void clearParams();
     void readCfg(const std::string &path);
     void readMsnhBin(const std::string &path);
 
-   void parseConfigParams(NetConfigParams *netConfigParams, YAML::const_iterator &iter);
+    void parseConfigParams(NetConfigParams *netConfigParams, YAML::const_iterator &iter);
     void parseMaxPoolParams(MaxPoolParams *maxPoolParams, YAML::const_iterator &iter);
     void parseLocalAvgPoolParams(LocalAvgPoolParams *localAvgPoolParams, YAML::const_iterator &iter);
     void parseConvParams(ConvParams *convParams, YAML::const_iterator &iter);

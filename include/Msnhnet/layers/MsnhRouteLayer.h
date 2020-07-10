@@ -15,12 +15,12 @@ public:
     RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes, std::vector<int> &inputLayerOutputs,
                const int &groups, const int &groupId);
 
-   std::vector<int>inputLayerIndexes;
+    std::vector<int>inputLayerIndexes;
     std::vector<int>inputLayerOutputs;
     int         groups              =   0;
     int         groupIndex          =   0;
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
     void resize(Network &net);
 };
 }

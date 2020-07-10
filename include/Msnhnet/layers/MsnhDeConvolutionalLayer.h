@@ -26,7 +26,7 @@ public:
     int         batchNorm           =   0;
     virtual void forward(NetworkState &netState);
 
-   int deConvOutHeight();
+    int deConvOutHeight();
     int deConvOutWidth();
 };
 }

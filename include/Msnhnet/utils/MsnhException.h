@@ -10,7 +10,7 @@ class Exception:public std::exception
 {
 public:
 
-   Exception (int errCode, std::string err, std::string errFile, int errLine):
+    Exception (int errCode, std::string err, std::string errFile, int errLine):
         err(err),
         errCode(errCode),
         errFile(errFile),
@@ -18,34 +18,34 @@ public:
     {
     }
 
-   Exception()
+    Exception()
     {
         err="error";
     }
 
-   virtual const char* what () const noexcept
+    virtual const char* what () const noexcept
     {
         return err.data();
     }
 
-   inline std::string getErrFile() const
+    inline std::string getErrFile() const
     {
         return errFile;
     }
 
-   inline int getErrLine() const
+    inline int getErrLine() const
     {
         return errLine;
     }
 
-   inline int getErrCode() const
+    inline int getErrCode() const
     {
         return errCode;
     }
 
 private:
 
-   std::string err;
+    std::string err;
     int         errCode;
     std::string errFile;
     int         errLine;

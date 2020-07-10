@@ -15,14 +15,14 @@ public:
               const int &cropHeight, const int &cropWidth, const int &flip, const float &angle,
               const float &saturation, const float &exposure);
 
-   int         kSize               =   0;
+    int         kSize               =   0;
     float       scale               =   0;
     int         flip                =   0;
     float       saturation          =   0;
     float       exposure            =   0;
     int         noAdjust            =   0;
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
     void resize(const int &width, const int &height);
 };
 }

@@ -21,25 +21,25 @@ public:
     int     useSoftNms  = 0;
     int     pixels      = 0;
 
-   int     orgHeight   =   0;
+    int     orgHeight   =   0;
     int     orgWidth    =   0;
 
-   std::vector<int> yolov3Indexes;
+    std::vector<int> yolov3Indexes;
     std::vector<Yolov3Info> yolov3LayersInfo;
 
-   int     yolov3AllInputNum   =   0;      
+    int     yolov3AllInputNum   =   0;
 
-   float   *allInput           =   nullptr;
+    float   *allInput           =   nullptr;
     float   *shuffleInput       =   nullptr;
 
-   std::vector<bool> batchHasBox;
+    std::vector<bool> batchHasBox;
     std::vector<std::vector<Yolov3Box>> finalOut;
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
 
-   static Yolov3Box bboxResize2org(Yolov3Box &box, const Point2I &currentShape , const Point2I &orgShape);
+    static Yolov3Box bboxResize2org(Yolov3Box &box, const Point2I &currentShape , const Point2I &orgShape);
 
-   static std::vector<Yolov3Box> nms(const std::vector<Yolov3Box> &bboxes, const float& nmsThresh, const bool &useSoftNms=false, const float &sigma =0.3f);
+    static std::vector<Yolov3Box> nms(const std::vector<Yolov3Box> &bboxes, const float& nmsThresh, const bool &useSoftNms=false, const float &sigma =0.3f);
 };
 }
 

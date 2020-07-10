@@ -28,13 +28,13 @@ public:
     ResBlockLayer(const int &batch, NetBuildParams &params, std::vector<BaseParams*> &baseParams, ActivationType &activation, const std::vector<float> &actParams);
     float       *activationInput    =   nullptr;
 
-   void loadAllWeigths(std::vector<float> &weights);
+    void loadAllWeigths(std::vector<float> &weights);
 
-   std::vector<BaseLayer *> baseLayers;
+    std::vector<BaseLayer *> baseLayers;
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
 
-   ~ResBlockLayer();
+    ~ResBlockLayer();
 };
 }
 #endif 

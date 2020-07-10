@@ -13,7 +13,7 @@ public:
                  const int &strideX, const int &strideY, const int &paddingX, const int &paddingY, const int &maxPoolDepth,
                  const int &outChannelsMp, const int &ceilMode, const int &antialiasing);
 
-   int         kSizeX              =   0;
+    int         kSizeX              =   0;
     int         kSizeY              =   0;
     int         stride              =   0;
     int         strideX             =   0;
@@ -25,7 +25,7 @@ public:
     int         outChannelsMp       =   0;
     int         ceilMode            =   0;
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
 
 #ifdef USE_X86
     void forwardAvx(float *const &src, float *const &dst, const int &kSizeX, const int &kSizeY, const int &width,
@@ -33,7 +33,7 @@ public:
                     const int &paddingY, const int &stride, const int &batch);
 #endif
 
-   ~MaxPoolLayer();
+    ~MaxPoolLayer();
 
 };
 }

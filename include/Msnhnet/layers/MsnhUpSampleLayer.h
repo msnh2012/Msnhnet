@@ -16,7 +16,7 @@ public:
     int         stride      =   0;
     float       scale       =   1.f;
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
     void resize(const int &width, const int &height);
 };
 }

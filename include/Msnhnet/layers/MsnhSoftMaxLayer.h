@@ -14,7 +14,7 @@ public:
     int         groups              =   0;
     float       temperature         =   0;
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
 };
 }
 

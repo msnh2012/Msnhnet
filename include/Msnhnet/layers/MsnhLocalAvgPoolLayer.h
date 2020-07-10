@@ -12,7 +12,7 @@ public:
     LocalAvgPoolLayer(const int &batch, const int &height, const int &width, const int &channel, const int &kSizeX, const int &kSizeY,
                       const int &strideX, const int &strideY, const int &paddingX, const int &paddingY, const int&ceilMode, const int &antialiasing);
 
-   int         kSizeX              =   0;
+    int         kSizeX              =   0;
     int         kSizeY              =   0;
     int         stride              =   0;
     int         strideX             =   0;
@@ -20,13 +20,13 @@ public:
     int         paddingX            =   0;
     int         paddingY            =   0;
 
-   int         ceilMode            =   0;
+    int         ceilMode            =   0;
 
-   int         antialiasing        =   0;
+    int         antialiasing        =   0;
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
 
-   ~LocalAvgPoolLayer();
+    ~LocalAvgPoolLayer();
 };
 }
 

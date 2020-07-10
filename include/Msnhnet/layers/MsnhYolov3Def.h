@@ -10,17 +10,17 @@ struct Yolov3Info
     Yolov3Info(const int& outHeight, const int& outWidth, const int& outChannel)
         :outHeight(outHeight),outWidth(outWidth),outChannel(outChannel){}
 
-   int outHeight   =   0;
+    int outHeight   =   0;
     int outWidth    =   0;
     int outChannel  =   0;
 
-   int getOutputNum(){return outChannel*outWidth*outHeight;}
+    int getOutputNum(){return outChannel*outWidth*outHeight;}
 };
 
 struct Yolov3FinalBox
 {
     Yolov3FinalBox(const float &x, const float &y, const float &w, const float &h, const float &conf, const int &bestCls)
-                :x(x),y(y),w(w),h(h),conf(conf),bestCls(bestCls){}
+        :x(x),y(y),w(w),h(h),conf(conf),bestCls(bestCls){}
     float    x      =   0;
     float    y      =   0;
     float    w      =   0;

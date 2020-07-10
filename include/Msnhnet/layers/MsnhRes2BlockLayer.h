@@ -29,15 +29,15 @@ class MsnhNet_API Res2BlockLayer : public BaseLayer
 public:
     Res2BlockLayer(const int &batch, NetBuildParams &params, std::vector<BaseParams*> &baseParams, std::vector<BaseParams*> &branchParams, ActivationType &activation, const std::vector<float> &actParams);
 
-   std::vector<BaseLayer *> baseLayers;
+    std::vector<BaseLayer *> baseLayers;
     std::vector<BaseLayer *> branchLayers;
     float       *activationInput    =   nullptr;
 
-   void loadAllWeigths(std::vector<float> &weights);
+    void loadAllWeigths(std::vector<float> &weights);
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
 
-   ~Res2BlockLayer();
+    ~Res2BlockLayer();
 };
 }
 #endif 

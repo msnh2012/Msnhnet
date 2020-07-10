@@ -13,40 +13,40 @@ class MsnhNet_API IO
 {
 public:
 
-   template<typename T>
+    template<typename T>
     inline static void printVector(std::vector<T>& v,bool needASCII = false)
     {
         if(std::is_same<T,char>::value||
-           std::is_same<T,unsigned char>::value||
-           std::is_same<T,int>::value||
-           std::is_same<T,unsigned int>::value||
-           std::is_same<T,float>::value||
-           std::is_same<T,double>::value||
-           std::is_same<T,long>::value||
-           std::is_same<T,unsigned long>::value||
-           std::is_same<T,long long>::value||
-           std::is_same<T,unsigned long long>::value||
-           std::is_same<T,short>::value||
-           std::is_same<T,unsigned short>::value||
-           std::is_same<T,int8_t>::value||
-           std::is_same<T,uint8_t>::value||
-           std::is_same<T,int16_t>::value||
-           std::is_same<T,uint16_t>::value||
-           std::is_same<T,int32_t>::value||
-           std::is_same<T,uint32_t>::value||
-           std::is_same<T,int64_t>::value||
-           std::is_same<T,uint64_t>::value||
-           std::is_same<T,float_t>::value||
-           std::is_same<T,double_t>::value)
+                std::is_same<T,unsigned char>::value||
+                std::is_same<T,int>::value||
+                std::is_same<T,unsigned int>::value||
+                std::is_same<T,float>::value||
+                std::is_same<T,double>::value||
+                std::is_same<T,long>::value||
+                std::is_same<T,unsigned long>::value||
+                std::is_same<T,long long>::value||
+                std::is_same<T,unsigned long long>::value||
+                std::is_same<T,short>::value||
+                std::is_same<T,unsigned short>::value||
+                std::is_same<T,int8_t>::value||
+                std::is_same<T,uint8_t>::value||
+                std::is_same<T,int16_t>::value||
+                std::is_same<T,uint16_t>::value||
+                std::is_same<T,int32_t>::value||
+                std::is_same<T,uint32_t>::value||
+                std::is_same<T,int64_t>::value||
+                std::is_same<T,uint64_t>::value||
+                std::is_same<T,float_t>::value||
+                std::is_same<T,double_t>::value)
         {
 
-       }
+        }
         else
         {
             throw Exception(1, "Type not support .", __FILE__,__LINE__);
         }
 
-       for (typename std::vector<T>::iterator it = v.begin(); it != v.end(); it++)
+        for (typename std::vector<T>::iterator it = v.begin(); it != v.end(); it++)
         {
             if(needASCII)
                 std::cout << static_cast<int>(*it) << std::endl;
@@ -55,34 +55,34 @@ public:
         }
     }
 
-   template<typename T>
+    template<typename T>
     static void saveVector(std::vector<T>& v,const char* path,const char* format)
     {
         if(std::is_same<T,char>::value||
-           std::is_same<T,unsigned char>::value||
-           std::is_same<T,int>::value||
-           std::is_same<T,unsigned int>::value||
-           std::is_same<T,float>::value||
-           std::is_same<T,double>::value||
-           std::is_same<T,long>::value||
-           std::is_same<T,unsigned long>::value||
-           std::is_same<T,long long>::value||
-           std::is_same<T,unsigned long long>::value||
-           std::is_same<T,short>::value||
-           std::is_same<T,unsigned short>::value||
-           std::is_same<T,int8_t>::value||
-           std::is_same<T,uint8_t>::value||
-           std::is_same<T,int16_t>::value||
-           std::is_same<T,uint16_t>::value||
-           std::is_same<T,int32_t>::value||
-           std::is_same<T,uint32_t>::value||
-           std::is_same<T,int64_t>::value||
-           std::is_same<T,uint64_t>::value||
-           std::is_same<T,float_t>::value||
-           std::is_same<T,double_t>::value)
+                std::is_same<T,unsigned char>::value||
+                std::is_same<T,int>::value||
+                std::is_same<T,unsigned int>::value||
+                std::is_same<T,float>::value||
+                std::is_same<T,double>::value||
+                std::is_same<T,long>::value||
+                std::is_same<T,unsigned long>::value||
+                std::is_same<T,long long>::value||
+                std::is_same<T,unsigned long long>::value||
+                std::is_same<T,short>::value||
+                std::is_same<T,unsigned short>::value||
+                std::is_same<T,int8_t>::value||
+                std::is_same<T,uint8_t>::value||
+                std::is_same<T,int16_t>::value||
+                std::is_same<T,uint16_t>::value||
+                std::is_same<T,int32_t>::value||
+                std::is_same<T,uint32_t>::value||
+                std::is_same<T,int64_t>::value||
+                std::is_same<T,uint64_t>::value||
+                std::is_same<T,float_t>::value||
+                std::is_same<T,double_t>::value)
         {
 
-       }
+        }
         else
         {
             throw Exception(1, "Type not support .", __FILE__,__LINE__);
@@ -107,39 +107,39 @@ public:
                 outfile<<*it<<format;
             }
 
-       }
+        }
         outfile.flush();
         outfile.close();
     }
 
-   template<typename T>
+    template<typename T>
     static void readVector(std::vector<T>& v,const char* path,const char* format)
     {
         if(std::is_same<T,char>::value||
-           std::is_same<T,unsigned char>::value||
-           std::is_same<T,int>::value||
-           std::is_same<T,unsigned int>::value||
-           std::is_same<T,float>::value||
-           std::is_same<T,double>::value||
-           std::is_same<T,long>::value||
-           std::is_same<T,unsigned long>::value||
-           std::is_same<T,long long>::value||
-           std::is_same<T,unsigned long long>::value||
-           std::is_same<T,short>::value||
-           std::is_same<T,unsigned short>::value||
-           std::is_same<T,int8_t>::value||
-           std::is_same<T,uint8_t>::value||
-           std::is_same<T,int16_t>::value||
-           std::is_same<T,uint16_t>::value||
-           std::is_same<T,int32_t>::value||
-           std::is_same<T,uint32_t>::value||
-           std::is_same<T,int64_t>::value||
-           std::is_same<T,uint64_t>::value||
-           std::is_same<T,float_t>::value||
-           std::is_same<T,double_t>::value)
+                std::is_same<T,unsigned char>::value||
+                std::is_same<T,int>::value||
+                std::is_same<T,unsigned int>::value||
+                std::is_same<T,float>::value||
+                std::is_same<T,double>::value||
+                std::is_same<T,long>::value||
+                std::is_same<T,unsigned long>::value||
+                std::is_same<T,long long>::value||
+                std::is_same<T,unsigned long long>::value||
+                std::is_same<T,short>::value||
+                std::is_same<T,unsigned short>::value||
+                std::is_same<T,int8_t>::value||
+                std::is_same<T,uint8_t>::value||
+                std::is_same<T,int16_t>::value||
+                std::is_same<T,uint16_t>::value||
+                std::is_same<T,int32_t>::value||
+                std::is_same<T,uint32_t>::value||
+                std::is_same<T,int64_t>::value||
+                std::is_same<T,uint64_t>::value||
+                std::is_same<T,float_t>::value||
+                std::is_same<T,double_t>::value)
         {
 
-       }
+        }
         else
         {
             throw Exception(1, "Type not support .", __FILE__,__LINE__);
@@ -156,11 +156,11 @@ public:
         std::vector<std::string> datas;
         ExString::split(datas,str,format);
 
-       for (auto it = datas.begin(); it != datas.end(); it++)
+        for (auto it = datas.begin(); it != datas.end(); it++)
         {
             std::istringstream iss(*it);
 
-           if(std::is_same<T,char>::value||std::is_same<T,int8_t>::value)
+            if(std::is_same<T,char>::value||std::is_same<T,int8_t>::value)
             {
                 int num;
                 iss>>num;
@@ -181,7 +181,7 @@ public:
         }
     }
 
-   static void readVectorStr(std::vector<std::string>& v,const char* path,const char* format)
+    static void readVectorStr(std::vector<std::string>& v,const char* path,const char* format)
     {
         std::ifstream inFile(path,std::ios::in);
         if(!inFile)

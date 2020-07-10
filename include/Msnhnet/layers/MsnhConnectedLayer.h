@@ -16,21 +16,21 @@ public:
     ConnectedLayer(const int &batch, const int &steps, const int &inputNum, const int &outputNum,
                    const ActivationType &activation, const std::vector<float> &actParams, const int &batchNorm);
 
-   ~ConnectedLayer();
+    ~ConnectedLayer();
 
-   float       *weights            =   nullptr;
+    float       *weights            =   nullptr;
     float       *biases             =   nullptr;
     float       *scales             =   nullptr;
     float       *rollMean           =   nullptr;
     float       *rollVariance       =   nullptr;
 
-   int         nBiases             =   0;
+    int         nBiases             =   0;
     int         nWeights            =   0;
     int         nScales             =   0;
     int         nRollMean           =   0;
     int         nRollVariance       =   0;
 
-   int         kSize               =   0;
+    int         kSize               =   0;
     int         stride              =   0;
     int         strideX             =   0;
     int         strideY             =   0;
@@ -38,11 +38,11 @@ public:
     int         dilation            =   0;
     int         batchNorm           =   0;
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
 
-   void loadAllWeigths(std::vector<float> &weights);
+    void loadAllWeigths(std::vector<float> &weights);
 
-   void loadScales(float *const &weights, const int& len);
+    void loadScales(float *const &weights, const int& len);
     void loadBias(float *const &bias, const int& len);
     void loadWeights(float *const &weights, const int& len);
     void loadRollMean(float *const &rollMean, const int& len);
