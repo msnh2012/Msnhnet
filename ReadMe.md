@@ -39,7 +39,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)
 - ARM(Yolov3Tiny cpu)
   |cpu|raspberry 3B|raspberry 4B|Jeston NX|
   |:---:|:---:|:---:|:---:|
-  |without NNPack|10s|2.5s|1.2s|
+  |without NNPack|6s|2.5s|1.2s|
   |with NNPack|2.5s|1.1s|0.6s|
 
 
