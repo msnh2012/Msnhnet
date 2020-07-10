@@ -13,8 +13,7 @@ option(OMP_MAX_THREAD       "Omp will use max threads"  ON )
 option(ENABLE_OPEN_BLAS     "Use open blas"             OFF)
 option(BUILD_SHARED_LIBS    "Build shared lib"          ON )
 option(BUILD_EXAMPLES       "Build examples"            ON )
-option(BUILD_VIEWER         "Build MsnhnetViewer"       ON )
-
+option(BUILD_VIEWER         "Build MsnhnetViewer"       OFF)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_Release} -O3")
@@ -116,23 +115,45 @@ else()
     set(USE_X86_MACRO "")
 endif()
 
+message(${CMAKE_SYSTEM_PROCESSOR})
 
+set(USE_NNPACK_MACRO "")
 # ARM config
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(aarch32)|(armv7l)")
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(armv7l)")
     add_definitions(-DUSE_ARM) #===============
     set(USE_ARM_MACRO "#define USE_ARM\n")
 
     message(STATUS "Use arm arch")
 
-   option(ENABLE_NEON "Use neon" ON)
+    option(ENABLE_NEON "Use neon" ON)
     if(ENABLE_NEON MATCHES ON)
         add_definitions(-DUSE_NEON)
         set(USE_NEON_MACRO "#define USE_NEON\n")
-        set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -mfpu=neon")
+
+        if (CMAKE_SYSTEM_PROCESSOR MATCHES "(armv7l)") # aarch64 neon is default
+            set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -mfpu=neon")
+        endif()
         message(STATUS "Use neon")
     else()
         set(USE_NEON_MACRO "")
     endif()
+
+    option(ENABLE_NNPACK        "Build with NNAPCK"         ON )
+    if(ENABLE_NNPACK MATCHES ON)
+        add_definitions(-DUSE_NNPACK)
+        set(USE_NNPACK_MACRO "#define USE_NNPACK\n")
+        set(NNPACK_LIBS
+                -L$ENV{NNPACK_LIB_DIR}
+		-lclog 
+                -lnnpack
+                -lpthreadpool
+		-lcpuinfo
+               )
+        message(STATUS "Use NNPACK")
+        message(STATUS "NNPACK lib ${NNPACK_LIBS}")
+        message(STATUS "NNPACK inc $ENV{NNPACK_INC_DIR}")
+    endif()
+
 else()
     set(USE_ARM_MACRO "")
 endif()
@@ -184,11 +205,20 @@ target_sources(${PROJECT_NAME}
 
 #openblas
 if(ENABLE_OPEN_BLAS MATCHES ON)
-    target_link_libraries(${PROJECT_NAME} ${OpenBLAS_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenBLAS_LIBRARIES})
+endif()
+
+#NNPack
+if(ENABLE_NNPACK)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${NNPACK_LIBS})
+    target_include_directories(${PROJECT_NAME}
+           PUBLIC
+           $ENV{NNPACK_INC_DIR}
+           )
 endif()
 
 #link 3rdparty libs
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp )
 
 if(BUILD_EXAMPLES MATCHES ON)
     add_subdirectory(examples)
@@ -241,7 +271,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     )
 
 # Create cfg macro head file
-file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_SHARED_MSNHNET_MACRO}#endif")
+file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_NNPACK_MACRO}#endif")
 
 # Install macro head file
 install(FILES MsnhnetTmp/MsnhnetMacro.h
