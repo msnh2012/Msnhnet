@@ -10,14 +10,14 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)
 **OS supported** (you can check other OS by yourself)
 
 | |windows|linux|mac|
-|---|---|---|---|
-|checked|<center>√</center>|<center>√</center>|<center>x</center>|
-|gpu|<center>x</center>|<center>x</center>|<center>x</center>|
+|:---:|:---:|:---:|:---:|
+|checked|√|√|x|
+|gpu|x|x|x|
 
 **CPU checked**
 | |Intel i7|raspberry 3B|raspberry 4B|Jeston NX|
-|---|---|---|---|---|
-|checked|<center>√</center>|<center>√</center>|<center>√</center>|<center>√</center>
+|:---:|:---:|:---:|:---:|:---:|
+|checked|√|√|√|√
 
 **Features**
 
