@@ -14,13 +14,34 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)
 |checked|<center>√</center>|<center>√</center>|<center>x</center>|
 |gpu|<center>x</center>|<center>x</center>|<center>x</center>|
 
-**Yolo Test** (Win10 MSVC 2017 I7-10700F)
+**CPU checked**
+| |Intel i7|raspberry 3B|raspberry 4B|Jeston NX|
+|---|---|---|---|---|
+|checked|<center>√</center>|<center>√</center>|<center>√</center>|<center>√</center>
 
-|net|time|
-|---|---|
-|yolov3|465ms|
-|yolov3_tiny|75ms|
-|yolov4|600ms|
+**Features**
+
+- C++ Only. 3rdparty blas lib is optional, also you can use OpenBlas.
+- A viewer for msnhnet is supported.(netron like)
+![](readme_imgs/msnhnetviewer.png)
+- OS supported: Windows, Linux(Ubuntu checked) and Mac os(unchecked).
+- CPU supported: Intel X86, AMD(unchecked) and ARM(checked: armv7 armv8 arrch64).
+- Working on it...(**Weekend Only  (╮（╯＿╰）╭)**)
+
+**Yolo Test** 
+- Win10 MSVC 2017 I7-10700F
+
+  |net|yolov3|yolov3_tiny|yolov4|
+  |:---:|:---:|:---:|:---:|
+  |time|465ms|75ms|600ms|
+
+
+- ARM(Yolov3Tiny cpu)
+  |cpu|raspberry 3B|raspberry 4B|Jeston NX|
+  |:---:|:---:|:---:|:---:|
+  |without NNPack|10s|2.5s|1.2s|
+  |with NNPack|2.5s|1.1s|0.6s|
+
 
 **Tested networks**
 - lenet5
@@ -35,6 +56,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)
 - resnet152
 - darknet53
 - googLenet
+- mobilenetv2
 - yolov3
 - yolov3_spp
 - yolov3_tiny
@@ -151,6 +173,11 @@ with open("alexnet.msnhbin","wb") as f:
 ```
 **Ps. More detail in file "pytorch2msnhbin/pytorch2msnhbin.py"**
 
-Enjoy it! :D</br>
+**About Train**
+- Just use pytorch to train your model, and export as msnhbin.
+- eg. yolov3/v4 [https://github.com/ultralytics/yolov3](https://github.com/ultralytics/yolov3)
+
+Enjoy it! :D
+
 **加群交流**</br>
 ![](readme_imgs/qq.png)</br>
