@@ -14,24 +14,24 @@ namespace MsnhViewer
         NodeName(QGraphicsItem* parent);
         void adjustPosition();
 
-   protected:
+    protected:
         void keyPressEvent(QKeyEvent* e) override;
     };
 
-   class Node : public QGraphicsItem
+    class Node : public QGraphicsItem
     {
         friend Link* connect(QString const& from, QString const& out, QString const& to, QString const& in);
 
-   public:
+    public:
         Node (QString const& type = "", QString const& name = "");
         ~Node();
 
-       void highlight(Attribute* emitter);
+        void highlight(Attribute* emitter);
         void unhighlight();
         QString name() const;
         QString const& nodeType() const { return type_;  }
 
-       void setMode(Mode mode);
+        void setMode(Mode mode);
         void setName(QString const& name);
         void setBackgroundColor(QColor const& color)
         {
@@ -39,51 +39,51 @@ namespace MsnhViewer
             update();
         }
 
-       void createAttributes(QVector<AttributeInfo> const& attributesInfo);
+        void createAttributes(QVector<AttributeInfo> const& attributesInfo);
 
-       QVector<Attribute*> const& attributes() const { return attributes_; }
+        QVector<Attribute*> const& attributes() const { return attributes_; }
 
-       QVector<Attribute*>& attributes() { return attributes_; }
+        QVector<Attribute*>& attributes() { return attributes_; }
 
-   protected:
+    protected:
         QRectF boundingRect() const override;
         void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
-       void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+        void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
         void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
         void keyPressEvent(QKeyEvent* event) override;
 
-       void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
+        void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
 
-   private:
+    private:
         void createStyle();
 
-       QRectF boundingRect_;
+        QRectF boundingRect_;
 
-       NodeName* name_;
+        NodeName* name_;
         QString type_;
         QString stage_;
         Mode mode_;
 
-       qint32 width_;
+        qint32 width_;
         qint32 height_;
 
-       QBrush backgroundBrush_;
+        QBrush backgroundBrush_;
         QPen pen_;
         QPen penSelected_;
 
-       QBrush attributeBrush_;
+        QBrush attributeBrush_;
         QBrush attributeAltBrush_;
 
-       QPen typePen_;
+        QPen typePen_;
         QBrush typeBrush_;
         QFont typeFont_;
         QRectF typeRect_;
 
-       QVector<Attribute*> attributes_;
+        QVector<Attribute*> attributes_;
     };
 
-   Link* connect(QString const& from, QString const& out, QString const& to, QString const& in);
+    Link* connect(QString const& from, QString const& out, QString const& to, QString const& in);
 
 }
 

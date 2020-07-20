@@ -9,6 +9,7 @@
 #include <QSvgGenerator>
 #include <omp.h>
 #include <QTimer>
+#include <QProgressBar>
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -24,17 +25,23 @@ public:
 
 private slots:
 
-   void on_actionOpen_triggered();
+    void on_actionOpen_triggered();
 
-   void on_actionPrint_triggered();
+    void on_actionPrint_triggered();
 
-   void on_actionHand_triggered();
+    void on_actionHand_triggered();
 
-   void doTimer();
+    void doTimer();
 
-   void createNode(MsnhViewer::Node *node, const QString &layerName, Msnhnet::BaseLayer *inLayer);
+    void startProgressBar();
 
-   void on_actionPowerOff_triggered();
+    void stopProgressBar();
+
+    void updateProgressBar(const int &val);
+
+    void createNode(MsnhViewer::Node *node, const QString &layerName, Msnhnet::BaseLayer *inLayer);
+
+    void on_actionPowerOff_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -42,6 +49,6 @@ private:
     MsnhViewer::Scene *subScene;
     QTimer *timer;
     Msnhnet::NetBuilder builder;
+    QProgressBar *progressBar;
 };
 #endif 
-

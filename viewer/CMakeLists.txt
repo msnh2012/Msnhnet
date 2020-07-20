@@ -11,13 +11,16 @@ set(CMAKE_AUTOUIC ON)
 # Instruct CMake to run Qt ressource
 set(CMAKE_AUTORCC ON)
 
-set(SRCS 
+
+set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/MsnhBlas.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/MsnhGemm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/io/MsnhIO.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/io/MsnhParser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhActivationLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhActivations.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhActivationsAvx.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhActivationsNeon.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhAddBlockLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhBaseLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhBatchNormLayer.cpp
@@ -54,7 +57,7 @@ set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ressources/resources.qrc
- )
+    )
 
 add_executable(MsnhnetViewer ${SRCS})
 target_include_directories(MsnhnetViewer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -64,4 +67,4 @@ target_link_libraries(MsnhnetViewer Qt5::Svg)
 target_link_libraries(MsnhnetViewer Qt5::PrintSupport)
 target_link_libraries(MsnhnetViewer yaml-cpp)
 install(TARGETS MsnhnetViewer
-        RUNTIME DESTINATION bin)
+    RUNTIME DESTINATION bin)

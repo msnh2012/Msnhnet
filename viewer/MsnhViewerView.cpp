@@ -25,26 +25,26 @@ void View::wheelEvent(QWheelEvent* event)
 {
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 
-   constexpr qreal inFactor = 1.1f;
+    constexpr qreal inFactor = 1.1f;
     constexpr qreal outFactor = 1 / inFactor;
 
-   qreal zoomFactor = outFactor;
+    qreal zoomFactor = outFactor;
     if (event->delta() > 0)
     {
         zoomFactor = inFactor;
     }
 
-   scale(zoomFactor, zoomFactor);
+    scale(zoomFactor, zoomFactor);
 }
 
 void View::keyPressEvent(QKeyEvent* event)
 {
 
-   setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+    setTransformationAnchor(QGraphicsView::AnchorViewCenter);
     constexpr qreal inFactor = 1.1f;
     constexpr qreal outFactor = 1 / inFactor;
 
-   if ((event->key() == Qt::Key::Key_Plus) && (event->modifiers() & Qt::ControlModifier))
+    if ((event->key() == Qt::Key::Key_Plus) && (event->modifiers() & Qt::ControlModifier))
     {
         scale(inFactor, inFactor);
         event->accept();
@@ -55,7 +55,7 @@ void View::keyPressEvent(QKeyEvent* event)
         event->accept();
     }
 
-   QGraphicsView::keyPressEvent(event);
+    QGraphicsView::keyPressEvent(event);
 }
 
 }
