@@ -50,6 +50,7 @@ public:
     void setPreviewMode(const bool &mode);
     std::vector<float> runClassify(std::vector<float> img);
     std::vector<std::vector<Yolov3Box>> runYolov3(std::vector<float> img);
+    Point2I getInputSize();
 
     void  clearLayers();
     float getInferenceTime();

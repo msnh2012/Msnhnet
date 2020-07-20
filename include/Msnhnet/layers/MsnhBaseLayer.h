@@ -18,14 +18,11 @@ public:
     static bool     supportFma;
     static bool     isPreviewMode;
 
-    LayerType       type;
-
-    ActivationType  activation;
-
+    LayerType       type;                       
+    ActivationType  activation;                 
     std::vector<float> actParams;
 
-    int             num             =  0;
-
+    int             num             =  0;       
     size_t          workSpaceSize   =  0;
 
     int             height          =  0;
@@ -39,11 +36,10 @@ public:
     int             inputNum        =  0;
     int             outputNum       =  0;
 
-    size_t          numWeights      =  0;
+    size_t          numWeights      =  0;       
 
     int             batch           =  0;
-    float          *output          =  nullptr;
-
+    float          *output          =  nullptr; 
     float           bFlops          =  0;
 
     std::string     layerName       =  "BaseLayer";
@@ -69,4 +65,3 @@ public:
 }
 
 #endif 
-

@@ -4,6 +4,15 @@
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/core/MsnhSimd.h"
 #include "Msnhnet/utils/MsnhExport.h"
+#ifdef USE_X86
+#include "Msnhnet/layers/MsnhActivationsAvx.h"
+#endif
+
+#ifdef USE_ARM
+#ifdef USE_NEON
+#include "Msnhnet/layers/MsnhActivationsNeon.h"
+#endif
+#endif
 
 namespace Msnhnet
 {
@@ -16,26 +25,20 @@ public:
     static std::string getActivationStr(const ActivationType &type);
 
     static float activate(const float &x, const ActivationType &actType, const float &params = 0.1f);
-
-    static void activateArray(float *const &x, const int &numX, const ActivationType &actType, const float &param = 0.1f);
+    static void activateArray(float *const &x, const int &numX, const ActivationType &actType, const bool &useAVX, const float &param = 0.1f);
     static void activateArrayNormCh(float *const &x, const int &numX, const int &batch, const int &channels, const int &whStep, float *const &output);
     static void activateArrayNormChSoftMax(float *const &x, const int &numX, const int &batch, const int &channels, const int &whStep, float *const &output, const int &useMaxVal);
 
 private:
 
-    static inline float linearActivate(const float &x)
-    {
-        return x;
-    }
-
     static inline float logisticActivate(const float &x)
     {
-        return static_cast<float>(1.f/(1.f + exp(-x)));
+        return 1.f/(1.f + expf(-x));
     }
 
     static inline float loggyActivate(const float &x)
     {
-        return static_cast<float>(2.f/(1.f + exp(-x)) - 1);
+        return 2.f/(1.f + expf(-x)) - 1.f;
     }
 
     static inline float reluActivate(const float &x)
@@ -50,7 +53,7 @@ private:
 
     static inline float eluActivate(const float &x)
     {
-        return static_cast<float>((x >= 0)*x + (x < 0)*(exp(x)-1));
+        return ((x >= 0)*x + (x < 0)*(expf(x)-1.f));
     }
 
     static inline float seluActivate(const float &x)
@@ -75,7 +78,7 @@ private:
 
     static inline float tanhActivate(const float &x)
     {
-        return static_cast<float>((exp(2*x)-1)/(exp(2*x)+1));
+        return ((expf(2*x)-1)/(expf(2*x)+1));
     }
 
     static inline float stairActivate(const float &x)
@@ -83,11 +86,11 @@ private:
         int n = static_cast<int>(floor(x));
         if (n%2 == 0)
         {
-            return static_cast<float>(floor(x/2.f));
+            return (floorf(x/2.f));
         }
         else
         {
-            return static_cast<float>((x - n) + floor(x/2.f));
+            return static_cast<float>((x - n) + floorf(x/2.f));
         }
     }
 
@@ -104,7 +107,7 @@ private:
         return x;
     }
 
-    static inline float softplusActivate(float x, float threshold)
+    static inline float softplusActivate(const float &x, const float &threshold)
     {
         if (x > threshold)
         {
@@ -157,4 +160,3 @@ private:
 }
 
 #endif 
-

@@ -18,12 +18,21 @@ public:
     static void cpuIm2col(float *const &input, const int &channelNum, const int &height, const int &width,
                           const int &kSize,const int &stride, const int &padding, float *const &output);
 
+    static void cpuCol2Im(float *const &input, const int &channelNum, const int &height, const int &width,
+                           const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY,
+                           const int &paddingX, const int &paddingY, float *const &output);
+
     inline static int is_a_ge_zero_and_a_lt_b(const int &a, const int &b)
     {
         return static_cast<unsigned>(a) < static_cast<unsigned>(b);
     }
 
     static void cpuIm2colEx(float *input, const int &channelNum, const int &height, const int &width,
+                            const int &kernelH, const int &kernelW, const int &padH, const int &padW,
+                            const int &strideH,  const int &strideW, const int &dilationH, const int &dilationW,
+                            float *output);
+
+    static void cpuCol2ImEx(float *input, const int &channelNum, const int &height, const int &width,
                             const int &kernelH, const int &kernelW, const int &padH, const int &padW,
                             const int &strideH,  const int &strideW, const int &dilationH, const int &dilationW,
                             float *output);
@@ -86,9 +95,7 @@ public:
     static void cpuFastADotB(const int &n, float *const &A, float *const& B, float *const &C);
 
 #define TILE_M 4  
-
 #define TILE_N 16 
-
 #define TILE_K 16 
 
     static void cpuGemmNNFast(const int &M, const int &N, const int &K, const float &ALPHA,
@@ -149,12 +156,11 @@ public:
     static inline void xnorAvx2Popcnt(__m256i aBit256, __m256i bBit256, __m256i *countSum)
     {
         __m256i cBit256 = _mm256_set1_epi8(static_cast<char>(-1));
-        __m256i xor256  = _mm256_xor_si256(aBit256, bBit256);
+        __m256i xor256  = _mm256_xor_si256(aBit256, bBit256);  
 
-        cBit256         = _mm256_andnot_si256(xor256, cBit256);
+        cBit256         = _mm256_andnot_si256(xor256, cBit256);       
 
-        *countSum      = _mm256_add_epi64(count256(cBit256), *countSum);
-
+        *countSum      = _mm256_add_epi64(count256(cBit256), *countSum);    
     }
 
     static inline int getCountMula(__m256i countSum)
@@ -216,4 +222,3 @@ public:
 }
 
 #endif 
-

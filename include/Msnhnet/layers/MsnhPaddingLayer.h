@@ -11,7 +11,7 @@ class MsnhNet_API PaddingLayer : public BaseLayer
 {
 public:
     PaddingLayer(const int &batch,  const int &height, const int &width, const int &channel, const int &top,
-                 const int &down, const int &left, const int &right, const float &paddingVal);
+                     const int &down, const int &left, const int &right, const float &paddingVal);
 
     ~PaddingLayer(){}
 
@@ -27,4 +27,3 @@ public:
 }
 
 #endif 
-

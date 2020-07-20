@@ -13,12 +13,13 @@ class MsnhNet_API RouteLayer : public BaseLayer
 {
 public:
     RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes, std::vector<int> &inputLayerOutputs,
-               const int &groups, const int &groupId);
+               const int &groups, const int &groupId, const int &addModel);
 
     std::vector<int>inputLayerIndexes;
     std::vector<int>inputLayerOutputs;
     int         groups              =   0;
     int         groupIndex          =   0;
+    int         addModel            =   0;
 
     virtual void forward(NetworkState &netState);
     void resize(Network &net);
@@ -26,4 +27,3 @@ public:
 }
 
 #endif 
-

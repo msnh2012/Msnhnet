@@ -18,16 +18,14 @@ class MsnhNet_API ConvolutionalLayer:public BaseLayer
 public:
 
     ConvolutionalLayer(const int &batch, const int &steps, const int &height, const int &width, const int &channel, const int &num, const int &groups,
-                       const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY, const int &dilationX, const int &dilationY, const int &paddingX, const int &paddingY, ActivationType activation, const std::vector<float> &actParams,
-                       const int &batchNorm,  const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex,
-                       const int &antialiasing, ConvolutionalLayer *const &shareLayer, const int &assistedExcitation, const int &deform);
+                      const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY, const int &dilationX, const int &dilationY, const int &paddingX, const int &paddingY, ActivationType activation, const std::vector<float> &actParams,
+                      const int &batchNorm,  const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex,
+                      const int &antialiasing, ConvolutionalLayer *const &shareLayer, const int &assistedExcitation, const int &deform);
     ~ConvolutionalLayer();
 
     float       *weights            =   nullptr;
     float       *biases             =   nullptr;
-#ifdef USE_NNPACK
-    float       *nnBiases           =   nullptr;
-#endif
+
     ConvolutionalLayer* shareLayer  =   nullptr;
 
     float       *scales             =   nullptr;
@@ -98,8 +96,8 @@ public:
     void loadWeights(float *const &weights, const int& len);
     void loadRollMean(float * const &rollMean, const int &len);
     void loadRollVariance(float * const &rollVariance, const int &len);
+
 };
 }
 
 #endif 
-

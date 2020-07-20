@@ -7,6 +7,8 @@
 #include <chrono>
 #include "Msnhnet/utils/MsnhException.h"
 #include "Msnhnet/config/MsnhnetMacro.h"
+#include <math.h>
+#include <string.h>
 
 #ifdef USE_OMP
 #include <omp.h>
@@ -20,6 +22,10 @@
 #include <cblas.h>
 #endif
 
+#ifdef USE_NNPACK
+#include <nnpack.h>
+#endif
+
 #ifndef OMP_THREAD
 #define OMP_THREAD omp_get_max_threads()
 #endif
@@ -30,7 +36,6 @@ enum ActivationType
     RELU,
     RELU6,
     RELIE,
-    LINEAR,
     RAMP,
     TANH,
     PLSE,
@@ -110,4 +115,4 @@ enum WeightsNorm
     SOFTMAX_NORM
 };
 
-#endif // MSNHINFERENCECFG_H
+#endif 

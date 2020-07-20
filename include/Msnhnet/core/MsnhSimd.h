@@ -113,8 +113,7 @@ public:
         pclose(pf);
 
         unsigned int iSize =  strResult.size();
-        if(iSize > 0 && strResult[iSize - 1] == '\n')
-
+        if(iSize > 0 && strResult[iSize - 1] == '\n')  
         {
             strResult = strResult.substr(0, iSize - 1);
         }
@@ -224,4 +223,3 @@ private:
 
 }
 #endif 
-

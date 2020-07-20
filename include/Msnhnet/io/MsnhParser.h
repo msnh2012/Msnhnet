@@ -76,8 +76,34 @@ public:
     int             dilation    =   1;
     int             dilationX   =   -1;
     int             dilationY   =   -1;
-    int             useBias     =   1;
+    int             useBias     =   1; 
+    ActivationType  activation  =   ActivationType::NONE;
+    std::vector<float> actParams;
+};
 
+class DeConvParams : public  BaseParams
+{
+public:
+    DeConvParams(bool incIndex) : BaseParams(incIndex)
+    {
+        this->type     = LayerType::DECONVOLUTIONAL;
+    }
+
+    int             filters     =   1;
+
+    int             kSize       =   1;
+    int             kSizeX      =   -1;
+    int             kSizeY      =   -1;
+
+    int             stride      =   1;
+    int             strideX     =   -1;
+    int             strideY     =   -1;
+
+    int             padding     =   0;
+    int             paddingX    =   -1;
+    int             paddingY    =   -1;
+
+    int             useBias     =   1; 
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
 };
@@ -225,6 +251,7 @@ public:
 
     int     groups      =   1;
     int     groupsId    =   0;
+    int     addModel    =   0;
 };
 
 class UpSampleParams : public BaseParams
@@ -259,13 +286,32 @@ public:
     {
         this->type = LayerType::YOLOV3_OUT;
     }
-
+    YoloType  yoloType  =   YoloType::YoloV3_NORMAL;
     int     orgWidth    =   0;
     int     orgHeight   =   0;
     float   confThresh  =   0;
     float   nmsThresh   =   0;
     int     useSoftNms  =   0;
     std::vector<int> layerIndexes;
+    void getYoloTypeFromStr(const std::string &str)
+    {
+        if(str == "yolov3Normal")
+        {
+            yoloType = YoloType::YoloV3_NORMAL;
+        }
+        else if(str == "yolov3Angle")
+        {
+            yoloType = YoloType::YoloV3_ANGLE;
+        }
+        else if(str == "yolov3Gaussian")
+        {
+            yoloType = YoloType::YoloV3_GAUSSIAN;
+        }
+        else if(str == "yolov4")
+        {
+            yoloType = YoloType::YoloV4;
+        }
+    }
 };
 
 class PaddingParams : public BaseParams
@@ -300,6 +346,7 @@ public:
     void parseMaxPoolParams(MaxPoolParams *maxPoolParams, YAML::const_iterator &iter);
     void parseLocalAvgPoolParams(LocalAvgPoolParams *localAvgPoolParams, YAML::const_iterator &iter);
     void parseConvParams(ConvParams *convParams, YAML::const_iterator &iter);
+    void parseDeConvParams(DeConvParams *deconvParams, YAML::const_iterator &iter);
     void parseConnectParams(ConnectParams *connectParams, YAML::const_iterator &iter);
     void parseBatchNormParams(BatchNormParams *batchNormParams, YAML::const_iterator &iter);
     void parseEmptyNormParams(EmptyParams *emptyParams, YAML::const_iterator &iter);
@@ -317,4 +364,3 @@ public:
 }
 
 #endif 
-

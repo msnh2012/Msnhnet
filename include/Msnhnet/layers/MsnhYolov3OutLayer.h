@@ -14,7 +14,7 @@ class MsnhNet_API Yolov3OutLayer:public BaseLayer
 {
 public:
     Yolov3OutLayer(const int &batch, const int &orgWidth, const int &orgHeight, std::vector<int> &yolov3Indexes, std::vector<Yolov3Info> &yolov3LayersInfo,
-                   const float &confThresh, const float &nmsThresh, const int &useSoftNms);
+                   const float &confThresh, const float &nmsThresh, const int &useSoftNms, const YoloType &yoloType);
     ~Yolov3OutLayer();
     float   confThresh  = 0.6f;
     float   nmsThresh   = 0.4f;
@@ -24,11 +24,12 @@ public:
     int     orgHeight   =   0;
     int     orgWidth    =   0;
 
+    YoloType yoloType   =   YoloType::YoloV3_NORMAL;
+
     std::vector<int> yolov3Indexes;
     std::vector<Yolov3Info> yolov3LayersInfo;
 
-    int     yolov3AllInputNum   =   0;
-
+    int     yolov3AllInputNum   =   0;      
     float   *allInput           =   nullptr;
     float   *shuffleInput       =   nullptr;
 
@@ -44,4 +45,3 @@ public:
 }
 
 #endif 
-
