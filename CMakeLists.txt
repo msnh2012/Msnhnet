@@ -70,6 +70,8 @@ set(SRCS
     src/io/MsnhParser.cpp
     src/layers/MsnhActivationLayer.cpp
     src/layers/MsnhActivations.cpp
+    src/layers/MsnhActivationsAvx.cpp
+    src/layers/MsnhActivationsNeon.cpp
     src/layers/MsnhAddBlockLayer.cpp
     src/layers/MsnhBaseLayer.cpp
     src/layers/MsnhBatchNormLayer.cpp
