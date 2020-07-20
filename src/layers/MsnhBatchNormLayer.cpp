@@ -31,20 +31,15 @@ BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &he
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->output        =  new float[static_cast<size_t>(this->outputNum * this->batch)]();
+        this->output        =  new float[static_cast<size_t>(this->outputNum * this->batch)](); 
+        this->biases        =  new float[static_cast<size_t>(channel)](); 
+        this->scales        =  new float[static_cast<size_t>(channel)](); 
 
-        this->biases        =  new float[static_cast<size_t>(channel)]();
-
-        this->scales        =  new float[static_cast<size_t>(channel)]();
-
-        this->rollMean      =  new float[static_cast<size_t>(channel)]();
-
-        this->rollVariance  =  new float[static_cast<size_t>(channel)]();
-
+        this->rollMean      =  new float[static_cast<size_t>(channel)](); 
+        this->rollVariance  =  new float[static_cast<size_t>(channel)](); 
         for(int i=0; i<channel; ++i)
         {
-            this->scales[i] = 1;
-
+            this->scales[i] = 1;                   
         }
     }
 
@@ -153,15 +148,14 @@ void BatchNormLayer::forward(NetworkState &netState)
 
     }
     else
-    {
-
+    {                           
         if(actParams.size() > 0)
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, actParams[0]);
+            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx, actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation);
+            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx);
         }
     }
 
@@ -172,8 +166,7 @@ void BatchNormLayer::forward(NetworkState &netState)
 
 void BatchNormLayer::addBias(float *const &output, float *const &biases, const int &batch, const int &channel, const int &whSize)
 {
-    for(int b=0; b<batch; ++b)
-
+    for(int b=0; b<batch; ++b)      
     {
         for(int i=0; i<channel; ++i)
         {
@@ -189,11 +182,9 @@ void BatchNormLayer::scaleBias(float *const &output, float *const &scales, const
 {
     for(int b=0; b<batch; ++b)
     {
-        for(int i=0; i<channel; ++i)
-
+        for(int i=0; i<channel; ++i)    
         {
-            for(int j=0; j<whSize; ++j)
-
+            for(int j=0; j<whSize; ++j) 
             {
                 output[(b*channel + i)*whSize + j] *= scales[i];
             }

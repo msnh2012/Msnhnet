@@ -25,7 +25,7 @@ void Blas::cpuFill(const int &inputN, const float &alpha, float *const &x, const
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-    for(int i=0; i<inputN; i++)
+    for(int i=0; i<inputN; ++i)
     {
         x[i*step] = alpha;
     }
@@ -46,23 +46,27 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-        for(i=0; i<inputN/4; i++)
+        for(i=0; i<inputN/4; ++i)
         {
             float32x4_t a, b, c, result;
             a = vdupq_n_f32(alpha);
-            b = vld1q_f32(x+(i<<2));
-            c = vld1q_f32(y+(i<<2));
+            b = vld1q_f32(x+(i*4));
+            c = vld1q_f32(y+(i*4));
             result = vmulq_f32(a,b);
             result = vaddq_f32(result, c);
-            vst1q_f32(y+(i<<2),result);
+            vst1q_f32(y+(i*4),result);
         }
 
-        for(int j=(i<<2);j<inputN;j++)
+        for(int j=(inputN/4)*4;j<inputN;++j)
         {
             y[i]  = y[i] + alpha * x[i];
         }
 #else
-        for(int i=0; i<inputN; i++)
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
         {
             y[i]  = y[i] + alpha * x[i];
         }
@@ -71,7 +75,10 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
     }
     else
     {
-        for(int i=0; i<inputN; i++)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
         {
             y[i*stepY]  = y[i*stepY] + alpha * x[i*stepX];
         }
@@ -87,7 +94,7 @@ void Blas::cpuScale(const int &inputN, const float &alpha, float *const &x, cons
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-    for(int i=0; i<inputN; i++)
+    for(int i=0; i<inputN; ++i)
     {
         x[i*stepX] = x[i*stepX] * alpha;
     }
@@ -96,21 +103,18 @@ void Blas::cpuScale(const int &inputN, const float &alpha, float *const &x, cons
 
 void Blas::cpuMean(float *const &x, const int &batch, const int &filters, const int &outSize, float *const &mean)
 {
-    float scale  =  1.f/(batch * outSize);
+    float scale  =  1.f/(batch * outSize); 
 
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-    for(int i=0; i<filters; ++i)
-
+    for(int i=0; i<filters; ++i) 
     {
         mean[i]  = 0;
 
-        for(int j=0; j<batch; ++j)
-
+        for(int j=0; j<batch; ++j) 
         {
-            for(int k=0; k<outSize; ++k)
-
+            for(int k=0; k<outSize; ++k) 
             {
 
                 int index = j*filters*outSize + i*outSize + k;

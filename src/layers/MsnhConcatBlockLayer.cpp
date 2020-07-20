@@ -21,7 +21,7 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
 
     for (size_t i = 0; i < branchParams.size(); ++i)
     {
-        branchBuildParams = params;
+        branchBuildParams = params;  
 
         std::vector<BaseLayer* > tmpLayers;
         for (size_t j = 0; j < branchParams[i].size(); ++j)
@@ -256,11 +256,11 @@ void ConcatBlockLayer::forward(NetworkState &netState)
     {
         if(actParams.size() > 0)
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, actParams[0]);
+            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx, actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation);
+            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx);
         }
     }
 

@@ -18,7 +18,6 @@ ActivationType Activations::getActivation(const std::string &msg)
     if (msg=="plse") return PLSE;
     if (msg=="hardtan") return HARDTAN;
     if (msg=="lhtan") return LHTAN;
-    if (msg=="linear") return LINEAR;
     if (msg=="ramp") return RAMP;
     if (msg=="leaky") return LEAKY;
     if (msg=="tanh") return TANH;
@@ -44,7 +43,6 @@ string Activations::getActivationStr(const ActivationType &type)
     if (type==PLSE) return "plse";
     if (type==HARDTAN) return "hardtan";
     if (type==LHTAN) return "lhtan";
-    if (type==LINEAR) return "linear";
     if (type==RAMP) return "ramp";
     if (type==LEAKY) return "leaky";
     if (type==TANH) return "tanh";
@@ -57,8 +55,6 @@ float Activations::activate(const float &x, const ActivationType &actType, const
 {
     switch (actType)
     {
-    case LINEAR:
-        return linearActivate(x);
     case LOGISTIC:
         return logisticActivate(x);
     case LOGGY:
@@ -93,6 +89,8 @@ float Activations::activate(const float &x, const ActivationType &actType, const
         return mishActivate(x);
     case SWISH:
         return swishActivate(x);
+    case NONE:
+        return x;
     default:
         return 0;
     }
@@ -100,6 +98,7 @@ float Activations::activate(const float &x, const ActivationType &actType, const
 
 void Activations::activateArrayNormCh(float * const &x, const int &numX, const int &batch, const int &channels, const int &whStep, float * const &output)
 {
+    /* TODO: */
     (void) batch;
     int size = numX/channels;
 #ifdef USE_OMP
@@ -144,6 +143,7 @@ void Activations::activateArrayNormCh(float * const &x, const int &numX, const i
 
 void Activations::activateArrayNormChSoftMax(float * const &x, const int &numX, const int &batch, const int &channels, const int &whStep, float * const &output, const int &useMaxVal)
 {
+    /* TODO: */
     (void) batch;
     int size = numX/channels;
 #ifdef USE_OMP
@@ -192,16 +192,61 @@ void Activations::activateArrayNormChSoftMax(float * const &x, const int &numX, 
     }
 }
 
-void Activations::activateArray(float *const &x, const int &numX, const ActivationType &actType, const float &param)
+void Activations::activateArray(float *const &x, const int &numX, const ActivationType &actType, const bool &useAVX, const float &param)
 {
 
+#ifdef USE_X86
+    if(useAVX)
+    {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-    for(int i=0; i<numX;++i)
-    {
-        x[i] = activate(x[i],actType, param);
+        for(int i=0; i<numX/8;++i)
+        {
+            ActivationsAvx::activateAvx8(x+i*8,actType,param);
+        }
+
+        for(int i=(numX/8)*8 ; i<numX;++i)
+        {
+            x[i] = activate(x[i],actType, param);
+        }
     }
+    else
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<numX;++i)
+        {
+            x[i] = activate(x[i],actType, param);
+        }
+    }
+#endif
+
+#ifdef USE_ARM
+#ifdef USE_NEON
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<numX/4;++i)
+        {
+            ActivationsNeon::activateNeon4(x+i*4,actType,param);
+        }
+
+        for(int i=(numX/4)*4 ; i<numX;++i)
+        {
+            x[i] = activate(x[i],actType, param);
+        }
+#else
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<numX;++i)
+        {
+            x[i] = activate(x[i],actType, param);
+        }
+#endif
+#endif
 }
 
 }

@@ -2,10 +2,12 @@
 namespace Msnhnet
 {
 Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int &orgHeight, std::vector<int> &yolov3Indexes, std::vector<Yolov3Info> &yolov3LayersInfo,
-                               const float &confThresh, const float &nmsThresh, const int &useSotfNms)
+                               const float &confThresh, const float &nmsThresh, const int &useSotfNms, const YoloType &yoloType)
 {
     this->type              =   LayerType::YOLOV3_OUT;
     this->layerName         =   "Yolov3Out       ";
+
+    this->yoloType          =   yoloType;
 
     this->batch             =   batch;
     this->confThresh        =   confThresh;
@@ -36,9 +38,8 @@ Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int 
         this->yolov3AllInputNum += yolov3LayersInfo[i].getOutputNum();
     }
 
-    this->channel           =   yolov3LayersInfo[0].outChannel/3;
-
-    this->pixels            =   this->yolov3AllInputNum / channel;
+    this->channel           =   yolov3LayersInfo[0].outChannel/3;    
+    this->pixels            =   this->yolov3AllInputNum / channel; 
 
     this->layerDetail.append("\n");
 
@@ -106,9 +107,34 @@ void Yolov3OutLayer::forward(NetworkState &netState)
                         this->shuffleInput[ptr + i*this->channel + 3]);
                 box.conf            =   this->shuffleInput[ptr + i*this->channel + 4];
 
-                for (int j = 0; j < this->channel - 5; ++j)
+                if(yoloType == YoloType::YoloV3_NORMAL || yoloType == YoloType::YoloV4)
                 {
-                    box.classesVal.push_back(this->shuffleInput[ptr + i*this->channel + 5 + j]);
+                    for (int j = 0; j < this->channel - 5; ++j)
+                    {
+                        box.classesVal.push_back(this->shuffleInput[ptr + i*this->channel + 5 + j]);
+                    }
+                }
+                else if(yoloType == YoloType::YoloV3_ANGLE)
+                {
+                    for (int j = 0; j < this->channel - 5 - 7; ++j) 
+                    {
+                        box.classesVal.push_back(this->shuffleInput[ptr + i*this->channel + 5 + j]);
+                    }
+
+                    std::vector<float> angleSplits;
+
+                    for (int j = 0; j < 6; ++j)
+                    {
+                       angleSplits.push_back(this->shuffleInput[ptr + i*this->channel +  this->channel - 7 + j]);
+                    }
+
+                    float regAngle    = 0.f;
+
+                    regAngle = this->shuffleInput[ptr + i*this->channel +  this->channel - 1];
+
+                    int bestAngleIndex = static_cast<int>(ExVector::maxIndex(angleSplits));
+                    box.angle = bestAngleIndex*30.f + regAngle*30 - 90.f;
+
                 }
 
                 box.bestClsConf     =   ExVector::max<float>(box.classesVal);
@@ -119,8 +145,7 @@ void Yolov3OutLayer::forward(NetworkState &netState)
             }
         }
 
-        if(tmpBatchHasBox[b])
-
+        if(tmpBatchHasBox[b]) 
         {
 
             std::vector<float> confs;

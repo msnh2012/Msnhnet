@@ -295,11 +295,11 @@ void Res2BlockLayer::forward(NetworkState &netState)
     {
         if(actParams.size() > 0)
         {
-            Activations::activateArray(this->output, this->outputNum, this->activation, actParams[0]);
+            Activations::activateArray(this->output, this->outputNum, this->activation, this->supportAvx, actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->output, this->outputNum, this->activation);
+            Activations::activateArray(this->output, this->outputNum, this->activation, this->supportAvx);
         }
     }
 

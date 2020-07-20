@@ -26,7 +26,7 @@ Yolov3Layer::Yolov3Layer(const int &batch, const int &width, const int &height, 
 
     this->anchors   =   anchors;
 
-    this->ratios    =   1.f*orgHeight/outHeight;
+    this->ratios    =   1.f*orgHeight/outHeight;  
 
     if(3*(this->classNum + 4 + 1) != num)
     {

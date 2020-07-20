@@ -3,7 +3,7 @@
 namespace Msnhnet
 {
 RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
-                       std::vector<int> &inputLayerOutputs, const int &groups, const int &groupIndex)
+                       std::vector<int> &inputLayerOutputs, const int &groups, const int &groupIndex, const int &addModel)
 {
     this->type              =   LayerType::ROUTE;
     this->layerName         =   "Route           ";
@@ -11,6 +11,8 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
     this->batch             =   batch;
     this->groups            =   groups;
     this->groupIndex        =   groupIndex;
+    this->addModel          =   addModel;
+
     int mOutputNum          =   0;
 
     this->layerDetail.append("route ");
@@ -28,10 +30,18 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
 #endif
         this->layerDetail.append(msg);
 
-        mOutputNum      =   mOutputNum + inputLayerOutputs[i];
+        if(addModel != 1)
+        {
+            mOutputNum      =   mOutputNum + inputLayerOutputs[i];
+        }
     }
 
     this->layerDetail.append("\n");
+
+    if(addModel == 1)
+    {
+        mOutputNum = inputLayerOutputs[0];
+    }
 
     mOutputNum          =   mOutputNum / groups;
     this->outputNum     =   mOutputNum;
@@ -45,7 +55,6 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
 }
 
 void RouteLayer::forward(NetworkState &netState)        
-
 {
     auto st = std::chrono::system_clock::now();
     int offset          =   0;
@@ -57,11 +66,21 @@ void RouteLayer::forward(NetworkState &netState)
         int partInSize  =   inputLayerOutputs / this->groups;
         for (int j = 0; j < this->batch; ++j)
         {
-            Blas::cpuCopy(partInSize, mInput + j*inputLayerOutputs + partInSize*this->groupIndex, 1,
-                          this->output + offset + j*this->outputNum,1);
+            if(addModel == 1)
+            {
+                Blas::cpuAxpy(partInSize, 1, mInput + j*inputLayerOutputs + partInSize*this->groupIndex, 1,
+                              this->output + offset + j*this->outputNum,1);
+            }
+            else
+            {
+                Blas::cpuCopy(partInSize, mInput + j*inputLayerOutputs + partInSize*this->groupIndex, 1,
+                              this->output + offset + j*this->outputNum,1);
+            }
         }
-
-        offset          = offset + partInSize;
+        if(addModel != 1)
+        {
+            offset          = offset + partInSize;
+        }
     }
     auto so = std::chrono::system_clock::now();
     this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;

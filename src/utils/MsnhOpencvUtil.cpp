@@ -113,7 +113,6 @@ std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &siz
             for (int x = 0; x < width; ++x)
             {
                 imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.data[y*step + x*channel + k] / 255.0f;
-
             }
         }
     }
@@ -223,7 +222,6 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
             for (int x = 0; x < width; ++x)
             {
                 imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.data[y*step + x*channel + k] / 255.0f;
-
             }
         }
     }
@@ -233,25 +231,83 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
 
 }
 
-void OpencvUtil::drawYolov3Box(cv::Mat &mat, std::vector<std::string> &labels, std::vector<std::vector<Yolov3Box>> &boxs)
+std::vector<float> OpencvUtil::getTransformedF32C3(const string &path, const cv::Size &size, const cv::Scalar &mean, const cv::Scalar &std)
+{
+    cv::Mat mat = cv::imread(path.data());
+    return getTransformedF32C3(mat, size, mean, std);
+}
+
+std::vector<float> OpencvUtil::getTransformedF32C3(cv::Mat &mat, const cv::Size &size, const cv::Scalar &mean, const cv::Scalar &std)
+{
+    if(mat.empty())
+    {
+        throw Exception(1,"img empty", __FILE__, __LINE__);
+    }
+
+    cv::resize(mat, mat, size);
+
+    std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols*3));
+
+    int width   = mat.cols;
+    int height  = mat.rows;
+    int channel = mat.channels();
+
+    int step    = static_cast<int>(mat.step);
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+    for (int y = 0; y < height; ++y)
+    {
+        for (int k = 0; k < channel; ++k)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                if(k == 0)
+                {
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = ((mat.data[y*step + x*channel + k] / 255.0f) - mean[0])/std[0];
+                }
+                else if(k == 1)
+                {
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = ((mat.data[y*step + x*channel + k] / 255.0f) - mean[1])/std[1] ;
+                }
+                else if(k == 2)
+                {
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = ((mat.data[y*step + x*channel + k] / 255.0f) - mean[2])/std[2] ;
+                }
+            }
+        }
+    }
+
+    mat.release();
+    return imgs;
+}
+
+void OpencvUtil::drawYolov3Box(cv::Mat &mat, std::vector<std::string> &labels, std::vector<std::vector<Yolov3Box>> &boxs, const Point2I &size)
 {
     for (size_t i = 0; i < boxs[0].size(); ++i)
     {
-        Msnhnet::Yolov3Box box = Msnhnet::Yolov3OutLayer::bboxResize2org(boxs[0][i],Msnhnet::Point2I(416,416),Msnhnet::Point2I(mat.cols,mat.rows));
-        cv::rectangle(mat,cv::Point(static_cast<int>(box.xywhBox.x - box.xywhBox.w/2) ,static_cast<int>(box.xywhBox.y - box.xywhBox.h/2)),
-                      cv::Point(static_cast<int>(box.xywhBox.x + box.xywhBox.w/2) ,static_cast<int>(box.xywhBox.y +box.xywhBox.h/2)),
-                      Msnhnet::OpencvUtil::colorTable[static_cast<size_t>(box.bestClsIdx)],2,cv::LineTypes::LINE_AA);
+        Msnhnet::Yolov3Box box = Msnhnet::Yolov3OutLayer::bboxResize2org(boxs[0][i],size,Msnhnet::Point2I(mat.cols,mat.rows));
+
         std::string label = std::to_string(static_cast<int>(box.conf*100)) + "% "+labels[static_cast<size_t>(box.bestClsIdx)];
 
         cv::rectangle(mat,cv::Point(static_cast<int>(box.xywhBox.x - box.xywhBox.w/2),static_cast<int>(box.xywhBox.y - box.xywhBox.h/2-20)),
                       cv::Point(static_cast<int>(box.xywhBox.x - box.xywhBox.w/2 + label.length()*12),static_cast<int>(box.xywhBox.y - box.xywhBox.h/2)),
                       Msnhnet::OpencvUtil::colorTable[static_cast<size_t>(box.bestClsIdx)],-2,cv::LineTypes::LINE_AA);
 
+        cv::RotatedRect rotRect(cv::Point2f(box.xywhBox.x,box.xywhBox.y),cv::Size2f(box.xywhBox.w,box.xywhBox.h),box.angle);
+        cv::Point2f ver[4];
+        rotRect.points(ver);
+        for (int i = 0; i < 4; i++)
+        {
+            cv::line(mat, ver[i], ver[(i + 1) % 4], Msnhnet::OpencvUtil::colorTable[static_cast<size_t>(box.bestClsIdx)],2,cv::LineTypes::LINE_AA);
+        }
+
         cv::putText(mat,
                     label,
                     cv::Point(static_cast<int>(box.xywhBox.x - box.xywhBox.w/2),
                               static_cast<int>(box.xywhBox.y - box.xywhBox.h/2 - 2)),
-                    0, 0.6, cv::Scalar(0, 0, 0), 1,cv::LineTypes::LINE_AA);
+                    0, 0.6, cv::Scalar(255, 255, 255), 1,cv::LineTypes::LINE_AA);
     }
 }
 }

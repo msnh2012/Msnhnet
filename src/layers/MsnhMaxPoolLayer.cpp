@@ -20,18 +20,14 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
     this->ceilMode       = ceilMode;
 
     this->maxPoolDepth   = maxPoolDepth;
-    this->outChannelsMp  = outChannelsMp;
-
+    this->outChannelsMp  = outChannelsMp;   
     this->antialiasing   = antialiasing;
 
-    this->kSizeX         = kSizeX;
+    this->kSizeX         = kSizeX;  
+    this->kSizeY         = kSizeY;  
 
-    this->kSizeY         = kSizeY;
-
-    this->stride         = strideX;
-
+    this->stride         = strideX; 
     this->strideX        = strideX;
-
     this->strideY        = strideY;
 
     if(maxPoolDepth)
@@ -45,9 +41,8 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
 
         if(this->ceilMode == 1)
         {
-            int tmpW = (width  + paddingX*2 - kSizeX) % strideX;
-
-            int tmpH = (height + paddingY*2 - kSizeY) % strideY;
+            int tmpW = (width  + paddingX*2 - kSizeX) % strideX; 
+            int tmpH = (height + paddingY*2 - kSizeY) % strideY; 
 
             if(tmpW >= kSizeX)
             {
@@ -61,52 +56,42 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
 
             if(tmpW <= paddingX)
             {
-                this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1;
-
+                this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1; 
             }
             else
             {
-                this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 2;
-
+                this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 2; 
             }
 
             if(tmpH <= paddingY)
             {
-                this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1;
-
+                this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1; 
             }
             else
             {
-                this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 2;
-
+                this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 2; 
             }
         }
         else if(this->ceilMode == 0)
         {
-            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1;
-
-            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1;
-
+            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1; 
+            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1; 
         }
         else
         {
-            this->outWidth   = (width  + paddingX - kSizeX) / strideX + 1;
-
-            this->outHeight  = (height + paddingY - kSizeY) / strideY + 1;
-
+            this->outWidth   = (width  + paddingX - kSizeX) / strideX + 1; 
+            this->outHeight  = (height + paddingY - kSizeY) / strideY + 1; 
         }
-        this->outChannel = channel;
-
+        this->outChannel = channel;                                 
     }
 
-    this->outputNum      =  this->outHeight * this->outWidth * this->outChannel;
-
-    this->inputNum       =  height * width * channel;
+    this->outputNum      =  this->outHeight * this->outWidth * this->outChannel; 
+    this->inputNum       =  height * width * channel; 
 
     if(!BaseLayer::isPreviewMode)
     {
 
-        this->output         = new float[static_cast<size_t>(outputNum * this->batch)]();
+        this->output         = new float[static_cast<size_t>(this->outputNum * this->batch)]();
     }
 
     this->bFlops            = (this->kSizeX*this->kSizeY* this->channel*this->outHeight*this->outWidth)/ 1000000000.f;
@@ -161,21 +146,16 @@ void MaxPoolLayer::forward(NetworkState &netState)
 
     if(this->maxPoolDepth)
     {
-        for(int b=0; b<this->batch; ++b)
-
+        for(int b=0; b<this->batch; ++b)                    
         {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif                                                      
-
-            for(int i=0; i<this->height; i++)
-
+            for(int i=0; i<this->height; i++)               
             {
-                for(int j=0; j<this->width; ++j)
-
+                for(int j=0; j<this->width; ++j)            
                 {
-                    for(int g=0; j<this->outChannel; ++g)
-
+                    for(int g=0; j<this->outChannel; ++g)   
                     {
                         int outIndex = j + this->width*(i + this->height*(g + this->outChannel*b));
                         float max    = -FLT_MAX;
@@ -217,20 +197,16 @@ void MaxPoolLayer::forward(NetworkState &netState)
 
         int mChannel        =   this->channel;
 
-        for(int b=0; b<this->batch; ++b)
-
+        for(int b=0; b<this->batch; ++b)                
         {
-            for(int k=0; k<mChannel; ++k)
-
+            for(int k=0; k<mChannel; ++k)               
             {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-                for(int i=0; i<mHeight; ++i)
-
+                for(int i=0; i<mHeight; ++i)            
                 {
-                    for(int j=0; j<mWidth; ++j)
-
+                    for(int j=0; j<mWidth; ++j)         
                     {
 
                         int outIndex = j + mWidth*(i + mHeight*(k + channel*b));
@@ -289,19 +265,15 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
             for(int i=0; i<outHeight; ++i)
             {
                 int j = 0;
-                if(stride == 1)
-
+                if(stride == 1)  
                 {
-                    for(j=0; j<outWidth - 8 -(kSizeX - 1); j+=8)
-
+                    for(j=0; j<outWidth - 8 -(kSizeX - 1); j+=8)  
                     {
                         int outIndex = j + outWidth*(i + outHeight*(k + channel*b));
                         __m256 max256    = _mm256_set1_ps(-FLT_MAX);
-                        for(int n=0; n<kSizeY; ++n)
-
+                        for(int n=0; n<kSizeY; ++n)  
                         {
-                            for(int m=0; m<kSizeX; ++m)
-
+                            for(int m=0; m<kSizeX; ++m) 
                             {
                                 int curHeight = heightOffset + i*stride + n;
                                 int curWidth  = widthOffset  + j*stride + m;
@@ -321,8 +293,7 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
 
                     }
                 }
-                else if(kSizeX == 2 && kSizeX == 2 && stride == 2)
-
+                else if(kSizeX == 2 && kSizeX == 2 && stride == 2)  
                 {
                     for(j=0; j<outWidth-4; j+=4)
                     {
@@ -361,8 +332,7 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
                     }
                 }
 
-                for(; j<outWidth; ++j)
-
+                for(; j<outWidth; ++j)       
                 {
                     int outIndex  =  j + outWidth * (i + outHeight * (k + channel * b));
                     float max     =  -FLT_MAX;

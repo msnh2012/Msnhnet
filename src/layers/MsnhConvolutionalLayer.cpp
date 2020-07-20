@@ -7,15 +7,12 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
                                        const int &paddingX, const int &paddingY, ActivationType activation, const std::vector<float> &actParams, const int &batchNorm, const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex, const int &antialiasing,
                                        ConvolutionalLayer * const &shareLayer, const int &assistedExcitation, const int &deform)
 {
-
     (void) deform;
     int totalBatch          = batch * steps;
     this->type              = LayerType::CONVOLUTIONAL;
-
     if(xnor)
     {
-        this->groups        = 1;
-
+        this->groups        = 1; 
     }
     else
     {
@@ -63,8 +60,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     this->paddingX          = paddingX;
     this->paddingY          = paddingY;
     this->batchNorm         = batchNorm;
-    this->nWeights          = (this->channel / groups) * num * kSizeX * kSizeY;
-
+    this->nWeights          = (this->channel / groups) * num * kSizeX * kSizeY; 
     this->useBias           = useBias;
 
     if(this->useBias)
@@ -96,15 +92,13 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         {
             this->weights       = new float[static_cast<size_t>(this->nWeights)]();
             this->biases        = new float[static_cast<size_t>(this->num)]();
-#ifdef USE_NNPACK
-            this->nnBiases      = new float[static_cast<size_t>(this->num)]();
-#endif
+
         }
     }
 
     this->outHeight         = convOutHeight();
     this->outWidth          = convOutWidth();
-    this->outChannel        = num;
+    this->outChannel        = num;      
 
     this->outputNum         = this->outHeight * this->outWidth * this->outChannel;
     this->inputNum          = height * width * channel;
@@ -126,9 +120,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 
     if(xnor)
     {
-
-        int align           = 32;
-
+        int align           = 32; 
         int srcAlign        = this->outHeight * this->outWidth;
         this->bitAlign      = srcAlign + (align - srcAlign % align);
         this->ldaAlign      = 256;
@@ -308,12 +300,14 @@ ConvolutionalLayer::~ConvolutionalLayer()
 
 int ConvolutionalLayer::convOutHeight()
 {
-    return (this->height + 2*this->paddingY - this->kSizeY)/this->strideY + 1;
+
+    return (this->height + 2 * this->paddingY - (this->dilationY * (this->kSizeY - 1) + 1)) / this->strideY + 1;
 }
 
 int ConvolutionalLayer::convOutWidth()
 {
-    return (this->width + 2*this->paddingX - this->kSizeX)/this->strideX + 1;
+
+    return (this->width + 2 * this->paddingX - (this->dilationX * (this->kSizeX - 1) + 1)) / this->strideX + 1;
 }
 
 int ConvolutionalLayer::getWorkSpaceSize32()
@@ -425,6 +419,11 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 
     int mOutHeight      = convOutHeight();
     int mOutWidth       = convOutWidth();
+    int m       =  this->num / this->groups; 
+    int k       =  this->kSizeX * this->kSizeY *this->channel / this->groups; 
+    int n       =  mOutHeight * mOutWidth; 
+
+    Blas::cpuFill(this->outputNum * this->batch, 0, this->output, 1);
 
 #ifdef USE_NNPACK
     struct nnp_size     nnInSize    = {static_cast<size_t>(this->width),static_cast<size_t>(this->height)};
@@ -435,25 +434,17 @@ void ConvolutionalLayer::forward(NetworkState &netState)
     struct nnp_size     nnStride    = {static_cast<size_t>(this->strideX),static_cast<size_t>(this->strideY)};
 #endif
 
-    Blas::cpuFill(this->outputNum * this->batch, 0, this->output, 1);
-
     if(this->xnor && (!this->alignBitWeights))
     {
         if(!this->alignBitWeights)
         {
             binarizeWeights(this->weights,this->num, this->nWeights,this->binaryWeights);
         }
-        swapBinary();
+        swapBinary(); 
 
         cpuBinarize(netState.input, this->channel * this->height * this->width * this->batch, this->binaryInputs);
         netState.input = this->binaryInputs;
     }
-
-    int m       =  this->num / this->groups;
-
-    int k       =  this->kSizeX * this->kSizeY *this->channel / this->groups;
-
-    int n       =  mOutHeight * mOutWidth;
 
     for (int i = 0; i < this->batch; ++i)
     {
@@ -503,6 +494,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                     throw Exception(1,"NNPack error, code : "+std::to_string(status),__FILE__,__LINE__);
                 }
 #else
+
                 if(this->kSizeX == 1 && this->kSizeY == 1 &&  this->strideX == 1  &&  this->strideY == 1&& this->paddingX == 0 && this->paddingY == 0)
                 {
                     b = im;
@@ -519,6 +511,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 
                 Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
 #endif
+
             }
 
         }
@@ -629,11 +622,11 @@ void ConvolutionalLayer::forward(NetworkState &netState)
     {
         if(actParams.size() > 0)
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, actParams[0]);
+            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx, actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation);
+            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx);
         }
     }
 

@@ -74,10 +74,49 @@ void Gemm::cpuIm2col(float * const &input, const int &channelNum, const int &hei
 
                 int colIndex        = (ch*heightCol + h)*widthCol + w;
 
-                printf("%d, %d, %d  %d \n", chOff, imRow, imCol, colIndex);
-
                 output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
 
+            }
+        }
+    }
+}
+
+void Gemm::cpuCol2Im(float * const &input, const int &channelNum, const int &height, const int &width, const int &kSizeX, const int &kSizeY,
+                      const int &strideX, const int &strideY, const int &paddingX, const int &paddingY, float * const &output)
+{
+    int heightCol   =   (height + 2*paddingY - kSizeY)/strideY + 1;
+    int widthCol    =   (width  + 2*paddingX - kSizeX)/strideX + 1;
+
+    int channelsCol =   channelNum * kSizeX * kSizeY;
+
+    for (int c = 0; c < channelsCol; ++c)
+    {
+        int wOffset =   c % kSizeX;
+        int hOffset =   (c / kSizeX ) % kSizeY;
+
+        int cIm     =   c / kSizeX / kSizeY;
+
+        for (int h = 0; h < heightCol; ++h)
+        {
+            for (int w = 0; w < widthCol; ++w)
+            {
+                int imRow       =   hOffset + h * strideY;
+                int imCol       =   wOffset + w * strideX;
+
+                int colIndex    =   (c * heightCol + h) * widthCol + w;
+                float val       =   input[colIndex];
+
+                imRow           =   imRow - paddingY;
+                imCol           =   imCol - paddingX;
+
+                if(imRow < 0 || imCol <0 || imRow >= height|| imCol >= width)
+                {
+
+                }
+                else
+                {
+                    output[imCol + width*(imRow + height*cIm)] += val;
+                }
             }
         }
     }
@@ -99,35 +138,29 @@ void Gemm::cpuIm2colEx(float *input, const int &channelNum, const int &height, c
 #ifdef X86
         cpuIm2colWithAvx(input, channelNum, height, width, kernelH, strideH, padH, output, 1);
 #else
-        goto NEXT;
+       goto NEXT;
 #endif
     }
     else
     {
 NEXT:        
-
-        for (int channel = 0 ; channel++<channelNum; input += channelSize)
-
+        for (int channel = 0 ; channel++<channelNum; input += channelSize) 
         {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-            for (int kernelRow = 0; kernelRow < kernelH; kernelRow++)
-
+            for (int kernelRow = 0; kernelRow < kernelH; kernelRow++)   
             {
-                for (int kernelCol = 0; kernelCol < kernelW; kernelCol++)
-
+                for (int kernelCol = 0; kernelCol < kernelW; kernelCol++) 
                 {
 
                     int inputRow = -padH + kernelRow * dilationH;
 
                     for (int outputRow = 0; outputRow < outputH; ++outputRow)
                     {
-                        if (!is_a_ge_zero_and_a_lt_b(inputRow + outputRow*strideH, height))
-
+                        if (!is_a_ge_zero_and_a_lt_b(inputRow + outputRow*strideH, height)) 
                         {
-                            for (int outputCol = 0; outputCol < outputW; ++outputCol)
-
+                            for (int outputCol = 0; outputCol < outputW; ++outputCol) 
                             {
                                 output[ (channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
                                         kernelCol*outputH*outputW + outputRow*outputW + outputCol] = 0;
@@ -135,30 +168,74 @@ NEXT:
                         }
                         else
                         {
-                            int inputCol = -padW + kernelCol * dilationW;
+                            int inputCol = -padW + kernelCol * dilationW; 
 
                             for (int outputCol = 0 ; outputCol<outputW; ++outputCol)
                             {
-                                if (is_a_ge_zero_and_a_lt_b(inputCol + strideW*outputCol, width))
-
+                                if (is_a_ge_zero_and_a_lt_b(inputCol + strideW*outputCol, width)) 
                                 {
                                     output[ (channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
                                             kernelCol*outputH*outputW + outputRow*outputW + outputCol]
-                                            = input[(inputRow + outputRow*strideH) * width + inputCol + strideW*outputCol];
-
+                                            = input[(inputRow + outputRow*strideH) * width + inputCol + strideW*outputCol]; 
                                 }
-                                else
-
+                                else    
                                 {
                                     output[(channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
-                                            kernelCol*outputH*outputW + outputRow*outputW + outputCol] = 0;
-
+                                            kernelCol*outputH*outputW + outputRow*outputW + outputCol] = 0; 
                                 }
                             }
                         }
                     }
 
                 }
+            }
+        }
+    }
+}
+
+void Gemm::cpuCol2ImEx(float *input, const int &channelNum, const int &height, const int &width, const int &kernelH, const int &kernelW, const int &padH, const int &padW, const int &strideH, const int &strideW, const int &dilationH, const int &dilationW, float *output)
+{
+    const int outputH   =   (height + 2*padH - (dilationH * (kernelH - 1) + 1))/strideH + 1;
+    const int outputW   =   (width  + 2*padW - (dilationW * (kernelW - 1) + 1))/strideW + 1;
+
+    const int channelSize   =   height * width;
+
+    for (int channel = 0 ; channel++<channelNum; input += channelSize) 
+    {
+
+        for (int kernelRow = 0; kernelRow < kernelH; kernelRow++)   
+        {
+            for (int kernelCol = 0; kernelCol < kernelW; kernelCol++) 
+            {
+
+                int inputRow = -padH + kernelRow * dilationH;
+
+                for (int outputRow = 0; outputRow < outputH; ++outputRow)
+                {
+                    if (!is_a_ge_zero_and_a_lt_b(inputRow + outputRow*strideH, height)) 
+                    {
+                        input += outputW;
+
+                    }
+                    else
+                    {
+                        int inputCol = -padW + kernelCol * dilationW; 
+
+                        for (int outputCol = 0 ; outputCol<outputW; ++outputCol)
+                        {
+                            if (is_a_ge_zero_and_a_lt_b(inputCol + strideW*outputCol, width)) 
+                            {
+                                output[ (channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
+                                        kernelCol*outputH*outputW + outputRow*outputW + outputCol]
+                                        = *input;
+                            }
+
+                            input++;
+
+                        }
+                    }
+                }
+
             }
         }
     }
@@ -211,8 +288,7 @@ void Gemm::cpuIm2colWithAvx(float * const &input, const int &channelNum, const i
                     }
                 }
 
-                {
-
+                {   
                     w = 0;
                     for (h = 0; h < heightCol; ++h)
                     {
@@ -226,8 +302,7 @@ void Gemm::cpuIm2colWithAvx(float * const &input, const int &channelNum, const i
                     }
                 }
 
-                {
-
+                {   
                     w = widthCol - 1;
                     for (h = 0; h < heightCol; ++h)
                     {
@@ -326,7 +401,7 @@ void Gemm::cpuIm2colBinWithAvx(float * const &input, const int &channelNum, cons
 
                         __m256 src256       = _mm256_loadu_ps(static_cast<float*>((&input[imCol + width*(imRow + heightCol * chOff)])));
                         __m256 result256    = _mm256_cmp_ps(src256, floatZero256, _CMP_GT_OS);
-                        uint16_t mask       = _mm256_movemask_ps(result256);
+                        uint16_t mask       = _mm256_movemask_ps(result256); 
 
                         uint16_t* dstPtr = (uint16_t*)&((uint8_t*)output)[colIndex / 8];
                         *dstPtr |= (mask << (colIndex % 8));
@@ -347,8 +422,7 @@ void Gemm::cpuIm2colBinWithAvx(float * const &input, const int &channelNum, cons
                     }
                 }
 
-                {
-
+                {   
                     w = 0;
                     for (h = 0; h < heightCol; ++h)
                     {
@@ -367,8 +441,7 @@ void Gemm::cpuIm2colBinWithAvx(float * const &input, const int &channelNum, cons
                     }
                 }
 
-                {
-
+                {   
                     w = widthCol - 1;
                     for (h = 0; h < heightCol; ++h)
                     {
@@ -457,8 +530,7 @@ float Gemm::img2ColGetPixel(float * const &input, const int &height, const int &
 {
     int mRow    =  row - padding;
     int mCol    =  col - padding;
-    if(mRow < 0 || mCol < 0 || mRow >=height || mCol >=width)
-
+    if(mRow < 0 || mCol < 0 || mRow >=height || mCol >=width) 
     {
         return 0;
     }
@@ -556,12 +628,9 @@ void Gemm::cpuGemm(const int &TA, const int &TB, const int &M, const int &N, con
 }
 
 void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPHA,
-                     float * const &A, const int &lda,
-
-                     float * const &B, const int &ldb,
-
-                     float * const &C, const int &ldc,
-
+                     float * const &A, const int &lda, 
+                     float * const &B, const int &ldb, 
+                     float * const &C, const int &ldc, 
                      const bool &supportAvxAndFma)
 {
 
@@ -571,35 +640,27 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-        for (int i = 0; i < M; ++i)
-
+        for (int i = 0; i < M; ++i)         
         {
-            for (int k = 0; k < K; ++k)
-
+            for (int k = 0; k < K; ++k)     
             {
-                __m256 a256, b256, c256, result256;
-
-                float A_PART =  ALPHA*A[i*lda + k];
+                __m256 a256, b256, c256, result256;    
+                float A_PART =  ALPHA*A[i*lda + k];     
 
                 a256         =  _mm256_set1_ps(A_PART);
-                for (int j = 0; j < N - 8; j += 8)
-
+                for (int j = 0; j < N - 8; j += 8)     
                 {
-                    b256 = _mm256_loadu_ps(&B[k*ldb + j]);
+                    b256 = _mm256_loadu_ps(&B[k*ldb + j]); 
+                    c256 = _mm256_loadu_ps(&C[i*ldc + j]); 
 
-                    c256 = _mm256_loadu_ps(&C[i*ldc + j]);
-
-                    result256 = _mm256_mul_ps(a256, b256);
-
+                    result256 = _mm256_mul_ps(a256, b256);     
                     result256 = _mm256_add_ps(result256, c256);
-
                     _mm256_storeu_ps(&C[i*ldc + j], result256);
                 }
 
-                int prevEnd = (N % 8 == 0) ? (N - 8) : (N / 8) * 8;
+                int prevEnd = (N % 8 == 0) ? (N - 8) : (N / 8) * 8; 
 
-                for (int j = prevEnd; j < N; ++j)
-
+                for (int j = prevEnd; j < N; ++j)   
                 {
                     C[i*ldc + j] += A_PART*B[k*ldb + j];
                 }
@@ -612,16 +673,13 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-        for (int i = 0; i < M; ++i)
-
+        for (int i = 0; i < M; ++i)   
         {
-            for (int k = 0; k < K; ++k)
-
+            for (int k = 0; k < K; ++k)     
             {
-                float A_PART =  ALPHA*A[i*lda + k];
+                float A_PART =  ALPHA*A[i*lda + k];     
 
-                for (int j = 0; j < N; ++j)
-
+                for (int j = 0; j < N; ++j)  
                 {
                     C[i*ldc + j] += A_PART*B[k*ldb + j];
                 }
@@ -637,11 +695,9 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-    for (int i = 0; i < M; ++i)
-
+    for (int i = 0; i < M; ++i)   
     {
-        for (int k = 0; k < K; ++k)
-
+        for (int k = 0; k < K; ++k)     
         {
             float32x4_t a, b, c, result;
 
@@ -660,10 +716,9 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
                 vst1q_f32(&C[i*ldc + j],result);
             }
 
-            int prevEnd = (N % 4 == 0) ? (N - 4) : (N / 4) * 4;
+            int prevEnd = (N % 4 == 0) ? (N - 4) : (N / 4) * 4; 
 
-            for (int j = prevEnd; j < N; ++j)
-
+            for (int j = prevEnd; j < N; ++j)   
             {
                 C[i*ldc + j] += A_PART*B[k*ldb + j];
             }
@@ -675,16 +730,13 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-    for (int i = 0; i < M; ++i)
-
+    for (int i = 0; i < M; ++i)   
     {
-        for (int k = 0; k < K; ++k)
-
+        for (int k = 0; k < K; ++k)     
         {
-            float A_PART =  ALPHA*A[i*lda + k];
+            float A_PART =  ALPHA*A[i*lda + k];     
 
-            for (int j = 0; j < N; ++j)
-
+            for (int j = 0; j < N; ++j)  
             {
                 C[i*ldc + j] += A_PART*B[k*ldb + j];
             }
@@ -706,16 +758,13 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPH
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-    for (int i = 0; i < M; ++i)
-
+    for (int i = 0; i < M; ++i)   
     {
-        for (int k = 0; k < K; ++k)
-
+        for (int k = 0; k < K; ++k)     
         {
-            float A_PART =  ALPHA*A[k*lda + i];
+            float A_PART =  ALPHA*A[k*lda + i];     
 
-            for (int j = 0; j < N; ++j)
-
+            for (int j = 0; j < N; ++j)  
             {
                 C[i*ldc + j] += A_PART*B[k*ldb + j];
             }
@@ -825,14 +874,10 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
             {
 
                 __m256 result256;
-                __m256 a256_0, b256_0;
-
-                __m256 a256_1, b256_1;
-
+                __m256 a256_0, b256_0;    
+                __m256 a256_1, b256_1;    
                 __m256 a256_2;
-
                 __m256 a256_3;
-
                 __m256 c256_0, c256_1, c256_2, c256_3;
                 __m256 c256_4, c256_5, c256_6, c256_7;
 
@@ -1060,11 +1105,9 @@ void Gemm::transpose32x32ReversedDiag(uint32_t *const &A, uint32_t *const &B, co
 void Gemm::transposeUint32(uint32_t * const &input, uint32_t * const &output, const int &inH,
                            const int &inW, const int &inAlign, const int &outAlign)
 {
-    for (int i = 0; i < inH; ++i)
-
+    for (int i = 0; i < inH; ++i)     
     {
-        for (int j = 0; j < inW; ++j)
-
+        for (int j = 0; j < inW; ++j)   
         {
             output[j*outAlign/32 + i] = input[i*inAlign + j];
         }
@@ -1093,7 +1136,7 @@ void Gemm::gemmNNBinMeanTrans(int M, int N, int K, float ALPHA_UNUSED, unsigned 
             __m256i countSum_2 = _mm256_set1_epi8(0);
             __m256i countSum_3 = _mm256_set1_epi8(0);
 
-            for (int k = 0; k < K; k += bitStep) {
+            for (int k = 0; k < K; k += bitStep) {   
 
                 __m256i aBit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((A + ((i + 0)*lda + k) / 8)));
                 __m256i bBit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((B + ((j + 0)*ldb + k) / 8)));
@@ -1114,8 +1157,7 @@ void Gemm::gemmNNBinMeanTrans(int M, int N, int K, float ALPHA_UNUSED, unsigned 
             int count3 = getCountMula(countSum_3);
 
             const int f1 = (K % bitStep == 0) ? 0 : (bitStep - (K % bitStep));
-            count0 = count0 - f1;
-
+            count0 = count0 - f1;    
             count1 = count1 - f1;
             count2 = count2 - f1;
             count3 = count3 - f1;
@@ -1143,8 +1185,7 @@ void Gemm::gemmNNBinMeanTrans(int M, int N, int K, float ALPHA_UNUSED, unsigned 
                 }
                 int count = getCountMula(count_sum);
                 const int f1 = (K % bit_step == 0) ? 0 : (bit_step - (K % bit_step));
-                count = count - f1;
-
+                count = count - f1;    
                 C[(i + iD)*ldc + j] = (2 * count - K) * meanVal;
             }
         }
@@ -1168,8 +1209,7 @@ void Gemm::gemmNNBinMeanTrans(int M, int N, int K, float ALPHA_UNUSED, unsigned 
             }
             int count = getCountMula(count_sum);
             const int f1 = (K % bit_step == 0) ? 0 : (bit_step - (K % bit_step));
-            count = count - f1;
-
+            count = count - f1;    
             C[i*ldc + j] = (2 * count - K) * mean_val;
         }
     }

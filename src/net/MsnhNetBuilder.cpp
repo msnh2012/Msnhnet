@@ -74,6 +74,18 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
                                                                                convParams->activation, convParams->actParams, convParams->batchNorm, convParams->useBias,
                                                                                0,0,0,0,convParams->antialiasing, nullptr, 0,0);
         }
+        else if(parser->params[i]->type == LayerType::DECONVOLUTIONAL)
+        {
+            if(params.height ==0 || params.width == 0 || params.channels == 0)
+            {
+                throw Exception(1, "Layer before deconvolutional layer must output image", __FILE__, __LINE__);
+            }
+
+            DeConvParams* deconvParams                  =   reinterpret_cast<DeConvParams*>(parser->params[i]);
+            layer                                   =   new DeConvolutionalLayer(params.batch, params.height, params.width, params.channels, deconvParams->filters, deconvParams->kSizeX,
+                                                                                 deconvParams->kSizeY, deconvParams->strideX, deconvParams->strideY, deconvParams->paddingX, deconvParams->paddingY,
+                                                                                 deconvParams->activation, deconvParams->actParams, deconvParams->useBias);
+        }
         else if(parser->params[i]->type == LayerType::CONNECTED)
         {
             ConnectParams *connectParams            =   reinterpret_cast<ConnectParams*>(parser->params[i]);
@@ -149,15 +161,23 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             {
                 size_t index   = static_cast<size_t>(routeParams->layerIndexes[i]);
                 layersOutputNum.push_back(net->layers[index]->outputNum);
-                outChannel +=   net->layers[index]->outChannel;
 
                 if(outHeight != net->layers[index]->outHeight || outWidth != net->layers[index]->outWidth)
                 {
                     throw Exception(1, "[route] layers height or width not equal", __FILE__, __LINE__);
                 }
+
+                if(routeParams->addModel == 1)
+                {
+                    outChannel = net->layers[index]->outChannel;
+                }
+                else
+                {
+                    outChannel +=   net->layers[index]->outChannel;
+                }
             }
             layer                                   =   new RouteLayer(params.batch, routeParams->layerIndexes, layersOutputNum,
-                                                                       routeParams->groups, routeParams->groupsId);
+                                                                       routeParams->groups, routeParams->groupsId, routeParams->addModel);
             layer->outChannel   =   outChannel;
             layer->outWidth     =   outWidth;
             layer->outHeight    =   outHeight;
@@ -200,7 +220,7 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             }
 
             layer                                   =   new Yolov3OutLayer(params.batch, yolov3OutParams->orgWidth, yolov3OutParams->orgHeight, yolov3OutParams->layerIndexes,
-                                                                           yolov3LayersInfo,yolov3OutParams->confThresh, yolov3OutParams->nmsThresh, yolov3OutParams->useSoftNms);
+                                                                           yolov3LayersInfo,yolov3OutParams->confThresh, yolov3OutParams->nmsThresh, yolov3OutParams->useSoftNms, yolov3OutParams->yoloType);
         }
 
         params.height       =   layer->outHeight;
@@ -232,7 +252,7 @@ void NetBuilder::loadWeightsFromMsnhBin(const string &path)
     {
         if(net->layers[i]->type == LayerType::CONVOLUTIONAL || net->layers[i]->type == LayerType::CONNECTED || net->layers[i]->type == LayerType::BATCHNORM ||
                 net->layers[i]->type == LayerType::RES_BLOCK   || net->layers[i]->type == LayerType::RES_2_BLOCK || net->layers[i]->type == LayerType::ADD_BLOCK ||
-                net->layers[i]->type == LayerType::CONCAT_BLOCK )
+                net->layers[i]->type == LayerType::CONCAT_BLOCK  || net->layers[i]->type == LayerType::DECONVOLUTIONAL)
         {
             size_t nums = net->layers[i]->numWeights;
 
@@ -269,11 +289,9 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
     {
         throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__);
     }
-
 #ifdef USE_NNPACK
     nnp_initialize();
 #endif
-
     netState->input     =   img.data();
     netState->inputNum  =   static_cast<int>(img.size());
     if(net->layers[0]->inputNum != netState->inputNum)
@@ -288,7 +306,6 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
 
         netState->input     =   net->layers[i]->output;
         netState->inputNum  =   net->layers[i]->outputNum;
-
     }
 
 #ifdef USE_NNPACK
@@ -305,11 +322,9 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img
     {
         throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__);
     }
-
 #ifdef USE_NNPACK
     nnp_initialize();
 #endif
-
     netState->input     =   img.data();
     netState->inputNum  =   static_cast<int>(img.size());
     if(net->layers[0]->inputNum != netState->inputNum)
@@ -321,8 +336,7 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img
     for (size_t i = 0; i < net->layers.size(); ++i)
     {
 
-        if(net->layers[i]->type != LayerType::ROUTE && net->layers[i]->type != LayerType::YOLOV3_OUT)
-
+        if(net->layers[i]->type != LayerType::ROUTE && net->layers[i]->type != LayerType::YOLOV3_OUT) 
         {
             if(netState->inputNum != net->layers[i]->inputNum)
             {
@@ -349,6 +363,24 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img
     else
     {
         throw Exception(1,"not a yolov3 net", __FILE__, __LINE__);
+    }
+}
+
+Point2I NetBuilder::getInputSize()
+{
+    if(parser->params.empty())
+    {
+        throw Exception(1,"net param is empty", __FILE__, __LINE__);
+    }
+
+    if(parser->params[0]->type == LayerType::CONFIG)
+    {
+        NetConfigParams* params = reinterpret_cast<NetConfigParams*>(parser->params[0]);
+        return Point2I(params->width,params->height);
+    }
+    else
+    {
+        throw Exception(1,"net param error", __FILE__, __LINE__);
     }
 }
 

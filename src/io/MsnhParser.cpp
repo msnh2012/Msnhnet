@@ -119,8 +119,7 @@ void Parser::readCfg(const std::string &path)
                 {
                     if(it->second.Type() == YAML::NodeType::Map)
                     {
-                        NetConfigParams *netConfigParams = new NetConfigParams(false);
-
+                        NetConfigParams *netConfigParams = new NetConfigParams(false); 
                         parseConfigParams(netConfigParams, it);
                         params.push_back(netConfigParams);
                         continue;
@@ -188,6 +187,19 @@ void Parser::readCfg(const std::string &path)
                     throw Exception(1,"[conv] content error", __FILE__, __LINE__);
                 }
             }
+            else if(node == "deconv")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    DeConvParams *deconvParams = new DeConvParams(true);
+                    parseDeConvParams(deconvParams, it);
+                    params.push_back(deconvParams);
+                }
+                else
+                {
+                    throw Exception(1,"[conv] content error", __FILE__, __LINE__);
+                }
+            }
             else if(node == "connect")
             {
                 if(it->second.Type() == YAML::NodeType::Map)
@@ -229,7 +241,7 @@ void Parser::readCfg(const std::string &path)
 
                         if(key == "size")
                         {
-                            std::string value   =   it2->second.as<std::string>();
+                            std::string value   =   it2->second.as<std::string>(); 
 
                             if(!ExString::strToInt(value, size))
                             {
@@ -239,7 +251,7 @@ void Parser::readCfg(const std::string &path)
 
                         if(key == "activation")
                         {
-                            std::string value   =   it2->second.as<std::string>();
+                            std::string value   =   it2->second.as<std::string>(); 
 
                             std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
@@ -286,7 +298,7 @@ void Parser::readCfg(const std::string &path)
 
                         if(key == "size")
                         {
-                            std::string value   =   it2->second.as<std::string>();
+                            std::string value   =   it2->second.as<std::string>(); 
 
                             if(!ExString::strToInt(value, size))
                             {
@@ -296,7 +308,7 @@ void Parser::readCfg(const std::string &path)
 
                         if(key == "activation")
                         {
-                            std::string value   =   it2->second.as<std::string>();
+                            std::string value   =   it2->second.as<std::string>(); 
 
                             std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
@@ -343,7 +355,7 @@ void Parser::readCfg(const std::string &path)
 
                         if(key == "size")
                         {
-                            std::string value   =   it2->second.as<std::string>();
+                            std::string value   =   it2->second.as<std::string>(); 
 
                             if(!ExString::strToInt(value, size))
                             {
@@ -353,7 +365,7 @@ void Parser::readCfg(const std::string &path)
 
                         if(key == "activation")
                         {
-                            std::string value   =   it2->second.as<std::string>();
+                            std::string value   =   it2->second.as<std::string>(); 
 
                             std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
@@ -396,7 +408,7 @@ void Parser::readCfg(const std::string &path)
 
                         if(key == "size")
                         {
-                            std::string value   =   it2->second.as<std::string>();
+                            std::string value   =   it2->second.as<std::string>(); 
 
                             if(!ExString::strToInt(value, size))
                             {
@@ -406,7 +418,7 @@ void Parser::readCfg(const std::string &path)
 
                         if(key == "activation")
                         {
-                            std::string value   =   it2->second.as<std::string>();
+                            std::string value   =   it2->second.as<std::string>(); 
 
                             std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
@@ -1072,6 +1084,153 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
 
 }
 
+void Parser::parseDeConvParams(DeConvParams *deconvParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "filters")
+        {
+            if(!ExString::strToInt(value, deconvParams->filters))
+            {
+                throw Exception(1,"[deconv] filters can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "kSize")
+        {
+            if(!ExString::strToInt(value, deconvParams->kSize))
+            {
+                throw Exception(1,"[deconv] kSize can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "kSizeX")
+        {
+            if(!ExString::strToInt(value, deconvParams->kSizeX))
+            {
+                throw Exception(1,"[deconv] kSizeX can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "kSizeY")
+        {
+            if(!ExString::strToInt(value, deconvParams->kSizeY))
+            {
+                throw Exception(1,"[deconv] kSizeY can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "stride")
+        {
+            if(!ExString::strToInt(value, deconvParams->stride))
+            {
+                throw Exception(1,"[deconv] stride can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "strideX")
+        {
+            if(!ExString::strToInt(value, deconvParams->strideX))
+            {
+                throw Exception(1,"[deconv] strideX can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "strideY")
+        {
+            if(!ExString::strToInt(value, deconvParams->strideY))
+            {
+                throw Exception(1,"[deconv] strideY can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "padding")
+        {
+            if(!ExString::strToInt(value, deconvParams->padding))
+            {
+                throw Exception(1,"[deconv] padding can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "paddingX")
+        {
+            if(!ExString::strToInt(value, deconvParams->paddingX))
+            {
+                throw Exception(1,"[deconv] paddingX can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "paddingY")
+        {
+            if(!ExString::strToInt(value, deconvParams->paddingY))
+            {
+                throw Exception(1,"[deconv] paddingY can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "useBias")
+        {
+            if(!ExString::strToInt(value, deconvParams->useBias))
+            {
+                throw Exception(1,"[deconv] useBias can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "activation")
+        {
+            std::vector<std::string> splits;
+            ExString::split(splits, value, ",");
+            deconvParams->activation = Activations::getActivation(splits[0]);
+
+            if(splits.size()>1)
+            {
+                for (size_t i = 1; i < splits.size(); ++i)
+                {
+                    float tmp = 0.f;
+                    ExString::strToFloat(splits[i], tmp);
+                    deconvParams->actParams.push_back(tmp);
+                }
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [deconv]", __FILE__, __LINE__);
+        }
+    }
+
+    if(deconvParams->strideX < 0 || deconvParams->strideY < 0)
+    {
+        if(deconvParams->strideX < 0 )
+        {
+            deconvParams->strideX = deconvParams->stride;
+        }
+
+        if(deconvParams->strideY < 0 )
+        {
+            deconvParams->strideY = deconvParams->stride;
+        }
+    }
+
+    if(deconvParams->kSizeX < 0 || deconvParams->kSizeY < 0)
+    {
+        if(deconvParams->kSizeX < 0 )
+        {
+            deconvParams->kSizeX = deconvParams->kSize;
+        }
+
+        if(deconvParams->kSizeY < 0 )
+        {
+            deconvParams->kSizeY = deconvParams->kSize;
+        }
+    }
+
+    if(deconvParams->paddingX < 0 || deconvParams->paddingY < 0)
+    {
+        if(deconvParams->paddingX < 0 )
+        {
+            deconvParams->paddingX = deconvParams->padding;
+        }
+
+        if(deconvParams->paddingY < 0 )
+        {
+            deconvParams->paddingY = deconvParams->padding;
+        }
+    }
+
+}
+
 void Parser::parseConnectParams(ConnectParams *connectParams, YAML::const_iterator &iter)
 {
     for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
@@ -1578,6 +1737,13 @@ void Parser::parseRouteParams(RouteParams *routeParams, YAML::const_iterator &it
                 throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__);
             }
         }
+        else if(key == "addModel")
+        {
+            if(!ExString::strToInt(value, routeParams->addModel))
+            {
+                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__);
+            }
+        }
         else
         {
             throw Exception(1, key + " is not supported in [route]", __FILE__, __LINE__);
@@ -1707,6 +1873,10 @@ void Parser::parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_
             {
                 throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__);
             }
+        }
+        else if(key == "yoloType")
+        {
+            yolov3OutParams->getYoloTypeFromStr(value);
         }
         else
         {

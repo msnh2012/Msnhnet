@@ -119,11 +119,11 @@ void ConnectedLayer::forward(NetworkState &netState)
 
     if(actParams.size() > 0)
     {
-        Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, actParams[0]);
+        Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx,actParams[0]);
     }
     else
     {
-        Activations::activateArray(this->output, this->outputNum*this->batch, this->activation);
+        Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx);
     }
 
     auto so = std::chrono::system_clock::now();

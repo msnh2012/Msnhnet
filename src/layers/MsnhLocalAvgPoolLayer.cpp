@@ -17,8 +17,7 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
     this->paddingX          = paddingX;
     this->paddingY          = paddingY;
 
-    this->kSizeX            = kSizeX;
-
+    this->kSizeX            = kSizeX;  
     this->kSizeY            = kSizeY;
 
     this->ceilMode          = ceilMode;
@@ -33,16 +32,13 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
     else
     {
         this->strideX       = strideX;
-
         this->strideY       = strideY;
-
     }
 
     if(this->ceilMode == 1)
     {
-        int tmpW = (width  + paddingX*2 - kSizeX) % strideX;
-
-        int tmpH = (height + paddingY*2 - kSizeY) % strideY;
+        int tmpW = (width  + paddingX*2 - kSizeX) % strideX; 
+        int tmpH = (height + paddingY*2 - kSizeY) % strideY; 
 
         if(tmpW >= kSizeX)
         {
@@ -56,50 +52,41 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
 
         if(tmpW <= paddingX)
         {
-            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1;
-
+            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1; 
         }
         else
         {
-            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 2;
-
+            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 2; 
         }
 
         if(tmpH <= paddingY)
         {
-            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1;
-
+            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1; 
         }
         else
         {
-            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 2;
-
+            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 2; 
         }
     }
     else if(this->ceilMode == 0)
     {
-        this->outWidth   = (width  + 2*paddingX - kSizeX) / strideX + 1;
-
-        this->outHeight  = (height + 2*paddingY - kSizeY) / strideY + 1;
-
+        this->outWidth   = (width  + 2*paddingX - kSizeX) / strideX + 1; 
+        this->outHeight  = (height + 2*paddingY - kSizeY) / strideY + 1; 
     }
     else
     {
-        this->outWidth   = (width  + paddingX - kSizeX) / strideX + 1;
-
-        this->outHeight  = (height + paddingY - kSizeY) / strideY + 1;
-
+        this->outWidth   = (width  + paddingX - kSizeX) / strideX + 1; 
+        this->outHeight  = (height + paddingY - kSizeY) / strideY + 1; 
     }
 
-    this->outChannel        = channel;
+    this->outChannel        = channel;                                  
 
-    this->outputNum         = this->outHeight * this->outWidth * this->outChannel;
-
-    this->inputNum          = height * width * channel;
+    this->outputNum         = this->outHeight * this->outWidth * this->outChannel; 
+    this->inputNum          = height * width * channel; 
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->output            = new float[static_cast<size_t>(outputNum * this->batch)]();
+        this->output            = new float[static_cast<size_t>(this->outputNum * this->batch)]();
     }
 
     this->bFlops            = (this->kSizeX*this->kSizeY* this->channel*this->outHeight*this->outWidth)/ 1000000000.f;
@@ -152,20 +139,16 @@ void LocalAvgPoolLayer::forward(NetworkState &netState)
 
     int mChannel        =   this->channel;
 
-    for(int b=0; b<this->batch; ++b)
-
+    for(int b=0; b<this->batch; ++b)                
     {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-        for(int k=0; k<mChannel; ++k)
-
+        for(int k=0; k<mChannel; ++k)               
         {
-            for(int i=0; i<mHeight; ++i)
-
+            for(int i=0; i<mHeight; ++i)            
             {
-                for(int j=0; j<mWidth; ++j)
-
+                for(int j=0; j<mWidth; ++j)         
                 {
 
                     int outIndex = j + mWidth*(i + mHeight*(k + channel*b));
@@ -196,8 +179,7 @@ void LocalAvgPoolLayer::forward(NetworkState &netState)
                         }
                     }
 
-                    this->output[outIndex] = avg / counter;
-
+                    this->output[outIndex] = avg / counter;  
                 }
 
             }

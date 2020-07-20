@@ -26,6 +26,8 @@ void ActivationLayer::forward(NetworkState &netState)
 
     Activations::activateArray(output,
                                outputNum*batch,
-                               activation);
+                               activation,
+                               this->supportAvx
+                               );
 }
 }
