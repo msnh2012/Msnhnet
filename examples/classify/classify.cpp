@@ -241,7 +241,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[9.22434 ]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl<<std::flush;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
         // ==============================================================================
     }
     catch(Msnhnet::Exception &ex)

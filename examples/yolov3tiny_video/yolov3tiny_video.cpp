@@ -24,7 +24,7 @@ int main(int argc, char** argv)
         msnhNet.loadWeightsFromMsnhBin(msnhbinPath);
         std::vector<std::string> labels ;
         Msnhnet::IO::readVectorStr(labels, labelsPath.data(), "\n");
-
+        Msnhnet::Point2I inSize = msnhNet.getInputSize();
 
         cv::VideoCapture cap(0);
         cv::Mat mat;
@@ -37,9 +37,9 @@ int main(int argc, char** argv)
         {
             cap >> mat;
             cv::Mat org = mat.clone();
-            std::vector<float> img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(mat, cv::Size(416,416));
+            std::vector<float> img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(mat, cv::Size(inSize.x,inSize.y));
             std::vector<std::vector<Msnhnet::Yolov3Box>> result = msnhNet.runYolov3(img);
-            Msnhnet::OpencvUtil::drawYolov3Box(org,labels,result);
+            Msnhnet::OpencvUtil::drawYolov3Box(org,labels,result,inSize);
             std::cout<<msnhNet.getInferenceTime()<<std::endl;
             cv::imshow("test",org);
             if(cv::waitKey(20) == 27)

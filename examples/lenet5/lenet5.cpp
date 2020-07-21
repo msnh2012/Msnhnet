@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
 		int bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
 		std::cout << "max   : pytorch[19.2447 ]  msnhnet: " << Msnhnet::ExVector::max<float>(result) << std::endl;
-                std::cout << "index : pytorch[  5     ]  msnhnet: " << bestIndex << std::endl <<std::flush;
+		std::cout << "index : pytorch[  5     ]  msnhnet: " << bestIndex << std::endl;
 	}
 	catch (Msnhnet::Exception &ex)
 	{	

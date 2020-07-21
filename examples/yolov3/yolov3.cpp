@@ -25,10 +25,11 @@ int main(int argc, char** argv)
         msnhNet.loadWeightsFromMsnhBin(msnhbinPath);
         std::vector<std::string> labels ;
         Msnhnet::IO::readVectorStr(labels, labelsPath.data(), "\n");
-        std::vector<float> img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imgPath, cv::Size(416, 416));
+        Msnhnet::Point2I inSize = msnhNet.getInputSize();
+        std::vector<float> img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imgPath, cv::Size(inSize.x,inSize.y));
         cv::Mat org = cv::imread(imgPath);
         std::vector<std::vector<Msnhnet::Yolov3Box>> result = msnhNet.runYolov3(img);
-        Msnhnet::OpencvUtil::drawYolov3Box(org,labels,result);
+        Msnhnet::OpencvUtil::drawYolov3Box(org,labels,result,inSize);
         std::cout<<msnhNet.getTimeDetail()<<std::endl<<std::flush;
         cv::imshow("test",org);
         cv::waitKey();
