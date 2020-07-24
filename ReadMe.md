@@ -14,7 +14,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)
 
 | |windows|linux|mac|
 |:---:|:---:|:---:|:---:|
-|checked|√|√|x|
+|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
 |gpu|x|x|x|
 
 **CPU checked**
