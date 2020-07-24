@@ -20,7 +20,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)
 **CPU checked**
 | |Intel i7|raspberry 3B|raspberry 4B|Jeston NX|
 |:---:|:---:|:---:|:---:|:---:|
-|checked|√|√|√|√
+|checked|![i7](https://img.shields.io/badge/build-passing-brightgreen.svg)|![3B](https://img.shields.io/badge/build-passing-brightgreen.svg)|![4B](https://img.shields.io/badge/build-passing-brightgreen.svg)|![NX](https://img.shields.io/badge/build-passing-brightgreen.svg)|
 
 **Features**
 
