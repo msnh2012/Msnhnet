@@ -6,9 +6,6 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)
 ![Msnhnet](https://img.shields.io/badge/Msnh-Msnhnet-blue)
 
 ![](readme_imgs/msnhnetviewer.png)
-**TODO:**</br>
-1.GPU</br>
-2.neon</br>
 
 **OS supported** (you can check other OS by yourself)
 
