@@ -11,7 +11,6 @@ set(CMAKE_AUTOUIC ON)
 # Instruct CMake to run Qt ressource
 set(CMAKE_AUTORCC ON)
 
-
 set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/MsnhBlas.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/MsnhGemm.cpp
@@ -31,6 +30,7 @@ set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhDeConvolutionalLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhEmptyLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhLocalAvgPoolLayer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhGlobalAvgPoolLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhMaxPoolLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhPaddingLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhRes2BlockLayer.cpp

@@ -96,6 +96,7 @@ namespace MsnhViewer
     {
         updatePath(from_->connectorPos(), end);
         setZValue(-1); 
+
     }
 
     void Link::setColor(QColor const& color)
@@ -145,6 +146,7 @@ namespace MsnhViewer
         else
         {
             connectTo(to_); 
+
         }
     }
 
@@ -171,10 +173,13 @@ namespace MsnhViewer
         double d12 = sqrt(pow(p2.x()-p1.x(), 2) + pow(p2.y() - p1.y(), 2));
 
         double fa = t * d01 / (d01 + d12);   
+
         double fb = t * d12 / (d01 + d12);   
 
         double p1x = p1.x() - fa * (p2.x() - p0.x()); 
+
         double p1y = p1.y() - fa * (p2.y() - p0.y()); 
+
         ctrl1.setX(p1x);
         ctrl1.setY(p1y);
 

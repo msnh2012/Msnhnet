@@ -35,6 +35,14 @@ public:
         });
         ColorTabel::instance().addColor("Empty",QColor(0xB85646));
 
+        NodeCreator::instance().addItem("Activate",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"act", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("Activate",QColor(0xcc2121));
+
         NodeCreator::instance().addItem("AddBlock",
         {
             {"input", "string", AttributeInfo::Type::input},
@@ -139,6 +147,13 @@ public:
         });
         ColorTabel::instance().addColor("LocalAvgPool",QColor(0xFFDB97));
 
+        NodeCreator::instance().addItem("GlobalAvgPool",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("GlobalAvgPool",QColor(0xFFDB97));
+
         NodeCreator::instance().addItem("MaxPool",
         {
             {"input", "string", AttributeInfo::Type::input},
@@ -186,7 +201,8 @@ public:
         NodeCreator::instance().addItem("SoftMax",
         {
             {"input", "string", AttributeInfo::Type::input},
-            {"group", "string", AttributeInfo::Type::member},
+            {"groups", "string", AttributeInfo::Type::member},
+            {"temperature", "string", AttributeInfo::Type::member},
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("SoftMax",QColor(0x60FFDF));
@@ -220,3 +236,4 @@ public:
 
 }
 #endif 
+

@@ -54,6 +54,7 @@ namespace MsnhViewer
 
         typeRect_ = QRectF{1, 13, width_ - 2.0, (qreal)attributeHeight};
         height_ += attributeHeight; 
+
     }
 
     Node::~Node()
@@ -104,6 +105,7 @@ namespace MsnhViewer
         QFont attributeFont = ThemeManager::instance().getAttributeTheme().normal.font;
         QFontMetrics metrics(attributeFont);
         QRect boundingRect{0, 0, baseWidth - 32, attributeHeight}; 
+
         for (auto const& info : attributesInfo)
         {
             boundingRect = boundingRect.united(metrics.boundingRect(info.name));
@@ -111,6 +113,7 @@ namespace MsnhViewer
 
         boundingRect.setTopLeft({0, 0});
         boundingRect.setWidth(boundingRect.width() + 30); 
+
         boundingRect.setHeight(attributeHeight);
 
         width_ = boundingRect.width() + 2;
@@ -154,6 +157,7 @@ namespace MsnhViewer
 
         prepareGeometryChange();
         name_->adjustPosition(); 
+
     }
 
     void Node::createStyle()
@@ -242,6 +246,7 @@ namespace MsnhViewer
         for (auto& attr : attributes_)
         {
             attr->refresh(); 
+
         }
 
         QGraphicsItem::mouseMoveEvent(event);

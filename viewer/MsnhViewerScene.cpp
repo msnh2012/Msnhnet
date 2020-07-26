@@ -217,7 +217,9 @@ QColor generateRandomColor()
 {
 
     static double nextColorHue = 1.0 / (rand() % 100); 
+
     constexpr double golden_ratio_conjugate = 0.618033988749895; 
+
     nextColorHue += golden_ratio_conjugate;
     nextColorHue = std::fmod(nextColorHue, 1.0);
 

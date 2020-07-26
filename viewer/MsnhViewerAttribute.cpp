@@ -250,6 +250,7 @@ void AttributeOutput::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
         {
             newConnection_->connectTo(input);
             newConnection_ = nullptr; 
+
             return;
         }
     }

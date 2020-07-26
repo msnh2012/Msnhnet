@@ -28,6 +28,7 @@ namespace MsnhViewer
 
     private:
         QVariant& data_; 
+
         QRectF boundingRect_;
         QBrush brush_;
     };
