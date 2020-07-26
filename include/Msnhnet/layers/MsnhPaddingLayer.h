@@ -10,20 +10,32 @@ namespace Msnhnet
 class MsnhNet_API PaddingLayer : public BaseLayer
 {
 public:
-    PaddingLayer(const int &batch,  const int &height, const int &width, const int &channel, const int &top,
-                     const int &down, const int &left, const int &right, const float &paddingVal);
+    PaddingLayer(const int &_batch,  const int &_height, const int &_width, const int &_channel, const int &_top,
+                     const int &_down, const int &_left, const int &_right, const float &_paddingVal);
 
     ~PaddingLayer(){}
 
-    int     top         =   0;
-    int     down        =   0;
-    int     left        =   0;
-    int     right       =   0;
-    float   paddingVal  =   0;
-
     virtual void forward(NetworkState &netState);
+
+    int getTop() const;
+
+    int getDown() const;
+
+    int getLeft() const;
+
+    int getRight() const;
+
+    float getPaddingVal() const;
+
+protected:
+    int     _top         =   0;
+    int     _down        =   0;
+    int     _left        =   0;
+    int     _right       =   0;
+    float   _paddingVal  =   0;
 
 };
 }
 
 #endif 
+

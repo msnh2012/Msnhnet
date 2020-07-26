@@ -37,26 +37,33 @@ static inline float32x4_t loadfp16(const void* ptr)
 #if __ARM_FP16_FORMAT_IEEE
     return vcvt_f32_f16(vld1_f16((const __fp16*)ptr));
 #else 
+
     float32x4_t v;
 #if __aarch64__
     asm volatile(
         "ld1    {v0.4h}, [%2]       \n"
         "fcvtl  %0.4s, v0.4h        \n"
         : "=w"(v) 
+
         : "0"(v),
         "r"(ptr) 
+
         : "memory", "v0");
 #else
     asm volatile(
         "vld1.s16       {d0}, [%2]  \n"
         "vcvt.f32.f16   %q0, d0     \n"
         : "=w"(v) 
+
         : "0"(v),
         "r"(ptr) 
+
         : "memory", "d0");
 #endif 
+
     return v;
 #endif 
+
 }
 #endif
 
@@ -143,6 +150,7 @@ static inline float32x4_t log_ps(float32x4_t x)
     x = vaddq_f32(x, y);
     x = vaddq_f32(x, tmp);
     x = vreinterpretq_f32_u32(vorrq_u32(vreinterpretq_u32_f32(x), invalid_mask)); 
+
     return x;
 }
 
@@ -413,3 +421,4 @@ static inline float32x4_t tanh_ps(float32x4_t x)
 
 #endif
 #endif 
+

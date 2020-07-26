@@ -36,8 +36,12 @@ public:
     static std::vector<float> getTransformedF32C3(cv::Mat &mat, const cv::Size &size,
                                                    const cv::Scalar &mean, const cv::Scalar &std);
 
+    static std::vector<float> getCaffeModeF32C3(const std::string &path,  const cv::Size &size);
+    static std::vector<float> getCaffeModeF32C3(cv::Mat &mat,  const cv::Size &size);
+
     static void drawYolov3Box(cv::Mat &mat, std::vector<string> &labels, std::vector<std::vector<Msnhnet::Yolov3Box>> &boxs, const Point2I &size);
 };
 }
 
 #endif 
+

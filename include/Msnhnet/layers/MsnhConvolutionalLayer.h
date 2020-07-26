@@ -17,62 +17,11 @@ class MsnhNet_API ConvolutionalLayer:public BaseLayer
 {
 public:
 
-    ConvolutionalLayer(const int &batch, const int &steps, const int &height, const int &width, const int &channel, const int &num, const int &groups,
-                      const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY, const int &dilationX, const int &dilationY, const int &paddingX, const int &paddingY, ActivationType activation, const std::vector<float> &actParams,
-                      const int &batchNorm,  const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex,
-                      const int &antialiasing, ConvolutionalLayer *const &shareLayer, const int &assistedExcitation, const int &deform);
+    ConvolutionalLayer(const int &_batch, const int &_steps, const int &_height, const int &_width, const int &_channel, const int &_num, const int &_groups,
+                      const int &_kSizeX, const int &_kSizeY, const int &_strideX, const int &_strideY, const int &_dilationX, const int &_dilationY, const int &_paddingX, const int &_paddingY, ActivationType _activation, const std::vector<float> &_actParams,
+                      const int &_batchNorm,  const int &_useBias, const int &_binary, const int &_xnor, const int &_useBinOutput, const int &_groupIndex,
+                      const int &_antialiasing, ConvolutionalLayer *const &_shareLayer, const int &assistedExcitation, const int &deform);
     ~ConvolutionalLayer();
-
-    float       *weights            =   nullptr;
-    float       *biases             =   nullptr;
-
-    ConvolutionalLayer* shareLayer  =   nullptr;
-
-    float       *scales             =   nullptr;
-    float       *rollMean           =   nullptr;
-    float       *rollVariance       =   nullptr;
-
-    char        *cWeights           =   nullptr;
-    float       *binaryInputs       =   nullptr;
-    float       *binaryWeights      =   nullptr;
-    float       *activationInput    =   nullptr;
-    float       *meanArr            =   nullptr;
-    uint32_t    *binRePackedIn      =   nullptr;
-    char        *tBitInput          =   nullptr;
-    char        *alignBitWeights    =   nullptr;
-
-    int         bitAlign            =   0;
-    int         ldaAlign            =   0;
-
-    int         useBias             =   1;
-
-    int         nScales             =   0;
-    int         nRollMean           =   0;
-    int         nRollVariance       =   0;
-
-    int         nBiases             =   0;
-    int         nWeights            =   0;
-    int         groups              =   0;
-    int         groupIndex          =   0;
-
-    int         xnor                =   0;
-    int         binary              =   0;
-    int         useBinOutput        =   0;
-    int         steps               =   0;
-
-    int         antialiasing        =   0;
-    int         assistedExcite      =   0;
-
-    int         kSizeX              =   0;
-    int         kSizeY              =   0;
-    int         stride              =   0;
-    int         strideX             =   0;
-    int         strideY             =   0;
-    int         paddingX            =   0;
-    int         paddingY            =   0;
-    int         dilationX           =   0;
-    int         dilationY           =   0;
-    int         batchNorm           =   0;
 
     int convOutHeight();
     int convOutWidth();
@@ -81,23 +30,153 @@ public:
     int getWorkSpaceSize32();
     int getWorkSpaceSize16();
 
-    static void  addBias(float *const &output, float *const &biases, const int &batch, const int &num, const int &whSize);
-    static void  scaleBias(float *const &output, float *const &scales, const int &batch, const int &num, const int &whSize);
+    static void  addBias(float *const &_output, float *const &_biases, const int &_batch, const int &_num, const int &whSize);
+    static void  scaleBias(float *const &_output, float *const &_scales, const int &_batch, const int &_num, const int &whSize);
 
-    void binarizeWeights(float *const &weights, const int &num, const int &wtSize, float *const &binary);
-    void cpuBinarize(float *const &x, const int &xNum, float *const &binary);
+    void binarizeWeights(float *const &_weights, const int &_num, const int &wtSize, float *const &_binary);
+    void cpuBinarize(float *const &x, const int &xNum, float *const &_binary);
     void swapBinary();
 
     void forward(NetworkState &netState);
-    void loadAllWeigths(std::vector<float> &weights);
+    void loadAllWeigths(std::vector<float> &_weights);
 
-    void loadScales(float *const &weights, const int& len);
+    void loadScales(float *const &_weights, const int& len);
     void loadBias(float *const &bias, const int& len);
-    void loadWeights(float *const &weights, const int& len);
-    void loadRollMean(float * const &rollMean, const int &len);
-    void loadRollVariance(float * const &rollVariance, const int &len);
+    void loadWeights(float *const &_weights, const int& len);
+    void loadRollMean(float * const &_rollMean, const int &len);
+    void loadRollVariance(float * const &_rollVariance, const int &len);
 
+    float *getWeights() const;
+
+    float *getBiases() const;
+
+    float *getScales() const;
+
+    float *getRollMean() const;
+
+    float *getRollVariance() const;
+
+    char *getCWeights() const;
+
+    float *getBinaryInputs() const;
+
+    float *getBinaryWeights() const;
+
+    float *getActivationInput() const;
+
+    float *getMeanArr() const;
+
+    uint32_t *getBinRePackedIn() const;
+
+    char *getTBitInput() const;
+
+    char *getAlignBitWeights() const;
+
+    int getBitAlign() const;
+
+    int getLdaAlign() const;
+
+    int getUseBias() const;
+
+    int getNScales() const;
+
+    int getNRollMean() const;
+
+    int getNRollVariance() const;
+
+    int getNBiases() const;
+
+    int getNWeights() const;
+
+    int getGroups() const;
+
+    int getGroupIndex() const;
+
+    int getXnor() const;
+
+    int getBinary() const;
+
+    int getUseBinOutput() const;
+
+    int getSteps() const;
+
+    int getAntialiasing() const;
+
+    int getAssistedExcite() const;
+
+    int getKSizeX() const;
+
+    int getKSizeY() const;
+
+    int getStride() const;
+
+    int getStrideX() const;
+
+    int getStrideY() const;
+
+    int getPaddingX() const;
+
+    int getPaddingY() const;
+
+    int getDilationX() const;
+
+    int getDilationY() const;
+
+    int getBatchNorm() const;
+
+protected:
+    float       *_weights            =   nullptr;
+    float       *_biases             =   nullptr;
+
+    ConvolutionalLayer* _shareLayer  =   nullptr;
+
+    float       *_scales             =   nullptr;
+    float       *_rollMean           =   nullptr;
+    float       *_rollVariance       =   nullptr;
+
+    char        *_cWeights           =   nullptr;
+    float       *_binaryInputs       =   nullptr;
+    float       *_binaryWeights      =   nullptr;
+    float       *_activationInput    =   nullptr;
+    float       *_meanArr            =   nullptr;
+    uint32_t    *_binRePackedIn      =   nullptr;
+    char        *_tBitInput          =   nullptr;
+    char        *_alignBitWeights    =   nullptr;
+
+    int         _bitAlign            =   0;
+    int         _ldaAlign            =   0;
+
+    int         _useBias             =   1;
+
+    int         _nScales             =   0;
+    int         _nRollMean           =   0;
+    int         _nRollVariance       =   0;
+
+    int         _nBiases             =   0;
+    int         _nWeights            =   0;
+    int         _groups              =   0;
+    int         _groupIndex          =   0;
+
+    int         _xnor                =   0;
+    int         _binary              =   0;
+    int         _useBinOutput        =   0;
+    int         _steps               =   0;
+
+    int         _antialiasing        =   0;
+    int         _assistedExcite      =   0;
+
+    int         _kSizeX              =   0;
+    int         _kSizeY              =   0;
+    int         _stride              =   0;
+    int         _strideX             =   0;
+    int         _strideY             =   0;
+    int         _paddingX            =   0;
+    int         _paddingY            =   0;
+    int         _dilationX           =   0;
+    int         _dilationY           =   0;
+    int         _batchNorm           =   0;
 };
 }
 
 #endif 
+

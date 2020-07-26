@@ -26,7 +26,7 @@ class NetBuildParams;
 class MsnhNet_API ConcatBlockLayer : public BaseLayer
 {
 public:
-    ConcatBlockLayer(const int &batch, NetBuildParams &params, std::vector<std::vector<BaseParams*>> &branchParams, ActivationType &activation, const std::vector<float> &actParams);
+    ConcatBlockLayer(const int &_batch, NetBuildParams &params, std::vector<std::vector<BaseParams*>> &branchParams, ActivationType &_activation, const std::vector<float> &_actParams);
 
     std::vector<std::vector<BaseLayer *>> branchLayers;
     float       *activationInput    =   nullptr;
@@ -40,3 +40,4 @@ public:
 }
 
 #endif 
+

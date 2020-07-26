@@ -12,18 +12,30 @@ namespace Msnhnet
 class MsnhNet_API RouteLayer : public BaseLayer
 {
 public:
-    RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes, std::vector<int> &inputLayerOutputs,
-               const int &groups, const int &groupId, const int &addModel);
-
-    std::vector<int>inputLayerIndexes;
-    std::vector<int>inputLayerOutputs;
-    int         groups              =   0;
-    int         groupIndex          =   0;
-    int         addModel            =   0;
+    RouteLayer(const int &_batch, std::vector<int> &_inputLayerIndexes, std::vector<int> &_inputLayerOutputs,
+               const int &_groups, const int &groupId, const int &_addModel);
 
     virtual void forward(NetworkState &netState);
     void resize(Network &net);
+
+    std::vector<int> getInputLayerIndexes() const;
+
+    std::vector<int> getInputLayerOutputs() const;
+
+    int getGroups() const;
+
+    int getGroupIndex() const;
+
+    int getAddModel() const;
+
+protected:
+    std::vector<int> _inputLayerIndexes;
+    std::vector<int> _inputLayerOutputs;
+    int         _groups              =   0;
+    int         _groupIndex          =   0;
+    int         _addModel            =   0;
 };
 }
 
 #endif 
+

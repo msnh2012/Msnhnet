@@ -49,6 +49,16 @@ public:
     }
 };
 
+class ActivationParams : public BaseParams
+{
+public:
+    ActivationParams(bool incIndex) : BaseParams(incIndex)
+    {
+        this->type     = LayerType::ACTIVE;
+    }
+    ActivationType activation = ActivationType::NONE;
+};
+
 class ConvParams : public  BaseParams
 {
 public:
@@ -77,6 +87,7 @@ public:
     int             dilationX   =   -1;
     int             dilationY   =   -1;
     int             useBias     =   1; 
+
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
 };
@@ -103,7 +114,10 @@ public:
     int             paddingX    =   -1;
     int             paddingY    =   -1;
 
+    int             groups      =   1;
+
     int             useBias     =   1; 
+
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
 };
@@ -131,6 +145,7 @@ public:
     int             outChannels =   1;
 
     int             ceilMode   =   0;
+    int             global      =   0;
 };
 
 class LocalAvgPoolParams : public BaseParams
@@ -153,6 +168,16 @@ public:
     int             paddingY    =   -1;
 
     int             ceilMode    =   0;
+    int             global      =   0;
+};
+
+class GlobalAvgPoolParams : public BaseParams
+{
+public:
+    GlobalAvgPoolParams(bool incIndex) : BaseParams(incIndex)
+    {
+        this->type  = LayerType::GLOBAL_AVGPOOL;
+    }
 };
 
 class ConnectParams : public BaseParams
@@ -254,6 +279,18 @@ public:
     int     addModel    =   0;
 };
 
+class SoftMaxParams : public BaseParams
+{
+public:
+    SoftMaxParams(bool incIndex) : BaseParams(incIndex)
+    {
+        this->type = LayerType::SOFTMAX;
+    }
+
+    int     groups      =   1;
+    int     temperature =   1;
+};
+
 class UpSampleParams : public BaseParams
 {
 public:
@@ -343,8 +380,10 @@ public:
     void readMsnhBin(const std::string &path);
 
     void parseConfigParams(NetConfigParams *netConfigParams, YAML::const_iterator &iter);
+    void parseActivationParams(ActivationParams *activationParams, YAML::const_iterator &iter);
     void parseMaxPoolParams(MaxPoolParams *maxPoolParams, YAML::const_iterator &iter);
     void parseLocalAvgPoolParams(LocalAvgPoolParams *localAvgPoolParams, YAML::const_iterator &iter);
+    void parseGlobalAvgPoolParams(GlobalAvgPoolParams *globalAvgPoolParams, YAML::const_iterator &iter);
     void parseConvParams(ConvParams *convParams, YAML::const_iterator &iter);
     void parseDeConvParams(DeConvParams *deconvParams, YAML::const_iterator &iter);
     void parseConnectParams(ConnectParams *connectParams, YAML::const_iterator &iter);
@@ -356,6 +395,7 @@ public:
     void parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::const_iterator &iter);
     void parseAddBlockParams(AddBlockParams *addBlockParams, YAML::const_iterator &iter);
     void parseRouteParams(RouteParams *routeParams, YAML::const_iterator &iter);
+    void parseSoftMaxParams(SoftMaxParams *softmaxParams, YAML::const_iterator &iter);
     void parseUpSampleParams(UpSampleParams *upSampleParams, YAML::const_iterator &iter);
     void parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator &iter);
     void parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_iterator &iter);
@@ -364,3 +404,4 @@ public:
 }
 
 #endif 
+

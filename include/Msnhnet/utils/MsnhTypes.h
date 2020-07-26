@@ -108,6 +108,7 @@ public:
     static inline float iou(const XYWHBox &box1, const XYWHBox &box2)
     {
         X1Y1X2Y2Box b1      = toX1Y1X2Y2Box(box1);  
+
         X1Y1X2Y2Box b2      = toX1Y1X2Y2Box(box2);  
 
         float innerRectX1   = std::max(b1.x1,b2.x1);
@@ -127,3 +128,4 @@ public:
 }
 
 #endif 
+

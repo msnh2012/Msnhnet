@@ -18,35 +18,6 @@ public:
     static bool     supportFma;
     static bool     isPreviewMode;
 
-    LayerType       type;                       
-    ActivationType  activation;                 
-    std::vector<float> actParams;
-
-    int             num             =  0;       
-    size_t          workSpaceSize   =  0;
-
-    int             height          =  0;
-    int             width           =  0;
-    int             channel         =  0;
-
-    int             outHeight       =  0;
-    int             outWidth        =  0;
-    int             outChannel      =  0;
-
-    int             inputNum        =  0;
-    int             outputNum       =  0;
-
-    size_t          numWeights      =  0;       
-
-    int             batch           =  0;
-    float          *output          =  nullptr; 
-    float           bFlops          =  0;
-
-    std::string     layerName       =  "BaseLayer";
-    std::string     layerDetail     =  "";
-
-    float           forwardTime     =  0;
-
     static void setPreviewMode(const bool &isPreviewMode);
 
     virtual void forward(NetworkState &netState);
@@ -61,7 +32,86 @@ public:
             value = nullptr;
         }
     }
+
+    LayerType type() const;
+
+    ActivationType activation() const;
+
+    int getOutHeight() const;
+
+    int getOutWidth() const;
+
+    int getOutChannel() const;
+
+    int getOutputNum() const;
+
+    void setOutHeight(int getOutHeight);
+
+    void setOutWidth(int getOutWidth);
+
+    void setOutChannel(int getOutChannel);
+
+    float *getOutput() const;
+
+    int getInputNum() const;
+
+    size_t getWorkSpaceSize() const;
+
+    void setWorkSpaceSize(const size_t &getWorkSpaceSize);
+
+    size_t getNumWeights() const;
+
+    std::string getLayerDetail() const;
+
+    int getHeight() const;
+
+    int getWidth() const;
+
+    int getChannel() const;
+
+    float getForwardTime() const;
+
+    std::string getLayerName() const;
+
+    int getBatch() const;
+
+    ActivationType getActivation() const;
+
+protected:
+    LayerType          _type;                       
+
+    ActivationType     _activation;                 
+
+    std::vector<float> _actParams;
+
+    int             _num             =  0;       
+
+    size_t          _workSpaceSize   =  0;
+
+    int             _height          =  0;
+    int             _width           =  0;
+    int             _channel         =  0;
+
+    int             _outHeight       =  0;
+    int             _outWidth        =  0;
+    int             _outChannel      =  0;
+
+    int             _inputNum        =  0;
+    int             _outputNum       =  0;
+
+    size_t          _numWeights      =  0;       
+
+    int             _batch           =  0;
+    float          *_output          =  nullptr; 
+
+    float           _bFlops          =  0;
+
+    std::string     _layerName       =  "BaseLayer";
+    std::string     _layerDetail     =  "";
+
+    float           _forwardTime     =  0;
 };
 }
 
 #endif 
+

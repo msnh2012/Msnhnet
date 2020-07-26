@@ -10,6 +10,7 @@
 #include "Msnhnet/layers/MsnhCropLayer.h"
 #include "Msnhnet/layers/MsnhDeConvolutionalLayer.h"
 #include "Msnhnet/layers/MsnhLocalAvgPoolLayer.h"
+#include "Msnhnet/layers/MsnhGlobalAvgPoolLayer.h"
 #include "Msnhnet/layers/MsnhMaxPoolLayer.h"
 #include "Msnhnet/layers/MsnhRouteLayer.h"
 #include "Msnhnet/layers/MsnhSoftMaxLayer.h"

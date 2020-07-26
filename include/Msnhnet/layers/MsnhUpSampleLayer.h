@@ -11,14 +11,23 @@ namespace Msnhnet
 class MsnhNet_API UpSampleLayer : public BaseLayer
 {
 public:
-    UpSampleLayer(const int &batch, const int &width, const int &height, const int &channel, const int &stride, const float &scale);
-    int         reverse     =   0;
-    int         stride      =   0;
-    float       scale       =   1.f;
+    UpSampleLayer(const int &_batch, const int &_width, const int &_height, const int &_channel, const int &_stride, const float &_scale);
 
     virtual void forward(NetworkState &netState);
-    void resize(const int &width, const int &height);
+    void resize(const int &_width, const int &_height);
+
+    int getReverse() const;
+
+    int getStride() const;
+
+    float getScale() const;
+
+protected:
+    int         _reverse     =   0;
+    int         _stride      =   0;
+    float       _scale       =   1.f;
 };
 }
 
 #endif 
+

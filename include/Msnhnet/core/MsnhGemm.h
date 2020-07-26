@@ -95,10 +95,17 @@ public:
     static void cpuFastADotB(const int &n, float *const &A, float *const& B, float *const &C);
 
 #define TILE_M 4  
+
 #define TILE_N 16 
+
 #define TILE_K 16 
 
     static void cpuGemmNNFast(const int &M, const int &N, const int &K, const float &ALPHA,
+                              float *const &A, const int &lda,
+                              float *const &B, const int &ldb,
+                              float *const &C, const int &ldc);
+
+    static void cpuGemmTNFast(const int &M, const int &N, const int &K, const float &ALPHA,
                               float *const &A, const int &lda,
                               float *const &B, const int &ldb,
                               float *const &C, const int &ldc);
@@ -161,6 +168,7 @@ public:
         cBit256         = _mm256_andnot_si256(xor256, cBit256);       
 
         *countSum      = _mm256_add_epi64(count256(cBit256), *countSum);    
+
     }
 
     static inline int getCountMula(__m256i countSum)
@@ -222,3 +230,4 @@ public:
 }
 
 #endif 
+

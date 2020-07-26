@@ -27,7 +27,7 @@ class NetBuildParams;
 class MsnhNet_API Res2BlockLayer : public BaseLayer
 {
 public:
-    Res2BlockLayer(const int &batch, NetBuildParams &params, std::vector<BaseParams*> &baseParams, std::vector<BaseParams*> &branchParams, ActivationType &activation, const std::vector<float> &actParams);
+    Res2BlockLayer(const int &_batch, NetBuildParams &params, std::vector<BaseParams*> &baseParams, std::vector<BaseParams*> &branchParams, ActivationType &_activation, const std::vector<float> &_actParams);
 
     std::vector<BaseLayer *> baseLayers;
     std::vector<BaseLayer *> branchLayers;
@@ -41,3 +41,4 @@ public:
 };
 }
 #endif 
+

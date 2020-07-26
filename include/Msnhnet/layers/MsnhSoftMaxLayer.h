@@ -10,12 +10,18 @@ namespace Msnhnet
 class MsnhNet_API SoftMaxLayer : public BaseLayer
 {
 public:
-    SoftMaxLayer(const int &batch, const int &inputNum, const int &groups);
-    int         groups              =   0;
-    float       temperature         =   0;
-
+    SoftMaxLayer(const int &_batch, const int &_inputNum, const int &_groups, const float &_temperature);
     virtual void forward(NetworkState &netState);
+
+    int getGroups() const;
+
+    float getTemperature() const;
+
+protected:
+    int         _groups              =   0;
+    float       _temperature         =   0;
 };
 }
 
 #endif 
+

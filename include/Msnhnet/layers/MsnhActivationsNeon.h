@@ -12,7 +12,9 @@ public:
     static inline void logisticActivateSize4(float *const &x)
     {
         const float32x4_t one   =   vdupq_n_f32(1.f);  
+
         const float32x4_t zero  =   vdupq_n_f32(0);  
+
         float32x4_t loadX       =   vld1q_f32(x);      
 
         float32x4_t divDown     =   vaddq_f32(one,exp_ps(vsubq_f32(zero,loadX)));
@@ -29,8 +31,11 @@ public:
     static inline void loggyActivateSize4(float *const &x)
     {
         const float32x4_t one   =   vdupq_n_f32(1.f);  
+
         const float32x4_t two   =   vdupq_n_f32(2.f);  
+
         const float32x4_t zero  =   vdupq_n_f32(0);  
+
         float32x4_t loadX       =   vld1q_f32(x);      
 
         float32x4_t divDown     =   vaddq_f32(one,exp_ps(vsubq_f32(zero,loadX)));
@@ -62,7 +67,9 @@ public:
     static inline void eluActivateSize4(float *const &x)
     {
         const float32x4_t one   =   vdupq_n_f32(1.f);  
+
         const float32x4_t zero  =   vdupq_n_f32(0);  
+
         float32x4_t loadX       =   vld1q_f32(x);      
 
         uint32x4_t a            =   vcgeq_f32(loadX, zero);
@@ -81,7 +88,9 @@ public:
     static inline void seluActivateSize4(float *const &x)
     {
         const float32x4_t one   =   vdupq_n_f32(1.f);  
+
         const float32x4_t zero  =   vdupq_n_f32(0);  
+
         float32x4_t loadX       =   vld1q_f32(x);      
 
         uint32x4_t a            =   vcgeq_f32(loadX, zero);
@@ -105,7 +114,9 @@ public:
     static inline void relieActivateSize4(float *const &x)
     {
         const float32x4_t zero  =   vdupq_n_f32(0);  
+
         const float32x4_t alpha =   vdupq_n_f32(.01f);  
+
         float32x4_t loadX       =   vld1q_f32(x);      
 
         uint32x4_t a            =   vcgtq_f32(loadX, zero);
@@ -124,7 +135,9 @@ public:
     static inline void rampActivateSize4(float *const &x)
     {
         const float32x4_t zero  =   vdupq_n_f32(0);  
+
         const float32x4_t alpha =   vdupq_n_f32(.1f);  
+
         float32x4_t loadX       =   vld1q_f32(x);      
 
         uint32x4_t a            =   vcgtq_f32(loadX, zero);
@@ -138,7 +151,9 @@ public:
     static inline void leakyActivateSize4(float *const &x, const float& param = 0.1f)
     {
         const float32x4_t zero  =   vdupq_n_f32(0);  
+
         const float32x4_t alpha =   vdupq_n_f32(param);  
+
         float32x4_t loadX       =   vld1q_f32(x);      
 
         uint32x4_t a            =   vcgtq_f32(loadX, zero);
@@ -157,14 +172,18 @@ public:
     static inline void tanhActivateSize4(float *const &x)
     {
         const float32x4_t one   =   vdupq_n_f32(1.f);  
+
         const float32x4_t two   =   vdupq_n_f32(2.f);  
+
         float32x4_t loadX       =   vld1q_f32(x);      
 
         float32x4_t up          =   vsubq_f32(exp_ps(vmulq_f32(two,loadX)),one);
         float32x4_t down        =   vaddq_f32(exp_ps(vmulq_f32(two,loadX)),one);
 
         float32x4_t rec0        =   vrecpeq_f32(down);                      
+
         float32x4_t rec1        =   vmulq_f32(rec0,vrecpsq_f32(rec0,down)); 
+
         float32x4_t result      =   vmulq_f32(up, rec1);                    
 
         vst1q_f32(x,result);
@@ -207,7 +226,9 @@ public:
     {
 
         const float32x4_t one   =   vdupq_n_f32(1.f);  
+
         const float32x4_t alpha =   vdupq_n_f32(threshold);  
+
         const float32x4_t nAlpha=   vdupq_n_f32(-1.0f*threshold);
         float32x4_t loadX       =   vld1q_f32(x);      
 
@@ -232,10 +253,15 @@ public:
     {
 
         const float32x4_t four  =   vdupq_n_f32(4.f);  
+
         const float32x4_t nFour =   vdupq_n_f32(-4.f);  
+
         const float32x4_t one   =   vdupq_n_f32(1.f);  
+
         const float32x4_t alpha =   vdupq_n_f32(0.01f);  
+
         const float32x4_t beta  =   vdupq_n_f32(0.125f);  
+
         const float32x4_t gama  =   vdupq_n_f32(0.5f);  
 
         float32x4_t loadX       =   vld1q_f32(x);      
@@ -263,12 +289,15 @@ public:
     static inline void lhtanActivateSize4(float *const &x)
     {
         const float32x4_t zero  =   vdupq_n_f32(0);  
+
         const float32x4_t one   =   vdupq_n_f32(1.f);  
+
         const float32x4_t alpha =   vdupq_n_f32(0.001f);  
 
         float32x4_t loadX       =   vld1q_f32(x);      
 
         uint32x4_t a            =   vcgtq_f32(loadX, one); 
+
         uint32x4_t b            =   vcltq_f32(loadX, zero);
         uint32x4_t c            =   vandq_u32(vcleq_f32(loadX, one),vcgeq_f32(loadX, zero));
         a                       =   vandq_u32(a, vdupq_n_u32(1));
@@ -291,6 +320,7 @@ public:
     static inline void mishActivateSize4(float *const &x)
     {
         float32x4_t loadX       =   vld1q_f32(x);      
+
         float32x4_t result      =   vmulq_f32(loadX, tanh_ps(log_ps(vaddq_f32(exp_ps(loadX), vdupq_n_f32(1.f)))));
         vst1q_f32(x,result);
 
@@ -304,7 +334,9 @@ public:
         float32x4_t divDown     =   vaddq_f32(one,exp_ps(vsubq_f32(vdupq_n_f32(0), loadX)));
 
         float32x4_t rec0        =   vrecpeq_f32(divDown);                         
+
         float32x4_t rec1        =   vmulq_f32(rec0,vrecpsq_f32(rec0,divDown));    
+
         float32x4_t logistic    =   vmulq_f32(one, rec1);                         
 
         float32x4_t result      =   vmulq_f32(loadX,logistic);
@@ -318,3 +350,4 @@ public:
 }
 #endif
 #endif 
+

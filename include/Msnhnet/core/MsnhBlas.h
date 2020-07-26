@@ -1,9 +1,20 @@
 ﻿#ifndef MSNHBLAS_H
 #define MSNHBLAS_H
 
+#include <algorithm>
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/core/MsnhSimd.h"
 #include "Msnhnet/utils/MsnhExport.h"
+#ifdef USE_X86
+#include "Msnhnet/layers/MsnhActivationsAvx.h"
+#endif
+
+#ifdef USE_ARM
+#ifdef USE_NEON
+#include "Msnhnet/layers/MsnhActivationsNeon.h"
+#endif
+#endif
+#include <Msnhnet/io/MsnhIO.h>
 
 namespace Msnhnet
 {
@@ -38,11 +49,12 @@ public:
 
     static void cpuFlatten(float *const &x, const int &size, const int &layers, const int &batch, const int &forward);
 
-    static void softmax(float *const &input, const int &num, const float &temp, const int &stride, float *const &output);
+    static void softmax(float *const &input, const int &num, const float &temperature, const int &stride, float *const &output,
+                        const bool &useAvx);
 
     static void cpuSoftmax(float *const &input, const int &num, const int &batch, const int &batchOff,
                            const int &groups, const int &groupOff, const float &temperature,  const int &stride,
-                           float *const &output);
+                           float *const &output, const bool &useAvx);
 
     static void cpuSoftMaxCrossEntropy(const int &num, float *const &pred, float *const &truth, float *const &delta, float *const &error);
 
@@ -65,3 +77,4 @@ public:
 };
 }
 #endif 
+

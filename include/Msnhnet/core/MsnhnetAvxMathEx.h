@@ -3,7 +3,8 @@
 /*
    AVX implementation of sin, cos, sincos, exp and log
    Based on "sse_mathfun.h", by Julien Pommier
-   http://gruntthepeon.free.fr/ssemath/
+   http:
+
    Copyright (C) 2012 Giovanni Garberoglio
    Interdisciplinary Laboratory for Computational Science (LISC)
    Fondazione Bruno Kessler and University of Trento
@@ -218,6 +219,7 @@ static inline __m256 log256_ps(__m256 x)
     x = _mm256_add_ps(x, y);
     x = _mm256_add_ps(x, tmp);
     y = _mm256_or_ps(x, invalid_mask); 
+
     return y;
 }
 
@@ -312,6 +314,7 @@ _PS256_CONST(cephes_FOPI, 1.27323954473516f);
 */
 static inline __m256 sin256_ps(__m256 x)
 {   
+
     __m256 xmm1, xmm2 = _mm256_setzero_ps(), xmm3, sign_bit, y;
     __m256i imm0, imm2;
 
@@ -428,6 +431,7 @@ static inline __m256 sin256_ps(__m256 x)
     /* select the correct result from the two polynoms */
     xmm3 = poly_mask;
     y2 = _mm256_and_ps(xmm3, y2); 
+
     y = _mm256_andnot_ps(xmm3, y);
     y = _mm256_add_ps(y, y2);
     /* update the sign */
@@ -439,6 +443,7 @@ static inline __m256 sin256_ps(__m256 x)
 /* almost the same as sin_ps */
 static inline __m256 cos256_ps(__m256 x)
 {   
+
     __m256 xmm1, xmm2 = _mm256_setzero_ps(), xmm3, y;
     __m256i imm0, imm2;
 
@@ -545,6 +550,7 @@ static inline __m256 cos256_ps(__m256 x)
     /* select the correct result from the two polynoms */
     xmm3 = poly_mask;
     y2 = _mm256_and_ps(xmm3, y2); 
+
     y = _mm256_andnot_ps(xmm3, y);
     y = _mm256_add_ps(y, y2);
     /* update the sign */
@@ -709,3 +715,4 @@ static inline __m256 pow_ps(__m256 a, __m256 b)
 }
 #endif
 #endif 
+
