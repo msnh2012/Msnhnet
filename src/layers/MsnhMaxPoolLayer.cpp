@@ -6,42 +6,47 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
                            const int &strideX, const int &strideY, const int &paddingX, const int &paddingY, const int &maxPoolDepth,
                            const int &outChannelsMp, const int& ceilMode,  const int &antialiasing)
 {
-    this->type           = LayerType::MAXPOOL;
-    this->layerName      = "MaxPool         ";
+    this->_type           = LayerType::MAXPOOL;
+    this->_layerName      = "MaxPool         ";
 
-    this->batch          = batch;
-    this->height         = height;
-    this->width          = width;
-    this->channel        = channel;
+    this->_batch          = batch;
+    this->_height         = height;
+    this->_width          = width;
+    this->_channel        = channel;
 
-    this->paddingX       = paddingX;
-    this->paddingY       = paddingY;
+    this->_paddingX       = paddingX;
+    this->_paddingY       = paddingY;
 
-    this->ceilMode       = ceilMode;
+    this->_ceilMode       = ceilMode;
 
-    this->maxPoolDepth   = maxPoolDepth;
-    this->outChannelsMp  = outChannelsMp;   
-    this->antialiasing   = antialiasing;
+    this->_maxPoolDepth   = maxPoolDepth;
+    this->_outChannelsMp  = outChannelsMp;   
 
-    this->kSizeX         = kSizeX;  
-    this->kSizeY         = kSizeY;  
+    this->_antialiasing   = antialiasing;
 
-    this->stride         = strideX; 
-    this->strideX        = strideX;
-    this->strideY        = strideY;
+    this->_kSizeX         = kSizeX;  
+
+    this->_kSizeY         = kSizeY;  
+
+    this->_stride         = strideX; 
+
+    this->_strideX        = strideX;
+
+    this->_strideY        = strideY;
 
     if(maxPoolDepth)
     {
-        this->outChannel = outChannelsMp;
-        this->outWidth   = this->width;
-        this->outHeight  = this->height;
+        this->_outChannel = outChannelsMp;
+        this->_outWidth   = this->_width;
+        this->_outHeight  = this->_height;
     }
     else
     {
 
-        if(this->ceilMode == 1)
+        if(this->_ceilMode == 1)
         {
             int tmpW = (width  + paddingX*2 - kSizeX) % strideX; 
+
             int tmpH = (height + paddingY*2 - kSizeY) % strideY; 
 
             if(tmpW >= kSizeX)
@@ -56,87 +61,97 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
 
             if(tmpW <= paddingX)
             {
-                this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1; 
+                this->_outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1; 
+
             }
             else
             {
-                this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 2; 
+                this->_outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 2; 
+
             }
 
             if(tmpH <= paddingY)
             {
-                this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1; 
+                this->_outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1; 
+
             }
             else
             {
-                this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 2; 
+                this->_outHeight  = (height + paddingY*2 - kSizeY) / strideY + 2; 
+
             }
         }
-        else if(this->ceilMode == 0)
+        else if(this->_ceilMode == 0)
         {
-            this->outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1; 
-            this->outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1; 
+            this->_outWidth   = (width  + paddingX*2 - kSizeX) / strideX + 1; 
+
+            this->_outHeight  = (height + paddingY*2 - kSizeY) / strideY + 1; 
+
         }
         else
         {
-            this->outWidth   = (width  + paddingX - kSizeX) / strideX + 1; 
-            this->outHeight  = (height + paddingY - kSizeY) / strideY + 1; 
+            this->_outWidth   = (width  + paddingX - kSizeX) / strideX + 1; 
+
+            this->_outHeight  = (height + paddingY - kSizeY) / strideY + 1; 
+
         }
-        this->outChannel = channel;                                 
+        this->_outChannel = channel;                                 
+
     }
 
-    this->outputNum      =  this->outHeight * this->outWidth * this->outChannel; 
-    this->inputNum       =  height * width * channel; 
+    this->_outputNum      =  this->_outHeight * this->_outWidth * this->_outChannel; 
+
+    this->_inputNum       =  height * width * channel; 
 
     if(!BaseLayer::isPreviewMode)
     {
 
-        this->output         = new float[static_cast<size_t>(this->outputNum * this->batch)]();
+        this->_output         = new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
     }
 
-    this->bFlops            = (this->kSizeX*this->kSizeY* this->channel*this->outHeight*this->outWidth)/ 1000000000.f;
+    this->_bFlops            = (this->_kSizeX*this->_kSizeY* this->_channel*this->_outHeight*this->_outWidth)/ 1000000000.f;
 
     char msg[100];
 
     if(maxPoolDepth)
     {
 #ifdef WIN32
-        sprintf_s(msg, "max-depth         %2dx%2d/%2d   %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n",
-                  this->kSizeX, this->kSizeY, this->strideX, this->width, this->height, this->channel,
-                  this->outWidth, this->outHeight,this->outChannel,this->bFlops);
+        sprintf_s(msg, "MaxPooldepth      %2dx%2d/%2d   %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n",
+                  this->_kSizeX, this->_kSizeY, this->_strideX, this->_width, this->_height, this->_channel,
+                  this->_outWidth, this->_outHeight,this->_outChannel,this->_bFlops);
 #else
         sprintf(msg, "max-depth         %2dx%2d/%2d   %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n",
-                this->kSizeX, this->kSizeY, this->strideX, this->width, this->height, this->channel,
-                this->outWidth, this->outHeight,this->outChannel,this->bFlops);
+                this->_kSizeX, this->_kSizeY, this->_strideX, this->_width, this->_height, this->_channel,
+                this->_outWidth, this->_outHeight,this->_outChannel,this->_bFlops);
 #endif
     }
 
     if(strideX == strideY)
     {
 #ifdef WIN32
-        sprintf_s(msg, "max               %2dx%2d/%2d   %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n",
-                  this->kSizeX, this->kSizeY, this->strideX, this->width, this->height, this->channel,
-                  this->outWidth, this->outHeight,this->outChannel,this->bFlops);
+        sprintf_s(msg, "MaxPool           %2dx%2d/%2d   %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n",
+                  this->_kSizeX, this->_kSizeY, this->_strideX, this->_width, this->_height, this->_channel,
+                  this->_outWidth, this->_outHeight,this->_outChannel,this->_bFlops);
 #else
         sprintf(msg, "max               %2dx%2d/%2d   %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n",
-                this->kSizeX, this->kSizeY, this->strideX, this->width, this->height, this->channel,
-                this->outWidth, this->outHeight,this->outChannel,this->bFlops);
+                this->_kSizeX, this->_kSizeY, this->_strideX, this->_width, this->_height, this->_channel,
+                this->_outWidth, this->_outHeight,this->_outChannel,this->_bFlops);
 #endif
     }
     else
     {
 #ifdef WIN32
-        sprintf_s(msg, "max              %2dx%2d/%2dx%2d %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n",
-                  this->kSizeX, this->kSizeY, this->strideX,this->strideY, this->width, this->height,
-                  this->channel, this->outWidth, this->outHeight,this->outChannel,this->bFlops);
+        sprintf_s(msg, "MaxPool          %2dx%2d/%2dx%2d %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n",
+                  this->_kSizeX, this->_kSizeY, this->_strideX,this->_strideY, this->_width, this->_height,
+                  this->_channel, this->_outWidth, this->_outHeight,this->_outChannel,this->_bFlops);
 #else
         sprintf(msg, "max              %2dx%2d/%2dx%2d %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n",
-                this->kSizeX, this->kSizeY, this->strideX,this->strideY, this->width, this->height,
-                this->channel, this->outWidth, this->outHeight,this->outChannel,this->bFlops);
+                this->_kSizeX, this->_kSizeY, this->_strideX,this->_strideY, this->_width, this->_height,
+                this->_channel, this->_outWidth, this->_outHeight,this->_outChannel,this->_bFlops);
 #endif
     }
 
-    this->layerDetail       = msg;
+    this->_layerDetail       = msg;
 
 }
 
@@ -144,33 +159,38 @@ void MaxPoolLayer::forward(NetworkState &netState)
 {
     auto st = std::chrono::system_clock::now();
 
-    if(this->maxPoolDepth)
+    if(this->_maxPoolDepth)
     {
-        for(int b=0; b<this->batch; ++b)                    
+        for(int b=0; b<this->_batch; ++b)                    
+
         {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif                                                      
-            for(int i=0; i<this->height; i++)               
+
+            for(int i=0; i<this->_height; i++)               
+
             {
-                for(int j=0; j<this->width; ++j)            
+                for(int j=0; j<this->_width; ++j)            
+
                 {
-                    for(int g=0; j<this->outChannel; ++g)   
+                    for(int g=0; j<this->_outChannel; ++g)   
+
                     {
-                        int outIndex = j + this->width*(i + this->height*(g + this->outChannel*b));
+                        int outIndex = j + this->_width*(i + this->_height*(g + this->_outChannel*b));
                         float max    = -FLT_MAX;
                         int maxIndex = -1;
 
-                        for(int k=g; k<this->channel; k+=this->outChannel)
+                        for(int k=g; k<this->_channel; k+=this->_outChannel)
                         {
-                            int inIndex = j + this->width*(i + this->height*(k + this->channel*b));
+                            int inIndex = j + this->_width*(i + this->_height*(k + this->_channel*b));
                             float val   = netState.input[inIndex];
 
                             maxIndex    = (val > max)? inIndex:maxIndex;
                             max         = (val > max)? val:max;
                         }
 
-                        this->output[outIndex] = max;
+                        this->_output[outIndex] = max;
                     }
 
                 }
@@ -180,52 +200,56 @@ void MaxPoolLayer::forward(NetworkState &netState)
         return;
     }
 #ifdef USE_X86
-    if((this->strideX == this->strideY) && supportAvx )
+    if((this->_strideX == this->_strideY) && supportAvx )
     {
-        forwardAvx(netState.input,this->output,this->kSizeX, this->kSizeY, this->width,this->height,this->outWidth,
-                   this->outHeight,this->channel,this->paddingX, this->paddingY,this->stride,this->batch);
+        forwardAvx(netState.input,this->_output,this->_kSizeX, this->_kSizeY, this->_width,this->_height,this->_outWidth,
+                   this->_outHeight,this->_channel,this->_paddingX, this->_paddingY,this->_stride,this->_batch);
     }
     else
 #endif
     {
 
-        int widthOffset  =     -(this->paddingX + 1)/2;
-        int heightOffset =     -(this->paddingY + 1)/2;
+        int widthOffset  =     -(this->_paddingX + 1)/2;
+        int heightOffset =     -(this->_paddingY + 1)/2;
 
-        int mHeight         =   this->outHeight;
-        int mWidth          =   this->outWidth;
+        int mHeight         =   this->_outHeight;
+        int mWidth          =   this->_outWidth;
 
-        int mChannel        =   this->channel;
+        int mChannel        =   this->_channel;
 
-        for(int b=0; b<this->batch; ++b)                
+        for(int b=0; b<this->_batch; ++b)                
+
         {
             for(int k=0; k<mChannel; ++k)               
+
             {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
                 for(int i=0; i<mHeight; ++i)            
+
                 {
                     for(int j=0; j<mWidth; ++j)         
+
                     {
 
-                        int outIndex = j + mWidth*(i + mHeight*(k + channel*b));
+                        int outIndex = j + mWidth*(i + mHeight*(k + _channel*b));
                         float max    = -FLT_MAX;
                         int maxIndex = -1;
 
-                        for(int n=0; n<this->kSizeY; ++n)
+                        for(int n=0; n<this->_kSizeY; ++n)
                         {
-                            for(int m=0; m<this->kSizeX; ++m)
+                            for(int m=0; m<this->_kSizeX; ++m)
                             {
 
-                                int curHeight =  heightOffset + i*this->strideY + n;
+                                int curHeight =  heightOffset + i*this->_strideY + n;
 
-                                int curWidth  =  widthOffset  + j*this->strideX + m;
+                                int curWidth  =  widthOffset  + j*this->_strideX + m;
 
-                                int index     =  curWidth + this->width*(curHeight + this->height*(k + b*this->channel));
+                                int index     =  curWidth + this->_width*(curHeight + this->_height*(k + b*this->_channel));
 
-                                bool valid    =  (curHeight >=0 && curHeight < this->height &&
-                                                  curWidth  >=0 && curWidth  < this->width);
+                                bool valid    =  (curHeight >=0 && curHeight < this->_height &&
+                                                  curWidth  >=0 && curWidth  < this->_width);
 
                                 float value   =  (valid)? netState.input[index] : -FLT_MAX;
 
@@ -235,7 +259,7 @@ void MaxPoolLayer::forward(NetworkState &netState)
                             }
                         }
 
-                        this->output[outIndex] = max;
+                        this->_output[outIndex] = max;
 
                     }
                 }
@@ -244,7 +268,7 @@ void MaxPoolLayer::forward(NetworkState &netState)
     }
 
     auto so = std::chrono::system_clock::now();
-    this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 
 }
 
@@ -266,14 +290,18 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
             {
                 int j = 0;
                 if(stride == 1)  
+
                 {
                     for(j=0; j<outWidth - 8 -(kSizeX - 1); j+=8)  
+
                     {
                         int outIndex = j + outWidth*(i + outHeight*(k + channel*b));
                         __m256 max256    = _mm256_set1_ps(-FLT_MAX);
                         for(int n=0; n<kSizeY; ++n)  
+
                         {
                             for(int m=0; m<kSizeX; ++m) 
+
                             {
                                 int curHeight = heightOffset + i*stride + n;
                                 int curWidth  = widthOffset  + j*stride + m;
@@ -294,6 +322,7 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
                     }
                 }
                 else if(kSizeX == 2 && kSizeX == 2 && stride == 2)  
+
                 {
                     for(j=0; j<outWidth-4; j+=4)
                     {
@@ -333,6 +362,7 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
                 }
 
                 for(; j<outWidth; ++j)       
+
                 {
                     int outIndex  =  j + outWidth * (i + outHeight * (k + channel * b));
                     float max     =  -FLT_MAX;
@@ -366,6 +396,61 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
 MaxPoolLayer::~MaxPoolLayer()
 {
 
+}
+
+int MaxPoolLayer::getKSizeX() const
+{
+    return _kSizeX;
+}
+
+int MaxPoolLayer::getKSizeY() const
+{
+    return _kSizeY;
+}
+
+int MaxPoolLayer::getStride() const
+{
+    return _stride;
+}
+
+int MaxPoolLayer::getStrideX() const
+{
+    return _strideX;
+}
+
+int MaxPoolLayer::getStrideY() const
+{
+    return _strideY;
+}
+
+int MaxPoolLayer::getPaddingX() const
+{
+    return _paddingX;
+}
+
+int MaxPoolLayer::getPaddingY() const
+{
+    return _paddingY;
+}
+
+int MaxPoolLayer::getAntialiasing() const
+{
+    return _antialiasing;
+}
+
+int MaxPoolLayer::getMaxPoolDepth() const
+{
+    return _maxPoolDepth;
+}
+
+int MaxPoolLayer::getOutChannelsMp() const
+{
+    return _outChannelsMp;
+}
+
+int MaxPoolLayer::getCeilMode() const
+{
+    return _ceilMode;
 }
 
 }

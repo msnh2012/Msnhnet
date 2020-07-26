@@ -109,12 +109,15 @@ void Blas::cpuMean(float *const &x, const int &batch, const int &filters, const 
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
     for(int i=0; i<filters; ++i) 
+
     {
         mean[i]  = 0;
 
         for(int j=0; j<batch; ++j) 
+
         {
             for(int k=0; k<outSize; ++k) 
+
             {
 
                 int index = j*filters*outSize + i*outSize + k;
@@ -253,39 +256,262 @@ void Blas::cpuFlatten(float * const &x, const int &size, const int &layers, cons
     delete[] swapVal;
 }
 
-void Blas::softmax(float * const &input, const int &num, const float &temprature,  const int &stride, float * const &output)
+void Blas::softmax(float * const &input, const int &num, const float &temperature,  const int &stride, float * const &output, const bool &useAvx)
 {
     float sum       =   0;
     float largest   =   -FLT_MAX;
 
-    for (int i = 0; i < num; ++i)
+    if(stride == 1)
     {
-        if(input[i*stride] > largest)
+        float tempLarge = *max_element(input,input+num);
+        if(tempLarge > largest)
         {
-            largest = input[i*stride];
+            largest = tempLarge;
         }
-    }
 
-    for (int i = 0; i < num; ++i)
-    {
-        float e         =   exp(input[i*stride]/temprature - largest/temprature);
-        sum             +=  e;
-        input[i*stride] =   e;
-    }
+#ifdef USE_X86
+        if(useAvx)
+        {
+            if(temperature == 1)
+            {
+                for (int i = 0; i < num/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&input[i*8]);
+                    __m256 largestMM    = _mm256_broadcast_ss(&largest);
+                    __m256 exp          = exp256_ps(_mm256_sub_ps(load,largestMM));
+                    _mm256_storeu_ps(&output[i*8],exp);
 
-    for (int i = 0; i < num; ++i)
+                    exp = _mm256_add_ps(exp, _mm256_permute2f128_ps(exp, exp, 1));
+                    exp = _mm256_hadd_ps(exp, exp);
+                    float sumExp    = _mm256_cvtss_f32(_mm256_hadd_ps(exp, exp));
+
+                    sum = sum + sumExp;
+                }
+
+                for (int i = (num/8)*8; i < num; ++i)
+                {
+                    float e         =   exp(input[i] - largest);
+                    sum             +=  e;
+                    output[i] =   e;
+                }
+
+            }
+            else
+            {
+                __m256 tempertureMM = _mm256_broadcast_ss(&temperature);
+                __m256 expB         = _mm256_div_ps(_mm256_broadcast_ss(&largest),tempertureMM);
+
+                for (int i = 0; i < num/8; ++i)
+                {
+                    __m256 load     = _mm256_loadu_ps(&input[i*8]);
+                    __m256 expA     = _mm256_div_ps(load,tempertureMM);
+                    __m256 exp      = exp256_ps(_mm256_sub_ps(expA,expB));
+                    _mm256_storeu_ps(&output[i*8],exp);
+
+                    exp = _mm256_add_ps(exp, _mm256_permute2f128_ps(exp, exp, 1));
+                    exp = _mm256_hadd_ps(exp, exp);
+                    float sumExp    = _mm256_cvtss_f32(_mm256_hadd_ps(exp, exp));
+                    sum = sum + sumExp;
+                }
+
+                for (int i = (num/8)*8; i < num; ++i)
+                {
+                    float e         =   exp(input[i]/temperature - largest/temperature);
+                    sum             +=  e;
+                    output[i] =   e;
+                }
+            }
+
+            __m256 sumNN = _mm256_broadcast_ss(&sum);
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < num/8; ++i)
+            {
+                __m256 load     = _mm256_loadu_ps(&output[i*8]);
+                load            = _mm256_div_ps(load, sumNN);
+                _mm256_storeu_ps(&output[i*8],load);
+            }
+
+            for (int i = (num/8)*8; i < num; ++i)
+            {
+                output[i] /= sum;
+            }
+
+        }
+        else
+        {
+            for (int i = 0; i < num; ++i)
+            {
+                float e         =   exp(input[i]/temperature - largest/temperature);
+                sum             +=  e;
+                output[i] =   e;
+            }
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < num; ++i)
+            {
+                output[i] /= sum;
+            }
+        }
+#endif
+
+#ifdef USE_ARM
+        std::cout<<"softmax arm need test"<<std::endl;
+        getchar();
+#ifdef USE_NEON
+        if(temperature == 1)
+        {
+            for (int i = 0; i < num/4; ++i)
+            {
+                float32x4_t load        =   vld1q_f32(&input[i*4]);
+                float32x4_t largestMM   =   vdupq_n_f32(largest);
+
+                float32x4_t exp         =   exp_ps(vsubq_f32(load,largestMM));
+
+                vst1q_f32(&output[i*4],exp);
+
+#ifdef __arrch64__
+                float sumExp            = vaddvq_f32(exp);
+#else
+                float32x2_t exp2        = vadd_f32(vget_low_f32(exp), vget_high_f32(exp));
+
+                exp2                    = vpadd_f32(exp2, exp2);
+
+                float sumExp            = vget_lane_f32(exp2, 0);
+
+#endif
+                sum = sum + sumExp;
+            }
+
+            for (int i = (num/4)*4; i < num; ++i)
+            {
+                float e         =   exp(input[i] - largest);
+                sum             +=  e;
+                output[i] =   e;
+            }
+        }
+        else
+        {
+            float32x4_t tempertureMM    =   vdupq_n_f32(temperature);
+            float32x4_t largestMM       =   vdupq_n_f32(largest);
+
+            float32x4_t recip0          =   vrecpeq_f32(tempertureMM);
+            float32x4_t recip1          =   vmulq_f32(recip0, vrecpsq_f32(recip0, tempertureMM));
+
+            float32x4_t expB            =   vmulq_f32(largestMM, recip1);
+
+            for (int i = 0; i < num/4; ++i)
+            {
+                float32x4_t load        =   vld1q_f32(&input[i*4]);
+                float32x4_t expA        =   vmulq_f32(load,recip1);
+
+                float32x4_t exp         =   exp_ps(vsubq_f32(expA,expB));
+
+                vst1q_f32(&output[i*4],exp);
+
+#ifdef __arrch64__
+                float sumExp            = vaddvq_f32(exp);
+#else
+                float32x2_t exp2        = vadd_f32(vget_low_f32(exp), vget_high_f32(exp));
+
+                exp2                    = vpadd_f32(exp2, exp2);
+
+                float sumExp            = vget_lane_f32(exp2, 0);
+
+#endif
+                sum = sum + sumExp;
+            }
+
+            for (int i = (num/4)*4; i < num; ++i)
+            {
+                float e         =   exp(input[i]/temperature - largest/temperature);
+                sum             +=  e;
+                output[i] =   e;
+            }
+        }
+
+        float32x4_t sumNN       = vdupq_n_f32(sum);
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < num/4; ++i)
+        {
+            float32x4_t load    = vld1q_f32(&output[i*4]);
+
+            float32x4_t recip00 = vrecpeq_f32(sumNN);
+            float32x4_t recip11 = vmulq_f32(recip00, vrecpsq_f32(recip00, sumNN));
+
+            load                = vmulq_f32(load, recip11);
+            vst1q_f32(&output[i*4],load);
+        }
+
+        for (int i = (num/4)*4; i < num; ++i)
+        {
+            output[i] /= sum;
+        }
+#else
+        for (int i = 0; i < num; ++i)
+        {
+            float e         =   exp(input[i]/temperature - largest/temperature);
+            sum             +=  e;
+            input[i] =   e;
+        }
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < num; ++i)
+        {
+            output[i] /= sum;
+        }
+#endif
+
+#endif
+
+    }
+    else
     {
-        output[i*stride] /= sum;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < num; ++i)
+        {
+            if(input[i*stride] > largest)
+            {
+                largest = input[i*stride];
+            }
+        }
+
+        for (int i = 0; i < num; ++i)
+        {
+            float e         =   exp(input[i*stride]/temperature - largest/temperature);
+            sum             +=  e;
+            input[i*stride] =   e;
+        }
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < num; ++i)
+        {
+            output[i*stride] /= sum;
+        }
     }
 }
 
-void Blas::cpuSoftmax(float * const &input, const int &num, const int &batch, const int &batchOff, const int &groups, const int &groupOff, const float &temperature,  const int &stride,float * const &output)
+void Blas::cpuSoftmax(float * const &input, const int &num, const int &batch, const int &batchOff, const int &groups,
+                      const int &groupOff, const float &temperature,  const int &stride, float * const &output, const bool &useAvx)
 {
     for (int b = 0; b < batch; ++b)
     {
         for (int g = 0; g < groups; ++g)
         {
-            softmax(input + b*batchOff + g*groupOff, num, temperature, stride,  output+b*batchOff+g*groupOff);
+            softmax(input + b*batchOff + g*groupOff, num, temperature, stride,  output+b*batchOff+g*groupOff, useAvx);
         }
     }
 }

@@ -3,21 +3,21 @@ namespace Msnhnet
 {
 AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vector<std::vector<BaseParams *> > &branchParams, ActivationType &activation, const std::vector<float> &actParams)
 {
-    this->type          =   LayerType::ADD_BLOCK;
-    this->layerName     =   "AddBlock        ";
-    this->activation    =   activation;
-    this->actParams     =   actParams;
+    this->_type          =   LayerType::ADD_BLOCK;
+    this->_layerName     =   "AddBlock        ";
+    this->_activation    =   activation;
+    this->_actParams     =   actParams;
 
-    this->batch         =   batch;
-    this->width         =   params.width;
-    this->height        =   params.height;
-    this->channel       =   params.channels;
+    this->_batch         =   batch;
+    this->_width         =   params.width;
+    this->_height        =   params.height;
+    this->_channel       =   params.channels;
 
     BaseLayer *layer    =   nullptr;
 
     NetBuildParams  branchBuildParams = params;
 
-    this->layerDetail.append("=============================== AddBlock ===============================\n");
+    this->_layerDetail.append("=============================== AddBlock ===============================\n");
 
     for (size_t i = 0; i < branchParams.size(); ++i)
     {
@@ -41,7 +41,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                                                                        0,0,0,0,convParams->antialiasing, nullptr, 0,0);
                 if(i == 0 && j == 0)
                 {
-                    this->inputNum = layer->inputNum;
+                    this->_inputNum = layer->getInputNum();
                 }
 
             }
@@ -52,7 +52,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                                                                   paddingParams->top, paddingParams->down, paddingParams->left, paddingParams->right, paddingParams->paddingVal);
                 if(i == 0 && j == 0)
                 {
-                    this->inputNum = layer->inputNum;
+                    this->_inputNum = layer->getInputNum();
                 }
             }
             else if(branchParams[i][j]->type == LayerType::CONNECTED)
@@ -62,7 +62,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                                                                    connectParams->batchNorm);
                 if(i == 0 && j == 0)
                 {
-                    this->inputNum = layer->inputNum;
+                    this->_inputNum = layer->getInputNum();
                 }
             }
             else if(branchParams[i][j]->type == LayerType::MAXPOOL)
@@ -73,7 +73,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                                                                  maxPoolParams->maxPoolDepth, maxPoolParams->outChannels, maxPoolParams->ceilMode, 0);
                 if(i == 0 && j == 0)
                 {
-                    this->inputNum = layer->inputNum;
+                    this->_inputNum = layer->getInputNum();
                 }
             }
             else if(branchParams[i][j]->type == LayerType::LOCAL_AVGPOOL)
@@ -84,7 +84,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                                                                                   localAvgPoolParams->paddingX, localAvgPoolParams->paddingY, localAvgPoolParams->ceilMode, 0);
                 if(i == 0 && j == 0)
                 {
-                    this->inputNum = layer->inputNum;
+                    this->_inputNum = layer->getInputNum();
                 }
             }
             else if(branchParams[i][j]->type == LayerType::BATCHNORM)
@@ -93,7 +93,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                 layer                           =   new BatchNormLayer(branchBuildParams.batch, branchBuildParams.width, branchBuildParams.height, branchBuildParams.channels, batchNormParams->activation, batchNormParams->actParams);
                 if(i == 0 && j == 0)
                 {
-                    this->inputNum = layer->inputNum;
+                    this->_inputNum = layer->getInputNum();
                 }
             }
             else if(branchParams[i][j]->type == LayerType::EMPTY)
@@ -101,7 +101,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                 layer                           =   new EmptyLayer(branchBuildParams.batch, branchBuildParams.width, branchBuildParams.height, branchBuildParams.channels);
                 if(i == 0 && j == 0)
                 {
-                    this->inputNum = layer->inputNum;
+                    this->_inputNum = layer->getInputNum();
                 }
             }
             else if(branchParams[i][j]->type == LayerType::ADD_BLOCK)
@@ -110,7 +110,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                 layer                                   =   new AddBlockLayer(1, params, addBlockParams->branchParams, addBlockParams->activation, addBlockParams->actParams);
                 if(i == 0 && j == 0)
                 {
-                    this->inputNum = layer->inputNum;
+                    this->_inputNum = layer->getInputNum();
                 }
             }
             else if(branchParams[i][j]->type == LayerType::CONCAT_BLOCK)
@@ -119,7 +119,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                 layer                                   =   new ConcatBlockLayer(1, params, concatBlockParams->branchParams, concatBlockParams->activation, concatBlockParams->actParams);
                 if(i == 0 && j == 0)
                 {
-                    this->inputNum = layer->inputNum;
+                    this->_inputNum = layer->getInputNum();
                 }
             }
             else
@@ -127,22 +127,22 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                 throw Exception(1, "layer type is not supported by [AddBlockLayer]", __FILE__, __LINE__);
             }
 
-            branchBuildParams.height       =   layer->outHeight;
-            branchBuildParams.width        =   layer->outWidth;
-            branchBuildParams.channels     =   layer->outChannel;
-            branchBuildParams.inputNums    =   layer->outputNum;
+            branchBuildParams.height       =   layer->getOutHeight();
+            branchBuildParams.width        =   layer->getOutWidth();
+            branchBuildParams.channels     =   layer->getOutChannel();
+            branchBuildParams.inputNums    =   layer->getOutputNum();
 
-            if(layer->workSpaceSize > this->workSpaceSize)
+            if(layer->getWorkSpaceSize() > this->getWorkSpaceSize())
             {
-                this->workSpaceSize = layer->workSpaceSize;
+                this->_workSpaceSize = layer->getWorkSpaceSize();
             }
 
-            this->numWeights    =   this->numWeights + layer->numWeights;
-            this->layerDetail   =   this->layerDetail.append(layer->layerDetail);
+            this->_numWeights    =   this->_numWeights + layer->getNumWeights();
+            this->_layerDetail   =   this->_layerDetail.append(layer->getLayerDetail());
 
             tmpLayers.push_back(layer);
         }
-        this->layerDetail.append("\n");
+        this->_layerDetail.append("\n");
 
         branchLayers.push_back(tmpLayers);
 
@@ -150,33 +150,33 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
 
     for (size_t i = 1; i < branchLayers.size(); ++i)
     {
-        if(branchLayers[i][branchLayers[i].size()-1]->height     != branchLayers[i-1][branchLayers[i-1].size()-1]->height||
-                branchLayers[i][branchLayers[i].size()-1]->width      != branchLayers[i-1][branchLayers[i-1].size()-1]->width||
-                branchLayers[i][branchLayers[i].size()-1]->outChannel != branchLayers[i-1][branchLayers[i-1].size()-1]->outChannel||
-                branchLayers[i][branchLayers[i].size()-1]->outputNum  != branchLayers[i-1][branchLayers[i-1].size()-1]->outputNum)
+        if(branchLayers[i][branchLayers[i].size()-1]->getHeight()     != branchLayers[i-1][branchLayers[i-1].size()-1]->getHeight()||
+                branchLayers[i][branchLayers[i].size()-1]->getWidth()      != branchLayers[i-1][branchLayers[i-1].size()-1]->getWidth()||
+                branchLayers[i][branchLayers[i].size()-1]->getOutChannel() != branchLayers[i-1][branchLayers[i-1].size()-1]->getOutChannel()||
+                branchLayers[i][branchLayers[i].size()-1]->getOutputNum()  != branchLayers[i-1][branchLayers[i-1].size()-1]->getOutputNum())
         {
             throw Exception(1, "branch's outputs size is not equal", __FILE__, __LINE__);
         }
     }
 
-    this->outHeight         =   branchBuildParams.height;
-    this->outWidth          =   branchBuildParams.width;
-    this->outChannel        =   branchBuildParams.channels;
-    this->outputNum         =   branchBuildParams.inputNums;
+    this->_outHeight         =   branchBuildParams.height;
+    this->_outWidth          =   branchBuildParams.width;
+    this->_outChannel        =   branchBuildParams.channels;
+    this->_outputNum         =   branchBuildParams.inputNums;
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->output            =   new float[static_cast<size_t>(outputNum * this->batch)]();
+        this->_output            =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
     }
 
-    this->layerDetail.append("========================================================================\n");
+    this->_layerDetail.append("========================================================================\n");
 }
 
 void AddBlockLayer::loadAllWeigths(std::vector<float> &weights)
 {
-    if(weights.size() != this->numWeights)
+    if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"AddBlockLayer weights load err. needed : " + std::to_string(this->numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"AddBlockLayer weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
     }
 
     size_t ptr = 0;
@@ -186,10 +186,10 @@ void AddBlockLayer::loadAllWeigths(std::vector<float> &weights)
     {
         for (size_t j = 0; j < branchLayers[i].size(); ++j)
         {
-            if(branchLayers[i][j]->type == LayerType::CONVOLUTIONAL || branchLayers[i][j]->type == LayerType::CONNECTED || branchLayers[i][j]->type == LayerType::BATCHNORM ||
-                    branchLayers[i][j]->type == LayerType::ADD_BLOCK || branchLayers[i][j]->type == LayerType::CONCAT_BLOCK)
+            if(branchLayers[i][j]->type() == LayerType::CONVOLUTIONAL || branchLayers[i][j]->type() == LayerType::CONNECTED || branchLayers[i][j]->type() == LayerType::BATCHNORM ||
+                    branchLayers[i][j]->type() == LayerType::ADD_BLOCK || branchLayers[i][j]->type() == LayerType::CONCAT_BLOCK)
             {
-                size_t nums = branchLayers[i][j]->numWeights;
+                size_t nums = branchLayers[i][j]->getNumWeights();
 
                 std::vector<float> weights(first + static_cast<long long>(ptr), first + static_cast<long long>(ptr + nums));
 
@@ -216,8 +216,8 @@ void AddBlockLayer::forward(NetworkState &netState)
         {
             branchLayers[i][j]->forward(netState);
 
-            netState.input     =   branchLayers[i][j]->output;
-            netState.inputNum  =   branchLayers[i][j]->outputNum;
+            netState.input     =   branchLayers[i][j]->getOutput();
+            netState.inputNum  =   branchLayers[i][j]->getOutputNum();
         }
 
     }
@@ -225,50 +225,50 @@ void AddBlockLayer::forward(NetworkState &netState)
     for (size_t i = 1; i < branchLayers.size(); ++i)
     {
 
-        Blas::cpuAxpy(netState.inputNum, 1.f, branchLayers[i-1][branchLayers[i-1].size()-1]->output,
-                1, branchLayers[i][branchLayers[i].size()-1]->output, 1);
+        Blas::cpuAxpy(netState.inputNum, 1.f, branchLayers[i-1][branchLayers[i-1].size()-1]->getOutput(),
+                1, branchLayers[i][branchLayers[i].size()-1]->getOutput(), 1);
 
     }
-    Blas::cpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1][branchLayers[branchLayers.size()-1].size()-1]->output, 1, this->output, 1);
+    Blas::cpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1][branchLayers[branchLayers.size()-1].size()-1]->getOutput(), 1, this->getOutput(), 1);
 
-    if(this->activation == ActivationType::NORM_CHAN)
+    if(this->_activation == ActivationType::NORM_CHAN)
     {
-        Activations::activateArrayNormCh(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
-                                         this->outWidth*this->outHeight, this->output);
+        Activations::activateArrayNormCh(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, this->_output);
     }
-    else if(this->activation == ActivationType::NORM_CHAN_SOFTMAX)
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        Activations::activateArrayNormChSoftMax(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
-                                                this->outWidth*this->outHeight, this->output,0);
+        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_output,0);
     }
-    else if(this->activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        Activations::activateArrayNormChSoftMax(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
-                                                this->outWidth*this->outHeight, this->output,1);
+        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_output,1);
     }
-    else if(this->activation == ActivationType::NONE)
+    else if(this->_activation == ActivationType::NONE)
     {
 
     }
     else
     {
-        if(actParams.size() > 0)
+        if(_actParams.size() > 0)
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx, actParams[0]);
+            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx);
+            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
         }
     }
 
-    this->forwardTime = 0;
+    this->_forwardTime = 0;
 
     for (size_t i = 0; i < branchLayers.size(); ++i)
     {
         for (size_t j = 0; j < branchLayers[i].size(); ++j)
         {
-            this->forwardTime += branchLayers[i][j]->forwardTime;
+            this->_forwardTime += branchLayers[i][j]->getForwardTime();
         }
     }
 }
@@ -281,31 +281,31 @@ AddBlockLayer::~AddBlockLayer()
         {
             if(branchLayers[i][j]!=nullptr)
             {
-                if(branchLayers[i][j]->type == LayerType::CONVOLUTIONAL)
+                if(branchLayers[i][j]->type() == LayerType::CONVOLUTIONAL)
                 {
                     delete reinterpret_cast<ConvolutionalLayer*>(branchLayers[i][j]);
                 }
-                else if(branchLayers[i][j]->type == LayerType::MAXPOOL)
+                else if(branchLayers[i][j]->type() == LayerType::MAXPOOL)
                 {
                     delete reinterpret_cast<MaxPoolLayer*>(branchLayers[i][j]);
                 }
-                else if(branchLayers[i][j]->type == LayerType::CONNECTED)
+                else if(branchLayers[i][j]->type() == LayerType::CONNECTED)
                 {
                     delete reinterpret_cast<ConnectedLayer*>(branchLayers[i][j]);
                 }
-                else if(branchLayers[i][j]->type == LayerType::BATCHNORM)
+                else if(branchLayers[i][j]->type() == LayerType::BATCHNORM)
                 {
                     delete reinterpret_cast<BatchNormLayer*>(branchLayers[i][j]);
                 }
-                else if(branchLayers[i][j]->type == LayerType::LOCAL_AVGPOOL)
+                else if(branchLayers[i][j]->type() == LayerType::LOCAL_AVGPOOL)
                 {
                     delete reinterpret_cast<LocalAvgPoolLayer*>(branchLayers[i][j]);
                 }
-                else if(branchLayers[i][j]->type == LayerType::EMPTY)
+                else if(branchLayers[i][j]->type() == LayerType::EMPTY)
                 {
                     delete reinterpret_cast<EmptyLayer*>(branchLayers[i][j]);
                 }
-                else if(branchLayers[i][j]->type == LayerType::PADDING)
+                else if(branchLayers[i][j]->type() == LayerType::PADDING)
                 {
                     delete reinterpret_cast<PaddingLayer*>(branchLayers[i][j]);
                 }

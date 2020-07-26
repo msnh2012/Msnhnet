@@ -4,76 +4,76 @@ namespace Msnhnet
 {
 Yolov3Layer::Yolov3Layer(const int &batch, const int &width, const int &height, const int &num, const int &orgWidth, const int &orgHeight, const int &classNum, const std::vector<float> &anchors)
 {
-    this->type      =   LayerType::YOLOV3;
-    this->layerName =   "Yolov3          ";
-    this->num       =   num;
-    this->batch     =   batch;
-    this->height    =   height;
-    this->width     =   width;
-    this->channel   =   num;
+    this->_type      =   LayerType::YOLOV3;
+    this->_layerName =   "Yolov3          ";
+    this->_num       =   num;
+    this->_batch     =   batch;
+    this->_height    =   height;
+    this->_width     =   width;
+    this->_channel   =   num;
 
-    this->orgHeight =   orgHeight;
-    this->orgWidth  =   orgWidth;
+    this->_orgHeight =   orgHeight;
+    this->_orgWidth  =   orgWidth;
 
-    this->classNum  =   classNum;
+    this->_classNum  =   classNum;
 
-    this->outWidth  =   this->width;
-    this->outHeight =   this->height;
-    this->outChannel=   this->channel;
+    this->_outWidth  =   this->_width;
+    this->_outHeight =   this->_height;
+    this->_outChannel=   this->_channel;
 
-    this->outputNum =   this->height*this->width*this->num;
-    this->inputNum  =   this->outputNum;
+    this->_outputNum =   this->_height*this->_width*this->_num;
+    this->_inputNum  =   this->_outputNum;
 
     this->anchors   =   anchors;
 
-    this->ratios    =   1.f*orgHeight/outHeight;  
+    this->_ratios    =   1.f*orgHeight/_outHeight;  
 
-    if(3*(this->classNum + 4 + 1) != num)
+    if(3*(this->_classNum + 4 + 1) != num)
     {
         throw Exception(1, "class num error!", __FILE__, __LINE__);
     }
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->output    =   new float[static_cast<size_t>(this->outputNum * this->batch)]();
+        this->_output    =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
     }
 
-    this->layerDetail.append("yolov3. class num : " + std::to_string(classNum) + "\n");
+    this->_layerDetail.append("yolov3. class num : " + std::to_string(classNum) + "\n");
 }
 
 void Yolov3Layer::forward(NetworkState &netState)
 {
     auto st = std::chrono::system_clock::now();
 
-    Blas::cpuCopy(netState.inputNum, netState.input, 1, this->output, 1);
+    Blas::cpuCopy(netState.inputNum, netState.input, 1, this->_output, 1);
 #ifndef USE_GPU
 
-    for (int b = 0; b < this->batch; ++b)
+    for (int b = 0; b < this->_batch; ++b)
     {
         for (int n = 0; n < 3; ++n)
         {
 
-            int index = b*this->outputNum + n*this->width*this->height*( 4 + 1 + this->classNum);
-            exSigmoid(this->output + index, this->width, this->height, this->ratios, true);
+            int index = b*this->_outputNum + n*this->_width*this->_height*( 4 + 1 + this->_classNum);
+            exSigmoid(this->_output + index, this->_width, this->_height, this->_ratios, true);
 
-            index = index + this->width*this->height;
+            index = index + this->_width*this->_height;
 
-            exSigmoid(this->output + index, this->width, this->height, this->ratios, false);
+            exSigmoid(this->_output + index, this->_width, this->_height, this->_ratios, false);
 
-            index = index + this->width*this->height;
+            index = index + this->_width*this->_height;
 
-            aExpT(this->output + index, this->width*this->height, anchors[n%3*2]);
+            aExpT(this->_output + index, this->_width*this->_height, anchors[n%3*2]);
 
-            index = index + this->width*this->height;
-            aExpT(this->output + index, this->width*this->height, anchors[n%3*2 + 1]);
+            index = index + this->_width*this->_height;
+            aExpT(this->_output + index, this->_width*this->_height, anchors[n%3*2 + 1]);
 
-            index = index + this->width*this->height;
-            sigmoid(this->output + index, this->width*this->height*(1+this->classNum));
+            index = index + this->_width*this->_height;
+            sigmoid(this->_output + index, this->_width*this->_height*(1+this->_classNum));
         }
 
     }
     auto so = std::chrono::system_clock::now();
-    this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 #endif
 }
 
@@ -114,5 +114,25 @@ void Yolov3Layer::aExpT(float *val, const int &num, const float &a)
     {
         val[i] = a*expf(val[i]);
     }
+}
+
+int Yolov3Layer::getClassNum() const
+{
+    return _classNum;
+}
+
+int Yolov3Layer::getOrgHeight() const
+{
+    return _orgHeight;
+}
+
+int Yolov3Layer::getOrgWidth() const
+{
+    return _orgWidth;
+}
+
+float Yolov3Layer::getRatios() const
+{
+    return _ratios;
 }
 }

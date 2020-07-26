@@ -4,70 +4,79 @@ namespace Msnhnet
 {
 DeConvolutionalLayer::DeConvolutionalLayer(const int &batch, const int &height, const int &width, const int &channel, const int &num,
                                            const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY,
-                                           const int &paddingX, const int &paddingY,
+                                           const int &paddingX, const int &paddingY, const int &groups,
                                            const ActivationType &activation,  const std::vector<float> &actParams, const int &useBias)
 {
-    this->type          =   LayerType::DECONVOLUTIONAL;
-    this->layerName     =  "DeConv          ";
+    this->_type          =   LayerType::DECONVOLUTIONAL;
+    this->_layerName     =  "DeConv          ";
 
-    this->height        =   height;
-    this->width         =   width;
-    this->channel       =   channel;
-    this->num           =   num;
-    this->batch         =   batch;
+    this->_height        =   height;
+    this->_width         =   width;
+    this->_channel       =   channel;
+    this->_num           =   num;
+    this->_batch         =   batch;
 
-    this->kSizeX        =   kSizeX;
-    this->kSizeY        =   kSizeY;
+    this->_kSizeX        =   kSizeX;
+    this->_kSizeY        =   kSizeY;
 
-    this->strideX       =   strideX;
-    this->strideY       =   strideY;
+    this->_strideX       =   strideX;
+    this->_strideY       =   strideY;
 
-    this->paddingX      =   paddingX;
-    this->paddingY      =   paddingY;
+    this->_paddingX      =   paddingX;
+    this->_paddingY      =   paddingY;
 
-    this->activation    =   activation;
-    this->actParams     =   actParams;
+    this->_activation    =   activation;
+    this->_actParams     =   actParams;
 
-    this->useBias       =   useBias;
+    this->_useBias       =   useBias;
 
-    this->outHeight     =   deConvOutHeight();
-    this->outWidth      =   deConvOutWidth();
-    this->outChannel    =   this->num;
-    this->outputNum     =   this->outWidth * this->outHeight * this->outChannel;
-    this->inputNum      =   width * width * channel;
-
-    this->nWeights      =   this->channel*this->num*this->kSizeX*this->kSizeY;
-
-    if(this->useBias)
+    if(groups<1)
     {
-        this->nBiases       = this->num;
+        this->_groups    = 1;
     }
     else
     {
-        this->nBiases       =   0;
+        this->_groups    = groups;
     }
 
-    this->numWeights            =   static_cast<size_t>(this->nWeights + this->nBiases);
+    this->_outHeight     =   deConvOutHeight();
+    this->_outWidth      =   deConvOutWidth();
+    this->_outChannel    =   this->_num;
+    this->_outputNum     =   this->_outWidth * this->_outHeight * this->_outChannel;
+    this->_inputNum      =   width * width * channel;
+
+    this->_nWeights      =   (this->_channel/this->_groups)*this->_num*this->_kSizeX*this->_kSizeY;
+
+    if(this->_useBias)
+    {
+        this->_nBiases       = this->_num;
+    }
+    else
+    {
+        this->_nBiases       =   0;
+    }
+
+    this->_numWeights            =   static_cast<size_t>(this->_nWeights + this->_nBiases);
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->weights       =   new float[static_cast<size_t>(this->nWeights)]();
-        if(this->useBias)
+        this->_weights       =   new float[static_cast<size_t>(this->_nWeights)]();
+        if(this->_useBias)
         {
-            this->biases        =   new float[static_cast<size_t>(this->nBiases)]();
+            this->_biases        =   new float[static_cast<size_t>(this->_nBiases)]();
         }
-        this->colImg        =   new float[static_cast<size_t>(this->height * this->width * this->kSizeX * this->kSizeX * this->num)]();
-        this->output        =   new float[static_cast<size_t>(outputNum * this->batch)]();
+        this->_colImg        =   new float[static_cast<size_t>(this->_height * this->_width * this->_kSizeX * this->_kSizeX * this->_num)]();
+        this->_output        =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
     }
     char msg[100];
 #ifdef WIN32
-    sprintf_s(msg, "Deconvolutional Layer: %d x %d x %d image, %d filters -> %d x %d x %d image\n", this->height, this->width, this->channel, this->num,
-              this->outHeight, this->outWidth, this->num);
+    sprintf_s(msg, "Deconvolutional Layer: %d x %d x %d image, %d filters -> %d x %d x %d image\n", this->_height, this->_width, this->_channel, this->_num,
+              this->_outHeight, this->_outWidth, this->_num);
 #else
-    sprintf(msg, "Deconvolutional Layer: %d x %d x %d image, %d filters -> %d x %d x %d image\n", this->height, this->width, this->channel, this->num,
-            this->outHeight, this->outWidth, this->num);
+    sprintf(msg, "Deconvolutional Layer: %d x %d x %d image, %d filters -> %d x %d x %d image\n", this->_height, this->_width, this->_channel, this->_num,
+            this->_outHeight, this->_outWidth, this->_num);
 #endif
-    this->layerDetail   = msg;
+    this->_layerDetail   = msg;
 
 }
 
@@ -79,103 +88,177 @@ void DeConvolutionalLayer::forward(NetworkState &netState)
     int mOutW           =   deConvOutWidth();
     int whOutSize       =   mOutH*mOutW;
 
-    int m               =   this->kSizeX * this->kSizeY * this->num;
-    int n               =   this->height * this->width;
-    int k               =   this->channel;
+    int m               =   this->_kSizeX * this->_kSizeY * this->_num / this->_groups;
+    int n               =   this->_height * this->_width;
+    int k               =   this->_channel / this->_groups;
 
-    Blas::cpuFill(this->outputNum*this->batch, 0, this->output, 1);
+    Blas::cpuFill(this->_outputNum*this->_batch, 0, this->_output, 1);
 
-    for (int i = 0; i < this->batch; ++i)
+    for (int i = 0; i < this->_batch; ++i)
     {
-        float *a        =   this->weights;
-        float *b        =   netState.input + i*this->channel*this->height*this->width;
-        float *c        =   this->colImg;
-        Gemm::cpuGemm(1,0,m,n,k,1,a,m,b,n,0,c,n, this->supportAvx&&this->supportFma);
+        for (int j = 0; j < this->_groups; ++j)
+        {
+            float *a        =   this->_weights + j*this->_nWeights /this->_groups;
+            float *b        =   netState.input + i*this->_channel/this->_groups*this->_height*this->_width;
+            float *c        =   this->_colImg + (i*this->_groups + j)*n*k;
+            Gemm::cpuGemm(1,0,m,n,k,1,a,m,b,n,0,c,n, this->supportAvx&&this->supportFma);
 
-        Gemm::cpuCol2Im(c, this->num, mOutH, mOutW, this->kSizeX, this->kSizeY, this->strideX, this->strideY, this->paddingX,
-                        this->paddingY, this->output + i*this->num*whOutSize);
-    }
-    ConvolutionalLayer::addBias(this->output, this->biases, this->batch, this->num, whOutSize);
+            Gemm::cpuCol2Im(c, this->_num/this->_groups, mOutH, mOutW, this->_kSizeX, this->_kSizeY, this->_strideX, this->_strideY, this->_paddingX,
+                            this->_paddingY, this->_output + i*this->_num*whOutSize);
+        }
 
-    if(this->activation == ActivationType::NORM_CHAN)
-    {
-        Activations::activateArrayNormCh(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
-                                         this->outWidth*this->outHeight, this->output);
     }
-    else if(this->activation == ActivationType::NORM_CHAN_SOFTMAX)
+    ConvolutionalLayer::addBias(this->_output, this->_biases, this->_batch, this->_num, whOutSize);
+
+    if(this->_activation == ActivationType::NORM_CHAN)
     {
-        Activations::activateArrayNormChSoftMax(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
-                                                this->outWidth*this->outHeight, this->output,0);
+        Activations::activateArrayNormCh(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, this->_output);
     }
-    else if(this->activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        Activations::activateArrayNormChSoftMax(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
-                                                this->outWidth*this->outHeight, this->output,1);
+        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_output,0);
     }
-    else if(this->activation == ActivationType::NONE)
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_output,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
     {
 
     }
     else
     {
-        if(actParams.size() > 0)
+        if(_actParams.size() > 0)
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx, actParams[0]);
+            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx);
+            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
         }
     }
 
     auto so = std::chrono::system_clock::now();
-    this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 
 }
 
 void DeConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
 {
-    if(weights.size() != this->numWeights)
+    if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"Deconv weights load err. needed : " + std::to_string(this->numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"Deconv weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
     }
 
-    loadWeights(weights.data(), nWeights);
+    loadWeights(weights.data(), _nWeights);
 
-    if(useBias==1)
+    if(_useBias==1)
     {
-        loadBias(weights.data() + nWeights, nBiases);
+        loadBias(weights.data() + _nWeights, _nBiases);
     }
 }
 
 void DeConvolutionalLayer::loadBias(float * const &bias, const int &len)
 {
-    if(len != this->nBiases)
+    if(len != this->_nBiases)
     {
         throw Exception(1, "load bias data len error ",__FILE__,__LINE__);
     }
-    Blas::cpuCopy(len, bias, 1, this->biases,1);
+    Blas::cpuCopy(len, bias, 1, this->_biases,1);
 }
 
 void DeConvolutionalLayer::loadWeights(float * const &weights, const int &len)
 {
-    if(len != this->nWeights)
+    if(len != this->_nWeights)
     {
         throw Exception(1, "load weights data len error ",__FILE__,__LINE__);
     }
-    Blas::cpuCopy(len, weights, 1, this->weights,1);
+    Blas::cpuCopy(len, weights, 1, this->_weights,1);
 }
 
 int DeConvolutionalLayer::deConvOutHeight()
 {
-    return (this->height - 1) * this->strideY -2*paddingY + this->kSizeY;
+    return (this->_height - 1) * this->_strideY -2*_paddingY + this->_kSizeY;
 
 }
 
 int DeConvolutionalLayer::deConvOutWidth()
 {
-    return (this->width - 1) * this->strideX -2*paddingX + this->kSizeX;
+    return (this->_width - 1) * this->_strideX -2*_paddingX + this->_kSizeX;
 
+}
+
+float *DeConvolutionalLayer::getWeights() const
+{
+    return _weights;
+}
+
+float *DeConvolutionalLayer::getBiases() const
+{
+    return _biases;
+}
+
+float *DeConvolutionalLayer::getColImg() const
+{
+    return _colImg;
+}
+
+int DeConvolutionalLayer::getKSizeX() const
+{
+    return _kSizeX;
+}
+
+int DeConvolutionalLayer::getKSizeY() const
+{
+    return _kSizeY;
+}
+
+int DeConvolutionalLayer::getStride() const
+{
+    return _stride;
+}
+
+int DeConvolutionalLayer::getStrideX() const
+{
+    return _strideX;
+}
+
+int DeConvolutionalLayer::getStrideY() const
+{
+    return _strideY;
+}
+
+int DeConvolutionalLayer::getPaddingX() const
+{
+    return _paddingX;
+}
+
+int DeConvolutionalLayer::getPaddingY() const
+{
+    return _paddingY;
+}
+
+int DeConvolutionalLayer::getUseBias() const
+{
+    return _useBias;
+}
+
+int DeConvolutionalLayer::getNBiases() const
+{
+    return _nBiases;
+}
+
+int DeConvolutionalLayer::getNWeights() const
+{
+    return _nWeights;
+}
+
+int DeConvolutionalLayer::getGroups() const
+{
+    return _groups;
 }
 
 }

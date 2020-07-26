@@ -5,21 +5,21 @@ namespace Msnhnet
 RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
                        std::vector<int> &inputLayerOutputs, const int &groups, const int &groupIndex, const int &addModel)
 {
-    this->type              =   LayerType::ROUTE;
-    this->layerName         =   "Route           ";
+    this->_type              =   LayerType::ROUTE;
+    this->_layerName         =   "Route           ";
 
-    this->batch             =   batch;
-    this->groups            =   groups;
-    this->groupIndex        =   groupIndex;
-    this->addModel          =   addModel;
+    this->_batch             =   batch;
+    this->_groups            =   groups;
+    this->_groupIndex        =   groupIndex;
+    this->_addModel          =   addModel;
 
     int mOutputNum          =   0;
 
-    this->layerDetail.append("route ");
+    this->_layerDetail.append("route ");
     char msg[100];
 
-    this->inputLayerIndexes =   inputLayerIndexes;
-    this->inputLayerOutputs =   inputLayerOutputs;
+    this->_inputLayerIndexes =   inputLayerIndexes;
+    this->_inputLayerOutputs =   inputLayerOutputs;
 
     for (size_t i = 0; i < inputLayerIndexes.size(); ++i)
     {
@@ -28,7 +28,7 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
 #else
         sprintf(msg, " %d", inputLayerIndexes[i]);
 #endif
-        this->layerDetail.append(msg);
+        this->_layerDetail.append(msg);
 
         if(addModel != 1)
         {
@@ -36,7 +36,7 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
         }
     }
 
-    this->layerDetail.append("\n");
+    this->_layerDetail.append("\n");
 
     if(addModel == 1)
     {
@@ -44,86 +44,112 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
     }
 
     mOutputNum          =   mOutputNum / groups;
-    this->outputNum     =   mOutputNum;
-    this->inputNum      =   mOutputNum;
+    this->_outputNum     =   mOutputNum;
+    this->_inputNum      =   mOutputNum;
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->output        =   new float[static_cast<size_t>(this->outputNum*this->batch)]();
+        this->_output        =   new float[static_cast<size_t>(this->_outputNum*this->_batch)]();
     }
 
 }
 
 void RouteLayer::forward(NetworkState &netState)        
+
 {
     auto st = std::chrono::system_clock::now();
     int offset          =   0;
-    for (size_t i = 0; i < inputLayerIndexes.size(); ++i)
+    for (size_t i = 0; i < _inputLayerIndexes.size(); ++i)
     {
-        int index       =   this->inputLayerIndexes[i];
-        float *mInput   =   netState.net->layers[static_cast<size_t>(index)]->output;
-        int inputLayerOutputs   =   this->inputLayerOutputs[i];
-        int partInSize  =   inputLayerOutputs / this->groups;
-        for (int j = 0; j < this->batch; ++j)
+        int index       =   this->_inputLayerIndexes[i];
+        float *mInput   =   netState.net->layers[static_cast<size_t>(index)]->getOutput();
+        int inputLayerOutputs   =   this->_inputLayerOutputs[i];
+        int partInSize  =   inputLayerOutputs / this->_groups;
+        for (int j = 0; j < this->_batch; ++j)
         {
-            if(addModel == 1)
+            if(_addModel == 1)
             {
-                Blas::cpuAxpy(partInSize, 1, mInput + j*inputLayerOutputs + partInSize*this->groupIndex, 1,
-                              this->output + offset + j*this->outputNum,1);
+                Blas::cpuAxpy(partInSize, 1, mInput + j*inputLayerOutputs + partInSize*this->_groupIndex, 1,
+                              this->_output + offset + j*this->_outputNum,1);
             }
             else
             {
-                Blas::cpuCopy(partInSize, mInput + j*inputLayerOutputs + partInSize*this->groupIndex, 1,
-                              this->output + offset + j*this->outputNum,1);
+                Blas::cpuCopy(partInSize, mInput + j*inputLayerOutputs + partInSize*this->_groupIndex, 1,
+                              this->_output + offset + j*this->_outputNum,1);
             }
         }
-        if(addModel != 1)
+        if(_addModel != 1)
         {
             offset          = offset + partInSize;
         }
     }
     auto so = std::chrono::system_clock::now();
-    this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 
 }
 
 void RouteLayer::resize(Network &net)
 {
-    BaseLayer first                 =   *net.layers[static_cast<size_t>(this->inputLayerIndexes[0])];
-    this->outWidth                  =   first.outWidth;
-    this->outHeight                 =   first.outHeight;
-    this->outChannel                =   first.outChannel;
-    this->outputNum                 =   first.outputNum;
-    this->inputLayerOutputs[0]      =   first.outputNum;
+    BaseLayer first                 =   *net.layers[static_cast<size_t>(this->_inputLayerIndexes[0])];
+    this->_outWidth                  =   first.getOutWidth();
+    this->_outHeight                 =   first.getOutHeight();
+    this->_outChannel                =   first.getOutChannel();
+    this->_outputNum                 =   first.getOutputNum();
+    this->_inputLayerOutputs[0]      =   first.getOutputNum();
 
-    for (size_t i = 0; i < static_cast<size_t>(this->num); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(this->_num); ++i)
     {
-        size_t index                =   static_cast<size_t>(this->inputLayerIndexes[i]);
+        size_t index                =   static_cast<size_t>(this->_inputLayerIndexes[i]);
         BaseLayer next              =   *net.layers[index];
-        this->outputNum             +=  next.outputNum;
-        this->inputLayerOutputs[i]  = next.outputNum;
+        this->_outputNum             +=  next.getOutputNum();
+        this->_inputLayerOutputs[i]  = next.getOutputNum();
 
-        if(next.outWidth == first.outWidth && next.outHeight == first.outHeight)
+        if(next.getOutWidth() == first.getOutWidth() && next.getOutHeight() == first.getOutHeight())
         {
-            this->outChannel    +=  next.outChannel;
+            this->_outChannel    +=  next.getOutChannel();
         }
         else
         {
-            this->outHeight     =   0;
-            this->outWidth      =   0;
-            this->outChannel    =   0;
+            this->_outHeight     =   0;
+            this->_outWidth      =   0;
+            this->_outChannel    =   0;
             throw Exception(1, "Different size of first layer and secon layer", __FILE__, __LINE__);
         }
     }
 
-    this->outChannel    =   this->outChannel/this->groups;
-    this->outputNum     =   this->outputNum / this->groups;
-    this->inputNum      =   this->outputNum;
-    if(this->output == nullptr)
+    this->_outChannel    =   this->_outChannel/this->_groups;
+    this->_outputNum     =   this->_outputNum / this->_groups;
+    this->_inputNum      =   this->_outputNum;
+    if(this->_output == nullptr)
     {
         throw Exception(1,"output can't be null", __FILE__, __LINE__);
     }
 
-    this->output    = static_cast<float *>(realloc(this->output, static_cast<size_t>(this->outputNum *this->batch)*sizeof(float)));
+    this->_output    = static_cast<float *>(realloc(this->_output, static_cast<size_t>(this->_outputNum *this->_batch)*sizeof(float)));
+}
+
+std::vector<int> RouteLayer::getInputLayerIndexes() const
+{
+    return _inputLayerIndexes;
+}
+
+std::vector<int> RouteLayer::getInputLayerOutputs() const
+{
+    return _inputLayerOutputs;
+}
+
+int RouteLayer::getGroups() const
+{
+    return _groups;
+}
+
+int RouteLayer::getGroupIndex() const
+{
+    return _groupIndex;
+}
+
+int RouteLayer::getAddModel() const
+{
+    return _addModel;
 }
 }

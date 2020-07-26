@@ -3,53 +3,58 @@ namespace Msnhnet
 {
 BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &height, const int &channel, const ActivationType &activation, const std::vector<float> &actParams)
 {
-    this->type          =  LayerType::BATCHNORM;
-    this->layerName     =  "BatchNorm       ";
-    this->batch         =  batch;
+    this->_type          =  LayerType::BATCHNORM;
+    this->_layerName     =  "BatchNorm       ";
+    this->_batch         =  batch;
 
-    this->height        =  height;
-    this->width         =  width;
-    this->channel       =  channel;
-    this->outHeight     =  height;
-    this->outWidth      =  width;
-    this->outChannel    =  channel;
+    this->_height        =  height;
+    this->_width         =  width;
+    this->_channel       =  channel;
+    this->_outHeight     =  height;
+    this->_outWidth      =  width;
+    this->_outChannel    =  channel;
 
-    this->activation    =   activation;
-    this->actParams     =   actParams;
+    this->_activation    =   activation;
+    this->_actParams     =   actParams;
 
-    this->num           =  this->outChannel;
+    this->_num           =  this->_outChannel;
 
-    this->inputNum      =  height * width * channel;
+    this->_inputNum      =  height * width * channel;
 
-    this->outputNum     =  this->inputNum;
-    this->nBiases       =  channel;
-    this->nScales       =  channel;
-    this->nRollMean     =  channel;
-    this->nRollVariance =  channel;
+    this->_outputNum     =  this->_inputNum;
+    this->_nBiases       =  channel;
+    this->_nScales       =  channel;
+    this->_nRollMean     =  channel;
+    this->_nRollVariance =  channel;
 
-    this->numWeights    =   static_cast<size_t>(this->nScales + this->nBiases + this->nRollMean + this->nRollVariance);
+    this->_numWeights    =   static_cast<size_t>(this->_nScales + this->_nBiases + this->_nRollMean + this->_nRollVariance);
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->output        =  new float[static_cast<size_t>(this->outputNum * this->batch)](); 
-        this->biases        =  new float[static_cast<size_t>(channel)](); 
-        this->scales        =  new float[static_cast<size_t>(channel)](); 
+        this->_output        =  new float[static_cast<size_t>(this->_outputNum * this->_batch)](); 
 
-        this->rollMean      =  new float[static_cast<size_t>(channel)](); 
-        this->rollVariance  =  new float[static_cast<size_t>(channel)](); 
+        this->_biases        =  new float[static_cast<size_t>(channel)](); 
+
+        this->_scales        =  new float[static_cast<size_t>(channel)](); 
+
+        this->_rollMean      =  new float[static_cast<size_t>(channel)](); 
+
+        this->_rollVariance  =  new float[static_cast<size_t>(channel)](); 
+
         for(int i=0; i<channel; ++i)
         {
-            this->scales[i] = 1;                   
+            this->_scales[i] = 1;                   
+
         }
     }
 
     char msg[100];
 #ifdef WIN32
-    sprintf_s(msg, "Batch Normalization Layer:     %d x %d x %d image\n", this->width, this->height, this->channel);
+    sprintf_s(msg, "Batch Normalization Layer:     %d x %d x %d image\n", this->_width, this->_height, this->_channel);
 #else
-    sprintf(msg, "Batch Normalization Layer:     %d x %d x %d image\n", this->width, this->height, this->channel);
+    sprintf(msg, "Batch Normalization Layer:     %d x %d x %d image\n", this->_width, this->_height, this->_channel);
 #endif
-    this->layerDetail   = msg;
+    this->_layerDetail   = msg;
 
 }
 
@@ -57,19 +62,19 @@ void BatchNormLayer::forward(NetworkState &netState)
 {
     auto st = std::chrono::system_clock::now();
 
-    for (int b = 0; b < this->batch; ++b)
+    for (int b = 0; b < this->_batch; ++b)
     {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-        for (int c = 0; c < this->channel; ++c)
+        for (int c = 0; c < this->_channel; ++c)
         {
 #ifdef USE_ARM
-            for (int i = 0; i < this->outHeight*this->outWidth; ++i)
+            for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
             {
-                int index = b*this->channel*this->outHeight*this->outWidth + c*this->outHeight*this->outWidth + i;
+                int index = b*this->_channel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
 
-                this->output[index]  = this->scales[c]*(netState.input[index] - this->rollMean[c])/sqrt(this->rollVariance[c] + 0.00001f) + this->biases[c];
+                this->_output[index]  = this->_scales[c]*(netState.input[index] - this->_rollMean[c])/sqrt(this->_rollVariance[c] + 0.00001f) + this->_biases[c];
             }
 #endif
 
@@ -77,10 +82,10 @@ void BatchNormLayer::forward(NetworkState &netState)
             if(this->supportAvx)
             {
                 int i = 0;
-                for (; i < (this->outHeight*this->outWidth)/8; ++i)
+                for (; i < (this->_outHeight*this->_outWidth)/8; ++i)
                 {
 
-                    int index = b*this->channel*this->outHeight*this->outWidth + c*this->outHeight*this->outWidth + i*8;
+                    int index = b*this->_channel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i*8;
 
                     __m256 mScale;
                     __m256 mInput;
@@ -91,12 +96,12 @@ void BatchNormLayer::forward(NetworkState &netState)
                     __m256 mResult1;
                     __m256 mResult2;
 
-                    mScale      =   _mm256_set1_ps(this->scales[c]);
+                    mScale      =   _mm256_set1_ps(this->_scales[c]);
                     mInput      =   _mm256_loadu_ps(netState.input+index);
-                    mMean       =   _mm256_set1_ps(this->rollMean[c]);
-                    mVariance   =   _mm256_set1_ps(this->rollVariance[c]);
+                    mMean       =   _mm256_set1_ps(this->_rollMean[c]);
+                    mVariance   =   _mm256_set1_ps(this->_rollVariance[c]);
                     mEsp        =   _mm256_set1_ps(0.00001f);
-                    mBias       =   _mm256_set1_ps(this->biases[c]);
+                    mBias       =   _mm256_set1_ps(this->_biases[c]);
                     mResult1    =   _mm256_sub_ps(mInput, mMean);
                     mResult1    =   _mm256_mul_ps(mScale, mResult1);
                     mResult2    =   _mm256_add_ps(mVariance,mEsp);
@@ -105,22 +110,22 @@ void BatchNormLayer::forward(NetworkState &netState)
                     mResult2    =   _mm256_div_ps(mResult1,mResult2);
                     mResult2    =   _mm256_add_ps(mResult2,mBias);
 
-                    _mm256_storeu_ps(this->output+index, mResult2);
+                    _mm256_storeu_ps(this->_output+index, mResult2);
 
                 }
 
-                for (int j = i*8; j < this->outHeight*this->outWidth; ++j)
+                for (int j = i*8; j < this->_outHeight*this->_outWidth; ++j)
                 {
-                    int index = b*this->channel*this->outHeight*this->outWidth + c*this->outHeight*this->outWidth + j;
-                    this->output[index]  = this->scales[c]*(netState.input[index] - this->rollMean[c])/sqrt(this->rollVariance[c] + 0.00001f) + this->biases[c];
+                    int index = b*this->_channel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + j;
+                    this->_output[index]  = this->_scales[c]*(netState.input[index] - this->_rollMean[c])/sqrt(this->_rollVariance[c] + 0.00001f) + this->_biases[c];
                 }
             }
             else
             {
-                for (int i = 0; i < this->outHeight*this->outWidth; ++i)
+                for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
                 {
-                    int index = b*this->channel*this->outHeight*this->outWidth + c*this->outHeight*this->outWidth + i;
-                    this->output[index]  = this->scales[c]*(netState.input[index] - this->rollMean[c])/sqrt(this->rollVariance[c] + 0.00001f) + this->biases[c];
+                    int index = b*this->_channel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
+                    this->_output[index]  = this->_scales[c]*(netState.input[index] - this->_rollMean[c])/sqrt(this->_rollVariance[c] + 0.00001f) + this->_biases[c];
                 }
             }
 #endif
@@ -128,45 +133,47 @@ void BatchNormLayer::forward(NetworkState &netState)
 
     }
 
-    if(this->activation == ActivationType::NORM_CHAN)
+    if(this->_activation == ActivationType::NORM_CHAN)
     {
-        Activations::activateArrayNormCh(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
-                                         this->outWidth*this->outHeight, this->output);
+        Activations::activateArrayNormCh(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, this->_output);
     }
-    else if(this->activation == ActivationType::NORM_CHAN_SOFTMAX)
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        Activations::activateArrayNormChSoftMax(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
-                                                this->outWidth*this->outHeight, this->output,0);
+        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_output,0);
     }
-    else if(this->activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        Activations::activateArrayNormChSoftMax(this->output, this->outputNum*this->batch, this->batch, this->outChannel,
-                                                this->outWidth*this->outHeight, this->output,1);
+        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_output,1);
     }
-    else if(this->activation == ActivationType::NONE)
+    else if(this->_activation == ActivationType::NONE)
     {
 
     }
     else
     {                           
-        if(actParams.size() > 0)
+
+        if(_actParams.size() > 0)
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx, actParams[0]);
+            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->output, this->outputNum*this->batch, this->activation, this->supportAvx);
+            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
         }
     }
 
     auto so = std::chrono::system_clock::now();
-    this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 
 }
 
 void BatchNormLayer::addBias(float *const &output, float *const &biases, const int &batch, const int &channel, const int &whSize)
 {
     for(int b=0; b<batch; ++b)      
+
     {
         for(int i=0; i<channel; ++i)
         {
@@ -183,8 +190,10 @@ void BatchNormLayer::scaleBias(float *const &output, float *const &scales, const
     for(int b=0; b<batch; ++b)
     {
         for(int i=0; i<channel; ++i)    
+
         {
             for(int j=0; j<whSize; ++j) 
+
             {
                 output[(b*channel + i)*whSize + j] *= scales[i];
             }
@@ -194,82 +203,127 @@ void BatchNormLayer::scaleBias(float *const &output, float *const &scales, const
 
 void BatchNormLayer::resize(int width, int height)
 {
-    this->outHeight = height;
-    this->outWidth  = width;
-    this->height    = height;
-    this->width     = width;
+    this->_outHeight = height;
+    this->_outWidth  = width;
+    this->_height    = height;
+    this->_width     = width;
 
-    this->outputNum = height * width * this->channel;
-    this->inputNum  = this->outputNum;
+    this->_outputNum = height * width * this->_channel;
+    this->_inputNum  = this->_outputNum;
 
-    const int outputSize = this->outputNum * this->batch;
+    const int outputSize = this->_outputNum * this->_batch;
 
-    if(this->output == nullptr)
+    if(this->_output == nullptr)
     {
         throw Exception(1,"output can't be null", __FILE__, __LINE__);
     }
 
-    this->output    = static_cast<float*>(realloc(this->output, static_cast<size_t>(outputSize)*sizeof(float)));
+    this->_output    = static_cast<float*>(realloc(this->_output, static_cast<size_t>(outputSize)*sizeof(float)));
 
 }
 
 void BatchNormLayer::loadAllWeigths(std::vector<float> &weights)
 {
 
-    if(weights.size() != this->numWeights)
+    if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"BatcnNorm weights load err. needed : " + std::to_string(this->numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"BatcnNorm weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
     }
 
-    loadScales(weights.data(), nScales);
-    loadBias(weights.data() + nScales , nBiases);
-    loadRollMean(weights.data() + nScales + nBiases, nRollMean);
-    loadRollVariance(weights.data() + nScales + nBiases + nRollVariance, nRollMean);
+    loadScales(weights.data(), _nScales);
+    loadBias(weights.data() + _nScales , _nBiases);
+    loadRollMean(weights.data() + _nScales + _nBiases, _nRollMean);
+    loadRollVariance(weights.data() + _nScales + _nBiases + _nRollVariance, _nRollMean);
 }
 
 void BatchNormLayer::loadBias(float * const &bias, const int &len)
 {
-    if(len != this->nBiases)
+    if(len != this->_nBiases)
     {
         throw Exception(1, "load bias data len error ",__FILE__,__LINE__);
     }
-    Blas::cpuCopy(len, bias, 1, this->biases,1);
+    Blas::cpuCopy(len, bias, 1, this->_biases,1);
 }
 
 void BatchNormLayer::loadScales(float * const &weights, const int &len)
 {
-    if(len != this->nScales)
+    if(len != this->_nScales)
     {
         throw Exception(1, "load scales data len error",__FILE__,__LINE__);
     }
-    Blas::cpuCopy(len, weights, 1, this->scales,1);
+    Blas::cpuCopy(len, weights, 1, this->_scales,1);
 }
 
 void BatchNormLayer::loadRollMean(float * const &rollMean, const int &len)
 {
-    if(len != this->channel)
+    if(len != this->_channel)
     {
         throw Exception(1, "load roll mean data len error ",__FILE__,__LINE__);
     }
 
-    Blas::cpuCopy(len, rollMean, 1, this->rollMean,1);
+    Blas::cpuCopy(len, rollMean, 1, this->_rollMean,1);
 }
 
 void BatchNormLayer::loadRollVariance(float * const &rollVariance, const int &len)
 {
-    if(len != this->channel)
+    if(len != this->_channel)
     {
         throw Exception(1, "load roll variance data len error ",__FILE__,__LINE__);
     }
-    Blas::cpuCopy(len, rollVariance, 1, this->rollVariance,1);
+    Blas::cpuCopy(len, rollVariance, 1, this->_rollVariance,1);
 }
 
 BatchNormLayer::~BatchNormLayer()
 {
-    releaseArr(scales);
-    releaseArr(biases);
-    releaseArr(rollMean);
-    releaseArr(rollVariance);
-    releaseArr(activationInput);
+    releaseArr(_scales);
+    releaseArr(_biases);
+    releaseArr(_rollMean);
+    releaseArr(_rollVariance);
+    releaseArr(_activationInput);
+}
+
+float *BatchNormLayer::getScales() const
+{
+    return _scales;
+}
+
+float *BatchNormLayer::getBiases() const
+{
+    return _biases;
+}
+
+float *BatchNormLayer::getRollMean() const
+{
+    return _rollMean;
+}
+
+float *BatchNormLayer::getRollVariance() const
+{
+    return _rollVariance;
+}
+
+float *BatchNormLayer::getActivationInput() const
+{
+    return _activationInput;
+}
+
+int BatchNormLayer::getNBiases() const
+{
+    return _nBiases;
+}
+
+int BatchNormLayer::getNScales() const
+{
+    return _nScales;
+}
+
+int BatchNormLayer::getNRollMean() const
+{
+    return _nRollMean;
+}
+
+int BatchNormLayer::getNRollVariance() const
+{
+    return _nRollVariance;
 }
 }

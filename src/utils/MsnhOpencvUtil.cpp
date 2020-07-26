@@ -113,6 +113,7 @@ std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &siz
             for (int x = 0; x < width; ++x)
             {
                 imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.data[y*step + x*channel + k] / 255.0f;
+
             }
         }
     }
@@ -222,6 +223,7 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
             for (int x = 0; x < width; ++x)
             {
                 imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.data[y*step + x*channel + k] / 255.0f;
+
             }
         }
     }
@@ -274,6 +276,58 @@ std::vector<float> OpencvUtil::getTransformedF32C3(cv::Mat &mat, const cv::Size 
                 else if(k == 2)
                 {
                     imgs[static_cast<size_t>(k*width*height + y*width + x)] = ((mat.data[y*step + x*channel + k] / 255.0f) - mean[2])/std[2] ;
+                }
+            }
+        }
+    }
+
+    mat.release();
+    return imgs;
+}
+
+std::vector<float> OpencvUtil::getCaffeModeF32C3(const string &path, const cv::Size &size)
+{
+    cv::Mat mat = cv::imread(path.data());
+    return getCaffeModeF32C3(mat, size);
+}
+
+std::vector<float> OpencvUtil::getCaffeModeF32C3(cv::Mat &mat, const cv::Size &size)
+{
+    if(mat.empty())
+    {
+        throw Exception(1,"img empty", __FILE__, __LINE__);
+    }
+
+    cv::resize(mat, mat, size);
+
+    std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols*3));
+
+    int width   = mat.cols;
+    int height  = mat.rows;
+    int channel = mat.channels();
+
+    int step    = static_cast<int>(mat.step);
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+    for (int y = 0; y < height; ++y)
+    {
+        for (int k = 0; k < channel; ++k)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                if(k == 0)
+                {
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = (mat.data[y*step + x*channel + k] ) - 123.68  ;
+                }
+                else if(k == 1)
+                {
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = (mat.data[y*step + x*channel + k]) - 116.779 ;
+                }
+                else if(k == 2)
+                {
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = (mat.data[y*step + x*channel + k]) - 103.939 ;
                 }
             }
         }

@@ -4,21 +4,21 @@ namespace Msnhnet
 {
 Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::vector<BaseParams *> &baseParams, std::vector<BaseParams *> &branchParams, ActivationType &activation,  const std::vector<float> &actParams)
 {
-    this->type          =   LayerType::RES_2_BLOCK;
-    this->layerName     =   "Res2Block       ";
-    this->activation    =   activation;
-    this->actParams     =   actParams;
+    this->_type          =   LayerType::RES_2_BLOCK;
+    this->_layerName     =   "Res2Block       ";
+    this->_activation    =   activation;
+    this->_actParams     =   actParams;
 
-    this->batch         =   batch;
-    this->width         =   params.width;
-    this->height        =   params.height;
-    this->channel       =   params.channels;
+    this->_batch         =   batch;
+    this->_width         =   params.width;
+    this->_height        =   params.height;
+    this->_channel       =   params.channels;
 
     BaseLayer *layer    =   nullptr;
 
     NetBuildParams  branchBuildParams = params;
 
-    this->layerDetail.append("================================ Res2Block ================================\n");
+    this->_layerDetail.append("================================ Res2Block ================================\n");
 
     for (size_t i = 0; i < baseParams.size(); ++i)
     {
@@ -38,7 +38,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
 
             if(i == 0)
             {
-                this->inputNum = layer->inputNum;
+                this->_inputNum = layer->getInputNum();
             }
         }
         else if(baseParams[i]->type == LayerType::CONNECTED)
@@ -48,7 +48,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
                                                                connectParams->actParams, connectParams->batchNorm);
             if(i == 0)
             {
-                this->inputNum = layer->inputNum;
+                this->_inputNum = layer->getInputNum();
             }
         }
         else if(baseParams[i]->type == LayerType::MAXPOOL)
@@ -59,7 +59,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
                                                              maxPoolParams->maxPoolDepth, maxPoolParams->outChannels, maxPoolParams->ceilMode, 0);
             if(i == 0)
             {
-                this->inputNum = layer->inputNum;
+                this->_inputNum = layer->getInputNum();
             }
         }
         else if(baseParams[i]->type == LayerType::LOCAL_AVGPOOL)
@@ -70,7 +70,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
                                                                               localAvgPoolParams->paddingX, localAvgPoolParams->paddingY, localAvgPoolParams->ceilMode, 0);
             if(i == 0)
             {
-                this->inputNum = layer->inputNum;
+                this->_inputNum = layer->getInputNum();
             }
         }
         else if(baseParams[i]->type == LayerType::BATCHNORM)
@@ -79,7 +79,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
             layer                           =   new BatchNormLayer(params.batch, params.width, params.height, params.channels, batchNormParams->activation, batchNormParams->actParams);
             if(i == 0)
             {
-                this->inputNum = layer->inputNum;
+                this->_inputNum = layer->getInputNum();
             }
         }
         else if(baseParams[i]->type == LayerType::PADDING)
@@ -89,7 +89,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
                                                               paddingParams->down, paddingParams->left, paddingParams->right, paddingParams->paddingVal);
             if(i == 0)
             {
-                this->inputNum = layer->inputNum;
+                this->_inputNum = layer->getInputNum();
             }
         }
         else
@@ -97,18 +97,18 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
             throw Exception(1, "layer type is not supported by [Res2BlockLayer]", __FILE__, __LINE__);
         }
 
-        params.height       =   layer->outHeight;
-        params.width        =   layer->outWidth;
-        params.channels     =   layer->outChannel;
-        params.inputNums    =   layer->outputNum;
+        params.height       =   layer->getOutHeight();
+        params.width        =   layer->getOutWidth();
+        params.channels     =   layer->getOutChannel();
+        params.inputNums    =   layer->getOutputNum();
 
-        if(layer->workSpaceSize > this->workSpaceSize)
+        if(layer->getWorkSpaceSize() > this->_workSpaceSize)
         {
-            this->workSpaceSize = layer->workSpaceSize;
+            this->_workSpaceSize = layer->getWorkSpaceSize();
         }
 
-        this->numWeights    =   this->numWeights + layer->numWeights;
-        this->layerDetail   =   this->layerDetail.append(layer->layerDetail);
+        this->_numWeights    =   this->_numWeights + layer->getNumWeights();
+        this->_layerDetail   =   this->_layerDetail.append(layer->getLayerDetail());
 
         baseLayers.push_back(layer);
     }
@@ -166,18 +166,18 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
             throw Exception(1, "layer type is not supported by [Res2BlockLayer]", __FILE__, __LINE__);
         }
 
-        branchBuildParams.height       =   layer->outHeight;
-        branchBuildParams.width        =   layer->outWidth;
-        branchBuildParams.channels     =   layer->outChannel;
-        branchBuildParams.inputNums    =   layer->outputNum;
+        branchBuildParams.height       =   layer->getOutHeight();
+        branchBuildParams.width        =   layer->getOutWidth();
+        branchBuildParams.channels     =   layer->getOutChannel();
+        branchBuildParams.inputNums    =   layer->getOutputNum();
 
-        if(layer->workSpaceSize > this->workSpaceSize)
+        if(layer->getWorkSpaceSize() > this->_workSpaceSize)
         {
-            this->workSpaceSize = layer->workSpaceSize;
+            this->_workSpaceSize = layer->getWorkSpaceSize();
         }
 
-        this->numWeights    =   this->numWeights + layer->numWeights;
-        this->layerDetail   =   this->layerDetail.append(layer->layerDetail);
+        this->_numWeights    =   this->_numWeights + layer->getNumWeights();
+        this->_layerDetail   =   this->_layerDetail.append(layer->getLayerDetail());
 
         branchLayers.push_back(layer);
     }
@@ -190,25 +190,25 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         throw Exception(1, "base output size is not equal with branch", __FILE__, __LINE__);
     }
 
-    this->outHeight         =   params.height;
-    this->outWidth          =   params.width;
-    this->outChannel        =   params.channels;
-    this->outputNum         =   params.inputNums;
+    this->_outHeight         =   params.height;
+    this->_outWidth          =   params.width;
+    this->_outChannel        =   params.channels;
+    this->_outputNum         =   params.inputNums;
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->output            =   new float[static_cast<size_t>(outputNum * this->batch)]();
+        this->_output            =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
     }
 
-    this->layerDetail.append("========================================================================\n");
+    this->_layerDetail.append("========================================================================\n");
 }
 
 void Res2BlockLayer::loadAllWeigths(std::vector<float> &weights)
 {
 
-    if(weights.size() != this->numWeights)
+    if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"Res2Block weights load err. needed : " + std::to_string(this->numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"Res2Block weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
     }
 
     size_t ptr = 0;
@@ -216,9 +216,9 @@ void Res2BlockLayer::loadAllWeigths(std::vector<float> &weights)
 
     for (size_t i = 0; i < baseLayers.size(); ++i)
     {
-        if(baseLayers[i]->type == LayerType::CONVOLUTIONAL || baseLayers[i]->type == LayerType::CONNECTED || baseLayers[i]->type == LayerType::BATCHNORM)
+        if(baseLayers[i]->type() == LayerType::CONVOLUTIONAL || baseLayers[i]->type() == LayerType::CONNECTED || baseLayers[i]->type() == LayerType::BATCHNORM)
         {
-            size_t nums = baseLayers[i]->numWeights;
+            size_t nums = baseLayers[i]->getNumWeights();
 
             std::vector<float> weights(first + static_cast<long long>(ptr), first + static_cast<long long>(ptr + nums));
 
@@ -230,9 +230,9 @@ void Res2BlockLayer::loadAllWeigths(std::vector<float> &weights)
 
     for (size_t i = 0; i < branchLayers.size(); ++i)
     {
-        if(branchLayers[i]->type == LayerType::CONVOLUTIONAL || branchLayers[i]->type == LayerType::CONNECTED || branchLayers[i]->type == LayerType::BATCHNORM)
+        if(branchLayers[i]->type() == LayerType::CONVOLUTIONAL || branchLayers[i]->type() == LayerType::CONNECTED || branchLayers[i]->type() == LayerType::BATCHNORM)
         {
-            size_t nums = branchLayers[i]->numWeights;
+            size_t nums = branchLayers[i]->getNumWeights();
 
             std::vector<float> weights(first + static_cast<long long>(ptr), first + static_cast<long long>(ptr + nums));
 
@@ -253,8 +253,8 @@ void Res2BlockLayer::forward(NetworkState &netState)
     {
         baseLayers[i]->forward(netState);
 
-        netState.input     =   baseLayers[i]->output;
-        netState.inputNum  =   baseLayers[i]->outputNum;
+        netState.input     =   baseLayers[i]->getOutput();
+        netState.inputNum  =   baseLayers[i]->getOutputNum();
     }
 
     netState.input         =    inputX.data();
@@ -264,55 +264,55 @@ void Res2BlockLayer::forward(NetworkState &netState)
     {
         branchLayers[i]->forward(netState);
 
-        netState.input     =   branchLayers[i]->output;
-        netState.inputNum  =   branchLayers[i]->outputNum;
+        netState.input     =   branchLayers[i]->getOutput();
+        netState.inputNum  =   branchLayers[i]->getOutputNum();
 
     }
 
-    Blas::cpuAxpy(netState.inputNum, 1.f, baseLayers[baseLayers.size()-1]->output, 1, branchLayers[branchLayers.size()-1]->output, 1);
-    Blas::cpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1]->output, 1, this->output, 1);
+    Blas::cpuAxpy(netState.inputNum, 1.f, baseLayers[baseLayers.size()-1]->getOutput(), 1, branchLayers[branchLayers.size()-1]->getOutput(), 1);
+    Blas::cpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1]->getOutput(), 1, this->_output, 1);
 
-    if(this->activation == ActivationType::NORM_CHAN)
+    if(this->_activation == ActivationType::NORM_CHAN)
     {
-        Activations::activateArrayNormCh(this->output, this->outputNum, this->batch, this->outChannel,
-                                         this->outWidth*this->outHeight, this->output);
+        Activations::activateArrayNormCh(this->_output, this->_outputNum, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, this->_output);
     }
-    else if(this->activation == ActivationType::NORM_CHAN_SOFTMAX)
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        Activations::activateArrayNormChSoftMax(this->output, this->outputNum, this->batch, this->outChannel,
-                                                this->outWidth*this->outHeight, this->output,0);
+        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_output,0);
     }
-    else if(this->activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        Activations::activateArrayNormChSoftMax(this->output, this->outputNum, this->batch, this->outChannel,
-                                                this->outWidth*this->outHeight, this->output,1);
+        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_output,1);
     }
-    else if(this->activation == ActivationType::NONE)
+    else if(this->_activation == ActivationType::NONE)
     {
 
     }
     else
     {
-        if(actParams.size() > 0)
+        if(_actParams.size() > 0)
         {
-            Activations::activateArray(this->output, this->outputNum, this->activation, this->supportAvx, actParams[0]);
+            Activations::activateArray(this->_output, this->_outputNum, this->_activation, this->supportAvx, _actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->output, this->outputNum, this->activation, this->supportAvx);
+            Activations::activateArray(this->_output, this->_outputNum, this->_activation, this->supportAvx);
         }
     }
 
-    this->forwardTime = 0;
+    this->_forwardTime = 0;
 
     for (size_t i = 0; i < baseLayers.size(); ++i)
     {
-        this->forwardTime += baseLayers[i]->forwardTime;
+        this->_forwardTime += baseLayers[i]->getForwardTime();
     }
 
     for (size_t i = 0; i < branchLayers.size(); ++i)
     {
-        this->forwardTime += branchLayers[i]->forwardTime;
+        this->_forwardTime += branchLayers[i]->getForwardTime();
     }
 
 }
@@ -323,23 +323,23 @@ Res2BlockLayer::~Res2BlockLayer()
     {
         if(baseLayers[i]!=nullptr)
         {
-            if(baseLayers[i]->type == LayerType::CONVOLUTIONAL)
+            if(baseLayers[i]->type() == LayerType::CONVOLUTIONAL)
             {
                 delete reinterpret_cast<ConvolutionalLayer*>(baseLayers[i]);
             }
-            else if(baseLayers[i]->type == LayerType::MAXPOOL)
+            else if(baseLayers[i]->type() == LayerType::MAXPOOL)
             {
                 delete reinterpret_cast<MaxPoolLayer*>(baseLayers[i]);
             }
-            else if(baseLayers[i]->type == LayerType::CONNECTED)
+            else if(baseLayers[i]->type() == LayerType::CONNECTED)
             {
                 delete reinterpret_cast<ConnectedLayer*>(baseLayers[i]);
             }
-            else if(baseLayers[i]->type == LayerType::BATCHNORM)
+            else if(baseLayers[i]->type() == LayerType::BATCHNORM)
             {
                 delete reinterpret_cast<BatchNormLayer*>(baseLayers[i]);
             }
-            else if(baseLayers[i]->type == LayerType::LOCAL_AVGPOOL)
+            else if(baseLayers[i]->type() == LayerType::LOCAL_AVGPOOL)
             {
                 delete reinterpret_cast<LocalAvgPoolLayer*>(baseLayers[i]);
             }
@@ -357,27 +357,27 @@ Res2BlockLayer::~Res2BlockLayer()
     {
         if(branchLayers[i]!=nullptr)
         {
-            if(branchLayers[i]->type == LayerType::CONVOLUTIONAL)
+            if(branchLayers[i]->type() == LayerType::CONVOLUTIONAL)
             {
                 delete reinterpret_cast<ConvolutionalLayer*>(branchLayers[i]);
             }
-            else if(branchLayers[i]->type == LayerType::MAXPOOL)
+            else if(branchLayers[i]->type() == LayerType::MAXPOOL)
             {
                 delete reinterpret_cast<MaxPoolLayer*>(branchLayers[i]);
             }
-            else if(branchLayers[i]->type == LayerType::CONNECTED)
+            else if(branchLayers[i]->type() == LayerType::CONNECTED)
             {
                 delete reinterpret_cast<ConnectedLayer*>(branchLayers[i]);
             }
-            else if(branchLayers[i]->type == LayerType::BATCHNORM)
+            else if(branchLayers[i]->type() == LayerType::BATCHNORM)
             {
                 delete reinterpret_cast<BatchNormLayer*>(branchLayers[i]);
             }
-            else if(branchLayers[i]->type == LayerType::LOCAL_AVGPOOL)
+            else if(branchLayers[i]->type() == LayerType::LOCAL_AVGPOOL)
             {
                 delete reinterpret_cast<LocalAvgPoolLayer*>(branchLayers[i]);
             }
-            else if(branchLayers[i]->type == LayerType::PADDING)
+            else if(branchLayers[i]->type() == LayerType::PADDING)
             {
                 delete reinterpret_cast<PaddingLayer*>(branchLayers[i]);
             }

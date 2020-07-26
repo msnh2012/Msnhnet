@@ -9,6 +9,7 @@ bool BaseLayer::isPreviewMode   = false;
 
 void BaseLayer::initSimd()
 {
+    std::cout<<"Checking......"<<std::endl;
 #ifdef USE_X86
     SimdInfo info;
     info.checkSimd();
@@ -16,13 +17,135 @@ void BaseLayer::initSimd()
     supportAvx = info.getSupportAVX2();
     supportFma = info.getSupportFMA3();
 
-    std::cout<<"checking simd."<<std::endl;
-
     if(supportAvx&&supportFma)
     {
-        std::cout<<"avx2 speed up"<<std::endl<<std::endl;
+        std::cout<<"avx2 speed up"<<std::endl;
     }
 #endif
+
+#if USE_ARM
+#ifdef USE_NEON
+    std::cout<<"Use NEON."<<std::endl;
+#endif
+
+#ifdef USE_NNPACK
+    std::cout<<"Use NNPACK."<<std::endl;
+#endif
+#endif
+
+#ifdef USE_OMP
+    std::cout<<"Use OMP.\nOMP thread num : "<<OMP_THREAD <<std::endl;
+#endif
+}
+
+LayerType BaseLayer::type() const
+{
+    return _type;
+}
+
+ActivationType BaseLayer::activation() const
+{
+    return _activation;
+}
+
+int BaseLayer::getOutHeight() const
+{
+    return _outHeight;
+}
+
+int BaseLayer::getOutWidth() const
+{
+    return _outWidth;
+}
+
+int BaseLayer::getOutChannel() const
+{
+    return _outChannel;
+}
+
+int BaseLayer::getOutputNum() const
+{
+    return _outputNum;
+}
+
+void BaseLayer::setOutHeight(int outHeight)
+{
+    _outHeight = outHeight;
+}
+
+void BaseLayer::setOutWidth(int outWidth)
+{
+    _outWidth = outWidth;
+}
+
+void BaseLayer::setOutChannel(int outChannel)
+{
+    _outChannel = outChannel;
+}
+
+float *BaseLayer::getOutput() const
+{
+    return _output;
+}
+
+int BaseLayer::getInputNum() const
+{
+    return _inputNum;
+}
+
+size_t BaseLayer::getWorkSpaceSize() const
+{
+    return _workSpaceSize;
+}
+
+void BaseLayer::setWorkSpaceSize(const size_t &workSpaceSize)
+{
+    _workSpaceSize = workSpaceSize;
+}
+
+size_t BaseLayer::getNumWeights() const
+{
+    return _numWeights;
+}
+
+std::string BaseLayer::getLayerDetail() const
+{
+    return _layerDetail;
+}
+
+int BaseLayer::getHeight() const
+{
+    return _height;
+}
+
+int BaseLayer::getWidth() const
+{
+    return _width;
+}
+
+int BaseLayer::getChannel() const
+{
+    return _channel;
+}
+
+float BaseLayer::getForwardTime() const
+{
+    return _forwardTime;
+}
+
+std::string BaseLayer::getLayerName() const
+{
+    return _layerName;
+}
+
+int BaseLayer::getBatch() const
+{
+    return _batch;
+}
+
+ActivationType BaseLayer::getActivation() const
+{
+    return _activation;
 }
 
 BaseLayer::BaseLayer()
@@ -32,7 +155,7 @@ BaseLayer::BaseLayer()
 
 BaseLayer::~BaseLayer()
 {
-    releaseArr(output);
+    releaseArr(_output);
 }
 
 void BaseLayer::setPreviewMode(const bool &previewMode)

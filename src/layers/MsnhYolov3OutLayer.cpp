@@ -4,56 +4,57 @@ namespace Msnhnet
 Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int &orgHeight, std::vector<int> &yolov3Indexes, std::vector<Yolov3Info> &yolov3LayersInfo,
                                const float &confThresh, const float &nmsThresh, const int &useSotfNms, const YoloType &yoloType)
 {
-    this->type              =   LayerType::YOLOV3_OUT;
-    this->layerName         =   "Yolov3Out       ";
+    this->_type              =   LayerType::YOLOV3_OUT;
+    this->_layerName         =   "Yolov3Out       ";
 
-    this->yoloType          =   yoloType;
+    this->_yoloType          =   yoloType;
 
-    this->batch             =   batch;
-    this->confThresh        =   confThresh;
-    this->nmsThresh         =   nmsThresh;
-    this->useSoftNms        =   useSotfNms;
+    this->_batch             =   batch;
+    this->_confThresh        =   confThresh;
+    this->_nmsThresh         =   nmsThresh;
+    this->_useSoftNms        =   useSotfNms;
 
-    this->orgHeight         =   orgHeight;
-    this->orgWidth          =   orgWidth;
+    this->_orgHeight         =   orgHeight;
+    this->_orgWidth          =   orgWidth;
 
-    this->layerDetail.append("yolov3out  ");
+    this->_layerDetail.append("yolov3out  ");
     char msg[100];
 
-    this->yolov3Indexes     =   yolov3Indexes;
-    this->yolov3LayersInfo  =   yolov3LayersInfo;
+    this->_yolov3Indexes     =   yolov3Indexes;
+    this->_yolov3LayersInfo  =   yolov3LayersInfo;
 
     for (size_t i = 0; i < yolov3Indexes.size(); ++i)
     {
-        this->width         +=   yolov3LayersInfo[i].outWidth;
-        this->height        +=   yolov3LayersInfo[i].outHeight;
+        this->_width         +=   yolov3LayersInfo[i].outWidth;
+        this->_height        +=   yolov3LayersInfo[i].outHeight;
 
 #ifdef WIN32
         sprintf_s(msg, " %d", yolov3Indexes[i]);
 #else
         sprintf(msg, " %d", yolov3Indexes[i]);
 #endif
-        this->layerDetail.append(msg);
+        this->_layerDetail.append(msg);
 
-        this->yolov3AllInputNum += yolov3LayersInfo[i].getOutputNum();
+        this->_yolov3AllInputNum += yolov3LayersInfo[i].getOutputNum();
     }
 
-    this->channel           =   yolov3LayersInfo[0].outChannel/3;    
-    this->pixels            =   this->yolov3AllInputNum / channel; 
+    this->_channel           =   yolov3LayersInfo[0].outChannel/3;    
 
-    this->layerDetail.append("\n");
+    this->_pixels            =   this->_yolov3AllInputNum / _channel; 
+
+    this->_layerDetail.append("\n");
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->allInput             =   new float[static_cast<size_t>(this->yolov3AllInputNum * this->batch)]();
-        this->shuffleInput         =   new float[static_cast<size_t>(this->yolov3AllInputNum * this->batch)]();
+        this->_allInput             =   new float[static_cast<size_t>(this->_yolov3AllInputNum * this->_batch)]();
+        this->_shuffleInput         =   new float[static_cast<size_t>(this->_yolov3AllInputNum * this->_batch)]();
     }
 }
 
 Yolov3OutLayer::~Yolov3OutLayer()
 {
-    releaseArr(allInput);
-    releaseArr(shuffleInput);
+    releaseArr(_allInput);
+    releaseArr(_shuffleInput);
 }
 
 void Yolov3OutLayer::forward(NetworkState &netState)
@@ -61,21 +62,21 @@ void Yolov3OutLayer::forward(NetworkState &netState)
     batchHasBox.clear();
     finalOut.clear();
     auto st = std::chrono::system_clock::now();
-    std::vector<bool> tmpBatchHasBox(static_cast<size_t>(this->batch),false);
+    std::vector<bool> tmpBatchHasBox(static_cast<size_t>(this->_batch),false);
 
     int offset          =   0;
-    for (int b = 0; b < this->batch; ++b)
+    for (int b = 0; b < this->_batch; ++b)
     {
-        for (size_t i = 0; i < this->yolov3Indexes.size(); ++i)
+        for (size_t i = 0; i < this->_yolov3Indexes.size(); ++i)
         {
-            size_t index        =   static_cast<size_t>(this->yolov3Indexes[i]);
-            float *mInput       =   netState.net->layers[index]->output;
-            int yolov3InputNum  =   netState.net->layers[index]->outputNum;
+            size_t index        =   static_cast<size_t>(this->_yolov3Indexes[i]);
+            float *mInput       =   netState.net->layers[index]->getOutput();
+            int yolov3InputNum  =   netState.net->layers[index]->getOutputNum();
 
-            Blas::cpuCopy(yolov3InputNum, mInput, 1, this->allInput+offset,1);
+            Blas::cpuCopy(yolov3InputNum, mInput, 1, this->_allInput+offset,1);
 
-            int WxH             =   netState.net->layers[index]->outWidth*netState.net->layers[index]->outHeight;
-            int chn             =   netState.net->layers[index]->outChannel/3;
+            int WxH             =   netState.net->layers[index]->getOutWidth()*netState.net->layers[index]->getOutHeight();
+            int chn             =   netState.net->layers[index]->getOutChannel()/3;
 
             for (int k = 0; k < 3; ++k)
             {
@@ -83,7 +84,7 @@ void Yolov3OutLayer::forward(NetworkState &netState)
                 {
                     for (int m = 0; m < chn; ++m)
                     {
-                        this->shuffleInput[offset + k*WxH*chn + n*chn + m] = this->allInput[offset + k*WxH*chn+ m*WxH + n];
+                        this->_shuffleInput[offset + k*WxH*chn + n*chn + m] = this->_allInput[offset + k*WxH*chn+ m*WxH + n];
                     }
                 }
             }
@@ -93,44 +94,45 @@ void Yolov3OutLayer::forward(NetworkState &netState)
 
         std::vector<Yolov3Box> tmpBox;
 
-        for (int i = 0; i < this->pixels; ++i)
+        for (int i = 0; i < this->_pixels; ++i)
         {
-            int ptr             =   this->yolov3AllInputNum*b;
+            int ptr             =   this->_yolov3AllInputNum*b;
 
-            if(this->shuffleInput[ptr + i*this->channel + 4] > this->confThresh)
+            if(this->_shuffleInput[ptr + i*this->_channel + 4] > this->_confThresh)
             {
                 Yolov3Box box;
 
-                box.xywhBox         =   Box::XYWHBox(this->shuffleInput[ptr + i*this->channel],
-                        this->shuffleInput[ptr + i*this->channel + 1],
-                        this->shuffleInput[ptr + i*this->channel + 2],
-                        this->shuffleInput[ptr + i*this->channel + 3]);
-                box.conf            =   this->shuffleInput[ptr + i*this->channel + 4];
+                box.xywhBox         =   Box::XYWHBox(this->_shuffleInput[ptr + i*this->_channel],
+                        this->_shuffleInput[ptr + i*this->_channel + 1],
+                        this->_shuffleInput[ptr + i*this->_channel + 2],
+                        this->_shuffleInput[ptr + i*this->_channel + 3]);
+                box.conf            =   this->_shuffleInput[ptr + i*this->_channel + 4];
 
-                if(yoloType == YoloType::YoloV3_NORMAL || yoloType == YoloType::YoloV4)
+                if(_yoloType == YoloType::YoloV3_NORMAL || _yoloType == YoloType::YoloV4)
                 {
-                    for (int j = 0; j < this->channel - 5; ++j)
+                    for (int j = 0; j < this->_channel - 5; ++j)
                     {
-                        box.classesVal.push_back(this->shuffleInput[ptr + i*this->channel + 5 + j]);
+                        box.classesVal.push_back(this->_shuffleInput[ptr + i*this->_channel + 5 + j]);
                     }
                 }
-                else if(yoloType == YoloType::YoloV3_ANGLE)
+                else if(_yoloType == YoloType::YoloV3_ANGLE)
                 {
-                    for (int j = 0; j < this->channel - 5 - 7; ++j) 
+                    for (int j = 0; j < this->_channel - 5 - 7; ++j) 
+
                     {
-                        box.classesVal.push_back(this->shuffleInput[ptr + i*this->channel + 5 + j]);
+                        box.classesVal.push_back(this->_shuffleInput[ptr + i*this->_channel + 5 + j]);
                     }
 
                     std::vector<float> angleSplits;
 
                     for (int j = 0; j < 6; ++j)
                     {
-                       angleSplits.push_back(this->shuffleInput[ptr + i*this->channel +  this->channel - 7 + j]);
+                       angleSplits.push_back(this->_shuffleInput[ptr + i*this->_channel +  this->_channel - 7 + j]);
                     }
 
                     float regAngle    = 0.f;
 
-                    regAngle = this->shuffleInput[ptr + i*this->channel +  this->channel - 1];
+                    regAngle = this->_shuffleInput[ptr + i*this->_channel +  this->_channel - 1];
 
                     int bestAngleIndex = static_cast<int>(ExVector::maxIndex(angleSplits));
                     box.angle = bestAngleIndex*30.f + regAngle*30 - 90.f;
@@ -146,6 +148,7 @@ void Yolov3OutLayer::forward(NetworkState &netState)
         }
 
         if(tmpBatchHasBox[b]) 
+
         {
 
             std::vector<float> confs;
@@ -165,13 +168,13 @@ void Yolov3OutLayer::forward(NetworkState &netState)
             }
         }
 
-        finalOut.push_back(nms(tmpBox, this->nmsThresh, this->useSoftNms));
+        finalOut.push_back(nms(tmpBox, this->_nmsThresh, this->_useSoftNms));
     }
 
     this->batchHasBox   =   tmpBatchHasBox;
 
     auto so = std::chrono::system_clock::now();
-    this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 
 }
 
@@ -296,6 +299,66 @@ std::vector<Yolov3Box> Yolov3OutLayer::nms(const std::vector<Yolov3Box> &bboxes,
         }
     }
     return bestBoxes;
+}
+
+float Yolov3OutLayer::getConfThresh() const
+{
+    return _confThresh;
+}
+
+float Yolov3OutLayer::getNmsThresh() const
+{
+    return _nmsThresh;
+}
+
+int Yolov3OutLayer::getUseSoftNms() const
+{
+    return _useSoftNms;
+}
+
+int Yolov3OutLayer::getPixels() const
+{
+    return _pixels;
+}
+
+int Yolov3OutLayer::getOrgHeight() const
+{
+    return _orgHeight;
+}
+
+int Yolov3OutLayer::getOrgWidth() const
+{
+    return _orgWidth;
+}
+
+YoloType Yolov3OutLayer::getYoloType() const
+{
+    return _yoloType;
+}
+
+std::vector<int> Yolov3OutLayer::getYolov3Indexes() const
+{
+    return _yolov3Indexes;
+}
+
+std::vector<Yolov3Info> Yolov3OutLayer::getYolov3LayersInfo() const
+{
+    return _yolov3LayersInfo;
+}
+
+int Yolov3OutLayer::getYolov3AllInputNum() const
+{
+    return _yolov3AllInputNum;
+}
+
+float *Yolov3OutLayer::getAllInput() const
+{
+    return _allInput;
+}
+
+float *Yolov3OutLayer::getShuffleInput() const
+{
+    return _shuffleInput;
 }
 
 }

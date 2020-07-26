@@ -31,6 +31,14 @@ void Parser::clearParams()
             {
                 delete reinterpret_cast<ConvParams*>(params[i]);
             }
+            else if(params[i]->type == LayerType::ACTIVE)
+            {
+                delete reinterpret_cast<ActivationParams*>(params[i]);
+            }
+            else if(params[i]->type == LayerType::SOFTMAX)
+            {
+                delete reinterpret_cast<SoftMaxParams*>(params[i]);
+            }
             else if(params[i]->type == LayerType::EMPTY)
             {
                 delete reinterpret_cast<EmptyParams*>(params[i]);
@@ -120,6 +128,7 @@ void Parser::readCfg(const std::string &path)
                     if(it->second.Type() == YAML::NodeType::Map)
                     {
                         NetConfigParams *netConfigParams = new NetConfigParams(false); 
+
                         parseConfigParams(netConfigParams, it);
                         params.push_back(netConfigParams);
                         continue;
@@ -148,6 +157,19 @@ void Parser::readCfg(const std::string &path)
                     throw Exception(1,"[maxpool] content error", __FILE__, __LINE__);
                 }
             }
+            else if(node == "act")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    ActivationParams *activationParams = new ActivationParams(true);
+                    parseActivationParams(activationParams, it);
+                    params.push_back(activationParams);
+                }
+                else
+                {
+                    throw Exception(1,"[act] content error", __FILE__, __LINE__);
+                }
+            }
             else if(node == "padding")
             {
                 if(it->second.Type() == YAML::NodeType::Map)
@@ -171,8 +193,13 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[maxpool] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[localavgpool] content error", __FILE__, __LINE__);
                 }
+            }
+            else if(node == "globalavgpool")
+            {
+                GlobalAvgPoolParams *globalAvgPoolParams = new GlobalAvgPoolParams(true);
+                params.push_back(globalAvgPoolParams);
             }
             else if(node == "conv")
             {
@@ -463,6 +490,19 @@ void Parser::readCfg(const std::string &path)
                     throw Exception(1,"[route] content error", __FILE__, __LINE__);
                 }
             }
+            else if(node == "softmax")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    SoftMaxParams *softMaxParams = new SoftMaxParams(true);
+                    parseSoftMaxParams(softMaxParams, it);
+                    params.push_back(softMaxParams);
+                }
+                else
+                {
+                    throw Exception(1,"[softmax] content error", __FILE__, __LINE__);
+                }
+            }
             else if(node == "upsample")
             {
                 if(it->second.Type() == YAML::NodeType::Map)
@@ -601,6 +641,24 @@ void Parser::parseConfigParams(NetConfigParams *netConfigParams, YAML::const_ite
         else
         {
             throw Exception(1, key + " is not supported in [config]", __FILE__, __LINE__);
+        }
+    }
+}
+
+void Parser::parseActivationParams(ActivationParams *activationParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key         =   it->first.as<std::string>();
+        std::string value       =   it->second.as<std::string>();
+
+        if(key == "activation")
+        {
+            activationParams->activation = Activations::getActivation(value);
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [act]", __FILE__, __LINE__);
         }
     }
 }
@@ -864,6 +922,12 @@ void Parser::parseLocalAvgPoolParams(LocalAvgPoolParams *localAvgPoolParams, YAM
             localAvgPoolParams->kSizeY = localAvgPoolParams->kSize;
         }
     }
+}
+
+void Parser::parseGlobalAvgPoolParams(GlobalAvgPoolParams *globalAvgPoolParams, YAML::const_iterator &iter)
+{
+    (void)iter;
+    (void)globalAvgPoolParams;
 }
 
 void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
@@ -1166,6 +1230,13 @@ void Parser::parseDeConvParams(DeConvParams *deconvParams, YAML::const_iterator 
             if(!ExString::strToInt(value, deconvParams->useBias))
             {
                 throw Exception(1,"[deconv] useBias can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "groups")
+        {
+            if(!ExString::strToInt(value, deconvParams->groups))
+            {
+                throw Exception(1,"[deconv] groups can't convert to int", __FILE__, __LINE__);
             }
         }
         else if(key == "activation")
@@ -1747,6 +1818,34 @@ void Parser::parseRouteParams(RouteParams *routeParams, YAML::const_iterator &it
         else
         {
             throw Exception(1, key + " is not supported in [route]", __FILE__, __LINE__);
+        }
+    }
+}
+
+void Parser::parseSoftMaxParams(SoftMaxParams *softmaxParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "groups")
+        {
+            if(!ExString::strToInt(value, softmaxParams->groups))
+            {
+                throw Exception(1,"[softmax] output can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else if(key == "temperature")
+        {
+            if(!ExString::strToInt(value, softmaxParams->temperature))
+            {
+                throw Exception(1,"[softmax] output can't convert to int", __FILE__, __LINE__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [softmax]", __FILE__, __LINE__);
         }
     }
 }

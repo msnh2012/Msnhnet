@@ -74,6 +74,11 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
                                                                                convParams->activation, convParams->actParams, convParams->batchNorm, convParams->useBias,
                                                                                0,0,0,0,convParams->antialiasing, nullptr, 0,0);
         }
+        else if(parser->params[i]->type == LayerType::ACTIVE)
+        {
+            ActivationParams *activationParams      =   reinterpret_cast<ActivationParams*>(parser->params[i]);
+            layer                                   =   new ActivationLayer(params.batch, params.height, params.width, params.channels, params.inputNums, activationParams->activation);
+        }
         else if(parser->params[i]->type == LayerType::DECONVOLUTIONAL)
         {
             if(params.height ==0 || params.width == 0 || params.channels == 0)
@@ -81,10 +86,10 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
                 throw Exception(1, "Layer before deconvolutional layer must output image", __FILE__, __LINE__);
             }
 
-            DeConvParams* deconvParams                  =   reinterpret_cast<DeConvParams*>(parser->params[i]);
+            DeConvParams* deconvParams              =   reinterpret_cast<DeConvParams*>(parser->params[i]);
             layer                                   =   new DeConvolutionalLayer(params.batch, params.height, params.width, params.channels, deconvParams->filters, deconvParams->kSizeX,
                                                                                  deconvParams->kSizeY, deconvParams->strideX, deconvParams->strideY, deconvParams->paddingX, deconvParams->paddingY,
-                                                                                 deconvParams->activation, deconvParams->actParams, deconvParams->useBias);
+                                                                                 deconvParams->groups, deconvParams->activation, deconvParams->actParams, deconvParams->useBias);
         }
         else if(parser->params[i]->type == LayerType::CONNECTED)
         {
@@ -110,6 +115,10 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             LocalAvgPoolParams *localAvgPoolParams  =   reinterpret_cast<LocalAvgPoolParams*>(parser->params[i]);
             layer                                   =   new LocalAvgPoolLayer(params.batch, params.height, params.width, params.channels, localAvgPoolParams->kSizeX, localAvgPoolParams->kSizeY,
                                                                               localAvgPoolParams->strideX, localAvgPoolParams->strideY, localAvgPoolParams->paddingX, localAvgPoolParams->paddingY, localAvgPoolParams->ceilMode, 0);
+        }
+        else if(parser->params[i]->type == LayerType::GLOBAL_AVGPOOL)
+        {
+            layer                                   =   new GlobalAvgPoolLayer(params.batch, params.height, params.width, params.channels);
         }
         else if(parser->params[i]->type == LayerType::BATCHNORM)
         {
@@ -154,38 +163,43 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
                 throw Exception(1, "route layer error, route layers index should < size of layers", __FILE__, __LINE__);
             }
 
-            int outHeight   =   net->layers[routeIndex]->outHeight;
-            int outWidth    =   net->layers[routeIndex]->outWidth;
+            int outHeight   =   net->layers[routeIndex]->getOutHeight();
+            int outWidth    =   net->layers[routeIndex]->getOutWidth();
 
             for (size_t i = 0; i < routeParams->layerIndexes.size(); ++i)
             {
                 size_t index   = static_cast<size_t>(routeParams->layerIndexes[i]);
-                layersOutputNum.push_back(net->layers[index]->outputNum);
+                layersOutputNum.push_back(net->layers[index]->getOutputNum());
 
-                if(outHeight != net->layers[index]->outHeight || outWidth != net->layers[index]->outWidth)
+                if(outHeight != net->layers[index]->getOutHeight() || outWidth != net->layers[index]->getOutWidth())
                 {
                     throw Exception(1, "[route] layers height or width not equal", __FILE__, __LINE__);
                 }
 
                 if(routeParams->addModel == 1)
                 {
-                    outChannel = net->layers[index]->outChannel;
+                    outChannel = net->layers[index]->getOutChannel();
                 }
                 else
                 {
-                    outChannel +=   net->layers[index]->outChannel;
+                    outChannel +=   net->layers[index]->getOutChannel();
                 }
             }
             layer                                   =   new RouteLayer(params.batch, routeParams->layerIndexes, layersOutputNum,
                                                                        routeParams->groups, routeParams->groupsId, routeParams->addModel);
-            layer->outChannel   =   outChannel;
-            layer->outWidth     =   outWidth;
-            layer->outHeight    =   outHeight;
+            layer->setOutChannel(outChannel);
+            layer->setOutWidth(outWidth);
+            layer->setOutHeight(outHeight);
         }
         else if(parser->params[i]->type == LayerType::UPSAMPLE)
         {
             UpSampleParams *upSampleParams          =   reinterpret_cast<UpSampleParams*>(parser->params[i]);
             layer                                   =   new UpSampleLayer(params.batch, params.width, params.height, params.channels, upSampleParams->stride, upSampleParams->scale);
+        }
+        else if(parser->params[i]->type == LayerType::SOFTMAX)
+        {
+            SoftMaxParams  *softmaxParams           =   reinterpret_cast<SoftMaxParams*>(parser->params[i]);
+            layer                                   =   new SoftMaxLayer(params.batch, params.inputNums, softmaxParams->groups, softmaxParams->temperature);
         }
         else if(parser->params[i]->type == LayerType::YOLOV3)
         {
@@ -208,14 +222,14 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             {
                 size_t index   =   static_cast<size_t>(yolov3OutParams->layerIndexes[i]);
 
-                if(net->layers[index]->type != LayerType::YOLOV3)
+                if(net->layers[index]->type() != LayerType::YOLOV3)
                 {
                     throw Exception(1, "yolov3out layer error, not a yolov3 layer", __FILE__, __LINE__);
                 }
 
-                yolov3LayersInfo.push_back(Yolov3Info(net->layers[index]->outHeight,
-                                                      net->layers[index]->outWidth,
-                                                      net->layers[index]->outChannel
+                yolov3LayersInfo.push_back(Yolov3Info(net->layers[index]->getOutHeight(),
+                                                      net->layers[index]->getOutWidth(),
+                                                      net->layers[index]->getOutChannel()
                                                       ));
             }
 
@@ -223,14 +237,14 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
                                                                            yolov3LayersInfo,yolov3OutParams->confThresh, yolov3OutParams->nmsThresh, yolov3OutParams->useSoftNms, yolov3OutParams->yoloType);
         }
 
-        params.height       =   layer->outHeight;
-        params.width        =   layer->outWidth;
-        params.channels     =   layer->outChannel;
-        params.inputNums    =   layer->outputNum;
+        params.height       =   layer->getOutHeight();
+        params.width        =   layer->getOutWidth();
+        params.channels     =   layer->getOutChannel();
+        params.inputNums    =   layer->getOutputNum();
 
-        if(layer->workSpaceSize > maxWorkSpace)
+        if(layer->getWorkSpaceSize() > maxWorkSpace)
         {
-            maxWorkSpace = layer->workSpaceSize;
+            maxWorkSpace = layer->getWorkSpaceSize();
         }
         net->layers.push_back(layer);
     }
@@ -250,11 +264,11 @@ void NetBuilder::loadWeightsFromMsnhBin(const string &path)
 
     for (size_t i = 0; i < net->layers.size(); ++i)
     {
-        if(net->layers[i]->type == LayerType::CONVOLUTIONAL || net->layers[i]->type == LayerType::CONNECTED || net->layers[i]->type == LayerType::BATCHNORM ||
-                net->layers[i]->type == LayerType::RES_BLOCK   || net->layers[i]->type == LayerType::RES_2_BLOCK || net->layers[i]->type == LayerType::ADD_BLOCK ||
-                net->layers[i]->type == LayerType::CONCAT_BLOCK  || net->layers[i]->type == LayerType::DECONVOLUTIONAL)
+        if(net->layers[i]->type() == LayerType::CONVOLUTIONAL || net->layers[i]->type() == LayerType::CONNECTED || net->layers[i]->type() == LayerType::BATCHNORM ||
+                net->layers[i]->type() == LayerType::RES_BLOCK   || net->layers[i]->type() == LayerType::RES_2_BLOCK || net->layers[i]->type() == LayerType::ADD_BLOCK ||
+                net->layers[i]->type() == LayerType::CONCAT_BLOCK  || net->layers[i]->type() == LayerType::DECONVOLUTIONAL)
         {
-            size_t nums = net->layers[i]->numWeights;
+            size_t nums = net->layers[i]->getNumWeights();
 
             if((ptr + nums) > (parser->msnhF32Weights.size()))
             {
@@ -294,9 +308,9 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
 #endif
     netState->input     =   img.data();
     netState->inputNum  =   static_cast<int>(img.size());
-    if(net->layers[0]->inputNum != netState->inputNum)
+    if(net->layers[0]->getInputNum() != netState->inputNum)
     {
-        throw Exception(1,"input image size err. Needed :" + std::to_string(net->layers[0]->inputNum) + "given :" +
+        throw Exception(1,"input image size err. Needed :" + std::to_string(net->layers[0]->getInputNum()) + "given :" +
                 std::to_string(img.size()),__FILE__,__LINE__);
     }
 
@@ -304,8 +318,8 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
     {
         net->layers[i]->forward(*netState);
 
-        netState->input     =   net->layers[i]->output;
-        netState->inputNum  =   net->layers[i]->outputNum;
+        netState->input     =   net->layers[i]->getOutput();
+        netState->inputNum  =   net->layers[i]->getOutputNum();
     }
 
 #ifdef USE_NNPACK
@@ -327,28 +341,29 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img
 #endif
     netState->input     =   img.data();
     netState->inputNum  =   static_cast<int>(img.size());
-    if(net->layers[0]->inputNum != netState->inputNum)
+    if(net->layers[0]->getInputNum() != netState->inputNum)
     {
-        throw Exception(1,"input image size err. Needed :" + std::to_string(net->layers[0]->inputNum) + "given :" +
+        throw Exception(1,"input image size err. Needed :" + std::to_string(net->layers[0]->getInputNum()) + "given :" +
                 std::to_string(img.size()),__FILE__,__LINE__);
     }
 
     for (size_t i = 0; i < net->layers.size(); ++i)
     {
 
-        if(net->layers[i]->type != LayerType::ROUTE && net->layers[i]->type != LayerType::YOLOV3_OUT) 
+        if(net->layers[i]->type() != LayerType::ROUTE && net->layers[i]->type() != LayerType::YOLOV3_OUT) 
+
         {
-            if(netState->inputNum != net->layers[i]->inputNum)
+            if(netState->inputNum != net->layers[i]->getInputNum())
             {
-                throw Exception(1, "layer " + to_string(i) + " inputNum needed : " + std::to_string(net->layers[i]->inputNum) +
+                throw Exception(1, "layer " + to_string(i) + " inputNum needed : " + std::to_string(net->layers[i]->getInputNum()) +
                                 ", given : " + std::to_string(netState->inputNum),__FILE__,__LINE__);
             }
         }
 
         net->layers[i]->forward(*netState);
 
-        netState->input     =   net->layers[i]->output;
-        netState->inputNum  =   net->layers[i]->outputNum;
+        netState->input     =   net->layers[i]->getOutput();
+        netState->inputNum  =   net->layers[i]->getOutputNum();
 
     }
 
@@ -356,7 +371,7 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img
     nnp_deinitialize();
 #endif
 
-    if((net->layers[net->layers.size()-1])->type == LayerType::YOLOV3_OUT)
+    if((net->layers[net->layers.size()-1])->type() == LayerType::YOLOV3_OUT)
     {
         return (reinterpret_cast<Yolov3OutLayer*>((net->layers[net->layers.size()-1])))->finalOut;
     }
@@ -390,59 +405,71 @@ void NetBuilder::clearLayers()
     {
         if(net->layers[i]!=nullptr)
         {
-            if(net->layers[i]->type == LayerType::CONVOLUTIONAL)
+            if(net->layers[i]->type() == LayerType::CONVOLUTIONAL)
             {
                 delete reinterpret_cast<ConvolutionalLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::MAXPOOL)
+            else if(net->layers[i]->type() == LayerType::MAXPOOL)
             {
                 delete reinterpret_cast<MaxPoolLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::CONNECTED)
+            else if(net->layers[i]->type() == LayerType::ACTIVE)
+            {
+                delete reinterpret_cast<ActivationLayer*>(net->layers[i]);
+            }
+            else if(net->layers[i]->type() == LayerType::SOFTMAX)
+            {
+                delete reinterpret_cast<SoftMaxLayer*>(net->layers[i]);
+            }
+            else if(net->layers[i]->type() == LayerType::CONNECTED)
             {
                 delete reinterpret_cast<ConnectedLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::BATCHNORM)
+            else if(net->layers[i]->type() == LayerType::BATCHNORM)
             {
                 delete reinterpret_cast<BatchNormLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::LOCAL_AVGPOOL)
+            else if(net->layers[i]->type() == LayerType::LOCAL_AVGPOOL)
             {
                 delete reinterpret_cast<LocalAvgPoolLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::RES_BLOCK)
+            else if(net->layers[i]->type() == LayerType::GLOBAL_AVGPOOL)
+            {
+                delete reinterpret_cast<GlobalAvgPoolLayer*>(net->layers[i]);
+            }
+            else if(net->layers[i]->type() == LayerType::RES_BLOCK)
             {
                 delete reinterpret_cast<ResBlockLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::RES_2_BLOCK)
+            else if(net->layers[i]->type() == LayerType::RES_2_BLOCK)
             {
                 delete reinterpret_cast<Res2BlockLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::ADD_BLOCK)
+            else if(net->layers[i]->type() == LayerType::ADD_BLOCK)
             {
                 delete reinterpret_cast<AddBlockLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::CONCAT_BLOCK)
+            else if(net->layers[i]->type() == LayerType::CONCAT_BLOCK)
             {
                 delete reinterpret_cast<ConcatBlockLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::ROUTE)
+            else if(net->layers[i]->type() == LayerType::ROUTE)
             {
                 delete reinterpret_cast<RouteLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::UPSAMPLE)
+            else if(net->layers[i]->type() == LayerType::UPSAMPLE)
             {
                 delete reinterpret_cast<UpSampleLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::YOLOV3)
+            else if(net->layers[i]->type() == LayerType::YOLOV3)
             {
                 delete reinterpret_cast<Yolov3Layer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::YOLOV3_OUT)
+            else if(net->layers[i]->type() == LayerType::YOLOV3_OUT)
             {
                 delete reinterpret_cast<Yolov3OutLayer*>(net->layers[i]);
             }
-            else if(net->layers[i]->type == LayerType::PADDING)
+            else if(net->layers[i]->type() == LayerType::PADDING)
             {
                 delete reinterpret_cast<PaddingLayer*>(net->layers[i]);
             }
@@ -462,7 +489,7 @@ float NetBuilder::getInferenceTime()
     float inferTime     =   0.f;
     for (size_t i = 0; i < this->net->layers.size(); ++i)
     {
-        inferTime       +=  this->net->layers[i]->forwardTime;
+        inferTime       +=  this->net->layers[i]->getForwardTime();
     }
 
     return inferTime;
@@ -475,8 +502,8 @@ string NetBuilder::getLayerDetail()
     {
         detail = detail + "────────────────────────────────  " + ((i<10)?("00"+std::to_string(i)):((i<100)?("0"+std::to_string(i)):std::to_string(i)))
                 + " ─────────────────────────────────\n";
-        detail = detail + this->net->layers[i]->layerDetail  + "weights : "+
-                std::to_string(this->net->layers[i]->numWeights) + "\n\n";
+        detail = detail + this->net->layers[i]->getLayerDetail()  + "weights : "+
+                std::to_string(this->net->layers[i]->getNumWeights()) + "\n\n";
 
     }
     return detail;
@@ -491,10 +518,10 @@ string NetBuilder::getTimeDetail()
 
     for(size_t i=0;i<this->net->layers.size();++i)
     {
-        detail = detail + this->net->layers[i]->layerName + " : ";
+        detail = detail + this->net->layers[i]->getLayerName() + " : ";
         detail = detail + ((i<10)?("00"+std::to_string(i)):((i<100)?("0"+std::to_string(i)):std::to_string(i))) + "     ";
-        detail = detail + Msnhnet::ExString::left(std::to_string(this->net->layers[i]->forwardTime*1000),6) +" ms         ";
-        detail = detail + Msnhnet::ExString::left(std::to_string(((int)(this->net->layers[i]->forwardTime / totalWaste *1000))/10.f),4) + "%\n";
+        detail = detail + Msnhnet::ExString::left(std::to_string(this->net->layers[i]->getForwardTime()*1000),6) +" ms         ";
+        detail = detail + Msnhnet::ExString::left(std::to_string(((int)(this->net->layers[i]->getForwardTime() / totalWaste *1000))/10.f),4) + "%\n";
     }
     detail     = detail + "=========================================================\n";
     detail     = detail + "Msnhnet inference time : " + std::to_string(totalWaste*1000) + " ms";

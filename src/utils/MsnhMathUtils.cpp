@@ -66,6 +66,7 @@ unsigned int MathUtils::randomGen()
 #if (RAND_MAX < 65536)
     rnd = rand()*(RAND_MAX + 1) + rnd;
 #endif  
+
     return rnd;
 }
 }
