@@ -60,8 +60,8 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - yolov3_spp
 - yolov3_tiny
 - yolov4
-- **pretrained models** 链接：https://pan.baidu.com/s/1WElMhBhaN5EnPJnD8S1P3w 
-提取码：1hlm
+- **pretrained models** 链接：https://pan.baidu.com/s/1FjpYJ2eNH6DRU7U1MfaRbA 
+提取码：nzgm
 
 **Requirements**
   * OpenCV4 https://github.com/opencv/opencv
