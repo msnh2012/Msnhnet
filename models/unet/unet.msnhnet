@@ -1,0 +1,461 @@
+config:
+  batch: 1
+  channels: 3
+  width: 224
+  height: 224
+#0
+conv:
+  filters: 32
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#1
+batchnorm:
+  activation: none
+#2
+act:
+  activation: relu
+#3
+conv:
+  filters: 32
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#4
+batchnorm:
+  activation: none
+#5
+act:
+  activation: relu
+#6
+maxpool:
+  kSizeX: 2
+  kSizeY: 2
+  paddingX: 0
+  paddingY: 0
+  strideX: 2
+  strideY: 2
+#7
+conv:
+  filters: 64
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#8
+batchnorm:
+  activation: none
+#9
+act:
+  activation: relu
+#10
+conv:
+  filters: 64
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#11
+batchnorm:
+  activation: none
+#12
+act:
+  activation: relu
+#13
+maxpool:
+  kSizeX: 2
+  kSizeY: 2
+  paddingX: 0
+  paddingY: 0
+  strideX: 2
+  strideY: 2
+#14
+conv:
+  filters: 128
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#15
+batchnorm:
+  activation: none
+#16
+act:
+  activation: relu
+#17
+conv:
+  filters: 128
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#18
+batchnorm:
+  activation: none
+#19
+act:
+  activation: relu
+#20
+maxpool:
+  kSizeX: 2
+  kSizeY: 2
+  paddingX: 0
+  paddingY: 0
+  strideX: 2
+  strideY: 2
+#21
+conv:
+  filters: 256
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#22
+batchnorm:
+  activation: none
+#23
+act:
+  activation: relu
+#24
+conv:
+  filters: 256
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#25
+batchnorm:
+  activation: none
+#26
+act:
+  activation: relu
+#27
+maxpool:
+  kSizeX: 2
+  kSizeY: 2
+  paddingX: 0
+  paddingY: 0
+  strideX: 2
+  strideY: 2
+#28
+conv:
+  filters: 512
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#29
+batchnorm:
+  activation: none
+#30
+act:
+  activation: relu
+#31
+conv:
+  filters: 512
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#32
+batchnorm:
+  activation: none
+#33
+act:
+  activation: relu
+#34
+upsample:
+  stride: 2
+#35
+conv:
+  filters: 256
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#36
+batchnorm:
+  activation: none
+#37
+act:
+  activation: relu
+#38
+route:
+  layers: 26,37
+  addModel: 0
+#39
+upsample:
+  stride: 2
+#40
+conv:
+  filters: 128
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#41
+batchnorm:
+  activation: none
+#42
+act:
+  activation: relu
+#43
+route:
+  layers: 19,42
+  addModel: 0
+#44
+conv:
+  filters: 128
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#45
+batchnorm:
+  activation: none
+#46
+act:
+  activation: relu
+#47
+conv:
+  filters: 128
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#48
+batchnorm:
+  activation: none
+#49
+act:
+  activation: relu
+#50
+upsample:
+  stride: 2
+#51
+conv:
+  filters: 64
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#52
+batchnorm:
+  activation: none
+#53
+act:
+  activation: relu
+#54
+route:
+  layers: 12,53
+  addModel: 0
+#55
+conv:
+  filters: 64
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#56
+batchnorm:
+  activation: none
+#57
+act:
+  activation: relu
+#58
+conv:
+  filters: 64
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#59
+batchnorm:
+  activation: none
+#60
+act:
+  activation: relu
+#61
+upsample:
+  stride: 2
+#62
+conv:
+  filters: 32
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#63
+batchnorm:
+  activation: none
+#64
+act:
+  activation: relu
+#65
+route:
+  layers: 5,64
+  addModel: 0
+#66
+conv:
+  filters: 32
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#67
+batchnorm:
+  activation: none
+#68
+act:
+  activation: relu
+#69
+conv:
+  filters: 32
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#70
+batchnorm:
+  activation: none
+#71
+act:
+  activation: relu
+#72
+conv:
+  filters: 2
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#73
+softmax:
+  groups: 1
