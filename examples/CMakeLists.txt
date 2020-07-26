@@ -9,3 +9,7 @@ add_subdirectory(yolov3tiny)
 add_subdirectory(yolov3tiny_video)
 
 add_subdirectory(yolov4)
+
+add_subdirectory(unet)
+
+add_subdirectory(fcns)
