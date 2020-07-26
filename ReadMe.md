@@ -24,6 +24,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 ![](readme_imgs/msnhnetviewer.png)
 - OS supported: Windows, Linux(Ubuntu checked) and Mac os(unchecked).
 - CPU supported: Intel X86, AMD(unchecked) and ARM(checked: armv7 armv8 arrch64).
+- Keras to Msnhnet is supported. (Keras 2 and tensorflow 1.x)
 - Working on it...(**Weekend Only  (╮（╯＿╰）╭)**)
 
 **Yolo Test** 
