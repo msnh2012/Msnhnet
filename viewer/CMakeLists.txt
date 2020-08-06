@@ -11,6 +11,7 @@ set(CMAKE_AUTOUIC ON)
 # Instruct CMake to run Qt ressource
 set(CMAKE_AUTORCC ON)
 
+
 set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/MsnhBlas.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/MsnhGemm.cpp
@@ -44,6 +45,7 @@ set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/net/MsnhNetwork.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/utils/MsnhExString.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/utils/MsnhExVector.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/utils/MsnhTimeUtil.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MsnhViewerAttribute.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MsnhViewerColorTabel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MsnhViewerLink.cpp
