@@ -8,6 +8,11 @@
 #include "Msnhnet/utils/MsnhExVector.h"
 #include "Msnhnet/utils/MsnhExport.h"
 
+#ifdef USE_GPU
+#include "Msnhnet/layers/cuda/MsnhYolov3OutLayerGPU.h"
+#include "Msnhnet/layers/cuda/MsnhYolov3LayerGPU.h"
+#endif
+
 namespace Msnhnet
 {
 class MsnhNet_API Yolov3OutLayer:public BaseLayer
@@ -21,6 +26,10 @@ public:
     std::vector<std::vector<Yolov3Box>> finalOut;
 
     virtual void forward(NetworkState &netState);
+
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
 
     static Yolov3Box bboxResize2org(Yolov3Box &box, const Point2I &currentShape , const Point2I &orgShape);
 
@@ -58,6 +67,7 @@ protected:
 
     int     _orgHeight   =   0;
     int     _orgWidth    =   0;
+    float em = 0.f;
 
     YoloType _yoloType   =   YoloType::YoloV3_NORMAL;
 
@@ -68,6 +78,11 @@ protected:
 
     float   *_allInput           =   nullptr;
     float   *_shuffleInput       =   nullptr;
+
+#ifdef USE_GPU
+    float   *_allInputGpu        =   nullptr;
+    float   *_shuffleInputGpu    =   nullptr;
+#endif
 
 };
 }

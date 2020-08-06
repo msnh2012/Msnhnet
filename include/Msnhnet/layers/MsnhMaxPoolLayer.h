@@ -3,6 +3,9 @@
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/layers/MsnhBaseLayer.h"
 #include "Msnhnet/utils/MsnhExport.h"
+#ifdef USE_GPU
+#include "Msnhnet/layers/cuda/MsnhMaxPoolLayerGPU.h"
+#endif
 
 namespace Msnhnet
 {
@@ -14,6 +17,10 @@ public:
                  const int &_outChannelsMp, const int &_ceilMode, const int &_antialiasing);
 
     virtual void forward(NetworkState &netState);
+
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
 
 #ifdef USE_X86
     void forwardAvx(float *const &src, float *const &dst, const int &_kSizeX, const int &_kSizeY, const int &_width,

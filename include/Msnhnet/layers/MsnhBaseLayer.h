@@ -4,6 +4,11 @@
 #include "Msnhnet/net/MsnhNetwork.h"
 #include "Msnhnet/core/MsnhSimd.h"
 #include "Msnhnet/utils/MsnhExport.h"
+#include "Msnhnet/utils/MsnhTimeUtil.h"
+
+#ifdef USE_GPU
+#include "Msnhnet/config/MsnhnetCuda.h"
+#endif
 
 namespace Msnhnet
 {
@@ -18,9 +23,21 @@ public:
     static bool     supportFma;
     static bool     isPreviewMode;
 
+#ifdef USE_GPU
+    static cudaEvent_t     _start;
+    static cudaEvent_t     _stop;
+#endif
+
     static void setPreviewMode(const bool &isPreviewMode);
 
     virtual void forward(NetworkState &netState);
+
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+    float *getGpuOutput() const;
+    void recordCudaStart();
+    void recordCudaStop();
+#endif
     virtual void loadAllWeigths(std::vector<float> &weights);
 
     static void initSimd();
@@ -77,7 +94,7 @@ public:
 
     ActivationType getActivation() const;
 
-protected:
+protected:    
     LayerType          _type;                       
 
     ActivationType     _activation;                 
@@ -105,6 +122,10 @@ protected:
     float          *_output          =  nullptr; 
 
     float           _bFlops          =  0;
+
+#ifdef USE_GPU
+    float          *_gpuOutput       =  nullptr;
+#endif
 
     std::string     _layerName       =  "BaseLayer";
     std::string     _layerDetail     =  "";

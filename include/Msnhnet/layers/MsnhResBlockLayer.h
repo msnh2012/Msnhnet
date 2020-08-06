@@ -34,6 +34,10 @@ public:
 
     virtual void forward(NetworkState &netState);
 
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
+
     ~ResBlockLayer();
 };
 }

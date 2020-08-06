@@ -288,7 +288,7 @@ public:
     }
 
     int     groups      =   1;
-    int     temperature =   1;
+    float   temperature =   1;
 };
 
 class UpSampleParams : public BaseParams

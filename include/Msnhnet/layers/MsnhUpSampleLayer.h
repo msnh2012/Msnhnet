@@ -14,6 +14,10 @@ public:
     UpSampleLayer(const int &_batch, const int &_width, const int &_height, const int &_channel, const int &_stride, const float &_scale);
 
     virtual void forward(NetworkState &netState);
+
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
     void resize(const int &_width, const int &_height);
 
     int getReverse() const;

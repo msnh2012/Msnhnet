@@ -20,6 +20,10 @@ public:
 
     virtual void forward(NetworkState &netState);
 
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
+
     void loadAllWeigths(std::vector<float> &_weights);
 
     void loadScales(float *const &_weights, const int& len);
@@ -68,6 +72,15 @@ protected:
     float       *_scales             =   nullptr;
     float       *_rollMean           =   nullptr;
     float       *_rollVariance       =   nullptr;
+
+#ifdef USE_GPU
+    float       *_gpuWeights         =   nullptr;
+    float       *_gpuBiases          =   nullptr;
+
+    float       *_gpuScales          =   nullptr;
+    float       *_gpuRollMean        =   nullptr;
+    float       *_gpuRollVariance    =   nullptr;
+#endif
 
     int         _nBiases             =   0;
     int         _nWeights            =   0;

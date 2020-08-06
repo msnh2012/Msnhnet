@@ -16,6 +16,7 @@
 #include <ammintrin.h>
 #include <immintrin.h>
 #include <smmintrin.h>
+#include <avxintrin.h>
 #include <string.h>
 #include <math.h>
 #endif
@@ -24,7 +25,9 @@
 #ifdef USE_ARM
 #include <math.h>
 #include <string.h>
+#ifdef USE_NEON
 #include <arm_neon.h>
+#endif
 #endif
 
 namespace Msnhnet

@@ -16,6 +16,11 @@ public:
                const int &_groups, const int &groupId, const int &_addModel);
 
     virtual void forward(NetworkState &netState);
+
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
+
     void resize(Network &net);
 
     std::vector<int> getInputLayerIndexes() const;

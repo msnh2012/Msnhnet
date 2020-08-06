@@ -8,6 +8,10 @@
 #include "Msnhnet/layers/MsnhActivationsAvx.h"
 #endif
 
+#ifdef USE_GPU
+#include "Msnhnet/layers/cuda/MsnhActivationsGPU.h"
+#endif
+
 #ifdef USE_ARM
 #ifdef USE_NEON
 #include "Msnhnet/layers/MsnhActivationsNeon.h"

@@ -14,10 +14,15 @@
 #include "Msnhnet/layers/MsnhActivationsNeon.h"
 #endif
 #endif
-#include <Msnhnet/io/MsnhIO.h>
+#include "Msnhnet/io/MsnhIO.h"
+
+#ifdef USE_GPU
+#include "Msnhnet/core/cuda/MsnhBlasGPU.h"
+#endif
 
 namespace Msnhnet
 {
+
 class MsnhNet_API Blas
 {
 public:
@@ -47,8 +52,6 @@ public:
 
     static void cpuL2(const int &n, float *const &pred, float *const &truth, float *const &delta, float *const &error);
 
-    static void cpuFlatten(float *const &x, const int &size, const int &layers, const int &batch, const int &forward);
-
     static void softmax(float *const &input, const int &num, const float &temperature, const int &stride, float *const &output,
                         const bool &useAvx);
 
@@ -63,18 +66,8 @@ public:
     static void cpuUpSample(float *const &in, const int &width, const int &height, const int &channel, const int &batch, const int &stride,
                             const int &forward, const float &scale, float *const &out);
 
-    static inline float relu(const float &x)
-    {
-        if(x > 0)
-        {
-            return x;
-        }
-        else
-        {
-            return 0;
-        }
-    }
 };
+
 }
 #endif 
 

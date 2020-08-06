@@ -3,6 +3,9 @@
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/layers/MsnhBaseLayer.h"
 #include "Msnhnet/utils/MsnhExport.h"
+#ifdef USE_GPU
+#include "Msnhnet/layers/cuda/MsnhLocalAvgPoolLayerGPU.h"
+#endif
 
 namespace Msnhnet
 {
@@ -13,6 +16,10 @@ public:
                       const int &_strideX, const int &_strideY, const int &_paddingX, const int &_paddingY, const int&_ceilMode, const int &_antialiasing);
 
     virtual void forward(NetworkState &netState);
+
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
 
     ~LocalAvgPoolLayer();
 

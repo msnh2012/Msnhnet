@@ -13,6 +13,10 @@ public:
     SoftMaxLayer(const int &_batch, const int &_inputNum, const int &_groups, const float &_temperature);
     virtual void forward(NetworkState &netState);
 
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
+
     int getGroups() const;
 
     float getTemperature() const;

@@ -3,6 +3,9 @@
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/core/MsnhSimd.h"
 #include "Msnhnet/utils/MsnhExport.h"
+#ifdef USE_GPU
+#include "Msnhnet/core/cuda/MsnhGemmGPU.h"
+#endif
 
 namespace Msnhnet
 {
@@ -225,6 +228,7 @@ public:
                                   + _mm256_extract_epi64(val, 3));
     }
 #endif
+
 };
 
 }

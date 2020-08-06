@@ -3,8 +3,7 @@
 /*
    AVX implementation of sin, cos, sincos, exp and log
    Based on "sse_mathfun.h", by Julien Pommier
-   http:
-
+   http://gruntthepeon.free.fr/ssemath/
    Copyright (C) 2012 Giovanni Garberoglio
    Interdisciplinary Laboratory for Computational Science (LISC)
    Fondazione Bruno Kessler and University of Trento
@@ -26,8 +25,18 @@
   (this is the zlib license)
 */
 #ifdef USE_X86
+#ifdef WIN32
+#include <intrin.h>
+#include <ammintrin.h>
 #include <immintrin.h>
-#include <emmintrin.h>
+#include <smmintrin.h>
+#else
+#include <x86intrin.h>
+#include <ammintrin.h>
+#include <immintrin.h>
+#include <smmintrin.h>
+#include <avxintrin.h>
+#endif
 #include <Msnhnet/config/MsnhnetCfg.h>
 
 #define __AVX2__ 

@@ -14,6 +14,9 @@ class MsnhNet_API ActivationLayer:public BaseLayer
 public:
     ActivationLayer(const int &_batch, const int &_width, const int &_height, const int &_channel, const int &_inputNum, const ActivationType &_activation);
     virtual void forward(NetworkState &netState);
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
 };
 }
 

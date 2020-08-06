@@ -38,6 +38,9 @@ public:
     void swapBinary();
 
     void forward(NetworkState &netState);
+#ifdef USE_GPU
+    void forwardGPU(NetworkState &netState);
+#endif
     void loadAllWeigths(std::vector<float> &_weights);
 
     void loadScales(float *const &_weights, const int& len);
@@ -61,8 +64,6 @@ public:
     float *getBinaryInputs() const;
 
     float *getBinaryWeights() const;
-
-    float *getActivationInput() const;
 
     float *getMeanArr() const;
 
@@ -127,7 +128,6 @@ public:
 protected:
     float       *_weights            =   nullptr;
     float       *_biases             =   nullptr;
-
     ConvolutionalLayer* _shareLayer  =   nullptr;
 
     float       *_scales             =   nullptr;
@@ -137,11 +137,20 @@ protected:
     char        *_cWeights           =   nullptr;
     float       *_binaryInputs       =   nullptr;
     float       *_binaryWeights      =   nullptr;
-    float       *_activationInput    =   nullptr;
     float       *_meanArr            =   nullptr;
     uint32_t    *_binRePackedIn      =   nullptr;
     char        *_tBitInput          =   nullptr;
     char        *_alignBitWeights    =   nullptr;
+
+#ifdef USE_GPU
+    float       *_gpuWeights         =   nullptr;
+    float       *_gpuBiases          =   nullptr;
+
+    float       *_gpuScales          =   nullptr;
+    float       *_gpuRollMean        =   nullptr;
+    float       *_gpuRollVariance    =   nullptr;
+
+#endif
 
     int         _bitAlign            =   0;
     int         _ldaAlign            =   0;

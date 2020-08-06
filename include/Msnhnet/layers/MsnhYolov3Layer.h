@@ -5,6 +5,9 @@
 #include "Msnhnet/core/MsnhBlas.h"
 #include "Msnhnet/layers/MsnhBaseLayer.h"
 #include "Msnhnet/utils/MsnhExport.h"
+#ifdef USE_GPU
+#include "Msnhnet/layers/cuda/MsnhYolov3LayerGPU.h"
+#endif
 
 namespace Msnhnet
 {
@@ -17,8 +20,14 @@ public:
 
     virtual void forward(NetworkState &netState);
 
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
+
     void sigmoid(float *val, const int &_num);
+
     void exSigmoid(float *val, const int &_width, const int &_height, const float& _ratios, const bool &addGridW);
+
     void aExpT(float *val, const int &_num, const float &a);
 
     int getClassNum() const;

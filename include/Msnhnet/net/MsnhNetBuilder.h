@@ -51,6 +51,11 @@ public:
     void setPreviewMode(const bool &mode);
     std::vector<float> runClassify(std::vector<float> img);
     std::vector<std::vector<Yolov3Box>> runYolov3(std::vector<float> img);
+#ifdef USE_GPU
+    std::vector<float> runClassifyGPU(std::vector<float> img);
+    std::vector<std::vector<Yolov3Box>> runYolov3GPU(std::vector<float> img);
+#endif
+
     Point2I getInputSize();
 
     void  clearLayers();

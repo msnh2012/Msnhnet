@@ -43,7 +43,7 @@ public:
         }
         else
         {
-            throw Exception(1, "Type not support .", __FILE__,__LINE__);
+            throw Exception(1, "Type not support .", __FILE__,__LINE__, __FUNCTION__);
         }
 
         for (typename std::vector<T>::iterator it = v.begin(); it != v.end(); it++)
@@ -85,12 +85,12 @@ public:
         }
         else
         {
-            throw Exception(1, "Type not support .", __FILE__,__LINE__);
+            throw Exception(1, "Type not support .", __FILE__,__LINE__, __FUNCTION__);
         }
         std::ofstream outfile(path,std::ios::trunc);
         if(!outfile)
         {
-            throw Exception(1, "File open err.", __FILE__,__LINE__);
+            throw Exception(1, "File open err.", __FILE__,__LINE__, __FUNCTION__);
         }
         for (typename std::vector<T>::iterator it = v.begin(); it != v.end(); it++)
         {
@@ -142,12 +142,12 @@ public:
         }
         else
         {
-            throw Exception(1, "Type not support .", __FILE__,__LINE__);
+            throw Exception(1, "Type not support .", __FILE__,__LINE__, __FUNCTION__);
         }
         std::ifstream inFile(path,std::ios::in);
         if(!inFile)
         {
-            throw Exception(1, "File open err.", __FILE__,__LINE__);
+            throw Exception(1, "File open err.", __FILE__,__LINE__, __FUNCTION__);
         }
         std::ostringstream tmpStr;
         tmpStr << inFile.rdbuf();
@@ -186,7 +186,7 @@ public:
         std::ifstream inFile(path,std::ios::in);
         if(!inFile)
         {
-            throw Exception(1, "File open err.", __FILE__,__LINE__);
+            throw Exception(1, "File open err.", __FILE__,__LINE__, __FUNCTION__);
         }
         std::ostringstream tmpStr;
         tmpStr << inFile.rdbuf();

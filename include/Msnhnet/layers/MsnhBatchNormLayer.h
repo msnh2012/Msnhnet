@@ -16,6 +16,9 @@ public:
     BatchNormLayer(const int &_batch, const int &_width, const int &_height, const int &_channel, const ActivationType &_activation, const std::vector<float> &_actParams);
 
     virtual void forward(NetworkState &netState);
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
 
     static void addBias(float *const &_output, float *const &_biases, const int &_batch, const int &_channel, const int &whSize);
     static void scaleBias(float *const &_output, float *const &_scales, const int &_batch, const int &_channel, const int &whSize);
@@ -54,6 +57,13 @@ protected:
     float       *_rollMean           =   nullptr;
     float       *_rollVariance       =   nullptr;
     float       *_activationInput    =   nullptr;
+
+#ifdef USE_GPU
+    float       *_gpuScales          =   nullptr;
+    float       *_gpuBiases          =   nullptr;
+    float       *_gpuRollMean        =   nullptr;
+    float       *_gpuRollVariance    =   nullptr;
+#endif
 
     int         _nBiases             =   0;
     int         _nScales             =   0;

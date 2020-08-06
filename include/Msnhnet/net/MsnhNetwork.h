@@ -38,11 +38,15 @@ public:
     float           *input          =  nullptr; 
 
     int             inputNum        =  0;
-
     Network         *net            =  nullptr;
+    int             fixNan          =  0;
 
     float           *workspace      =  nullptr; 
 
+#ifdef USE_GPU
+    float           *gpuWorkspace   =  nullptr; 
+
+#endif
     inline void releaseArr(float * value)
     {
         if(value!=nullptr)
