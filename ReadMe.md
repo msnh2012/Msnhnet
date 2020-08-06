@@ -25,7 +25,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - OS supported: Windows, Linux(Ubuntu checked) and Mac os(unchecked).
 - CPU supported: Intel X86, AMD(unchecked) and ARM(checked: armv7 armv8 arrch64).
 - Keras to Msnhnet is supported. (Keras 2 and tensorflow 1.x)
-- GPU supported.(Checked GTX1080Ti, Jetson NX)
+- GPU cuda supported.(Checked GTX1080Ti, Jetson NX)
 - Working on it...(**Weekend Only  (╮（╯＿╰）╭)**)
 
 **Yolo Test** 
@@ -83,6 +83,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 
 **How to build**
 - With CMake 3.10+
+- Viewer can not build with GPU.
 - Options</br>
 ![](readme_imgs/cmake_option.png)</br>
 **ps. You can change omp threads by unchecking OMP_MAX_THREAD and modifying "num" val at CMakeLists.txt:43** </br>
@@ -95,6 +96,9 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 5. Then use cmake-gui tool and visual studio to make or use vcpkg.
 
 - Linux(Ubuntu)
+
+ps. If you want to build with Jetson, please uncheck NNPACK, OMP, OPENBLAS, NEON, OMP_MAX_THREAD.
+
 ```
 sudo apt-get install qt5-default      #optional
 sudo apt-get install libqt5svg5-dev   #optional
