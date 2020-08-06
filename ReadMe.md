@@ -25,6 +25,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - OS supported: Windows, Linux(Ubuntu checked) and Mac os(unchecked).
 - CPU supported: Intel X86, AMD(unchecked) and ARM(checked: armv7 armv8 arrch64).
 - Keras to Msnhnet is supported. (Keras 2 and tensorflow 1.x)
+- GPU supported.(Checked GTX1080Ti, Jetson NX)
 - Working on it...(**Weekend Only  (╮（╯＿╰）╭)**)
 
 **Yolo Test** 
@@ -41,6 +42,16 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
   |without NNPack|6s|2.5s|1.2s|
   |with NNPack|2.5s|1.1s|0.6s|
 
+**Yolo GPU Test**
+- Ubuntu16.04  GCC  Cuda10.1  GTX1080Ti
+  |net|yolov3|yolov3_tiny|yolov4|
+  |:---:|:---:|:---:|:---:|
+  |time|30ms|8ms|30ms|
+  
+- Jetson NX
+  |net|yolov3|yolov3_tiny|yolov4|
+  |:---:|:---:|:---:|:---:|
+  |time|280ms|50ms|210ms|
 
 **Tested networks**
 - lenet5
