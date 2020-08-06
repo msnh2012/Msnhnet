@@ -185,12 +185,12 @@ std::string ExString::left(const std::string &str, const int &n)
 {
     if(n < 0)
     {
-        throw Exception(0,"n must > 0",__FILE__,__LINE__);
+        throw Exception(0,"n must > 0",__FILE__,__LINE__, __FUNCTION__);
     }
 
     if(n > static_cast<int>(str.length()))
     {
-        throw Exception(0,"n must < length of str",__FILE__,__LINE__);
+        throw Exception(0,"n must < length of str",__FILE__,__LINE__, __FUNCTION__);
     }
 
     return str.substr(0,n);
@@ -200,12 +200,12 @@ std::string ExString::right(const std::string &str, const int &n)
 {
     if(n<0)
     {
-        throw Exception(0,"n must > 0",__FILE__,__LINE__);
+        throw Exception(0,"n must > 0",__FILE__,__LINE__, __FUNCTION__);
     }
 
     if(n>static_cast<int>(str.length()))
     {
-        throw Exception(0,"n must < length of str",__FILE__,__LINE__);
+        throw Exception(0,"n must < length of str",__FILE__,__LINE__, __FUNCTION__);
     }
 
     return str.substr(str.length()-n,n);
@@ -215,25 +215,25 @@ std::string ExString::mid(const std::string &str, const size_t &start, const siz
 {
     if(start<0)
     {
-        throw Exception(0,"start must > 0",__FILE__,__LINE__);
+        throw Exception(0,"start must > 0",__FILE__,__LINE__, __FUNCTION__);
     }
     else if(start > static_cast<int>(str.length()))
     {
-        throw Exception(0,"start must < length of str",__FILE__,__LINE__);
+        throw Exception(0,"start must < length of str",__FILE__,__LINE__, __FUNCTION__);
     }
 
     if(offset<0)
     {
-        throw Exception(0,"offset must > 0",__FILE__,__LINE__);
+        throw Exception(0,"offset must > 0",__FILE__,__LINE__, __FUNCTION__);
     }
     else if(offset > static_cast<int>(str.length()))
     {
-        throw Exception(0,"start must < length of str",__FILE__,__LINE__);
+        throw Exception(0,"start must < length of str",__FILE__,__LINE__, __FUNCTION__);
     }
 
     if((start + offset) >static_cast<int>(str.length()))
     {
-        throw Exception(0,"start + offset must < length of str",__FILE__,__LINE__);
+        throw Exception(0,"start + offset must < length of str",__FILE__,__LINE__, __FUNCTION__);
     }
 
     return str.substr(start, offset);
@@ -243,7 +243,7 @@ std::vector<std::string> ExString::splitHex(const std::string &str)
 {
     if((str.length()%2)!=0)
     {
-        throw Exception(0,"String length must be even",__FILE__,__LINE__);
+        throw Exception(0,"String length must be even",__FILE__,__LINE__, __FUNCTION__);
     }
     std::vector<std::string> temp;
     for(size_t i =0;i<str.length()/2;i++)

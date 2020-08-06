@@ -31,7 +31,7 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
             {
                 if(branchBuildParams.height ==0 || branchBuildParams.width == 0 || branchBuildParams.channels == 0)
                 {
-                    throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__);
+                    throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__, __FUNCTION__);
                 }
 
                 ConvParams* convParams      =   reinterpret_cast<ConvParams*>(branchParams[i][j]);
@@ -124,7 +124,7 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
             }
             else
             {
-                throw Exception(1, "layer type is not supported by [ConcatBlockLayer]", __FILE__, __LINE__);
+                throw Exception(1, "layer type is not supported by [ConcatBlockLayer]", __FILE__, __LINE__, __FUNCTION__);
             }
 
             branchBuildParams.height       =   layer->getOutHeight();
@@ -158,7 +158,7 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
         if(branchLayers[i][branchLayers[i].size()-1]->getHeight() != branchLayers[i-1][branchLayers[i-1].size()-1]->getHeight()||
            branchLayers[i][branchLayers[i].size()-1]->getWidth()  != branchLayers[i-1][branchLayers[i-1].size()-1]->getWidth())
         {
-            throw Exception(1, "branch's outputs size is not equal", __FILE__, __LINE__);
+            throw Exception(1, "branch's outputs size is not equal", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
@@ -168,6 +168,9 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
     if(!BaseLayer::isPreviewMode)
     {
         this->_output            =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
 
     this->_layerDetail.append("===========================================================================\n");
@@ -177,7 +180,7 @@ void ConcatBlockLayer::loadAllWeigths(std::vector<float> &weights)
 {
     if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"ConcatBlockLayer weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"ConcatBlockLayer weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__, __FUNCTION__);
     }
 
     size_t ptr = 0;
@@ -274,6 +277,84 @@ void ConcatBlockLayer::forward(NetworkState &netState)
         }
     }
 }
+
+#ifdef USE_GPU
+void ConcatBlockLayer::forwardGPU(NetworkState &netState)
+{
+    /* TODO: batch; */
+
+    float * inputX      = Cuda::makeCudaArray(netState.input,netState.inputNum,cudaMemcpyKind::cudaMemcpyDeviceToDevice);
+    int     inputXNum   = netState.inputNum;
+
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        for (size_t j = 0; j < branchLayers[i].size(); ++j)
+        {
+            branchLayers[i][j]->forwardGPU(netState);
+
+            netState.input     =   branchLayers[i][j]->getGpuOutput();
+            netState.inputNum  =   branchLayers[i][j]->getOutputNum();
+        }
+
+        netState.input         =    inputX;
+        netState.inputNum      =    inputXNum;
+    }
+
+    int  branchOutNum       =    0;
+
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        int tmpOutNum       =    branchLayers[i][branchLayers[i].size()-1]->getOutputNum();
+
+        BlasGPU::gpuCopy(tmpOutNum, branchLayers[i][branchLayers[i].size()-1]->getGpuOutput(), 1, this->_gpuOutput+branchOutNum, 1);
+
+        branchOutNum           +=   tmpOutNum;
+    }
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                            this->_outWidth*this->_outHeight, this->_gpuOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {                           
+
+        if(_actParams.size() > 0)
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+        }
+        else
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+        }
+    }
+
+    this->_forwardTime = 0;
+
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        for (size_t j = 0; j < branchLayers[i].size(); ++j)
+        {
+            this->_forwardTime += branchLayers[i][j]->getForwardTime();
+        }
+    }
+    Cuda::freeCuda(inputX);
+}
+#endif
 
 ConcatBlockLayer::~ConcatBlockLayer()
 {

@@ -43,7 +43,7 @@ void Gemm::float2Bit(float * const &input, uint8_t * const &output, size_t size)
     (void)input;
     (void)output;
     (void)size;
-    throw Exception(1,"TODO: for arm",__FILE__, __LINE__);
+    throw Exception(1,"TODO: for arm",__FILE__, __LINE__, __FUNCTION__);
 #endif
 }
 
@@ -135,7 +135,7 @@ void Gemm::cpuIm2colEx(float *input, const int &channelNum, const int &height, c
 
     if(outputH == height && outputW == width && strideH==1 &&strideW==1 && padH==1 && padW==1)
     {
-#ifdef X86
+#ifdef USE_X86
         cpuIm2colWithAvx(input, channelNum, height, width, kernelH, strideH, padH, output, 1);
 #else
         goto NEXT;
@@ -524,7 +524,7 @@ void Gemm::cpuIm2colBinWithAvx(float * const &input, const int &channelNum, cons
     }
     else
     {
-        throw Exception(1,"Error: is no non-optimized version",__FILE__, __LINE__);
+        throw Exception(1,"Error: is no non-optimized version",__FILE__, __LINE__, __FUNCTION__);
     }
 #endif
 
@@ -540,7 +540,7 @@ void Gemm::cpuIm2colBinWithAvx(float * const &input, const int &channelNum, cons
     (void)output;
     (void)bitAlign;
     (void)supportAvxAndFma;
-    throw Exception(1,"Error: is no non-optimized version",__FILE__, __LINE__);
+    throw Exception(1,"Error: is no non-optimized version",__FILE__, __LINE__, __FUNCTION__);
 #endif
 }
 
@@ -1007,7 +1007,7 @@ void Gemm::cpuFastADotB(const int &n, float * const &A, float * const &B, float 
     (void)A;
     (void)B;
     (void)C;
-    throw Exception(1, "TODO: for arm", __FILE__, __LINE__);
+    throw Exception(1, "TODO: for arm", __FILE__, __LINE__, __FUNCTION__);
 #endif
 }
 
@@ -1146,7 +1146,7 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
     (void)ldb;
     (void)C;
     (void)ldc;
-    throw Exception(1, "TODO: for arm", __FILE__, __LINE__);
+    throw Exception(1, "TODO: for arm", __FILE__, __LINE__, __FUNCTION__);
 #endif
 }
 
@@ -1282,7 +1282,7 @@ void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const float &
     (void)ldb;
     (void)C;
     (void)ldc;
-    throw Exception(1, "TODO: for arm", __FILE__, __LINE__);
+    throw Exception(1, "TODO: for arm", __FILE__, __LINE__, __FUNCTION__);
 #endif
 }
 
@@ -1301,7 +1301,7 @@ void Gemm::transpose32Optimized(uint32_t * const &A, const int &num)
 
     if(num!=32)
     {
-        throw Exception(1, "num must equa 32", __FILE__, __LINE__);
+        throw Exception(1, "num must equa 32", __FILE__, __LINE__, __FUNCTION__);
     }
 
     j = 16;
@@ -1514,5 +1514,6 @@ void Gemm::gemmNNBinMeanTrans(int M, int N, int K, float ALPHA_UNUSED, unsigned 
         }
     }
 }
+
 #endif
 }

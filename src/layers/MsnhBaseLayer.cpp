@@ -7,6 +7,11 @@ bool BaseLayer::supportAvx      = false;
 bool BaseLayer::supportFma      = false;
 bool BaseLayer::isPreviewMode   = false;
 
+#ifdef USE_GPU
+cudaEvent_t  BaseLayer::_start;
+cudaEvent_t  BaseLayer::_stop;
+#endif
+
 void BaseLayer::initSimd()
 {
     std::cout<<"Checking......"<<std::endl;
@@ -35,6 +40,10 @@ void BaseLayer::initSimd()
 
 #ifdef USE_OMP
     std::cout<<"Use OMP.\nOMP thread num : "<<OMP_THREAD <<std::endl;
+#endif
+
+#ifdef USE_GPU
+    std::cout<<Cuda::getDeviceInfo()<<std::endl;
 #endif
 }
 
@@ -156,6 +165,10 @@ BaseLayer::BaseLayer()
 BaseLayer::~BaseLayer()
 {
     releaseArr(_output);
+#ifdef USE_GPU
+    Cuda::freeCuda(_gpuOutput);
+
+#endif
 }
 
 void BaseLayer::setPreviewMode(const bool &previewMode)
@@ -172,4 +185,37 @@ void BaseLayer::loadAllWeigths(std::vector<float> &weights)
 {
     (void)weights;
 }
+
+#ifdef USE_GPU
+void BaseLayer::forwardGPU(NetworkState &netState)
+{
+    (void)netState;
+}
+
+float *BaseLayer::getGpuOutput() const
+{
+    return _gpuOutput;
+}
+
+void BaseLayer::recordCudaStart()
+{
+    /* cudaEventRecord(_start, 0); */
+}
+
+void BaseLayer::recordCudaStop()
+{
+
+    /* Not good */
+
+    this->_forwardTime = 0.f;
+/*
+   cudaThreadSynchronize();
+   cudaEventRecord(_stop, 0);
+   cudaEventSynchronize(_stop);
+   float elapsedTime;
+   cudaEventElapsedTime(&elapsedTime, _start, _stop);
+   this->_forwardTime = elapsedTime;
+*/
+}
+#endif
 }

@@ -23,7 +23,7 @@ ResBlockLayer::ResBlockLayer(const int &batch, NetBuildParams &params, std::vect
         {
             if(params.height ==0 || params.width == 0 || params.channels == 0)
             {
-                throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__);
+                throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__, __FUNCTION__);
             }
 
             ConvParams* convParams      =   reinterpret_cast<ConvParams*>(baseParams[i]);
@@ -91,7 +91,7 @@ ResBlockLayer::ResBlockLayer(const int &batch, NetBuildParams &params, std::vect
         }
         else
         {
-            throw Exception(1, "layer type is not supported by [ResBlockLayer]", __FILE__, __LINE__);
+            throw Exception(1, "layer type is not supported by [ResBlockLayer]", __FILE__, __LINE__, __FUNCTION__);
         }
 
         params.height       =   layer->getOutHeight();
@@ -118,6 +118,9 @@ ResBlockLayer::ResBlockLayer(const int &batch, NetBuildParams &params, std::vect
     if(!BaseLayer::isPreviewMode)
     {
         this->_output            =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
     this->_layerDetail.append("========================================================================\n");
 }
@@ -127,7 +130,7 @@ void ResBlockLayer::loadAllWeigths(std::vector<float> &weights)
 
     if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"ResBlock weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"ResBlock weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__, __FUNCTION__);
     }
 
     size_t ptr = 0;
@@ -203,6 +206,65 @@ void ResBlockLayer::forward(NetworkState &netState)
     }
 
 }
+
+#ifdef USE_GPU
+void ResBlockLayer::forwardGPU(NetworkState &netState)
+{
+    float * inputX      = Cuda::makeCudaArray(netState.input,netState.inputNum,cudaMemcpyKind::cudaMemcpyDefault);
+
+    for (size_t i = 0; i < baseLayers.size(); ++i)
+    {
+        baseLayers[i]->forwardGPU(netState);
+
+        netState.input     =   baseLayers[i]->getGpuOutput();
+        netState.inputNum  =   baseLayers[i]->getOutputNum();
+    }
+
+    BlasGPU::gpuAxpy(netState.inputNum, 1.f, inputX, 1,netState.input, 1);
+    BlasGPU::gpuCopy(netState.inputNum, netState.input, 1, this->_gpuOutput, 1);
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                            this->_outWidth*this->_outHeight, this->_gpuOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {                           
+
+        if(_actParams.size() > 0)
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+        }
+        else
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+        }
+    }
+
+    this->_forwardTime = 0;
+
+    for (size_t i = 0; i < baseLayers.size(); ++i)
+    {
+        this->_forwardTime += baseLayers[i]->getForwardTime();
+    }
+
+    Cuda::freeCuda(inputX);
+}
+#endif
 
 ResBlockLayer::~ResBlockLayer()
 {

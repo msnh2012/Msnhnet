@@ -19,6 +19,9 @@ EmptyLayer::EmptyLayer(const int &batch, const int &width, const int &height, co
     if(!BaseLayer::isPreviewMode)
     {
         this->_output    =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
     char msg[100];
 #ifdef WIN32
@@ -37,6 +40,18 @@ EmptyLayer::~EmptyLayer()
 
 void EmptyLayer::forward(NetworkState &netState)
 {
+    TimeUtil::startRecord();
     Blas::cpuCopy(netState.inputNum, netState.input, 1, this->_output, 1);
+    this->_forwardTime = TimeUtil::getElapsedTime();
 }
+
+#ifdef USE_GPU
+void EmptyLayer::forwardGPU(NetworkState &netState)
+{
+
+    this->recordCudaStart();
+    BlasGPU::gpuSimpleCopy(netState.inputNum, netState.input, this->_gpuOutput);
+    this->recordCudaStop();
+}
+#endif
 }

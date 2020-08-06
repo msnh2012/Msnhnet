@@ -30,6 +30,9 @@ PaddingLayer::PaddingLayer(const int &batch, const int &height, const int &width
     if(!BaseLayer::isPreviewMode)
     {
         this->_output        =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput     =   Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
 
     char msg[100];
@@ -46,6 +49,8 @@ PaddingLayer::PaddingLayer(const int &batch, const int &height, const int &width
 
 void PaddingLayer::forward(NetworkState &netState)
 {
+    TimeUtil::startRecord();
+
     for (int i = 0; i < this->_batch; ++i)
     {
         for (int j = 0; j < this->_outChannel; ++j)
@@ -75,14 +80,31 @@ void PaddingLayer::forward(NetworkState &netState)
                         }
                     }
 
-                    this->_output[i*this->_outChannel*this->_outHeight*this->_outHeight + j*this->_outHeight*this->_outWidth + m*this->_outWidth + n] = val;
+                    this->_output[i*this->_outChannel*this->_outHeight*this->_outWidth + j*this->_outHeight*this->_outWidth + m*this->_outWidth + n] = val;
 
                 }
             }
         }
     }
 
+    this->_forwardTime = TimeUtil::getElapsedTime();
+
 }
+
+#ifdef USE_GPU
+void PaddingLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+    PaddingLayerGPU::forwardNormalGPU(this->_batch, this->_outChannel, this->_outHeight, this->_outWidth,
+                     this->_height, this->_width, this->_channel,
+                     this->_top, this->_left,
+                     this->_paddingVal,
+                     netState.input,
+                     this->_gpuOutput
+                     );
+    this->recordCudaStop();
+}
+#endif
 
 int PaddingLayer::getTop() const
 {

@@ -8,7 +8,6 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
                                        ConvolutionalLayer * const &shareLayer, const int &assistedExcitation, const int &deform)
 {
     (void) deform;
-    int totalBatch          = batch * steps;
     this->_type              = LayerType::CONVOLUTIONAL;
     if(xnor)
     {
@@ -82,7 +81,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
                 this->_channel  != this->_shareLayer->_channel ||
                 this->_num      != this->_shareLayer->_num)
         {
-            throw Exception(1, "Layer size, nweights, channels or filters don't match for the share_layer", __FILE__, __LINE__);
+            throw Exception(1, "Layer size, nweights, channels or filters don't match for the share_layer", __FILE__, __LINE__, __FUNCTION__);
         }
 
         this->_weights       = this->_shareLayer->_weights;
@@ -94,7 +93,10 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         {
             this->_weights       = new float[static_cast<size_t>(this->_nWeights)]();
             this->_biases        = new float[static_cast<size_t>(this->_num)]();
-
+#ifdef USE_GPU
+            this->_gpuWeights    = Cuda::makeCudaArray(this->_weights, this->_nWeights);
+            this->_gpuBiases     = Cuda::makeCudaArray(this->_biases , this->_num);
+#endif
         }
     }
 
@@ -108,7 +110,13 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     this->_activation        = activation;
     this->_actParams         = actParams;
 
-    this->_output            = new float[static_cast<size_t>(_outputNum * this->_batch)]();
+    if(!BaseLayer::isPreviewMode)
+    {
+        this->_output            = new float[static_cast<size_t>(_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
+    }
 
     if(binary)
     {
@@ -117,14 +125,18 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
             this->_binaryWeights = new float[static_cast<size_t>(this->_nWeights)]();
             this->_cWeights      = new char[static_cast<size_t>(this->_nWeights)]();
             this->_scales        = new float[static_cast<size_t>(this->_num)]();
+
+#ifdef USE_GPU
+
+#endif
         }
     }
 
     if(xnor)
     {
-        int align           = 32; 
+        int align            = 32; 
 
-        int srcAlign        = this->_outHeight * this->_outWidth;
+        int srcAlign         = this->_outHeight * this->_outWidth;
         this->_bitAlign      = srcAlign + (align - srcAlign % align);
         this->_ldaAlign      = 256;
 
@@ -142,6 +154,9 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
             int kAligned        = k + (this->_ldaAlign - k%this->_ldaAlign);
             int tBitInSize      = kAligned * this->_bitAlign / 8;
             this->_tBitInput     = new char[static_cast<size_t>(tBitInSize)]();
+#ifdef USE_GPU
+
+#endif
         }
     }
 
@@ -160,6 +175,12 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
                 this->_scales         = new float[static_cast<size_t>(this->_num)]();
                 this->_rollMean       = new float[static_cast<size_t>(this->_num)]();
                 this->_rollVariance   = new float[static_cast<size_t>(this->_num)]();
+#ifdef USE_GPU
+                this->_gpuScales      = Cuda::makeCudaArray(this->_scales, this->_num);
+                this->_gpuRollMean    = Cuda::makeCudaArray(this->_rollMean, this->_num);
+                this->_gpuRollVariance= Cuda::makeCudaArray(this->_rollVariance, this->_num);
+#endif
+
             }
         }
 
@@ -169,13 +190,6 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     }
 
     this->_numWeights            =   static_cast<size_t>(this->_nWeights + this->_nScales + this->_nRollMean + this->_nRollVariance + this->_nBiases);
-
-#ifndef GPU
-    if(this->_activation == ActivationType::SWISH || this->_activation == ActivationType::MISH)
-    {
-        this->_activationInput = new float[static_cast<size_t>(this->_outputNum * totalBatch)]();
-    }
-#endif
 
     this->_workSpaceSize = getConvWorkSpaceSize();
 
@@ -294,11 +308,19 @@ ConvolutionalLayer::~ConvolutionalLayer()
     releaseArr(_cWeights);
     releaseArr(_binaryInputs);
     releaseArr(_binaryWeights);
-    releaseArr(_activationInput);
     releaseArr(_meanArr);
     releaseArr(_binRePackedIn);
     releaseArr(_tBitInput);
     releaseArr(_alignBitWeights);
+
+#ifdef USE_GPU
+    Cuda::freeCuda(_gpuWeights);
+    Cuda::freeCuda(_gpuBiases);
+    Cuda::freeCuda(_gpuScales);
+    Cuda::freeCuda(_gpuRollMean);
+    Cuda::freeCuda(_gpuRollVariance);
+
+#endif
 }
 
 int ConvolutionalLayer::convOutHeight()
@@ -411,29 +433,31 @@ void ConvolutionalLayer::cpuBinarize(float * const &x, const int &xNum, float * 
 
 void ConvolutionalLayer::swapBinary()
 {
-    float *swapV         = this->_weights;
-    this->_weights       = this->_binaryWeights;
-    this->_binaryWeights = swapV;
+    /* TODO */
+    float *swapV            = this->_weights;
+    this->_weights          = this->_binaryWeights;
+    this->_binaryWeights    = swapV;
+#ifdef USE_GPU
+
+#endif
 }
 
 void ConvolutionalLayer::forward(NetworkState &netState)
 {
-    auto st = std::chrono::system_clock::now();
+    TimeUtil::startRecord();
 
-    int mOutHeight      = convOutHeight();
-    int mOutWidth       = convOutWidth();
     int m       =  this->_num / this->_groups; 
 
     int k       =  this->_kSizeX * this->_kSizeY *this->_channel / this->_groups; 
 
-    int n       =  mOutHeight * mOutWidth; 
+    int n       =  this->_outHeight * this->_outWidth; 
 
     Blas::cpuFill(this->_outputNum * this->_batch, 0, this->_output, 1);
 
 #ifdef USE_NNPACK
     struct nnp_size     nnInSize    = {static_cast<size_t>(this->_width),static_cast<size_t>(this->_height)};
     struct nnp_padding  nnInPadding = {static_cast<size_t>(this->_paddingX),static_cast<size_t>(this->_paddingX),
-                                      static_cast<size_t>(this->_paddingY),static_cast<size_t>(this->_paddingY)
+                static_cast<size_t>(this->_paddingY),static_cast<size_t>(this->_paddingY)
                                       };
     struct nnp_size     nnKSize     = {static_cast<size_t>(this->_kSizeX),static_cast<size_t>(this->_kSizeY)};
     struct nnp_size     nnStride    = {static_cast<size_t>(this->_strideX),static_cast<size_t>(this->_strideY)};
@@ -476,27 +500,27 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 #ifdef USE_NNPACK
                 nnp_status status;
                 status = nnp_convolution_inference(nnp_convolution_algorithm_implicit_gemm,
-                                          nnp_convolution_transform_strategy_tuple_based,
-                                          static_cast<size_t>(this->_channel/this->_groups),
-                                          static_cast<size_t>(m),
-                                          nnInSize,
-                                          nnInPadding,
-                                          nnKSize,
-                                          nnStride,
-                                          im,
-                                          a,
-                                          nullptr,
-                                          c,
-                                          nullptr,
-                                          nullptr,
-                                          nnp_activation_identity,
-                                          nullptr,
-                                          nullptr,
-                                          nullptr
-                                          );
+                                                   nnp_convolution_transform_strategy_tuple_based,
+                                                   static_cast<size_t>(this->_channel/this->_groups),
+                                                   static_cast<size_t>(m),
+                                                   nnInSize,
+                                                   nnInPadding,
+                                                   nnKSize,
+                                                   nnStride,
+                                                   im,
+                                                   a,
+                                                   nullptr,
+                                                   c,
+                                                   nullptr,
+                                                   nullptr,
+                                                   nnp_activation_identity,
+                                                   nullptr,
+                                                   nullptr,
+                                                   nullptr
+                                                   );
                 if(status !=0 )
                 {
-                    throw Exception(1,"NNPack error, code : "+std::to_string(status),__FILE__,__LINE__);
+                    throw Exception(1,"NNPack error, code : "+std::to_string(status),__FILE__,__LINE__, __FUNCTION__);
                 }
 #else
 
@@ -601,7 +625,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
     else
     {
         if(_useBias == 1)
-            addBias(this->_output, this->_biases, this->_batch, this->_num, mOutHeight*mOutWidth);
+            addBias(this->_output, this->_biases, this->_batch, this->_num, this->_outHeight * this->_outWidth);
     }
 
     if(this->_activation == ActivationType::NORM_CHAN)
@@ -635,22 +659,140 @@ void ConvolutionalLayer::forward(NetworkState &netState)
         }
     }
 
+    /* xnor and binary TODO: */
     if(this->_binary || this->_xnor)
     {
         swapBinary();
     }
 
-    auto so = std::chrono::system_clock::now();
-
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   TimeUtil::getElapsedTime();
 
 }
+
+#ifdef USE_GPU
+void ConvolutionalLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+
+#ifdef USE_CUDNN
+
+#else
+
+    int m       =  this->_num / this->_groups; 
+
+    int k       =  this->_kSizeX * this->_kSizeY *this->_channel / this->_groups; 
+
+    int n       =  this->_outHeight * this->_outWidth; 
+
+    BlasGPU::gpuFill(this->_outputNum * this->_batch, 0, this->_gpuOutput, 1);
+
+    for (int i = 0; i < this->_batch; ++i)
+    {
+
+        for (int j = 0; j < this->_groups; ++j)
+        {
+
+            float *a    =  this->_gpuWeights + j*this->_nWeights /this->_groups;
+
+            float *b    =  netState.gpuWorkspace;
+
+            float *c    =  this->_gpuOutput + (i*this->_groups +j)*n*m;
+
+            if(this->_xnor && this->_alignBitWeights && this->_strideX == this->_strideY)
+            {
+                /* TODO */
+            }
+            else
+            {
+
+                float *im = netState.input + (i*this->_groups + j)*(this->_channel / this->_groups)*this->_height*this->_width;
+
+                if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+                {
+                    b = im;
+                }
+                else
+                {
+
+                    GemmGPU::gpuIm2ColEx(im, this->_channel/this->_groups, this->_height, this->_width, this->_kSizeX, this->_kSizeY,
+                                      this->_paddingX, this->_paddingY, this->_strideX, this->_strideY, this->_dilationX, this->_dilationY,
+                                      b);
+                }
+
+                GemmGPU::gpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n);
+            }
+
+        }
+
+    }
+
+    if(this->_batchNorm)
+    {
+        BlasGPU::gpuNorm(this->_gpuOutput, this->_gpuRollMean, this->_gpuRollVariance, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+        BlasGPU::gpuScaleBias(this->_gpuOutput, this->_gpuScales, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+        BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+    }
+    else
+    {
+        if(this->_useBias)
+        {
+            BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+        }
+    }
+#endif
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                            this->_outWidth*this->_outHeight, this->_gpuOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {                           
+
+        if(_actParams.size() > 0)
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+        }
+        else
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+        }
+    }
+
+    /* xnor and binary TODO: */
+    if(this->_binary || this->_xnor)
+    {
+        swapBinary();
+    }
+
+    if(netState.fixNan==1)
+    {
+        BlasGPU::gpuFixNanAndInf(this->_gpuOutput, this->_outputNum*this->_batch);
+    }
+
+    this->recordCudaStop();
+}
+#endif
 
 void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
 {
     if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"Conv weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"Conv weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__, __FUNCTION__);
     }
 
     loadWeights(weights.data(), _nWeights);
@@ -664,18 +806,36 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
     }
     else
     {
-        if(_useBias==1)
+        if(this->_useBias==1)
         {
             loadBias(weights.data() + _nWeights, _nBiases);
         }
     }
+
+#ifdef USE_GPU
+    Cuda::pushCudaArray(this->_gpuWeights, this->_weights, this->_nWeights);
+    if(this->_batchNorm)
+    {
+        Cuda::pushCudaArray(this->_gpuScales       , this->_scales       , this->_nScales      );
+        Cuda::pushCudaArray(this->_gpuBiases       , this->_biases       , this->_nBiases      );
+        Cuda::pushCudaArray(this->_gpuRollMean     , this->_rollMean     , this->_nRollMean    );
+        Cuda::pushCudaArray(this->_gpuRollVariance , this->_rollVariance, this->_nRollVariance);
+    }
+    else
+    {
+        if(this->_useBias == 1)
+        {
+            Cuda::pushCudaArray(this->_gpuBiases, this->_biases, this->_nBiases);
+        }
+    }
+#endif
 }
 
 void ConvolutionalLayer::loadScales(float * const &weights, const int &len)
 {
     if(len != this->_nScales)
     {
-        throw Exception(1, "load scales data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load scales data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, weights, 1, this->_scales,1);
 }
@@ -684,7 +844,7 @@ void ConvolutionalLayer::loadBias(float * const &bias, const int &len)
 {
     if(len != this->_nBiases)
     {
-        throw Exception(1, "load bias data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load bias data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, bias, 1, this->_biases,1);
 }
@@ -693,7 +853,7 @@ void ConvolutionalLayer::loadWeights(float * const &weights, const int &len)
 {
     if(len != this->_nWeights)
     {
-        throw Exception(1, "load weights data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load weights data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, weights, 1, this->_weights,1);
 }
@@ -702,7 +862,7 @@ void ConvolutionalLayer::loadRollMean(float * const &rollMean, const int &len)
 {
     if(len != this->_nRollMean)
     {
-        throw Exception(1, "load roll mean data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load roll mean data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, rollMean, 1, this->_rollMean,1);
 }
@@ -711,7 +871,7 @@ void ConvolutionalLayer::loadRollVariance(float * const &rollVariance, const int
 {
     if(len != this->_nRollVariance)
     {
-        throw Exception(1, "load roll variance data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load roll variance data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, rollVariance, 1, this->_rollVariance,1);
 }
@@ -754,11 +914,6 @@ float *ConvolutionalLayer::getBinaryInputs() const
 float *ConvolutionalLayer::getBinaryWeights() const
 {
     return _binaryWeights;
-}
-
-float *ConvolutionalLayer::getActivationInput() const
-{
-    return _activationInput;
 }
 
 float *ConvolutionalLayer::getMeanArr() const

@@ -1,4 +1,4 @@
-#include "Msnhnet/layers/MsnhGlobalAvgPoolLayer.h"
+﻿#include "Msnhnet/layers/MsnhGlobalAvgPoolLayer.h"
 namespace Msnhnet
 {
 GlobalAvgPoolLayer::GlobalAvgPoolLayer(const int &batch, const int &height, const int &width, const int &channel)
@@ -18,11 +18,15 @@ GlobalAvgPoolLayer::GlobalAvgPoolLayer(const int &batch, const int &height, cons
     this->_inputNum          = height*width*channel;
     this->_outputNum         = this->_outChannel;
 
-    this->_output            = new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
     if(!BaseLayer::isPreviewMode)
     {
-        this->_bFlops            = (this->_width*this->_height* this->_channel*this->_outHeight*this->_outWidth)/ 1000000000.f;
+        this->_output         = new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput      = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
+
+    this->_bFlops            = (this->_width*this->_height* this->_channel*this->_outHeight*this->_outWidth)/ 1000000000.f;
 
     char msg[100];
 
@@ -40,8 +44,19 @@ GlobalAvgPoolLayer::~GlobalAvgPoolLayer()
 
 }
 
+#ifdef USE_GPU
+void GlobalAvgPoolLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+    GlobalAvgPoolLayerGPU::forwardNormalGPU(this->_width, this->_height, this->_channel, this->_batch, netState.input, this->_gpuOutput);
+    this->recordCudaStop();
+}
+#endif
+
 void GlobalAvgPoolLayer::forward(NetworkState &netState)
 {
+
+    TimeUtil::startRecord();
 
     for (int b = 0; b < this->_batch; ++b)
     {
@@ -60,6 +75,8 @@ void GlobalAvgPoolLayer::forward(NetworkState &netState)
             this->_output[outIndex] /= (this->_height*this->_width);
         }
     }
+
+    this->_forwardTime =  TimeUtil::getElapsedTime();
 }
 
 }

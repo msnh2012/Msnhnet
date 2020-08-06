@@ -51,12 +51,12 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
 
             if(tmpW >= kSizeX)
             {
-                throw Exception(1,"maxpool padding error ", __FILE__, __LINE__);
+                throw Exception(1,"maxpool padding error ", __FILE__, __LINE__, __FUNCTION__);
             }
 
             if(tmpH >= kSizeY)
             {
-                throw Exception(1,"maxpool padding error ", __FILE__, __LINE__);
+                throw Exception(1,"maxpool padding error ", __FILE__, __LINE__, __FUNCTION__);
             }
 
             if(tmpW <= paddingX)
@@ -107,6 +107,10 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
     {
 
         this->_output         = new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+
+#ifdef USE_GPU
+        this->_gpuOutput      = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
 
     this->_bFlops            = (this->_kSizeX*this->_kSizeY* this->_channel*this->_outHeight*this->_outWidth)/ 1000000000.f;
@@ -157,7 +161,8 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
 
 void MaxPoolLayer::forward(NetworkState &netState)
 {
-    auto st = std::chrono::system_clock::now();
+
+    TimeUtil::startRecord();
 
     if(this->_maxPoolDepth)
     {
@@ -174,19 +179,17 @@ void MaxPoolLayer::forward(NetworkState &netState)
                 for(int j=0; j<this->_width; ++j)            
 
                 {
-                    for(int g=0; j<this->_outChannel; ++g)   
+                    for(int g=0; g<this->_outChannel; ++g)   
 
                     {
                         int outIndex = j + this->_width*(i + this->_height*(g + this->_outChannel*b));
                         float max    = -FLT_MAX;
-                        int maxIndex = -1;
 
                         for(int k=g; k<this->_channel; k+=this->_outChannel)
                         {
                             int inIndex = j + this->_width*(i + this->_height*(k + this->_channel*b));
                             float val   = netState.input[inIndex];
 
-                            maxIndex    = (val > max)? inIndex:maxIndex;
                             max         = (val > max)? val:max;
                         }
 
@@ -197,6 +200,7 @@ void MaxPoolLayer::forward(NetworkState &netState)
 
             }
         }
+        this->_forwardTime = TimeUtil::getElapsedTime();
         return;
     }
 #ifdef USE_X86
@@ -235,7 +239,6 @@ void MaxPoolLayer::forward(NetworkState &netState)
 
                         int outIndex = j + mWidth*(i + mHeight*(k + _channel*b));
                         float max    = -FLT_MAX;
-                        int maxIndex = -1;
 
                         for(int n=0; n<this->_kSizeY; ++n)
                         {
@@ -253,8 +256,6 @@ void MaxPoolLayer::forward(NetworkState &netState)
 
                                 float value   =  (valid)? netState.input[index] : -FLT_MAX;
 
-                                maxIndex      =  (value > max) ? index : maxIndex;
-
                                 max           =  (value > max) ? value : max;
                             }
                         }
@@ -267,10 +268,35 @@ void MaxPoolLayer::forward(NetworkState &netState)
         }
     }
 
-    auto so = std::chrono::system_clock::now();
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime = TimeUtil::getElapsedTime();
 
 }
+
+#ifdef USE_GPU
+void MaxPoolLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+
+    if(this->_maxPoolDepth)
+    {
+        MaxPoolLayerGPU::forwardDepthGPU(this->_width, this->_height, this->_channel, this->_outWidth, this->_outHeight, this->_outChannel, this->_batch, netState.input, this->_gpuOutput);
+    }
+    else
+    {
+        MaxPoolLayerGPU::forwardNormalGPU(this->_width,this->_height,this->_channel,
+                                          this->_outWidth, this->_outHeight, this->_outChannel,
+                                          this->_strideX, this->_strideY,
+                                          this->_kSizeX, this->_kSizeY,
+                                          this->_paddingX, this->_paddingY,
+                                          this->_batch,
+                                          netState.input,
+                                          this->_gpuOutput
+                                          );
+    }
+
+    this->recordCudaStop();
+}
+#endif
 
 #ifdef USE_X86
 void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &kSizeX, const int &kSizeY,

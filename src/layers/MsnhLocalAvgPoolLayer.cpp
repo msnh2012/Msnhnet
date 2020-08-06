@@ -46,12 +46,12 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
 
         if(tmpW >= kSizeX)
         {
-            throw Exception(1,"localavgpool padding error ", __FILE__, __LINE__);
+            throw Exception(1,"localavgpool padding error ", __FILE__, __LINE__, __FUNCTION__);
         }
 
         if(tmpH >= kSizeY)
         {
-            throw Exception(1,"localavgpool padding error ", __FILE__, __LINE__);
+            throw Exception(1,"localavgpool padding error ", __FILE__, __LINE__, __FUNCTION__);
         }
 
         if(tmpW <= paddingX)
@@ -99,7 +99,10 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->_output            = new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+        this->_output         = new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput      = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
 
     this->_bFlops            = (this->_kSizeX*this->_kSizeY* this->_channel*this->_outHeight*this->_outWidth)/ 1000000000.f;
@@ -187,7 +190,8 @@ int LocalAvgPoolLayer::getAntialiasing() const
 
 void LocalAvgPoolLayer::forward(NetworkState &netState)
 {
-    auto st = std::chrono::system_clock::now();
+
+    TimeUtil::startRecord();
 
     int widthOffset  =     -(this->_paddingX + 1) / 2;
     int heightOffset =     -(this->_paddingY + 1) / 2;
@@ -249,9 +253,25 @@ void LocalAvgPoolLayer::forward(NetworkState &netState)
         }
     }
 
-    auto so = std::chrono::system_clock::now();
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   TimeUtil::getElapsedTime();
 
 }
+
+#ifdef USE_GPU
+void LocalAvgPoolLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+    LocalAvgPoolLayerGPU::forwardNormalGPU(this->_width,this->_height,this->_channel,
+                                           this->_outWidth, this->_outHeight, this->_outChannel,
+                                           this->_strideX, this->_strideY,
+                                           this->_kSizeX, this->_kSizeY,
+                                           this->_paddingX, this->_paddingY,
+                                           this->_batch,
+                                           netState.input,
+                                           this->_gpuOutput
+                                           );
+    this->recordCudaStop();
+}
+#endif
 
 }

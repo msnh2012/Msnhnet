@@ -48,6 +48,10 @@ Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int 
     {
         this->_allInput             =   new float[static_cast<size_t>(this->_yolov3AllInputNum * this->_batch)]();
         this->_shuffleInput         =   new float[static_cast<size_t>(this->_yolov3AllInputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_allInputGpu          =   Cuda::makeCudaArray(this->_allInput, this->_yolov3AllInputNum * this->_batch);
+        this->_shuffleInputGpu      =   Cuda::makeCudaArray(this->_shuffleInput, this->_yolov3AllInputNum * this->_batch);
+#endif
     }
 }
 
@@ -59,15 +63,17 @@ Yolov3OutLayer::~Yolov3OutLayer()
 
 void Yolov3OutLayer::forward(NetworkState &netState)
 {
+
+    TimeUtil::startRecord();
+
     batchHasBox.clear();
     finalOut.clear();
-    auto st = std::chrono::system_clock::now();
     std::vector<bool> tmpBatchHasBox(static_cast<size_t>(this->_batch),false);
 
     int offset          =   0;
     for (int b = 0; b < this->_batch; ++b)
     {
-        for (size_t i = 0; i < this->_yolov3Indexes.size(); ++i)
+        for (int i = 0; i < this->_yolov3Indexes.size(); ++i)
         {
             size_t index        =   static_cast<size_t>(this->_yolov3Indexes[i]);
             float *mInput       =   netState.net->layers[index]->getOutput();
@@ -106,6 +112,7 @@ void Yolov3OutLayer::forward(NetworkState &netState)
                         this->_shuffleInput[ptr + i*this->_channel + 1],
                         this->_shuffleInput[ptr + i*this->_channel + 2],
                         this->_shuffleInput[ptr + i*this->_channel + 3]);
+
                 box.conf            =   this->_shuffleInput[ptr + i*this->_channel + 4];
 
                 if(_yoloType == YoloType::YoloV3_NORMAL || _yoloType == YoloType::YoloV4)
@@ -127,7 +134,7 @@ void Yolov3OutLayer::forward(NetworkState &netState)
 
                     for (int j = 0; j < 6; ++j)
                     {
-                       angleSplits.push_back(this->_shuffleInput[ptr + i*this->_channel +  this->_channel - 7 + j]);
+                        angleSplits.push_back(this->_shuffleInput[ptr + i*this->_channel +  this->_channel - 7 + j]);
                     }
 
                     float regAngle    = 0.f;
@@ -173,10 +180,126 @@ void Yolov3OutLayer::forward(NetworkState &netState)
 
     this->batchHasBox   =   tmpBatchHasBox;
 
-    auto so = std::chrono::system_clock::now();
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime  =   TimeUtil::getElapsedTime();
 
 }
+
+#ifdef USE_GPU
+void Yolov3OutLayer::forwardGPU(NetworkState &netState)
+{
+    batchHasBox.clear();
+    finalOut.clear();
+    auto st = std::chrono::high_resolution_clock::now();
+    std::vector<bool> tmpBatchHasBox(static_cast<size_t>(this->_batch),false);
+
+    int offset          =   0;
+
+    for (int b = 0; b < this->_batch; ++b)
+    {
+        for (int i = 0; i < this->_yolov3Indexes.size(); ++i)
+        {
+
+            size_t index        =   static_cast<size_t>(this->_yolov3Indexes[i]);
+            float *mInput       =   netState.net->layers[index]->getGpuOutput();
+            int yolov3InputNum  =   netState.net->layers[index]->getOutputNum();
+
+            cudaMemcpy(this->_allInputGpu + offset, mInput, yolov3InputNum*sizeof(float), cudaMemcpyDeviceToDevice);
+
+            int WxH             =   netState.net->layers[index]->getOutWidth()*netState.net->layers[index]->getOutHeight();
+            int chn             =   netState.net->layers[index]->getOutChannel()/3;
+
+            Yolov3OutLayerGPU::shuffleData(3, WxH, chn, this->_allInputGpu + offset, this->_shuffleInputGpu + offset, 0);
+            offset              =   offset + yolov3InputNum;
+        }
+
+        cudaMemcpy(this->_shuffleInput, this->_shuffleInputGpu, this->_yolov3AllInputNum * this->_batch*sizeof(float), cudaMemcpyDeviceToHost);
+
+        std::vector<Yolov3Box> tmpBox;
+
+        for (int i = 0; i < this->_pixels; ++i)
+        {
+            int ptr             =   this->_yolov3AllInputNum*b;
+
+            if(this->_shuffleInput[ptr + i*this->_channel + 4] > this->_confThresh)
+            {
+                Yolov3Box box;
+
+                box.xywhBox         =   Box::XYWHBox(this->_shuffleInput[ptr + i*this->_channel],
+                        this->_shuffleInput[ptr + i*this->_channel + 1],
+                        this->_shuffleInput[ptr + i*this->_channel + 2],
+                        this->_shuffleInput[ptr + i*this->_channel + 3]);
+                box.conf            =   this->_shuffleInput[ptr + i*this->_channel + 4];
+
+                if(_yoloType == YoloType::YoloV3_NORMAL || _yoloType == YoloType::YoloV4)
+                {
+                    for (int j = 0; j < this->_channel - 5; ++j)
+                    {
+                        box.classesVal.push_back(this->_shuffleInput[ptr + i*this->_channel + 5 + j]);
+                    }
+                }
+                else if(_yoloType == YoloType::YoloV3_ANGLE)
+                {
+                    for (int j = 0; j < this->_channel - 5 - 7; ++j) 
+
+                    {
+                        box.classesVal.push_back(this->_shuffleInput[ptr + i*this->_channel + 5 + j]);
+                    }
+
+                    std::vector<float> angleSplits;
+
+                    for (int j = 0; j < 6; ++j)
+                    {
+                        angleSplits.push_back(this->_shuffleInput[ptr + i*this->_channel +  this->_channel - 7 + j]);
+                    }
+
+                    float regAngle    = 0.f;
+
+                    regAngle = this->_shuffleInput[ptr + i*this->_channel +  this->_channel - 1];
+
+                    int bestAngleIndex = static_cast<int>(ExVector::maxIndex(angleSplits));
+                    box.angle = bestAngleIndex*30.f + regAngle*30 - 90.f;
+
+                }
+
+                box.bestClsConf     =   ExVector::max<float>(box.classesVal);
+                box.bestClsIdx      =   static_cast<int>(ExVector::maxIndex(box.classesVal));
+
+                tmpBatchHasBox[b]   =   true;
+                tmpBox.push_back(box);
+            }
+        }
+
+        if(tmpBatchHasBox[b]) 
+
+        {
+
+            std::vector<float> confs;
+            for (int i = 0; i < tmpBox.size(); ++i)
+            {
+                float conf = tmpBox[i].conf * tmpBox[i].bestClsConf;
+                confs.push_back(conf);
+            }
+
+            std::vector<int> confIndex = ExVector::argsort(confs, true);
+
+            std::vector<Yolov3Box> tmpBox1 = tmpBox;
+
+            for (size_t i = 0; i < confIndex.size(); ++i)
+            {
+                tmpBox[i]  =   tmpBox1[static_cast<size_t>(confIndex[i])];
+            }
+        }
+
+        finalOut.push_back(nms(tmpBox, this->_nmsThresh, this->_useSoftNms));
+    }
+
+    this->batchHasBox   =   tmpBatchHasBox;
+
+    auto so = std::chrono::high_resolution_clock::now();
+    this->_forwardTime =   std::chrono::duration <double, milli> (so-st).count();
+
+}
+#endif
 
 Yolov3Box Yolov3OutLayer::bboxResize2org( Yolov3Box &box, const Point2I &currentShape, const Point2I &orgShape)
 {

@@ -17,6 +17,7 @@ void Blas::cpuCopy(const int &inputN, float *const &input, const int &inputStep,
         output[i*outputStep] = input[i*inputStep];
     }
 #endif
+
 }
 
 void Blas::cpuFill(const int &inputN, const float &alpha, float *const &x, const int &step)
@@ -226,36 +227,6 @@ void Blas::cpuL2(const int &n, float * const &pred, float * const &truth, float 
     }
 }
 
-void Blas::cpuFlatten(float * const &x, const int &size, const int &layers, const int &batch, const int &forward)
-{
-    float *swapVal  =   new float[static_cast<size_t>(size*layers*batch)]();
-
-    for (int b = 0; b < batch; ++b)
-    {
-        for (int c = 0; c < layers; ++c)
-        {
-            for (int i = 0; i < size; ++i)
-            {
-                int i1  =   b*layers*size + c*size + i;
-                int i2  =   b*layers*size + i*layers + c;
-
-                if(forward!=0)
-                {
-                    swapVal[i2] = x[i1];
-                }
-                else
-                {
-                    swapVal[i1] = x[i2];
-                }
-            }
-        }
-    }
-
-    memcpy(x, swapVal, static_cast<size_t>(size*layers*batch)*sizeof(float));
-
-    delete[] swapVal;
-}
-
 void Blas::softmax(float * const &input, const int &num, const float &temperature,  const int &stride, float * const &output, const bool &useAvx)
 {
     float sum       =   0;
@@ -283,8 +254,11 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
 
                     exp = _mm256_add_ps(exp, _mm256_permute2f128_ps(exp, exp, 1));
                     exp = _mm256_hadd_ps(exp, exp);
+#ifdef WIN32
                     float sumExp    = _mm256_cvtss_f32(_mm256_hadd_ps(exp, exp));
-
+#else
+                    float sumExp    = _mm256_hadd_ps(exp, exp)[0];
+#endif
                     sum = sum + sumExp;
                 }
 
@@ -310,7 +284,11 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
 
                     exp = _mm256_add_ps(exp, _mm256_permute2f128_ps(exp, exp, 1));
                     exp = _mm256_hadd_ps(exp, exp);
+#ifdef WIN32
                     float sumExp    = _mm256_cvtss_f32(_mm256_hadd_ps(exp, exp));
+#else
+                    float sumExp    = _mm256_hadd_ps(exp, exp)[0];
+#endif
                     sum = sum + sumExp;
                 }
 
@@ -523,7 +501,7 @@ void Blas::cpuSoftMaxCrossEntropy(const int &num, float * const &pred, float * c
         float t     =   truth[i];
         float p     =   pred[i];
 
-        error[i]    =   (t >0 ) ? -log(p) : 0;
+        error[i]    =   (t >0 ) ? -logf(p) : 0;
         delta[i]    =   t - p;
     }
 }
@@ -535,7 +513,7 @@ void Blas::cpuLogisticCorssEntropy(const int &num, float * const &pred, float * 
         float t     =   truth[i];
         float p     =   pred[i];
 
-        error[i]    =   -t*log(p) - (1-t)*log(1-p);
+        error[i]    =   -t*logf(p) - (1-t)*logf(1-p);
         delta[i]    =   t - p;
     }
 }

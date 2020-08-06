@@ -82,7 +82,7 @@ DeConvolutionalLayer::DeConvolutionalLayer(const int &batch, const int &height, 
 
 void DeConvolutionalLayer::forward(NetworkState &netState)
 {
-    auto st = std::chrono::system_clock::now();
+    TimeUtil::startRecord();
 
     int mOutH           =   deConvOutHeight();
     int mOutW           =   deConvOutWidth();
@@ -141,8 +141,7 @@ void DeConvolutionalLayer::forward(NetworkState &netState)
         }
     }
 
-    auto so = std::chrono::system_clock::now();
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =  TimeUtil::getElapsedTime();
 
 }
 
@@ -150,7 +149,7 @@ void DeConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
 {
     if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"Deconv weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"Deconv weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__, __FUNCTION__);
     }
 
     loadWeights(weights.data(), _nWeights);
@@ -165,7 +164,7 @@ void DeConvolutionalLayer::loadBias(float * const &bias, const int &len)
 {
     if(len != this->_nBiases)
     {
-        throw Exception(1, "load bias data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load bias data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, bias, 1, this->_biases,1);
 }
@@ -174,7 +173,7 @@ void DeConvolutionalLayer::loadWeights(float * const &weights, const int &len)
 {
     if(len != this->_nWeights)
     {
-        throw Exception(1, "load weights data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load weights data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, weights, 1, this->_weights,1);
 }

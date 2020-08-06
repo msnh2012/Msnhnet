@@ -16,6 +16,9 @@ SoftMaxLayer::SoftMaxLayer(const int &batch, const int &inputNum, const int &gro
     if(!BaseLayer::isPreviewMode)
     {
         this->_output        =   new float[static_cast<size_t>(this->_inputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
 
     char msg[100];
@@ -29,14 +32,25 @@ SoftMaxLayer::SoftMaxLayer(const int &batch, const int &inputNum, const int &gro
 
 void SoftMaxLayer::forward(NetworkState &netState)
 {
-    auto st = std::chrono::system_clock::now();
+    TimeUtil::startRecord();
 
     Blas::cpuSoftmax(netState.input, this->_inputNum/this->_groups, this->_batch, this->_inputNum,
                      this->_groups, this->_inputNum/this->_groups, this->_temperature, 1, this->_output, BaseLayer::supportAvx);
 
-    auto so = std::chrono::system_clock::now();
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   TimeUtil::getElapsedTime();
 }
+
+#ifdef USE_GPU
+void SoftMaxLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+
+    BlasGPU::gpuSoftmax(netState.input, this->_inputNum/this->_groups, this->_batch, this->_inputNum,
+                     this->_groups, this->_inputNum/this->_groups, this->_temperature, 1, this->_gpuOutput);
+
+    this->recordCudaStop();
+}
+#endif
 
 int SoftMaxLayer::getGroups() const
 {

@@ -26,7 +26,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         {
             if(params.height ==0 || params.width == 0 || params.channels == 0)
             {
-                throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__);
+                throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__, __FUNCTION__);
             }
 
             ConvParams* convParams      =   reinterpret_cast<ConvParams*>(baseParams[i]);
@@ -94,7 +94,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         }
         else
         {
-            throw Exception(1, "layer type is not supported by [Res2BlockLayer]", __FILE__, __LINE__);
+            throw Exception(1, "layer type is not supported by [Res2BlockLayer]", __FILE__, __LINE__, __FUNCTION__);
         }
 
         params.height       =   layer->getOutHeight();
@@ -119,7 +119,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         {
             if(branchBuildParams.height ==0 || branchBuildParams.width == 0 || branchBuildParams.channels == 0)
             {
-                throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__);
+                throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__, __FUNCTION__);
             }
 
             ConvParams* convParams      =   reinterpret_cast<ConvParams*>(branchParams[i]);
@@ -163,7 +163,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         }
         else
         {
-            throw Exception(1, "layer type is not supported by [Res2BlockLayer]", __FILE__, __LINE__);
+            throw Exception(1, "layer type is not supported by [Res2BlockLayer]", __FILE__, __LINE__, __FUNCTION__);
         }
 
         branchBuildParams.height       =   layer->getOutHeight();
@@ -187,7 +187,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
             branchBuildParams.channels != params.channels ||
             branchBuildParams.inputNums != params.inputNums)
     {
-        throw Exception(1, "base output size is not equal with branch", __FILE__, __LINE__);
+        throw Exception(1, "base output size is not equal with branch", __FILE__, __LINE__, __FUNCTION__);
     }
 
     this->_outHeight         =   params.height;
@@ -198,6 +198,9 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
     if(!BaseLayer::isPreviewMode)
     {
         this->_output            =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
 
     this->_layerDetail.append("========================================================================\n");
@@ -208,7 +211,7 @@ void Res2BlockLayer::loadAllWeigths(std::vector<float> &weights)
 
     if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"Res2Block weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"Res2Block weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__, __FUNCTION__);
     }
 
     size_t ptr = 0;
@@ -316,6 +319,84 @@ void Res2BlockLayer::forward(NetworkState &netState)
     }
 
 }
+
+#ifdef USE_GPU
+void Res2BlockLayer::forwardGPU(NetworkState &netState)
+{
+
+    float * inputX      = Cuda::makeCudaArray(netState.input,netState.inputNum,cudaMemcpyKind::cudaMemcpyDeviceToDevice);
+    int     inputXNum   = netState.inputNum;
+
+    for (size_t i = 0; i < baseLayers.size(); ++i)
+    {
+        baseLayers[i]->forwardGPU(netState);
+
+        netState.input     =   baseLayers[i]->getGpuOutput();
+        netState.inputNum  =   baseLayers[i]->getOutputNum();
+    }
+
+    netState.input         =    inputX;
+    netState.inputNum      =    inputXNum;
+
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        branchLayers[i]->forwardGPU(netState);
+
+        netState.input     =   branchLayers[i]->getGpuOutput();
+        netState.inputNum  =   branchLayers[i]->getOutputNum();
+
+    }
+
+    BlasGPU::gpuAxpy(netState.inputNum, 1.f, baseLayers[baseLayers.size()-1]->getGpuOutput(), 1, branchLayers[branchLayers.size()-1]->getGpuOutput(), 1);
+    BlasGPU::gpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1]->getGpuOutput(), 1, this->_gpuOutput, 1);
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                            this->_outWidth*this->_outHeight, this->_gpuOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {                           
+
+        if(_actParams.size() > 0)
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+        }
+        else
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+        }
+    }
+
+    this->_forwardTime = 0;
+
+    for (size_t i = 0; i < baseLayers.size(); ++i)
+    {
+        this->_forwardTime += baseLayers[i]->getForwardTime();
+    }
+
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        this->_forwardTime += branchLayers[i]->getForwardTime();
+    }
+
+   Cuda::freeCuda(inputX);
+}
+#endif
 
 Res2BlockLayer::~Res2BlockLayer()
 {

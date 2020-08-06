@@ -51,7 +51,7 @@ std::vector<float> OpencvUtil::getImgDataF32C1(cv::Mat &mat, const cv::Size &siz
 {
     if(mat.empty())
     {
-        throw Exception(1,"img empty", __FILE__, __LINE__);
+        throw Exception(1,"img empty", __FILE__, __LINE__, __FUNCTION__);
     }
 
     std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols));
@@ -90,7 +90,7 @@ std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &siz
 {
     if(mat.empty())
     {
-        throw Exception(1,"img empty", __FILE__, __LINE__);
+        throw Exception(1,"img empty", __FILE__, __LINE__, __FUNCTION__);
     }
 
     cv::resize(mat, mat, size);
@@ -132,7 +132,7 @@ std::vector<float> OpencvUtil::getGoogLenetF32C3(cv::Mat &mat, const cv::Size &s
 {
     if(mat.empty())
     {
-        throw Exception(1,"img empty", __FILE__, __LINE__);
+        throw Exception(1,"img empty", __FILE__, __LINE__, __FUNCTION__);
     }
 
     cv::resize(mat, mat, size);
@@ -184,7 +184,7 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
 {
     if(mat.empty())
     {
-        throw Exception(1,"img empty", __FILE__, __LINE__);
+        throw Exception(1,"img empty", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int width   = mat.cols;
@@ -243,7 +243,7 @@ std::vector<float> OpencvUtil::getTransformedF32C3(cv::Mat &mat, const cv::Size 
 {
     if(mat.empty())
     {
-        throw Exception(1,"img empty", __FILE__, __LINE__);
+        throw Exception(1,"img empty", __FILE__, __LINE__, __FUNCTION__);
     }
 
     cv::resize(mat, mat, size);
@@ -295,7 +295,7 @@ std::vector<float> OpencvUtil::getCaffeModeF32C3(cv::Mat &mat, const cv::Size &s
 {
     if(mat.empty())
     {
-        throw Exception(1,"img empty", __FILE__, __LINE__);
+        throw Exception(1,"img empty", __FILE__, __LINE__, __FUNCTION__);
     }
 
     cv::resize(mat, mat, size);

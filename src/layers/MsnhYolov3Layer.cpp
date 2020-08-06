@@ -30,12 +30,15 @@ Yolov3Layer::Yolov3Layer(const int &batch, const int &width, const int &height, 
 
     if(3*(this->_classNum + 4 + 1) != num)
     {
-        throw Exception(1, "class num error!", __FILE__, __LINE__);
+        throw Exception(1, "class num error!", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(!BaseLayer::isPreviewMode)
     {
         this->_output    =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput =   Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
 
     this->_layerDetail.append("yolov3. class num : " + std::to_string(classNum) + "\n");
@@ -43,10 +46,9 @@ Yolov3Layer::Yolov3Layer(const int &batch, const int &width, const int &height, 
 
 void Yolov3Layer::forward(NetworkState &netState)
 {
-    auto st = std::chrono::system_clock::now();
+    TimeUtil::startRecord();
 
     Blas::cpuCopy(netState.inputNum, netState.input, 1, this->_output, 1);
-#ifndef USE_GPU
 
     for (int b = 0; b < this->_batch; ++b)
     {
@@ -72,10 +74,46 @@ void Yolov3Layer::forward(NetworkState &netState)
         }
 
     }
-    auto so = std::chrono::system_clock::now();
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
-#endif
+
+    this->_forwardTime =   TimeUtil::getElapsedTime();
 }
+
+#ifdef USE_GPU
+void Yolov3Layer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+
+    BlasGPU::gpuCopy(netState.inputNum, netState.input, 1, this->_gpuOutput, 1);
+
+    int num     = this->_width*this->_height;
+    int nxClass =  num * (1+this->_classNum);
+
+    for (int b = 0; b < this->_batch; ++b)
+    {
+        for (int n = 0; n < 3; ++n)
+        {
+
+            int index = b*this->_outputNum + n*this->_width*this->_height*( 4 + 1 + this->_classNum);
+            Yolov3LayerGPU::exSigmoidGpu(num, this->_gpuOutput + index, this->_width, this->_ratios, 1);
+
+            index = index + this->_width*this->_height;
+            Yolov3LayerGPU::exSigmoidGpu(num, this->_gpuOutput + index, this->_width, this->_ratios, 0);
+
+            index = index + this->_width*this->_height;
+            Yolov3LayerGPU::aExpTGpu(num, this->_gpuOutput + index, anchors[n%3*2]);
+
+            index = index + this->_width*this->_height;
+            Yolov3LayerGPU::aExpTGpu(num, this->_gpuOutput + index, anchors[n%3*2 + 1]);
+
+            index = index + this->_width*this->_height;
+            Yolov3LayerGPU::sigmoidGpu(nxClass, this->_gpuOutput + index);
+        }
+
+    }
+
+    this->recordCudaStop();
+}
+#endif
 
 void Yolov3Layer::sigmoid(float *val, const int &num)
 {

@@ -50,6 +50,9 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
     if(!BaseLayer::isPreviewMode)
     {
         this->_output        =   new float[static_cast<size_t>(this->_outputNum*this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
 
 }
@@ -57,7 +60,7 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
 void RouteLayer::forward(NetworkState &netState)        
 
 {
-    auto st = std::chrono::system_clock::now();
+    TimeUtil::startRecord();
     int offset          =   0;
     for (size_t i = 0; i < _inputLayerIndexes.size(); ++i)
     {
@@ -83,10 +86,46 @@ void RouteLayer::forward(NetworkState &netState)
             offset          = offset + partInSize;
         }
     }
-    auto so = std::chrono::system_clock::now();
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+
+    this->_forwardTime =   TimeUtil::getElapsedTime();
 
 }
+
+#ifdef USE_GPU
+void RouteLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+
+    int offset          =   0;
+    for (size_t i = 0; i < _inputLayerIndexes.size(); ++i)
+    {
+        int index       =   this->_inputLayerIndexes[i];
+        float *mInput   =   netState.net->layers[static_cast<size_t>(index)]->getGpuOutput();
+        int inputLayerOutputs   =   this->_inputLayerOutputs[i];
+        int partInSize  =   inputLayerOutputs / this->_groups;
+        for (int j = 0; j < this->_batch; ++j)
+        {
+            if(_addModel == 1)
+            {
+                std::cout<<"================= add model ============================\n";
+                BlasGPU::gpuAxpy(partInSize, 1, mInput + j*inputLayerOutputs + partInSize*this->_groupIndex, 1,
+                              this->_gpuOutput + offset + j*this->_outputNum,1);
+            }
+            else
+            {
+                BlasGPU::gpuCopy(partInSize, mInput + j*inputLayerOutputs + partInSize*this->_groupIndex, 1,
+                              this->_gpuOutput + offset + j*this->_outputNum,1);
+            }
+        }
+        if(_addModel != 1)
+        {
+            offset          = offset + partInSize;
+        }
+    }
+
+    this->recordCudaStop();
+}
+#endif
 
 void RouteLayer::resize(Network &net)
 {
@@ -113,7 +152,7 @@ void RouteLayer::resize(Network &net)
             this->_outHeight     =   0;
             this->_outWidth      =   0;
             this->_outChannel    =   0;
-            throw Exception(1, "Different size of first layer and secon layer", __FILE__, __LINE__);
+            throw Exception(1, "Different size of first layer and secon layer", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
@@ -122,7 +161,7 @@ void RouteLayer::resize(Network &net)
     this->_inputNum      =   this->_outputNum;
     if(this->_output == nullptr)
     {
-        throw Exception(1,"output can't be null", __FILE__, __LINE__);
+        throw Exception(1,"output can't be null", __FILE__, __LINE__, __FUNCTION__);
     }
 
     this->_output    = static_cast<float *>(realloc(this->_output, static_cast<size_t>(this->_outputNum *this->_batch)*sizeof(float)));

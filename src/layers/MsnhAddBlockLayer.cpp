@@ -31,7 +31,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
             {
                 if(branchBuildParams.height ==0 || branchBuildParams.width == 0 || branchBuildParams.channels == 0)
                 {
-                    throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__);
+                    throw Exception(1, "Layer before convolutional layer must output image", __FILE__, __LINE__, __FUNCTION__);
                 }
 
                 ConvParams* convParams      =   reinterpret_cast<ConvParams*>(branchParams[i][j]);
@@ -124,7 +124,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
             }
             else
             {
-                throw Exception(1, "layer type is not supported by [AddBlockLayer]", __FILE__, __LINE__);
+                throw Exception(1, "layer type is not supported by [AddBlockLayer]", __FILE__, __LINE__, __FUNCTION__);
             }
 
             branchBuildParams.height       =   layer->getOutHeight();
@@ -155,7 +155,7 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                 branchLayers[i][branchLayers[i].size()-1]->getOutChannel() != branchLayers[i-1][branchLayers[i-1].size()-1]->getOutChannel()||
                 branchLayers[i][branchLayers[i].size()-1]->getOutputNum()  != branchLayers[i-1][branchLayers[i-1].size()-1]->getOutputNum())
         {
-            throw Exception(1, "branch's outputs size is not equal", __FILE__, __LINE__);
+            throw Exception(1, "branch's outputs size is not equal", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
@@ -167,6 +167,9 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
     if(!BaseLayer::isPreviewMode)
     {
         this->_output            =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
 
     this->_layerDetail.append("========================================================================\n");
@@ -176,7 +179,7 @@ void AddBlockLayer::loadAllWeigths(std::vector<float> &weights)
 {
     if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"AddBlockLayer weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"AddBlockLayer weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__, __FUNCTION__);
     }
 
     size_t ptr = 0;
@@ -272,6 +275,84 @@ void AddBlockLayer::forward(NetworkState &netState)
         }
     }
 }
+
+#ifdef USE_GPU
+void AddBlockLayer::forwardGPU(NetworkState &netState)
+{
+    /* TODO: batch */
+
+    float * inputX      = Cuda::makeCudaArray(netState.input,netState.inputNum,cudaMemcpyKind::cudaMemcpyDeviceToDevice);
+    int     inputXNum   = netState.inputNum;
+
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        netState.input         =    inputX;
+        netState.inputNum      =    inputXNum;
+
+        for (size_t j = 0; j < branchLayers[i].size(); ++j)
+        {
+            branchLayers[i][j]->forwardGPU(netState);
+
+            netState.input     =   branchLayers[i][j]->getGpuOutput();
+            netState.inputNum  =   branchLayers[i][j]->getOutputNum();
+        }
+
+    }
+
+    for (size_t i = 1; i < branchLayers.size(); ++i)
+    {
+
+        BlasGPU::gpuAxpy(netState.inputNum, 1.f, branchLayers[i-1][branchLayers[i-1].size()-1]->getGpuOutput(),
+                1, branchLayers[i][branchLayers[i].size()-1]->getGpuOutput(), 1);
+
+    }
+    BlasGPU::gpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1][branchLayers[branchLayers.size()-1].size()-1]->getGpuOutput(), 1, this->getGpuOutput(), 1);
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                            this->_outWidth*this->_outHeight, this->_gpuOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {                           
+
+        if(_actParams.size() > 0)
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+        }
+        else
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+        }
+    }
+
+    this->_forwardTime = 0;
+
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        for (size_t j = 0; j < branchLayers[i].size(); ++j)
+        {
+            this->_forwardTime += branchLayers[i][j]->getForwardTime();
+        }
+    }
+
+    Cuda::freeCuda(inputX);
+}
+#endif
 
 AddBlockLayer::~AddBlockLayer()
 {

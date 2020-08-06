@@ -135,12 +135,12 @@ void Parser::readCfg(const std::string &path)
                     }
                     else
                     {
-                        throw Exception(1,"[config] content error", __FILE__, __LINE__);
+                        throw Exception(1,"[config] content error", __FILE__, __LINE__, __FUNCTION__);
                     }
                 }
                 else
                 {
-                    throw Exception(1,"first node must be [config]", __FILE__, __LINE__);
+                    throw Exception(1,"first node must be [config]", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
 
@@ -154,7 +154,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[maxpool] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[maxpool] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "act")
@@ -167,7 +167,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[act] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[act] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "padding")
@@ -180,7 +180,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[padding] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[padding] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "localavgpool")
@@ -193,7 +193,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[localavgpool] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[localavgpool] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "globalavgpool")
@@ -211,7 +211,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[conv] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[conv] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "deconv")
@@ -224,7 +224,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[conv] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[conv] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "connect")
@@ -237,7 +237,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[connect] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[connect] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "batchnorm")
@@ -250,7 +250,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[batchnorm] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[batchnorm] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "resblock")
@@ -272,7 +272,7 @@ void Parser::readCfg(const std::string &path)
 
                             if(!ExString::strToInt(value, size))
                             {
-                                throw Exception(1,"[resblock] size can't convert to int", __FILE__, __LINE__);
+                                throw Exception(1,"[resblock] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                             }
                         }
 
@@ -307,7 +307,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[resblock] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[resblock] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "res2block")
@@ -329,7 +329,7 @@ void Parser::readCfg(const std::string &path)
 
                             if(!ExString::strToInt(value, size))
                             {
-                                throw Exception(1,"[res2block] size can't convert to int", __FILE__, __LINE__);
+                                throw Exception(1,"[res2block] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                             }
                         }
 
@@ -364,7 +364,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[res2block] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[res2block] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "addblock")
@@ -386,7 +386,7 @@ void Parser::readCfg(const std::string &path)
 
                             if(!ExString::strToInt(value, size))
                             {
-                                throw Exception(1,"[addblock] size can't convert to int", __FILE__, __LINE__);
+                                throw Exception(1,"[addblock] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                             }
                         }
 
@@ -439,7 +439,7 @@ void Parser::readCfg(const std::string &path)
 
                             if(!ExString::strToInt(value, size))
                             {
-                                throw Exception(1,"[concatblock] size can't convert to int", __FILE__, __LINE__);
+                                throw Exception(1,"[concatblock] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                             }
                         }
 
@@ -474,7 +474,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[addblock] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[addblock] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "route")
@@ -487,7 +487,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[route] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[route] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "softmax")
@@ -500,7 +500,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[softmax] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[softmax] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "upsample")
@@ -513,7 +513,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[upsample] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[upsample] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "yolov3")
@@ -528,7 +528,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[yolov3] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[yolov3] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "yolov3out")
@@ -543,18 +543,18 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[yolov3] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[yolov3] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else
             {
-                throw Exception(1,"LayerType [" + node + "] is not supported", __FILE__, __LINE__);
+                throw Exception(1,"LayerType [" + node + "] is not supported", __FILE__, __LINE__, __FUNCTION__);
             }
         }
     }
     catch(YAML::Exception ex)
     {
-        throw Exception(1,ex.what(), __FILE__, __LINE__);
+        throw Exception(1,ex.what(), __FILE__, __LINE__, __FUNCTION__);
     }
     return;
 }
@@ -566,7 +566,7 @@ void Parser::readMsnhBin(const std::string &path)
 
     if(!readFile.is_open())
     {
-        throw Exception(0,std::string(path) + " open filed!", __FILE__, __LINE__);
+        throw Exception(0,std::string(path) + " open filed!", __FILE__, __LINE__, __FUNCTION__);
     }
 
     readFile.seekg(0, std::ios::end);
@@ -575,12 +575,12 @@ void Parser::readMsnhBin(const std::string &path)
 
     if (fsize < 1)
     {
-        throw Exception(0,std::string(path) + " read filed!", __FILE__, __LINE__);
+        throw Exception(0,std::string(path) + " read filed!", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if (fsize % 4 != 0)
     {
-        throw Exception(0,std::string(path) + " file error!", __FILE__, __LINE__);
+        throw Exception(0,std::string(path) + " file error!", __FILE__, __LINE__, __FUNCTION__);
     }
 
     char *data = new char[static_cast<size_t>(fsize)]();
@@ -614,33 +614,33 @@ void Parser::parseConfigParams(NetConfigParams *netConfigParams, YAML::const_ite
         {
             if(!ExString::strToInt(value, netConfigParams->batch))
             {
-                throw Exception(1,"[config] width can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[config] width can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "width")
         {
             if(!ExString::strToInt(value, netConfigParams->width))
             {
-                throw Exception(1,"[config] width can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[config] width can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "height")
         {
             if(!ExString::strToInt(value, netConfigParams->height))
             {
-                throw Exception(1,"[config] height can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[config] height can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "channels")
         {
             if(!ExString::strToInt(value, netConfigParams->channels))
             {
-                throw Exception(1,"[config] channels can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[config] channels can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [config]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [config]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -658,7 +658,7 @@ void Parser::parseActivationParams(ActivationParams *activationParams, YAML::con
         }
         else
         {
-            throw Exception(1, key + " is not supported in [act]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [act]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -675,89 +675,89 @@ void Parser::parseMaxPoolParams(MaxPoolParams *maxPoolParams, YAML::const_iterat
         {
             if(!ExString::strToInt(value, maxPoolParams->kSize))
             {
-                throw Exception(1,"[maxpool] kSize can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeX")
         {
             if(!ExString::strToInt(value, maxPoolParams->kSizeX))
             {
-                throw Exception(1,"[maxpool] kSizeX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] kSizeX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeY")
         {
             if(!ExString::strToInt(value, maxPoolParams->kSizeY))
             {
-                throw Exception(1,"[maxpool] kSizeY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] kSizeY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "stride")
         {
             if(!ExString::strToInt(value, maxPoolParams->stride))
             {
-                throw Exception(1,"[maxpool] stride can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] stride can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideX")
         {
             if(!ExString::strToInt(value, maxPoolParams->strideX))
             {
-                throw Exception(1,"[maxpool] strideX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] strideX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideY")
         {
             if(!ExString::strToInt(value, maxPoolParams->strideY))
             {
-                throw Exception(1,"[maxpool] strideY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] strideY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "maxPoolDepth")
         {
             if(!ExString::strToInt(value, maxPoolParams->maxPoolDepth))
             {
-                throw Exception(1,"[maxpool] maxPoolDepth can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] maxPoolDepth can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "outChannels")
         {
             if(!ExString::strToInt(value, maxPoolParams->outChannels))
             {
-                throw Exception(1,"[maxpool] outChannels can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] outChannels can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "padding")
         {
             if(!ExString::strToInt(value, maxPoolParams->padding))
             {
-                throw Exception(1,"[maxpool] padding can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] padding can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingX")
         {
             if(!ExString::strToInt(value, maxPoolParams->paddingX))
             {
-                throw Exception(1,"[maxpool] paddingX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] paddingX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingY")
         {
             if(!ExString::strToInt(value, maxPoolParams->paddingY))
             {
-                throw Exception(1,"[maxpool] paddingY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] paddingY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "ceilMode")
         {
             if(!ExString::strToInt(value, maxPoolParams->ceilMode))
             {
-                throw Exception(1,"[maxpool] ceilMode can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] ceilMode can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [maxpool]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [maxpool]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
@@ -812,75 +812,75 @@ void Parser::parseLocalAvgPoolParams(LocalAvgPoolParams *localAvgPoolParams, YAM
         {
             if(!ExString::strToInt(value, localAvgPoolParams->kSize))
             {
-                throw Exception(1,"[localavgpool] kSize can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeX")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->kSizeX))
             {
-                throw Exception(1,"[localavgpool] kSizeX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] kSizeX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeY")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->kSizeY))
             {
-                throw Exception(1,"[localavgpool] kSizeY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] kSizeY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "stride")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->stride))
             {
-                throw Exception(1,"[localavgpool] stride can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] stride can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideX")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->strideX))
             {
-                throw Exception(1,"[localavgpool] strideX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] strideX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideY")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->strideY))
             {
-                throw Exception(1,"[localavgpool] strideY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] strideY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "padding")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->padding))
             {
-                throw Exception(1,"[localavgpool] padding can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] padding can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingX")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->paddingX))
             {
-                throw Exception(1,"[localavgpool] paddingX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] paddingX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingY")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->paddingY))
             {
-                throw Exception(1,"[localavgpool] paddingY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] paddingY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "ceilMode")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->ceilMode))
             {
-                throw Exception(1,"[localavgpool] ceilMode can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] ceilMode can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [localavgpool]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [localavgpool]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
@@ -941,119 +941,119 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
         {
             if(!ExString::strToInt(value, convParams->batchNorm))
             {
-                throw Exception(1,"[conv] batchNorm can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] batchNorm can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "filters")
         {
             if(!ExString::strToInt(value, convParams->filters))
             {
-                throw Exception(1,"[conv] filters can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] filters can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "groups")
         {
             if(!ExString::strToInt(value, convParams->groups))
             {
-                throw Exception(1,"[conv] groups can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] groups can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSize")
         {
             if(!ExString::strToInt(value, convParams->kSize))
             {
-                throw Exception(1,"[conv] kSize can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeX")
         {
             if(!ExString::strToInt(value, convParams->kSizeX))
             {
-                throw Exception(1,"[conv] kSizeX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] kSizeX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeY")
         {
             if(!ExString::strToInt(value, convParams->kSizeY))
             {
-                throw Exception(1,"[conv] kSizeY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] kSizeY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "stride")
         {
             if(!ExString::strToInt(value, convParams->stride))
             {
-                throw Exception(1,"[conv] stride can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] stride can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideX")
         {
             if(!ExString::strToInt(value, convParams->strideX))
             {
-                throw Exception(1,"[conv] strideX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] strideX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideY")
         {
             if(!ExString::strToInt(value, convParams->strideY))
             {
-                throw Exception(1,"[conv] strideY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] strideY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "dilation")
         {
             if(!ExString::strToInt(value, convParams->dilation))
             {
-                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "dilationX")
         {
             if(!ExString::strToInt(value, convParams->dilationX))
             {
-                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "dilationY")
         {
             if(!ExString::strToInt(value, convParams->dilationY))
             {
-                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "antialiasing")
         {
             if(!ExString::strToInt(value, convParams->antialiasing))
             {
-                throw Exception(1,"[conv] antialiasing can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] antialiasing can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "padding")
         {
             if(!ExString::strToInt(value, convParams->padding))
             {
-                throw Exception(1,"[conv] padding can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] padding can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingX")
         {
             if(!ExString::strToInt(value, convParams->paddingX))
             {
-                throw Exception(1,"[conv] paddingX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] paddingX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingY")
         {
             if(!ExString::strToInt(value, convParams->paddingY))
             {
-                throw Exception(1,"[conv] paddingY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] paddingY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "useBias")
         {
             if(!ExString::strToInt(value, convParams->useBias))
             {
-                throw Exception(1,"[conv] useBias can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] useBias can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "activation")
@@ -1074,7 +1074,7 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
         }
         else
         {
-            throw Exception(1, key + " is not supported in [conv]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [conv]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
@@ -1159,84 +1159,84 @@ void Parser::parseDeConvParams(DeConvParams *deconvParams, YAML::const_iterator 
         {
             if(!ExString::strToInt(value, deconvParams->filters))
             {
-                throw Exception(1,"[deconv] filters can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] filters can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSize")
         {
             if(!ExString::strToInt(value, deconvParams->kSize))
             {
-                throw Exception(1,"[deconv] kSize can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeX")
         {
             if(!ExString::strToInt(value, deconvParams->kSizeX))
             {
-                throw Exception(1,"[deconv] kSizeX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] kSizeX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeY")
         {
             if(!ExString::strToInt(value, deconvParams->kSizeY))
             {
-                throw Exception(1,"[deconv] kSizeY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] kSizeY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "stride")
         {
             if(!ExString::strToInt(value, deconvParams->stride))
             {
-                throw Exception(1,"[deconv] stride can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] stride can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideX")
         {
             if(!ExString::strToInt(value, deconvParams->strideX))
             {
-                throw Exception(1,"[deconv] strideX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] strideX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideY")
         {
             if(!ExString::strToInt(value, deconvParams->strideY))
             {
-                throw Exception(1,"[deconv] strideY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] strideY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "padding")
         {
             if(!ExString::strToInt(value, deconvParams->padding))
             {
-                throw Exception(1,"[deconv] padding can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] padding can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingX")
         {
             if(!ExString::strToInt(value, deconvParams->paddingX))
             {
-                throw Exception(1,"[deconv] paddingX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] paddingX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingY")
         {
             if(!ExString::strToInt(value, deconvParams->paddingY))
             {
-                throw Exception(1,"[deconv] paddingY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] paddingY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "useBias")
         {
             if(!ExString::strToInt(value, deconvParams->useBias))
             {
-                throw Exception(1,"[deconv] useBias can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] useBias can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "groups")
         {
             if(!ExString::strToInt(value, deconvParams->groups))
             {
-                throw Exception(1,"[deconv] groups can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[deconv] groups can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "activation")
@@ -1257,7 +1257,7 @@ void Parser::parseDeConvParams(DeConvParams *deconvParams, YAML::const_iterator 
         }
         else
         {
-            throw Exception(1, key + " is not supported in [deconv]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [deconv]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
@@ -1313,14 +1313,14 @@ void Parser::parseConnectParams(ConnectParams *connectParams, YAML::const_iterat
         {
             if(!ExString::strToInt(value, connectParams->output))
             {
-                throw Exception(1,"[connect] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[connect] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "batchNorm")
         {
             if(!ExString::strToInt(value, connectParams->batchNorm))
             {
-                throw Exception(1,"[connect] batchNorm can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[connect] batchNorm can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "activation")
@@ -1341,7 +1341,7 @@ void Parser::parseConnectParams(ConnectParams *connectParams, YAML::const_iterat
         }
         else
         {
-            throw Exception(1, key + " is not supported in [connect]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [connect]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1371,7 +1371,7 @@ void Parser::parseBatchNormParams(BatchNormParams *batchNormParams, YAML::const_
         }
         else
         {
-            throw Exception(1, key + " is not supported in [batchnorm]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [batchnorm]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1393,40 +1393,40 @@ void Parser::parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterat
         {
             if(!ExString::strToInt(value, paddingParams->top))
             {
-                throw Exception(1,"[padding] top can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[padding] top can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "down")
         {
             if(!ExString::strToInt(value, paddingParams->down))
             {
-                throw Exception(1,"[padding] down can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[padding] down can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "left")
         {
             if(!ExString::strToInt(value, paddingParams->left))
             {
-                throw Exception(1,"[padding] left can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[padding] left can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "right")
         {
             if(!ExString::strToInt(value, paddingParams->right))
             {
-                throw Exception(1,"[padding] right can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[padding] right can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingVal")
         {
             if(!ExString::strToFloat(value, paddingParams->paddingVal))
             {
-                throw Exception(1,"[padding] paddingVal can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[padding] paddingVal can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [padding]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [padding]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1482,7 +1482,7 @@ void Parser::parseResBlockParams(ResBlockParams *resBlockParams, YAML::const_ite
             }
             else
             {
-                throw Exception(1, key +  " is not supported by [resblock]", __FILE__, __LINE__);
+                throw Exception(1, key +  " is not supported by [resblock]", __FILE__, __LINE__, __FUNCTION__);
             }
         }
     }
@@ -1540,7 +1540,7 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
                     }
                     else
                     {
-                        throw Exception(1, key2 +  " is not supported by [res2block]", __FILE__, __LINE__);
+                        throw Exception(1, key2 +  " is not supported by [res2block]", __FILE__, __LINE__, __FUNCTION__);
                     }
                 }
             }
@@ -1588,7 +1588,7 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
                     }
                     else
                     {
-                        throw Exception(1, key2 +  " is not supported by [res2block]", __FILE__, __LINE__);
+                        throw Exception(1, key2 +  " is not supported by [res2block]", __FILE__, __LINE__, __FUNCTION__);
                     }
                 }
             }
@@ -1670,7 +1670,7 @@ void Parser::parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::
                     }
                     else
                     {
-                        throw Exception(1, key2 +  " is not supported by [concatblock]", __FILE__, __LINE__);
+                        throw Exception(1, key2 +  " is not supported by [concatblock]", __FILE__, __LINE__, __FUNCTION__);
                     }
                 }
             }
@@ -1754,7 +1754,7 @@ void Parser::parseAddBlockParams(AddBlockParams *addBlockParams, YAML::const_ite
                     }
                     else
                     {
-                        throw Exception(1, key2 +  " is not supported by [addblock]", __FILE__, __LINE__);
+                        throw Exception(1, key2 +  " is not supported by [addblock]", __FILE__, __LINE__, __FUNCTION__);
                     }
                 }
 
@@ -1783,7 +1783,7 @@ void Parser::parseRouteParams(RouteParams *routeParams, YAML::const_iterator &it
 
                 if(!ExString::strToInt(layerIndexes[i], index))
                 {
-                    throw Exception(1,"[route] kSize can't convert to int", __FILE__, __LINE__);
+                    throw Exception(1,"[route] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                 }
 
                 if(index < 0)
@@ -1798,26 +1798,26 @@ void Parser::parseRouteParams(RouteParams *routeParams, YAML::const_iterator &it
         {
             if(!ExString::strToInt(value, routeParams->groups))
             {
-                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "groupsId")
         {
             if(!ExString::strToInt(value, routeParams->groupsId))
             {
-                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "addModel")
         {
             if(!ExString::strToInt(value, routeParams->addModel))
             {
-                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [route]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [route]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1833,19 +1833,19 @@ void Parser::parseSoftMaxParams(SoftMaxParams *softmaxParams, YAML::const_iterat
         {
             if(!ExString::strToInt(value, softmaxParams->groups))
             {
-                throw Exception(1,"[softmax] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[softmax] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "temperature")
         {
-            if(!ExString::strToInt(value, softmaxParams->temperature))
+            if(!ExString::strToFloat(value, softmaxParams->temperature))
             {
-                throw Exception(1,"[softmax] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[softmax] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [softmax]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [softmax]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1861,19 +1861,19 @@ void Parser::parseUpSampleParams(UpSampleParams *upSampleParams, YAML::const_ite
         {
             if(!ExString::strToInt(value, upSampleParams->stride))
             {
-                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "scale")
         {
             if(!ExString::strToFloat(value, upSampleParams->scale))
             {
-                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [unsample]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [unsample]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1893,7 +1893,7 @@ void Parser::parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator 
 
             if(tmpAnchors.size()!=6)
             {
-                throw Exception(1,"[yolov3] anchor num should be 6", __FILE__, __LINE__);
+                throw Exception(1,"[yolov3] anchor num should be 6", __FILE__, __LINE__, __FUNCTION__);
             }
 
             for (size_t i = 0; i < tmpAnchors.size(); ++i)
@@ -1902,7 +1902,7 @@ void Parser::parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator 
                 ExString::trim(tmpAnchors[i]);
                 if(!ExString::strToFloat(tmpAnchors[i],tmp))
                 {
-                    throw Exception(1,"[yolov3] anchors can't convert to float", __FILE__, __LINE__);
+                    throw Exception(1,"[yolov3] anchors can't convert to float", __FILE__, __LINE__, __FUNCTION__);
                 }
 
                 yolov3Params->anchors.push_back(tmp);
@@ -1913,12 +1913,12 @@ void Parser::parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator 
         {
             if(!ExString::strToInt(value, yolov3Params->classNum))
             {
-                throw Exception(1,"[yolov3] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[yolov3] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [unsample]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [unsample]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1941,7 +1941,7 @@ void Parser::parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_
 
                 if(!ExString::strToInt(layerIndexes[i], index))
                 {
-                    throw Exception(1,"[yolov3out] kSize can't convert to int", __FILE__, __LINE__);
+                    throw Exception(1,"[yolov3out] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                 }
 
                 if(index < 0)
@@ -1956,21 +1956,21 @@ void Parser::parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_
         {
             if(!ExString::strToFloat(value, yolov3OutParams->confThresh))
             {
-                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "nmsThresh")
         {
             if(!ExString::strToFloat(value, yolov3OutParams->nmsThresh))
             {
-                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "useSoftNms")
         {
             if(!ExString::strToInt(value, yolov3OutParams->useSoftNms))
             {
-                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "yoloType")
@@ -1979,7 +1979,7 @@ void Parser::parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_
         }
         else
         {
-            throw Exception(1, key + " is not supported in [yolov3out]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [yolov3out]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }

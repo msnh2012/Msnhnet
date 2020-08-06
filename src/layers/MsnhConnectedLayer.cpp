@@ -34,24 +34,35 @@ ConnectedLayer::ConnectedLayer(const int &batch, const int &steps, const int &in
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->_output        =   new float[static_cast<size_t>(totalBatch * outputNum) ]();
-        this->_weights       =   new float[static_cast<size_t>(inputNum * outputNum)]();
-        this->_biases        =   new float[static_cast<size_t>(outputNum)]();
+        this->_output        =   new float[static_cast<size_t>(totalBatch * this->_outputNum) ]();
+        this->_weights       =   new float[static_cast<size_t>(inputNum * this->_outputNum)]();
+        this->_biases        =   new float[static_cast<size_t>(this->_outputNum)]();
+
+#ifdef USE_GPU
+        this->_gpuOutput     =   Cuda::makeCudaArray(this->_output, totalBatch*this->_outputNum);
+        this->_gpuWeights    =   Cuda::makeCudaArray(this->_weights, this->_inputNum*this->_outputNum);
+        this->_gpuBiases     =   Cuda::makeCudaArray(this->_biases, this->_outputNum);
+#endif
     }
 
     if(batchNorm)
     {
         if(!BaseLayer::isPreviewMode)
         {
-            this->_scales        =   new float[static_cast<size_t>(outputNum)]();
+            this->_scales        =   new float[static_cast<size_t>(this->_outputNum)]();
 
             for (int i = 0; i < outputNum; ++i)
             {
                 this->_scales[i] =   1;
             }
 
-            this->_rollMean      =   new float[static_cast<size_t>(outputNum)]();
-            this->_rollVariance  =   new float[static_cast<size_t>(outputNum)]();
+            this->_rollMean      =   new float[static_cast<size_t>(this->_outputNum)]();
+            this->_rollVariance  =   new float[static_cast<size_t>(this->_outputNum)]();
+#ifdef USE_GPU
+            this->_gpuScales        =   Cuda::makeCudaArray(this->_scales, this->_outputNum);
+            this->_gpuRollMean      =   Cuda::makeCudaArray(this->_rollMean, this->_outputNum);
+            this->_gpuRollVariance  =   Cuda::makeCudaArray(this->_rollVariance, this->_outputNum);
+#endif
         }
 
         this->_nScales       =   outputNum;
@@ -77,12 +88,18 @@ ConnectedLayer::~ConnectedLayer()
     releaseArr(_scales);
     releaseArr(_rollMean);
     releaseArr(_rollVariance);
-
+#ifdef USE_GPU
+    Cuda::freeCuda(_gpuWeights);
+    Cuda::freeCuda(_gpuBiases);
+    Cuda::freeCuda(_gpuScales);
+    Cuda::freeCuda(_gpuRollMean);
+    Cuda::freeCuda(_gpuRollVariance);
+#endif
 }
 
 void ConnectedLayer::forward(NetworkState &netState)
 {
-    auto st = std::chrono::system_clock::now();
+    TimeUtil::startRecord();
 
     Blas::cpuFill(this->_outputNum * this->_batch, 0, this->_output, 1);
     int m       =   this->_batch;
@@ -114,6 +131,8 @@ void ConnectedLayer::forward(NetworkState &netState)
             this->_activation==ActivationType::NORM_CHAN_SOFTMAX_MAXVAL||
             this->_activation==ActivationType::NONE)
     {
+
+        this->_forwardTime  =   TimeUtil::getElapsedTime();
         return;
     }
 
@@ -126,18 +145,66 @@ void ConnectedLayer::forward(NetworkState &netState)
         Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
     }
 
-    auto so = std::chrono::system_clock::now();
-
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =  TimeUtil::getElapsedTime();
 
 }
+#ifdef USE_GPU
+void ConnectedLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+
+    BlasGPU::gpuFill(this->_outputNum*this->_batch, 0, this->_gpuOutput, 1);
+
+    int m       =   this->_batch;
+    int k       =   this->_inputNum;
+    int n       =   this->_outputNum;
+
+    float *a    =   netState.input;
+    float *b    =   this->_gpuWeights;
+    float *c    =   this->_gpuOutput;
+
+    GemmGPU::gpuGemm(0,1,m,n,k,1,a,k,b,k,1,c,n);
+
+    if(this->_batchNorm)
+    {
+        BlasGPU::gpuNorm(this->_gpuOutput, this->_gpuRollMean, this->_gpuRollVariance, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+        BlasGPU::gpuScaleBias(this->_gpuOutput, this->_gpuScales, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+        BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+    }
+    else
+    {
+        BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+    }
+
+    if(     this->_activation==ActivationType::NORM_CHAN||
+            this->_activation==ActivationType::NORM_CHAN_SOFTMAX||
+            this->_activation==ActivationType::NORM_CHAN_SOFTMAX_MAXVAL||
+            this->_activation==ActivationType::NONE)
+    {
+        this->recordCudaStop();
+        return;
+    }
+
+    if(_actParams.size() > 0)
+    {
+        ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+    }
+    else
+    {
+        ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+    }
+
+    this->recordCudaStop();
+
+}
+#endif
 
 void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
 {
 
     if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"Connect weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"Connect weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__, __FUNCTION__);
     }
 
     loadWeights(weights.data(), _nWeights);
@@ -153,13 +220,28 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
     {
         loadBias(weights.data() + _nWeights, _nBiases);
     }
+
+#ifdef USE_GPU
+    Cuda::pushCudaArray(this->_gpuWeights, this->_weights, this->_nWeights);
+    if(this->_batchNorm)
+    {
+        Cuda::pushCudaArray(this->_gpuScales       , this->_scales       , this->_nScales      );
+        Cuda::pushCudaArray(this->_gpuBiases       , this->_biases       , this->_nBiases      );
+        Cuda::pushCudaArray(this->_gpuRollMean     , this->_rollMean     , this->_nRollMean    );
+        Cuda::pushCudaArray(this->_gpuRollVariance , this->_rollVariance, this->_nRollVariance);
+    }
+    else
+    {
+        Cuda::pushCudaArray(this->_gpuBiases, this->_biases, this->_nBiases);
+    }
+#endif
 }
 
 void ConnectedLayer::loadScales(float * const &weights, const int &len)
 {
     if(len != this->_nScales)
     {
-        throw Exception(1, "load scales data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load scales data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, weights, 1, this->_scales,1);
 }
@@ -168,7 +250,7 @@ void ConnectedLayer::loadBias(float * const &bias, const int &len)
 {
     if(len != this->_nBiases)
     {
-        throw Exception(1, "load bias data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load bias data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, bias, 1, this->_biases,1);
 }
@@ -177,7 +259,7 @@ void ConnectedLayer::loadWeights(float * const &weights, const int &len)
 {
     if(len != this->_nWeights)
     {
-        throw Exception(1, "load weights data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load weights data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, weights, 1, this->_weights,1);
 }
@@ -186,7 +268,7 @@ void ConnectedLayer::loadRollMean(float * const &rollMean, const int &len)
 {
     if(len != this->_nRollMean)
     {
-        throw Exception(1, "load roll mean data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load roll mean data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, rollMean, 1, this->_rollMean,1);
 }
@@ -195,7 +277,7 @@ void ConnectedLayer::loadRollVariance(float * const &rollVariance, const int &le
 {
     if(len != this->_nRollVariance)
     {
-        throw Exception(1, "load roll variance data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load roll variance data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, rollVariance, 1, this->_rollVariance,1);
 }

@@ -33,6 +33,9 @@ UpSampleLayer::UpSampleLayer(const int &batch, const int &width, const int &heig
     if(!BaseLayer::isPreviewMode)
     {
         this->_output        =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#endif
     }
 
     char msg[100];
@@ -62,8 +65,7 @@ UpSampleLayer::UpSampleLayer(const int &batch, const int &width, const int &heig
 
 void UpSampleLayer::forward(NetworkState &netState)
 {
-
-    auto st = std::chrono::system_clock::now();
+    TimeUtil::startRecord();
 
     if(this->_reverse)
     {
@@ -74,10 +76,29 @@ void UpSampleLayer::forward(NetworkState &netState)
         Blas::cpuUpSample(netState.input, this->_width, this->_height, this->_channel, this->_batch, this->_stride, 1, this->_scale, this->_output);
     }
 
-    auto so = std::chrono::system_clock::now();
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   TimeUtil::getElapsedTime();
 
 }
+
+#ifdef USE_GPU
+void UpSampleLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+
+    BlasGPU::gpuFill(this->_outputNum, 0, this->_gpuOutput, 1);
+
+    if(this->_reverse)
+    {
+        BlasGPU::gpuUpSample(this->_gpuOutput, this->_outWidth, this->_outHeight, this->_channel, this->_batch, this->_stride, 0, this->_scale, netState.input);
+    }
+    else
+    {
+        BlasGPU::gpuUpSample(netState.input, this->_width, this->_height, this->_channel, this->_batch, this->_stride, 1, this->_scale, this->_gpuOutput);
+    }
+
+    this->recordCudaStop();
+}
+#endif
 
 void UpSampleLayer::resize(const int &width, const int &height)
 {
@@ -96,7 +117,7 @@ void UpSampleLayer::resize(const int &width, const int &height)
 
     if(this->_output == nullptr)
     {
-        throw Exception(1,"output can't be null", __FILE__, __LINE__);
+        throw Exception(1,"output can't be null", __FILE__, __LINE__, __FUNCTION__);
     }
 
     this->_output    = static_cast<float *>(realloc(this->_output, static_cast<size_t>(this->_outputNum * this->_batch) *sizeof(float)));

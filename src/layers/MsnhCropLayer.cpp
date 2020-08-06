@@ -39,7 +39,7 @@ CropLayer::CropLayer(const int &batch, const int &height, const int &width, cons
 
 void CropLayer::forward(NetworkState &netState)
 {
-    auto st = std::chrono::system_clock::now();
+    TimeUtil::startRecord();
 
     int flip        =   (this->_flip && rand() % 2);
     int dh          =   rand()%(this->_height - this->_outHeight + 1);
@@ -86,9 +86,7 @@ void CropLayer::forward(NetworkState &netState)
         }
     }
 
-    auto so = std::chrono::system_clock::now();
-
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   TimeUtil::getElapsedTime();
 
 }
 
@@ -105,7 +103,7 @@ void CropLayer::resize(const int &width, const int &height)
 
     if(this->_output == nullptr)
     {
-        throw Exception(1,"output can't be null", __FILE__, __LINE__);
+        throw Exception(1,"output can't be null", __FILE__, __LINE__, __FUNCTION__);
     }
 
     this->_output    = static_cast<float*>(realloc(this->_output, static_cast<size_t>(this->_batch*this->_outputNum)*sizeof(float)));

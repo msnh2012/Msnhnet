@@ -46,6 +46,14 @@ BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &he
             this->_scales[i] = 1;                   
 
         }
+
+#ifdef USE_GPU
+        this->_gpuOutput     = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+        this->_gpuBiases     = Cuda::makeCudaArray(this->_biases, this->_channel);
+        this->_gpuScales     = Cuda::makeCudaArray(this->_scales, this->_channel);
+        this->_gpuRollMean      = Cuda::makeCudaArray(this->_rollMean, this->_channel);
+        this->_gpuRollVariance  = Cuda::makeCudaArray(this->_rollVariance, this->_channel);
+#endif
     }
 
     char msg[100];
@@ -60,8 +68,7 @@ BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &he
 
 void BatchNormLayer::forward(NetworkState &netState)
 {
-    auto st = std::chrono::system_clock::now();
-
+    TimeUtil::startRecord();
     for (int b = 0; b < this->_batch; ++b)
     {
 #ifdef USE_OMP
@@ -165,10 +172,54 @@ void BatchNormLayer::forward(NetworkState &netState)
         }
     }
 
-    auto so = std::chrono::system_clock::now();
-    this->_forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   TimeUtil::getElapsedTime();
 
 }
+
+#ifdef USE_GPU
+void BatchNormLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+
+    BlasGPU::gpuSimpleCopy(this->_outputNum*this->_batch, netState.input, this->_gpuOutput);
+    BlasGPU::gpuNorm(this->_gpuOutput, this->_gpuRollMean, this->_gpuRollVariance, this->_batch, this->_outChannel, this->_outHeight *this->_outWidth);
+    BlasGPU::gpuScaleBias(this->_gpuOutput, this->_gpuScales, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+    BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                            this->_outWidth*this->_outHeight, this->_gpuOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {                           
+
+        if(_actParams.size() > 0)
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+        }
+        else
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+        }
+    }
+
+    this->recordCudaStop();
+}
+#endif
 
 void BatchNormLayer::addBias(float *const &output, float *const &biases, const int &batch, const int &channel, const int &whSize)
 {
@@ -215,7 +266,7 @@ void BatchNormLayer::resize(int width, int height)
 
     if(this->_output == nullptr)
     {
-        throw Exception(1,"output can't be null", __FILE__, __LINE__);
+        throw Exception(1,"output can't be null", __FILE__, __LINE__, __FUNCTION__);
     }
 
     this->_output    = static_cast<float*>(realloc(this->_output, static_cast<size_t>(outputSize)*sizeof(float)));
@@ -227,20 +278,27 @@ void BatchNormLayer::loadAllWeigths(std::vector<float> &weights)
 
     if(weights.size() != this->_numWeights)
     {
-        throw Exception(1,"BatcnNorm weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__);
+        throw Exception(1,"BatcnNorm weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__, __FUNCTION__);
     }
 
     loadScales(weights.data(), _nScales);
     loadBias(weights.data() + _nScales , _nBiases);
     loadRollMean(weights.data() + _nScales + _nBiases, _nRollMean);
     loadRollVariance(weights.data() + _nScales + _nBiases + _nRollVariance, _nRollMean);
+
+#ifdef USE_GPU
+    Cuda::pushCudaArray(this->_gpuScales, this->_scales, this->_nScales);
+    Cuda::pushCudaArray(this->_gpuBiases, this->_biases, this->_nBiases);
+    Cuda::pushCudaArray(this->_gpuRollMean, this->_rollMean, this->_nRollMean);
+    Cuda::pushCudaArray(this->_gpuRollVariance, this->_rollVariance, this->_nRollVariance);
+#endif
 }
 
 void BatchNormLayer::loadBias(float * const &bias, const int &len)
 {
     if(len != this->_nBiases)
     {
-        throw Exception(1, "load bias data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load bias data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, bias, 1, this->_biases,1);
 }
@@ -249,7 +307,7 @@ void BatchNormLayer::loadScales(float * const &weights, const int &len)
 {
     if(len != this->_nScales)
     {
-        throw Exception(1, "load scales data len error",__FILE__,__LINE__);
+        throw Exception(1, "load scales data len error",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, weights, 1, this->_scales,1);
 }
@@ -258,7 +316,7 @@ void BatchNormLayer::loadRollMean(float * const &rollMean, const int &len)
 {
     if(len != this->_channel)
     {
-        throw Exception(1, "load roll mean data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load roll mean data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
 
     Blas::cpuCopy(len, rollMean, 1, this->_rollMean,1);
@@ -268,7 +326,7 @@ void BatchNormLayer::loadRollVariance(float * const &rollVariance, const int &le
 {
     if(len != this->_channel)
     {
-        throw Exception(1, "load roll variance data len error ",__FILE__,__LINE__);
+        throw Exception(1, "load roll variance data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, rollVariance, 1, this->_rollVariance,1);
 }
@@ -280,6 +338,13 @@ BatchNormLayer::~BatchNormLayer()
     releaseArr(_rollMean);
     releaseArr(_rollVariance);
     releaseArr(_activationInput);
+
+#ifdef USE_GPU
+    Cuda::freeCuda(_gpuScales);
+    Cuda::freeCuda(_gpuBiases);
+    Cuda::freeCuda(_gpuRollMean);
+    Cuda::freeCuda(_gpuRollVariance);
+#endif
 }
 
 float *BatchNormLayer::getScales() const
