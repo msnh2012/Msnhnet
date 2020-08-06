@@ -10,7 +10,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 | |windows|linux|mac|
 |:---:|:---:|:---:|:---:|
 |checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
-|gpu|![Windows](https://img.shields.io/badge/code-TODO-orange)|![Linux](https://img.shields.io/badge/code-TODO-orange)|![Mac](https://img.shields.io/badge/code-TODO-orange)|
+|gpu|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Linux](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Mac](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
 
 **CPU checked**
 | |Intel i7|raspberry 3B|raspberry 4B|Jeston NX|
