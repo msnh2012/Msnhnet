@@ -13,11 +13,10 @@ option(OMP_MAX_THREAD       "Omp will use max threads"  ON )
 option(ENABLE_OPEN_BLAS     "Use open blas"             OFF)
 option(BUILD_SHARED_LIBS    "Build shared lib"          ON )
 option(BUILD_EXAMPLES       "Build examples"            ON )
-option(BUILD_USE_GPU        "Use Gpu"                   OFF)
 option(BUILD_VIEWER         "Build MsnhnetViewer"       OFF)
-
-if((BUILD_USE_GPU MATCHES ON) AND (BUILD_VIEWER MATCHES ON))
-    message(FATAL_ERROR "Can not build viewer with GPU mode, If you want build viewer, please uncheck BUILD_USE_GPU")
+option(BUILD_USE_GPU        "Use Gpu"                   OFF)
+if(BUILD_USE_GPU MATCHES ON)
+    option(BUILD_USE_CUDNN      "Use cuDnn"                 OFF)
 endif()
 
 
@@ -120,6 +119,7 @@ if(BUILD_USE_GPU MATCHES ON)
     )
 
     set(CUDA_SRCS
+        src/config/cuda/MsnhnetCuda.cu
         src/core/cuda/MsnhBlasGPU.cu
         src/core/cuda/MsnhGemmGPU.cu
         src/layers/cuda/MsnhActivationsGPU.cu
@@ -133,8 +133,18 @@ if(BUILD_USE_GPU MATCHES ON)
         )
     set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
     find_package(cuBlas REQUIRED)
+    
+    if(BUILD_USE_CUDNN MATCHES ON)
+        add_definitions(-DUSE_CUDNN)#===============
+        find_package(cuDnn REQUIRED)
+        set(USE_CUDNN_MACRO "#define USE_CUDNN\n")
+    else()
+        set(USE_CUDNN_MACRO )
+    endif()
+
 else()
     set(USE_GPU_MACRO )
+    set(USE_CUDNN_MACRO )
     set(CUDA_SRCS )
     set(CXX_CUDA_SRCS )
 endif()
@@ -269,7 +279,11 @@ endif()
 
 #link 3rdparty libs
 if(BUILD_USE_GPU MATCHES ON)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp PRIVATE ${CUBLAS_LIBRARIES})
+    if(BUILD_USE_CUDNN MATCHES ON)
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp PRIVATE ${CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+    else()
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp PRIVATE ${CUBLAS_LIBRARIES})
+    endif()
 else()
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp )
 endif()
@@ -325,7 +339,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     )
 
 # Create cfg macro head file
-file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_NNPACK_MACRO}${USE_GPU_MACRO}#endif")
+file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_NNPACK_MACRO}${USE_GPU_MACRO}${USE_CUDNN_MACRO}#endif")
 
 # Install macro head file
 install(FILES MsnhnetTmp/MsnhnetMacro.h
