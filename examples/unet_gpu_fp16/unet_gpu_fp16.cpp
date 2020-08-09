@@ -19,6 +19,7 @@ int main(int argc, char** argv)
     try
     {
         Msnhnet::NetBuilder  msnhNet;
+        msnhNet.setUseFp16(true);
         msnhNet.buildNetFromMsnhNet(msnhnetPath);
         std::cout<<msnhNet.getLayerDetail();
         msnhNet.loadWeightsFromMsnhBin(msnhbinPath);
@@ -29,7 +30,6 @@ int main(int argc, char** argv)
         std::vector<float> img;
         std::vector<float> result;
         img  = Msnhnet::OpencvUtil::getImgDataF32C3(imgPath,{netX,netY});
-        
         for (size_t i = 0; i < 10; i++)
         {
             Msnhnet::TimeUtil::startRecord();

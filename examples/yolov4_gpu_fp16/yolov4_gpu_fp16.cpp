@@ -20,6 +20,7 @@ int main(int argc, char** argv)
     try
     {
         Msnhnet::NetBuilder  msnhNet;
+        msnhNet.setUseFp16(true); // FP16 must be set before build net
         msnhNet.buildNetFromMsnhNet(msnhnetPath);
         std::cout<<msnhNet.getLayerDetail();
         msnhNet.loadWeightsFromMsnhBin(msnhbinPath);
@@ -29,9 +30,8 @@ int main(int argc, char** argv)
 
         std::vector<float> img;
         std::vector<std::vector<Msnhnet::Yolov3Box>> result;
-        
         img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imgPath, cv::Size(inSize.x,inSize.y));
-        
+
         for (size_t i = 0; i < 10; i++)
         {
            Msnhnet::TimeUtil::startRecord(); 

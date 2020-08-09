@@ -30,10 +30,10 @@ int main(int argc, char** argv)
         std::vector<float> img;
         std::vector<std::vector<Msnhnet::Yolov3Box>> result;
 
+        img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imgPath, cv::Size(inSize.x,inSize.y));
         for (size_t i = 0; i < 10; i++)
         {
             Msnhnet::TimeUtil::startRecord();
-            img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imgPath, cv::Size(inSize.x,inSize.y));
             result = msnhNet.runYolov3GPU(img);
             std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl<<std::flush;
         }

@@ -26,4 +26,11 @@ if(BUILD_USE_GPU MATCHES ON)
     add_subdirectory(yolov4_gpu)
 
     add_subdirectory(unet_gpu)
+
+    if(BUILD_USE_CUDNN MATCHES ON)
+        add_subdirectory(unet_gpu_fp16)
+        add_subdirectory(yolov3_gpu_fp16)
+        add_subdirectory(yolov3tiny_gpu_fp16)
+        add_subdirectory(yolov4_gpu_fp16)
+    endif()
 endif()
