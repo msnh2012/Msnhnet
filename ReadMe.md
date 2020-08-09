@@ -26,6 +26,9 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - CPU supported: Intel X86, AMD(unchecked) and ARM(checked: armv7 armv8 arrch64).
 - Keras to Msnhnet is supported. (Keras 2 and tensorflow 1.x)
 - GPU cuda supported.(Checked GTX1080Ti, Jetson NX)
+- GPU cudnn supported.(Checked GTX1080Ti, Jetson NX)
+- GPU fp16 mode supported.(Checked GTX1080Ti, Jetson NX.)
+- **ps. Please check your card wheather fp16 full speed is supported.**
 - Working on it...(**Weekend Only  (╮（╯＿╰）╭)**)
 
 **Yolo Test** 
@@ -51,7 +54,13 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - Jetson NX
   |net|yolov3|yolov3_tiny|yolov4|
   |:---:|:---:|:---:|:---:|
-  |time|280ms|50ms|210ms|
+  |time|280ms|30ms|210ms|
+  
+**Yolo GPU cuDnn FP16 Test**
+- Jetson NX
+  |net|yolov3|yolov4|
+  |:---:|:---:|:---:|
+  |time|140ms|120ms|
 
 **Tested networks**
 - lenet5
@@ -80,6 +89,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
   * OpenCV4 https://github.com/opencv/opencv
   * yaml-cpp https://github.com/jbeder/yaml-cpp
   * Qt5 (**optional**. for Msnhnet viewer) http://download.qt.io/archive/qt/
+  * cuda10+ cudnn 7.0+.(for GPU)
 
 **How to build**
 - With CMake 3.10+
