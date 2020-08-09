@@ -107,7 +107,6 @@ void RouteLayer::forwardGPU(NetworkState &netState)
         {
             if(_addModel == 1)
             {
-                std::cout<<"================= add model ============================\n";
                 BlasGPU::gpuAxpy(partInSize, 1, mInput + j*inputLayerOutputs + partInSize*this->_groupIndex, 1,
                               this->_gpuOutput + offset + j*this->_outputNum,1);
             }

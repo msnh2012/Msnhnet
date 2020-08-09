@@ -1,9 +1,9 @@
-﻿#include "Msnhnet/layers/cuda/MsnhConvolutionalLayerGPU.h"
+﻿#include "Msnhnet/layers/cuda/MsnhConnectedLayerGPU.h"
 
 namespace Msnhnet
 {
 
-__global__ void convBnKernel(const int n, const int outChannel, const int outWxH, float *const gpuScales,
+__global__ void connBnKernel(const int n, const int outChannel, const int outWxH, float *const gpuScales,
                              float *const gpuRollMean, float *const gpuRollVariance, float *const gpuBiases, float *const gpuOutput)
 {
     int index   = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
@@ -22,13 +22,13 @@ __global__ void convBnKernel(const int n, const int outChannel, const int outWxH
     }
 }
 
-void ConvolutionalLayerGPU::convBn(const int &batch, const int &outChannel, const int &outHeight, const int &outWidth, float* const &gpuScales,
+void ConnectedLayerGPU::connBn(const int &batch, const int &outChannel, const int &outHeight, const int &outWidth, float* const &gpuScales,
                                      float *const &gpuRollMean, float *const &gpuRollVariance, float *const &gpuBiases, float *const &gpuOutput)
 {
     int num     = batch*outChannel*outWidth*outHeight;
     int outWxH  = outHeight*outWidth;
 
-    convBnKernel<<<Cuda::getGrid(num), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(num, outChannel, outWxH, gpuScales,
+    connBnKernel<<<Cuda::getGrid(num), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(num, outChannel, outWxH, gpuScales,
                                                                                       gpuRollMean, gpuRollVariance, gpuBiases, gpuOutput);
 
     CUDA_CHECK(cudaPeekAtLastError());

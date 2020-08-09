@@ -7,6 +7,10 @@ NetworkState::~NetworkState()
 
 #ifdef USE_GPU
     Cuda::freeCuda(gpuWorkspace);
+    if(BaseLayer::useFp16)
+    {
+        Cuda::freeCuda(gpuInputFp16);
+    }
 #endif
 }
 }

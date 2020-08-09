@@ -96,6 +96,12 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 #ifdef USE_GPU
             this->_gpuWeights    = Cuda::makeCudaArray(this->_weights, this->_nWeights);
             this->_gpuBiases     = Cuda::makeCudaArray(this->_biases , this->_num);
+#ifdef USE_CUDNN
+			if (useFp16)
+			{
+				this->_gpuWeightsFp16 = Cuda::makeCudaArray(this->_weights, this->_nWeights);
+			}
+#endif 
 #endif
         }
     }
@@ -115,6 +121,13 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         this->_output            = new float[static_cast<size_t>(_outputNum * this->_batch)]();
 #ifdef USE_GPU
         this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+#ifdef USE_CUDNN
+		if (useFp16)
+		{
+			this->_gpuOutputFp16 = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+		}
+#endif 
+
 #endif
     }
 
@@ -191,7 +204,50 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 
     this->_numWeights            =   static_cast<size_t>(this->_nWeights + this->_nScales + this->_nRollMean + this->_nRollVariance + this->_nBiases);
 
+#ifdef USE_GPU
+#ifdef USE_CUDNN
+
+    CUDNN_CHECK(cudnnCreateTensorDescriptor(&this->_inputDesc16));
+
+    CUDNN_CHECK(cudnnSetTensor4dDescriptor(this->_inputDesc16, CUDNN_TENSOR_NCHW, CUDNN_DATA_HALF, this->_batch, this->_channel, this->_height, this->_width));
+
+    CUDNN_CHECK(cudnnCreateTensorDescriptor(&this->_outputDesc16));
+    CUDNN_CHECK(cudnnSetTensor4dDescriptor(this->_outputDesc16, CUDNN_TENSOR_NCHW, CUDNN_DATA_HALF, this->_batch, this->_outChannel, this->_outHeight, this->_outWidth));
+
+    CUDNN_CHECK(cudnnCreateFilterDescriptor(&this->_weightDesc16));
+    CUDNN_CHECK(cudnnSetFilter4dDescriptor(this->_weightDesc16, CUDNN_DATA_HALF, CUDNN_TENSOR_NCHW, this->_num, this->_channel/this->_groups, this->_kSizeY, this->_kSizeX));
+
+    CUDNN_CHECK(cudnnCreateTensorDescriptor(&this->_inputDesc));
+
+    CUDNN_CHECK(cudnnSetTensor4dDescriptor(this->_inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, this->_batch, this->_channel, this->_height, this->_width));
+
+    CUDNN_CHECK(cudnnCreateTensorDescriptor(&this->_outputDesc));
+    CUDNN_CHECK(cudnnSetTensor4dDescriptor(this->_outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, this->_batch, this->_outChannel, this->_outHeight, this->_outWidth));
+
+    CUDNN_CHECK(cudnnCreateFilterDescriptor(&this->_weightDesc));
+    CUDNN_CHECK(cudnnSetFilter4dDescriptor(this->_weightDesc, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, this->_num, this->_channel/this->_groups, this->_kSizeY, this->_kSizeX));
+
+    CUDNN_CHECK(cudnnCreateConvolutionDescriptor(&this->_convDesc));
+
+    CUDNN_CHECK(cudnnSetConvolutionGroupCount(this->_convDesc,this->_groups));
+    CUDNN_CHECK(cudnnSetConvolutionMathType(this->_convDesc, CUDNN_TENSOR_OP_MATH));
+
+    CUDNN_CHECK(cudnnSetConvolution2dDescriptor(this->_convDesc, this->_paddingY*this->_dilationY, this->_paddingX*this->_dilationX, this->_strideY, this->_strideX,
+                                                this->_dilationY, this->_dilationX, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
+
+    this->_fwAlgo16 = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
+
+    CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(Cuda::getCudnnHandle(), this->_inputDesc, this->_weightDesc, this->_convDesc, this->_outputDesc, CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
+                                                    0,
+
+                                                    &this->_fwAlgo));
+
+#endif
+#endif
+
     this->_workSpaceSize = getConvWorkSpaceSize();
+
+    this->_inputSpaceSize = _inputNum;
 
     this->_bFlops        = (2.0f * this->_nWeights * this->_outHeight * this->_outWidth) / 1000000000.f;
 
@@ -314,6 +370,20 @@ ConvolutionalLayer::~ConvolutionalLayer()
     releaseArr(_alignBitWeights);
 
 #ifdef USE_GPU
+#ifdef USE_CUDNN
+    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc));
+    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc));
+    CUDNN_CHECK(cudnnDestroyFilterDescriptor(_weightDesc));
+    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc16));
+    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc16));
+    CUDNN_CHECK(cudnnDestroyFilterDescriptor(_weightDesc16));
+    CUDNN_CHECK(cudnnDestroyConvolutionDescriptor(_convDesc));
+	if (useFp16)
+	{
+		Cuda::freeCuda(_gpuWeightsFp16);
+		Cuda::freeCuda(_gpuOutputFp16);
+	}
+#endif
     Cuda::freeCuda(_gpuWeights);
     Cuda::freeCuda(_gpuBiases);
     Cuda::freeCuda(_gpuScales);
@@ -337,6 +407,15 @@ int ConvolutionalLayer::convOutWidth()
 
 int ConvolutionalLayer::getWorkSpaceSize32()
 {
+#ifdef USE_GPU
+#ifdef USE_CUDNN
+    size_t space = 0;
+    CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(Cuda::getCudnnHandle(), this->_inputDesc, this->_weightDesc, this->_convDesc,
+                                                        this->_outputDesc, this->_fwAlgo, &space));
+    return space;
+#endif
+#endif
+
     if(this->_xnor)
     {
         int  rePackInSize   = this->_channel * this->_width * this->_height * static_cast<int>(sizeof(float));
@@ -353,6 +432,17 @@ int ConvolutionalLayer::getWorkSpaceSize32()
 
 int ConvolutionalLayer::getWorkSpaceSize16()
 {
+#ifdef USE_GPU
+#ifdef USE_CUDNN
+    if(useFp16)
+    {
+        size_t space = 0;
+        CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(Cuda::getCudnnHandle(), this->_inputDesc16, this->_weightDesc16, this->_convDesc,
+                                                            this->_outputDesc16, this->_fwAlgo16, &space));
+        return space;
+    }
+#endif
+#endif
     return 0;
 }
 
@@ -610,6 +700,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                 }
                 else
                 {
+
                     for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
                     {
                         int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
@@ -675,9 +766,90 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
     this->recordCudaStart();
 
 #ifdef USE_CUDNN
+    if(!onlyUseCuda)
+    {
+        float a = 1.f;
+        float b = 0;
 
+        if(useFp16 && (this->_num%8==0) && (this->_channel%8==0) && this->_groups == 1)
+        {
+            Cuda::fp32ToFp16(netState.input, netState.inputNum, netState.gpuInputFp16);
+            Cuda::fp32ToFp16(this->_gpuWeights, this->_nWeights, this->_gpuWeightsFp16);
+
+            CUDNN_CHECK(cudnnConvolutionForward(Cuda::getCudnnHandle(),
+                                                &a,
+                                                this->_inputDesc16, netState.gpuInputFp16,
+                                                this->_weightDesc16, this->_gpuWeightsFp16,
+                                                this->_convDesc, this->_fwAlgo16,
+                                                netState.gpuWorkspace, this->_workSpaceSize,
+                                                &b,
+                                                this->_outputDesc16, this->_gpuOutputFp16));
+
+            Cuda::fp16ToFp32(this->_gpuOutputFp16, this->_outputNum, this->_gpuOutput);
+        }
+        else
+        {
+            CUDNN_CHECK(cudnnConvolutionForward(Cuda::getCudnnHandle(),
+                                                &a,
+                                                this->_inputDesc, netState.input,
+                                                this->_weightDesc, this->_gpuWeights,
+                                                this->_convDesc, this->_fwAlgo,
+                                                netState.gpuWorkspace, this->_workSpaceSize,
+                                                &b,
+                                                this->_outputDesc, this->_gpuOutput));
+        }
+    }
+    else
+    {
+        int m       =  this->_num / this->_groups; 
+
+        int k       =  this->_kSizeX * this->_kSizeY *this->_channel / this->_groups; 
+
+        int n       =  this->_outHeight * this->_outWidth; 
+
+        BlasGPU::gpuFill(this->_outputNum * this->_batch, 0, this->_gpuOutput, 1);
+
+        for (int i = 0; i < this->_batch; ++i)
+        {
+
+            for (int j = 0; j < this->_groups; ++j)
+            {
+
+                float *a    =  this->_gpuWeights + j*this->_nWeights /this->_groups;
+
+                float *b    =  netState.gpuWorkspace;
+
+                float *c    =  this->_gpuOutput + (i*this->_groups +j)*n*m;
+
+                if(this->_xnor && this->_alignBitWeights && this->_strideX == this->_strideY)
+                {
+                    /* TODO */
+                }
+                else
+                {
+
+                    float *im = netState.input + (i*this->_groups + j)*(this->_channel / this->_groups)*this->_height*this->_width;
+
+                    if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+                    {
+                        b = im;
+                    }
+                    else
+                    {
+
+                        GemmGPU::gpuIm2ColEx(im, this->_channel/this->_groups, this->_height, this->_width, this->_kSizeX, this->_kSizeY,
+                                             this->_paddingX, this->_paddingY, this->_strideX, this->_strideY, this->_dilationX, this->_dilationY,
+                                             b);
+                    }
+
+                    GemmGPU::gpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n);
+                }
+
+            }
+
+        }
+    }
 #else
-
     int m       =  this->_num / this->_groups; 
 
     int k       =  this->_kSizeX * this->_kSizeY *this->_channel / this->_groups; 
@@ -715,8 +887,8 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
                 {
 
                     GemmGPU::gpuIm2ColEx(im, this->_channel/this->_groups, this->_height, this->_width, this->_kSizeX, this->_kSizeY,
-                                      this->_paddingX, this->_paddingY, this->_strideX, this->_strideY, this->_dilationX, this->_dilationY,
-                                      b);
+                                         this->_paddingX, this->_paddingY, this->_strideX, this->_strideY, this->_dilationX, this->_dilationY,
+                                         b);
                 }
 
                 GemmGPU::gpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n);
@@ -725,12 +897,14 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
         }
 
     }
+#endif
 
-    if(this->_batchNorm)
+    if(this->_batchNorm == 1)
     {
-        BlasGPU::gpuNorm(this->_gpuOutput, this->_gpuRollMean, this->_gpuRollVariance, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
-        BlasGPU::gpuScaleBias(this->_gpuOutput, this->_gpuScales, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
-        BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+
+        ConvolutionalLayerGPU::convBn(this->_batch, this->_outChannel, this->_outHeight, this->_outWidth, this->_gpuScales,
+                                      this->_gpuRollMean, this->_gpuRollVariance, this->_gpuBiases, this->_gpuOutput
+                                      );
     }
     else
     {
@@ -739,22 +913,21 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
             BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
         }
     }
-#endif
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
         ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                            this->_outWidth*this->_outHeight, this->_gpuOutput);
+                                               this->_outWidth*this->_outHeight, this->_gpuOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
         ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
         ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {

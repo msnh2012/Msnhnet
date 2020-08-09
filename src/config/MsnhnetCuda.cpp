@@ -10,6 +10,11 @@ bool Cuda::streamInited = false;
 cublasHandle_t Cuda::handle;
 bool Cuda::handleInited = false;
 
+#ifdef USE_CUDNN
+cudnnHandle_t Cuda::cudnnHandle;
+bool Cuda::cudnnHandleInited = false;
+#endif
+
 void Cuda::cudaCheck(cudaError_t status, const char *fun, const char *file, const int &line)
 {
     cudaError_t lastStatus = cudaGetLastError();
@@ -45,7 +50,7 @@ void Cuda::cublasCheck(cublasStatus_t status,  const char *fun, const char *file
 {
     if(status != CUBLAS_STATUS_SUCCESS)
     {
-        std::cerr<<"Error code: "<<status<<" \nFile:  "<<file<<" : "<<line<<"  fun:  "<<fun<< std::endl;
+        std::cerr<<"Error cublas code: "<<status<<" \nFile:  "<<file<<" : "<<line<<"  fun:  "<<fun<< std::endl;
         exit(EXIT_FAILURE);
     }
 }
@@ -187,6 +192,21 @@ float *Cuda::makeCudaArray(float * const &x, const size_t &n, const cudaMemcpyKi
     return gpuX;
 }
 
+__half *Cuda::makeFp16ArrayFromFp32(float *const &x, const size_t &n)
+{
+    __half* gpuX;
+    CUDA_CHECK(cudaMalloc((void **)&gpuX, n*sizeof(__half)));
+    if(x != nullptr)
+    {
+        fp32ToFp16(x, n, (float*)gpuX);
+    }
+    if(gpuX == nullptr)
+    {
+        throw Exception(1, "Cuda malloc failed. \n",__FILE__,__LINE__, __FUNCTION__);
+    }
+    return gpuX;
+}
+
 void Cuda::pushCudaArray(float * const &gpuX, float * const &x, const size_t &n)
 {
     CUDA_CHECK(cudaMemcpyAsync(gpuX, x, n*sizeof(float), cudaMemcpyHostToDevice, getCudaStream()));
@@ -207,5 +227,28 @@ void Cuda::freeCuda(float * const &gpuX)
 
 }
 
+#ifdef USE_CUDNN
+
+void Cuda::cudnnCheck(cudnnStatus_t status, const char *fun, const char *file, const int &line)
+{
+    if(status != CUDNN_STATUS_SUCCESS)
+    {
+        std::string errStr =  cudnnGetErrorString(status);
+        std::cerr<<"Error cudnn code: "<<status<<".\n Err msg : "<<errStr<<" \nFile:  "<<file<<" : "<<line<<"  fun:  "<<fun<< std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+cudnnHandle_t Cuda::getCudnnHandle()
+{
+    if(!cudnnHandleInited)
+    {
+        CUDNN_CHECK(cudnnCreate(&cudnnHandle));
+        CUDNN_CHECK(cudnnSetStream(cudnnHandle, getCudaStream()));
+        cudnnHandleInited = true;
+    }
+    return cudnnHandle;
+}
+#endif
 }
 

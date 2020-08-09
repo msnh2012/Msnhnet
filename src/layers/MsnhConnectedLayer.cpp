@@ -72,6 +72,8 @@ ConnectedLayer::ConnectedLayer(const int &batch, const int &steps, const int &in
 
     this->_numWeights            =   static_cast<size_t>(this->_nWeights + this->_nScales + this->_nRollMean + this->_nRollVariance + this->_nBiases);
 
+    this->_inputSpaceSize        =   _inputNum;
+
     char msg[100];
 #ifdef WIN32
     sprintf_s(msg, "connected                            %4d  ->  %4d\n", inputNum, outputNum);
@@ -167,9 +169,10 @@ void ConnectedLayer::forwardGPU(NetworkState &netState)
 
     if(this->_batchNorm)
     {
-        BlasGPU::gpuNorm(this->_gpuOutput, this->_gpuRollMean, this->_gpuRollVariance, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
-        BlasGPU::gpuScaleBias(this->_gpuOutput, this->_gpuScales, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
-        BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+
+        ConvolutionalLayerGPU::convBn(this->_batch, this->_outChannel, this->_outHeight, this->_outWidth, this->_gpuScales,
+                                      this->_gpuRollMean, this->_gpuRollVariance, this->_gpuBiases, this->_gpuOutput
+                                      );
     }
     else
     {

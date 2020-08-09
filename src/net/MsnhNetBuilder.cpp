@@ -31,8 +31,13 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
     parser->readCfg(path);
     clearLayers();
 
+    if(BaseLayer::useFp16)
+    {
+        std::cout<<"CUDNN USE FP16"<<std::endl<<std::endl;
+    }
     NetBuildParams      params;
-    size_t      maxWorkSpace = 0;
+    size_t      maxWorkSpace    = 0;
+    size_t      maxInputSpace   = 0;
     for (size_t i = 0; i < parser->params.size(); ++i)
     {
         BaseLayer   *layer;
@@ -246,13 +251,24 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
         {
             maxWorkSpace = layer->getWorkSpaceSize();
         }
+
+        if(layer->getInputSpaceSize() > maxInputSpace)
+        {
+            maxInputSpace = layer->getInputSpaceSize();
+        }
+
         net->layers.push_back(layer);
     }
 
     netState->workspace     =   new float[maxWorkSpace]();
 #ifdef USE_GPU
     netState->gpuWorkspace  =   Cuda::makeCudaArray(netState->workspace,maxWorkSpace);
+    if(BaseLayer::useFp16)
+    {
+       netState->gpuInputFp16 = (float*)Cuda::makeFp16ArrayFromFp32(nullptr, maxInputSpace);
+    }
 #endif
+
 }
 
 void NetBuilder::loadWeightsFromMsnhBin(const string &path)
@@ -299,6 +315,16 @@ void NetBuilder::loadWeightsFromMsnhBin(const string &path)
 void NetBuilder::setPreviewMode(const bool &mode)
 {
     BaseLayer::setPreviewMode(mode);
+}
+
+void NetBuilder::setForceUseCuda(const bool &onlyUseCuda)
+{
+    BaseLayer::setForceUseCuda(onlyUseCuda);
+}
+
+void NetBuilder::setUseFp16(const bool &useFp16)
+{
+    BaseLayer::setUseFp16(useFp16);
 }
 
 std::vector<float> NetBuilder::runClassify(std::vector<float> img)

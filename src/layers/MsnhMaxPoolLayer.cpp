@@ -113,6 +113,24 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
 #endif
     }
 
+#ifdef USE_GPU
+#ifdef USE_CUDNN
+
+    CUDNN_CHECK(cudnnCreateTensorDescriptor(&this->_inputDesc));
+
+    CUDNN_CHECK(cudnnSetTensor4dDescriptor(this->_inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, this->_batch, this->_channel, this->_height, this->_width));
+
+    CUDNN_CHECK(cudnnCreateTensorDescriptor(&this->_outputDesc));
+    CUDNN_CHECK(cudnnSetTensor4dDescriptor(this->_outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, this->_batch, this->_outChannel, this->_outHeight, this->_outWidth));
+
+    CUDNN_CHECK(cudnnCreatePoolingDescriptor(&this->_maxPoolDesc));
+
+    CUDNN_CHECK(cudnnSetPooling2dDescriptor(this->_maxPoolDesc, CUDNN_POOLING_MAX, CUDNN_NOT_PROPAGATE_NAN,  
+
+                                            this->_kSizeY, this->_kSizeX, this->_paddingY, this->_paddingX, this->_strideY,this->_strideX));
+#endif
+#endif
+
     this->_bFlops            = (this->_kSizeX*this->_kSizeY* this->_channel*this->_outHeight*this->_outWidth)/ 1000000000.f;
 
     char msg[100];
@@ -283,6 +301,30 @@ void MaxPoolLayer::forwardGPU(NetworkState &netState)
     }
     else
     {
+#ifdef USE_CUDNN
+        if(!onlyUseCuda)
+        {
+            float a = 1.f;
+            float b = 0;
+            CUDNN_CHECK(cudnnPoolingForward(Cuda::getCudnnHandle(), this->_maxPoolDesc, &a,
+                                            this->_inputDesc, netState.input,
+                                            &b,
+                                            this->_outputDesc, this->_gpuOutput));
+        }
+        else
+        {
+            MaxPoolLayerGPU::forwardNormalGPU(this->_width,this->_height,this->_channel,
+                                              this->_outWidth, this->_outHeight, this->_outChannel,
+                                              this->_strideX, this->_strideY,
+                                              this->_kSizeX, this->_kSizeY,
+                                              this->_paddingX, this->_paddingY,
+                                              this->_batch,
+                                              netState.input,
+                                              this->_gpuOutput
+                                              );
+        }
+
+#else
         MaxPoolLayerGPU::forwardNormalGPU(this->_width,this->_height,this->_channel,
                                           this->_outWidth, this->_outHeight, this->_outChannel,
                                           this->_strideX, this->_strideY,
@@ -292,6 +334,7 @@ void MaxPoolLayer::forwardGPU(NetworkState &netState)
                                           netState.input,
                                           this->_gpuOutput
                                           );
+#endif
     }
 
     this->recordCudaStop();
@@ -421,7 +464,13 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
 
 MaxPoolLayer::~MaxPoolLayer()
 {
-
+#ifdef USE_GPU
+#ifdef USE_CUDNN
+    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc));
+    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc));
+    CUDNN_CHECK(cudnnDestroyPoolingDescriptor(_maxPoolDesc));
+#endif
+#endif
 }
 
 int MaxPoolLayer::getKSizeX() const

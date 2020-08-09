@@ -6,6 +6,9 @@ namespace Msnhnet
 bool BaseLayer::supportAvx      = false;
 bool BaseLayer::supportFma      = false;
 bool BaseLayer::isPreviewMode   = false;
+bool BaseLayer::onlyUseCuda     = false;
+
+bool BaseLayer::useFp16         = false;
 
 #ifdef USE_GPU
 cudaEvent_t  BaseLayer::_start;
@@ -44,6 +47,15 @@ void BaseLayer::initSimd()
 
 #ifdef USE_GPU
     std::cout<<Cuda::getDeviceInfo()<<std::endl;
+#ifdef USE_CUDNN
+    std::cout<<"Use CUDNN"<<std::endl;
+    std::cout<<"CUDNN version: "<<cudnnGetVersion()/1000<<"."<< (cudnnGetVersion() - cudnnGetVersion()/1000*1000)/100 <<std::endl;
+
+    if(cudnnGetVersion() < 7000)
+    {
+        throw Exception(1,"cudnn version must > 7.0",__FILE__,__LINE__,__FUNCTION__);
+    }
+#endif
 #endif
 }
 
@@ -157,6 +169,11 @@ ActivationType BaseLayer::getActivation() const
     return _activation;
 }
 
+size_t BaseLayer::getInputSpaceSize() const
+{
+    return _inputSpaceSize;
+}
+
 BaseLayer::BaseLayer()
 {
 
@@ -174,6 +191,16 @@ BaseLayer::~BaseLayer()
 void BaseLayer::setPreviewMode(const bool &previewMode)
 {
     BaseLayer::isPreviewMode = previewMode;
+}
+
+void BaseLayer::setForceUseCuda(const bool &forceUseCuda)
+{
+    BaseLayer::onlyUseCuda = forceUseCuda;
+}
+
+void BaseLayer::setUseFp16(const bool &useFp16)
+{
+    BaseLayer::useFp16 = useFp16;
 }
 
 void BaseLayer::forward(NetworkState &netState)
