@@ -53,6 +53,15 @@ protected:
     int         _ceilMode            =   0;
 
     int         _antialiasing        =   0;
+#ifdef USE_GPU
+#ifdef USE_CUDNN
+
+    cudnnPoolingDescriptor_t        _localAvgPoolDesc;
+
+    cudnnTensorDescriptor_t         _inputDesc;
+    cudnnTensorDescriptor_t         _outputDesc;
+#endif
+#endif
 };
 }
 

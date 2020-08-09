@@ -7,6 +7,10 @@
 #include "Msnhnet/layers/MsnhBatchNormLayer.h"
 #include "Msnhnet/utils/MsnhExport.h"
 
+#ifdef USE_GPU
+#include "Msnhnet/layers/cuda/MsnhConvolutionalLayerGPU.h"
+#endif
+
 #ifdef USE_NNPACK
 #include <nnpack.h>
 #endif
@@ -143,6 +147,29 @@ protected:
     char        *_alignBitWeights    =   nullptr;
 
 #ifdef USE_GPU
+#ifdef USE_CUDNN
+
+    cudnnConvolutionFwdAlgo_t       _fwAlgo;
+
+    cudnnConvolutionDescriptor_t    _convDesc;
+
+    cudnnTensorDescriptor_t         _inputDesc;
+    cudnnTensorDescriptor_t         _outputDesc;
+
+    cudnnFilterDescriptor_t         _weightDesc;
+
+    cudnnConvolutionFwdAlgo_t       _fwAlgo16;
+
+    cudnnTensorDescriptor_t         _inputDesc16;
+    cudnnTensorDescriptor_t         _outputDesc16;
+
+    cudnnFilterDescriptor_t         _weightDesc16;
+
+    float        *_gpuWeightsFp16    =   nullptr;
+    float        *_gpuOutputFp16     =   nullptr;
+
+#endif
+
     float       *_gpuWeights         =   nullptr;
     float       *_gpuBiases          =   nullptr;
 
@@ -184,6 +211,7 @@ protected:
     int         _dilationX           =   0;
     int         _dilationY           =   0;
     int         _batchNorm           =   0;
+
 };
 }
 

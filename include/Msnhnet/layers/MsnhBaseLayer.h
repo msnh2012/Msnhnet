@@ -22,6 +22,8 @@ public:
     static bool     supportAvx;
     static bool     supportFma;
     static bool     isPreviewMode;
+    static bool     onlyUseCuda;
+    static bool     useFp16;
 
 #ifdef USE_GPU
     static cudaEvent_t     _start;
@@ -29,6 +31,10 @@ public:
 #endif
 
     static void setPreviewMode(const bool &isPreviewMode);
+
+    static void setForceUseCuda(const bool &forceUseCuda);
+
+    static void setUseFp16(const bool &useFp16);
 
     virtual void forward(NetworkState &netState);
 
@@ -94,7 +100,9 @@ public:
 
     ActivationType getActivation() const;
 
-protected:    
+    size_t getInputSpaceSize() const;
+
+protected:
     LayerType          _type;                       
 
     ActivationType     _activation;                 
@@ -104,6 +112,7 @@ protected:
     int             _num             =  0;       
 
     size_t          _workSpaceSize   =  0;
+    size_t          _inputSpaceSize  =  0;
 
     int             _height          =  0;
     int             _width           =  0;

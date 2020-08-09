@@ -11,6 +11,9 @@ class MsnhNet_API SoftMaxLayer : public BaseLayer
 {
 public:
     SoftMaxLayer(const int &_batch, const int &_inputNum, const int &_groups, const float &_temperature);
+
+    ~SoftMaxLayer();
+
     virtual void forward(NetworkState &netState);
 
 #ifdef USE_GPU
@@ -24,6 +27,14 @@ public:
 protected:
     int         _groups              =   0;
     float       _temperature         =   0;
+
+#ifdef USE_GPU
+#ifdef USE_CUDNN
+
+    cudnnTensorDescriptor_t         _inputDesc;
+    cudnnTensorDescriptor_t         _outputDesc;
+#endif
+#endif
 };
 }
 

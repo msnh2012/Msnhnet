@@ -46,6 +46,7 @@ public:
 #ifdef USE_GPU
     float           *gpuWorkspace   =  nullptr; 
 
+    float           *gpuInputFp16   =  nullptr;
 #endif
     inline void releaseArr(float * value)
     {

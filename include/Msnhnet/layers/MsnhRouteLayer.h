@@ -39,6 +39,7 @@ protected:
     int         _groups              =   0;
     int         _groupIndex          =   0;
     int         _addModel            =   0;
+
 };
 }
 

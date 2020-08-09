@@ -65,6 +65,15 @@ protected:
     int         _outChannelsMp       =   0;
     int         _ceilMode            =   0;
 
+#ifdef USE_GPU
+#ifdef USE_CUDNN
+
+    cudnnPoolingDescriptor_t        _maxPoolDesc;
+
+    cudnnTensorDescriptor_t         _inputDesc;
+    cudnnTensorDescriptor_t         _outputDesc;
+#endif
+#endif
 };
 }
 

@@ -1,7 +1,7 @@
 ﻿#ifndef MSNHACTIVATIONSAVX_H
 #define MSNHACTIVATIONSAVX_H
 #ifdef USE_X86
-#include "Msnhnet/core/MsnhnetAvxMathEx.h"
+#include "Msnhnet/core/MsnhAvxMathEx.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 
 namespace Msnhnet

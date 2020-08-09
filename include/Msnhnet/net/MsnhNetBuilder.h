@@ -49,6 +49,8 @@ public:
     void buildNetFromMsnhNet(const std::string &path);
     void loadWeightsFromMsnhBin(const std::string &path);
     void setPreviewMode(const bool &mode);
+    void setForceUseCuda(const bool &onlyUseCuda);
+    void setUseFp16(const bool &useFp16);
     std::vector<float> runClassify(std::vector<float> img);
     std::vector<std::vector<Yolov3Box>> runYolov3(std::vector<float> img);
 #ifdef USE_GPU
