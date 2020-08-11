@@ -83,10 +83,10 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - fcns
 - unet</br>
 ==============================================================
-- mobilenetv2_yolov3_lite (cudnn not work with GTX10** Pascal Card, please use GPU model only)
-- mobilenetv2_yolov3_nano (cudnn not work with GTX10** Pascal Card, please use GPU model only)
-- yoloface100k (cudnn not work with GTX10** Pascal Card, please use GPU model only)
-- yoloface500k (cudnn not work with GTX10** Pascal Card, please use GPU model only)
+- mobilenetv2_yolov3_lite (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
+- mobilenetv2_yolov3_nano (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
+- yoloface100k (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
+- yoloface500k (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
 - Thanks: https://github.com/dog-qiuqiu/MobileNetv2-YOLOV3
 ==============================================================
 - **pretrained models** 链接：https://pan.baidu.com/s/1mBaJvGx7tp2ZsLKzT5ifOg 
