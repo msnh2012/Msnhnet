@@ -82,8 +82,8 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - yolov4
 - fcns
 - unet
-- **pretrained models** 链接：https://pan.baidu.com/s/1FjpYJ2eNH6DRU7U1MfaRbA 
-提取码：nzgm
+- **pretrained models** 链接：https://pan.baidu.com/s/1mBaJvGx7tp2ZsLKzT5ifOg 
+提取码：x53z 
 
 **Requirements**
   * OpenCV4 https://github.com/opencv/opencv
