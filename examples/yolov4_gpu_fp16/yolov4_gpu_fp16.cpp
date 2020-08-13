@@ -1,8 +1,5 @@
 ﻿#include <iostream>
-#include "Msnhnet/net/MsnhNetBuilder.h"
-#include "Msnhnet/io/MsnhIO.h"
-#include "Msnhnet/config/MsnhnetCfg.h"
-#include "Msnhnet/utils/MsnhOpencvUtil.h"
+#include "Msnhnet/Msnhnet.h"
 
 int main(int argc, char** argv)
 {
@@ -34,9 +31,9 @@ int main(int argc, char** argv)
 
         for (size_t i = 0; i < 10; i++)
         {
-           Msnhnet::TimeUtil::startRecord(); 
+		   auto st = Msnhnet::TimeUtil::startRecord();
            result = msnhNet.runYolov3GPU(img);
-           std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl<<std::flush;
+           std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl<<std::flush;
         }
     
         cv::Mat org = cv::imread(imgPath);
@@ -46,7 +43,7 @@ int main(int argc, char** argv)
     }
     catch (Msnhnet::Exception ex)
     {
-        std::cout<<ex.what()<<std::endl;
+        std::cout<<ex.what()<<" "<<ex.getErrFile() << " " <<ex.getErrLine()<< " "<<ex.getErrFun()<<std::endl;
     }
     getchar();
 

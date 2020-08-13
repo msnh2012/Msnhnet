@@ -180,7 +180,7 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
 void MaxPoolLayer::forward(NetworkState &netState)
 {
 
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     if(this->_maxPoolDepth)
     {
@@ -218,7 +218,7 @@ void MaxPoolLayer::forward(NetworkState &netState)
 
             }
         }
-        this->_forwardTime = TimeUtil::getElapsedTime();
+        this->_forwardTime = TimeUtil::getElapsedTime(st);
         return;
     }
 #ifdef USE_X86
@@ -286,7 +286,7 @@ void MaxPoolLayer::forward(NetworkState &netState)
         }
     }
 
-    this->_forwardTime = TimeUtil::getElapsedTime();
+    this->_forwardTime = TimeUtil::getElapsedTime(st);
 
 }
 

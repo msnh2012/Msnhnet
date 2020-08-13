@@ -1,9 +1,5 @@
 ﻿#include <iostream>
-#include "Msnhnet/net/MsnhNetBuilder.h"
-#include "Msnhnet/utils/MsnhExVector.h"
-#include "Msnhnet/utils/MsnhOpencvUtil.h"
-#include "Msnhnet/io/MsnhIO.h"
-#include "Msnhnet/config/MsnhnetCfg.h"
+#include "Msnhnet/Msnhnet.h"
 
 int main(int argc, char** argv) 
 {

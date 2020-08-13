@@ -56,7 +56,7 @@ void GlobalAvgPoolLayer::forwardGPU(NetworkState &netState)
 void GlobalAvgPoolLayer::forward(NetworkState &netState)
 {
 
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     for (int b = 0; b < this->_batch; ++b)
     {
@@ -76,7 +76,7 @@ void GlobalAvgPoolLayer::forward(NetworkState &netState)
         }
     }
 
-    this->_forwardTime =  TimeUtil::getElapsedTime();
+    this->_forwardTime =  TimeUtil::getElapsedTime(st);
 }
 
 }

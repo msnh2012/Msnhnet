@@ -65,7 +65,7 @@ UpSampleLayer::UpSampleLayer(const int &batch, const int &width, const int &heig
 
 void UpSampleLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     if(this->_reverse)
     {
@@ -76,7 +76,7 @@ void UpSampleLayer::forward(NetworkState &netState)
         Blas::cpuUpSample(netState.input, this->_width, this->_height, this->_channel, this->_batch, this->_stride, 1, this->_scale, this->_output);
     }
 
-    this->_forwardTime =   TimeUtil::getElapsedTime();
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 
 }
 

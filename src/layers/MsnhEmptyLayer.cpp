@@ -40,9 +40,9 @@ EmptyLayer::~EmptyLayer()
 
 void EmptyLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
     Blas::cpuCopy(netState.inputNum, netState.input, 1, this->_output, 1);
-    this->_forwardTime = TimeUtil::getElapsedTime();
+    this->_forwardTime = TimeUtil::getElapsedTime(st);
 }
 
 #ifdef USE_GPU

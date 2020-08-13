@@ -59,15 +59,19 @@ public:
 #endif
 
     Point2I getInputSize();
-
+    int getInputChannel();
     void  clearLayers();
     float getInferenceTime();
     std::string getLayerDetail();
     std::string getTimeDetail();
+    float getGpuInferenceTime() const;
 
-    Parser          *parser;
-    Network         *net;
-    NetworkState    *netState;
+private:
+
+    Parser          *_parser;
+    Network         *_net;
+    NetworkState    *_netState;
+    float           _gpuInferenceTime = 0.f;
 };
 }
 #endif 

@@ -101,7 +101,7 @@ ConnectedLayer::~ConnectedLayer()
 
 void ConnectedLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     Blas::cpuFill(this->_outputNum * this->_batch, 0, this->_output, 1);
     int m       =   this->_batch;
@@ -134,7 +134,7 @@ void ConnectedLayer::forward(NetworkState &netState)
             this->_activation==ActivationType::NONE)
     {
 
-        this->_forwardTime  =   TimeUtil::getElapsedTime();
+        this->_forwardTime  =   TimeUtil::getElapsedTime(st);
         return;
     }
 
@@ -147,7 +147,7 @@ void ConnectedLayer::forward(NetworkState &netState)
         Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
     }
 
-    this->_forwardTime =  TimeUtil::getElapsedTime();
+    this->_forwardTime =  TimeUtil::getElapsedTime(st);
 
 }
 #ifdef USE_GPU

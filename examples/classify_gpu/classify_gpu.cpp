@@ -1,9 +1,5 @@
 ﻿#include <iostream>
-#include "Msnhnet/net/MsnhNetBuilder.h"
-#include "Msnhnet/utils/MsnhExVector.h"
-#include "Msnhnet/utils/MsnhOpencvUtil.h"
-#include "Msnhnet/io/MsnhIO.h"
-#include "Msnhnet/config/MsnhnetCfg.h"
+#include "Msnhnet/Msnhnet.h"
 
 int main(int argc, char** argv) 
 {
@@ -24,7 +20,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/alexnet/alexnet.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+        auto st = Msnhnet::TimeUtil::startRecord();
 
         std::vector<float> result =  msnhNet.runClassifyGPU(img);
 
@@ -40,7 +36,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[10.57645]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  331   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl;
+        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check darknet53 ==============================
@@ -49,7 +45,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/darknet53/darknet53.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+		st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
         if( (abs(Msnhnet::ExVector::max<float>(result)-13.60f) < 0.01) && bestIndex==285)
@@ -62,7 +58,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[13.60138]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl;
+        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl;
         // ==============================================================================
 
 
@@ -72,7 +68,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/googLenet/googLenet.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+		st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
         if( (abs(Msnhnet::ExVector::max<float>(result)-6.24f) < 0.05) && bestIndex==284)
@@ -85,7 +81,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[6.26569 ]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  284   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl;
+        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check mobilenetv2 =============================
@@ -94,7 +90,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/mobilenetv2/mobilenetv2.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+		st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
         if( (abs(Msnhnet::ExVector::max<float>(result)-12.63f) < 1.f) && bestIndex==285) //12.63
@@ -107,7 +103,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[12.63113]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime()<<"ms"<<std::endl;
+        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st)<<"ms"<<std::endl;
         // ==============================================================================
 
 
@@ -117,7 +113,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/resnet18/resnet18.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+		st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
         if( (abs(Msnhnet::ExVector::max<float>(result)-11.10f) < 0.01f) && bestIndex==285)
@@ -130,7 +126,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[11.10028]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl;
+        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check resnet34 =============================`
@@ -139,7 +135,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/resnet34/resnet34.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+		st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
         if( (abs(Msnhnet::ExVector::max<float>(result)-12.080f) < 0.01f) && bestIndex==285)
@@ -152,7 +148,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[12.08040]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl;
+        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check resnet50 =============================
@@ -161,7 +157,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/resnet50/resnet50.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+		st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
         if( (abs(Msnhnet::ExVector::max<float>(result)-13.036f) < 0.001f) && bestIndex==285)
@@ -174,7 +170,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[13.03649]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime()<<"ms"<<std::endl;
+        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st)<<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check resnet101 =============================
@@ -183,7 +179,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/resnet101/resnet101.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+		st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
         if( (abs(Msnhnet::ExVector::max<float>(result)-9.273f) < 1.f) && bestIndex==285)
@@ -196,7 +192,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[9.273776]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " <<  Msnhnet::TimeUtil::getElapsedTime()<<"ms"<<std::endl;
+        std::cout<<"time  : " <<  Msnhnet::TimeUtil::getElapsedTime(st)<<"ms"<<std::endl;
         // ==============================================================================
 
 
@@ -206,7 +202,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/resnet152/resnet152.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+		st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
         if( (abs(Msnhnet::ExVector::max<float>(result)-11.60f) < 1.f) && bestIndex==285)
@@ -219,7 +215,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[11.60315]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " <<  Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl;
+        std::cout<<"time  : " <<  Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check vgg16 ==================================
@@ -228,7 +224,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/vgg16/vgg16.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+		st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
         if( (abs(Msnhnet::ExVector::max<float>(result)-12.1254f) < 0.001f) && bestIndex==285)
@@ -241,7 +237,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[12.12543]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " <<  Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl;
+        std::cout<<"time  : " <<  Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check vgg16_bn ================================
@@ -250,7 +246,7 @@ int main(int argc, char** argv)
         msnhNet.buildNetFromMsnhNet(config_file_);
         msnhNet.loadWeightsFromMsnhBin(root + "/vgg16_bn/vgg16_bn.msnhbin");
 
-        Msnhnet::TimeUtil::startRecord();
+		st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
         if( (abs(Msnhnet::ExVector::max<float>(result)-9.224f) < 0.01f) && bestIndex==285)
@@ -263,7 +259,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[9.22434 ]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl;
+        std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl;
         // ==============================================================================
     }
     catch(Msnhnet::Exception &ex)

@@ -6,14 +6,14 @@
 #include "Msnhnet/net/MsnhNetwork.h"
 #include "Msnhnet/layers/MsnhBaseLayer.h"
 #include "Msnhnet/utils/MsnhExport.h"
-
+#include "Msnhnet/layers/MsnhActivations.h"
 namespace Msnhnet
 {
 class MsnhNet_API RouteLayer : public BaseLayer
 {
 public:
     RouteLayer(const int &_batch, std::vector<int> &_inputLayerIndexes, std::vector<int> &_inputLayerOutputs,
-               const int &_groups, const int &groupId, const int &_addModel);
+               const int &_groups, const int &groupId, const int &_addModel, const ActivationType &activation, std::vector<float> actParams);
 
     virtual void forward(NetworkState &netState);
 

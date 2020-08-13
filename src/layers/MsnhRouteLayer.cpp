@@ -2,10 +2,11 @@
 
 namespace Msnhnet
 {
-RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
-                       std::vector<int> &inputLayerOutputs, const int &groups, const int &groupIndex, const int &addModel)
+RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes, std::vector<int> &inputLayerOutputs, const int &groups,
+                       const int &groupIndex, const int &addModel, const ActivationType &activation, std::vector<float> actParams)
 {
     this->_type              =   LayerType::ROUTE;
+    this->_activation        =   activation;
     this->_layerName         =   "Route           ";
 
     this->_batch             =   batch;
@@ -60,8 +61,14 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes,
 void RouteLayer::forward(NetworkState &netState)        
 
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
     int offset          =   0;
+
+    if(this->_addModel == 1)
+    {
+        Blas::cpuFill(this->_outputNum, 0, this->_output,1);
+    }
+
     for (size_t i = 0; i < _inputLayerIndexes.size(); ++i)
     {
         int index       =   this->_inputLayerIndexes[i];
@@ -86,8 +93,38 @@ void RouteLayer::forward(NetworkState &netState)
             offset          = offset + partInSize;
         }
     }
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        Activations::activateArrayNormCh(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, this->_output);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_output,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, this->_output,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
 
-    this->_forwardTime =   TimeUtil::getElapsedTime();
+    }
+    else
+    {
+        if(_actParams.size() > 0)
+        {
+            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
+        }
+        else
+        {
+            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
+        }
+    }
+
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 
 }
 
@@ -95,6 +132,11 @@ void RouteLayer::forward(NetworkState &netState)
 void RouteLayer::forwardGPU(NetworkState &netState)
 {
     this->recordCudaStart();
+
+    if(this->_addModel == 1)
+    {
+        BlasGPU::gpuFill(this->_outputNum, 0, this->_gpuOutput,1);
+    }
 
     int offset          =   0;
     for (size_t i = 0; i < _inputLayerIndexes.size(); ++i)
@@ -119,6 +161,38 @@ void RouteLayer::forwardGPU(NetworkState &netState)
         if(_addModel != 1)
         {
             offset          = offset + partInSize;
+        }
+    }
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                               this->_outWidth*this->_outHeight, this->_gpuOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {                           
+
+        if(_actParams.size() > 0)
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+        }
+        else
+        {
+            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
         }
     }
 
@@ -151,7 +225,7 @@ void RouteLayer::resize(Network &net)
             this->_outHeight     =   0;
             this->_outWidth      =   0;
             this->_outChannel    =   0;
-            throw Exception(1, "Different size of first layer and secon layer", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1, "Different size of first layer and second layer", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 

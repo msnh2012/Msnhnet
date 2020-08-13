@@ -534,7 +534,7 @@ void ConvolutionalLayer::swapBinary()
 
 void ConvolutionalLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     int m       =  this->_num / this->_groups; 
 
@@ -756,7 +756,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
         swapBinary();
     }
 
-    this->_forwardTime =   TimeUtil::getElapsedTime();
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 
 }
 

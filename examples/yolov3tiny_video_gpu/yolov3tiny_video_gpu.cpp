@@ -1,8 +1,5 @@
 ﻿#include <iostream>
-#include "Msnhnet/net/MsnhNetBuilder.h"
-#include "Msnhnet/io/MsnhIO.h"
-#include "Msnhnet/config/MsnhnetCfg.h"
-#include "Msnhnet/utils/MsnhOpencvUtil.h"
+#include "Msnhnet/Msnhnet.h"
 
 int main(int argc, char** argv) 
 {
@@ -38,10 +35,10 @@ int main(int argc, char** argv)
             cap >> mat;
             cv::Mat org = mat.clone();
 
-            Msnhnet::TimeUtil::startRecord();
+			auto st = Msnhnet::TimeUtil::startRecord();
             std::vector<float> img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(mat, cv::Size(inSize.x,inSize.y));
             std::vector<std::vector<Msnhnet::Yolov3Box>> result = msnhNet.runYolov3GPU(img);
-            std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime() <<"ms"<<std::endl;
+            std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl;
 
             Msnhnet::OpencvUtil::drawYolov3Box(org,labels,result,inSize);
             cv::imshow("test",org);
@@ -54,7 +51,7 @@ int main(int argc, char** argv)
     }
     catch (Msnhnet::Exception ex)
     {
-        std::cout<<ex.what()<<std::endl;
+        std::cout<<ex.what()<<" "<<ex.getErrFile() << " " <<ex.getErrLine()<< " "<<ex.getErrFun()<<std::endl;
     }
     return 0;
 }

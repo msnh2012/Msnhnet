@@ -1815,6 +1815,22 @@ void Parser::parseRouteParams(RouteParams *routeParams, YAML::const_iterator &it
                 throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
+        else if(key == "activation")
+        {
+            std::vector<std::string> splits;
+            ExString::split(splits, value, ",");
+            routeParams->activation = Activations::getActivation(splits[0]);
+
+            if(splits.size()>1)
+            {
+                for (size_t i = 1; i < splits.size(); ++i)
+                {
+                    float tmp = 0.f;
+                    ExString::strToFloat(splits[i], tmp);
+                    routeParams->actParams.push_back(tmp);
+                }
+            }
+        }
         else
         {
             throw Exception(1, key + " is not supported in [route]", __FILE__, __LINE__, __FUNCTION__);

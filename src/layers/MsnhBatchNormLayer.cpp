@@ -68,7 +68,7 @@ BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &he
 
 void BatchNormLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
     for (int b = 0; b < this->_batch; ++b)
     {
 #ifdef USE_OMP
@@ -172,7 +172,7 @@ void BatchNormLayer::forward(NetworkState &netState)
         }
     }
 
-    this->_forwardTime =   TimeUtil::getElapsedTime();
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 
 }
 

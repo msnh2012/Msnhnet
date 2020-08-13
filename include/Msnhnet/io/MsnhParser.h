@@ -273,10 +273,11 @@ public:
         this->type = LayerType::ROUTE;
     }
     std::vector<int> layerIndexes;
-
     int     groups      =   1;
     int     groupsId    =   0;
     int     addModel    =   0;
+    ActivationType  activation  =   ActivationType::NONE;
+    std::vector<float> actParams;
 };
 
 class SoftMaxParams : public BaseParams

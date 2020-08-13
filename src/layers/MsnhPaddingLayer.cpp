@@ -49,7 +49,7 @@ PaddingLayer::PaddingLayer(const int &batch, const int &height, const int &width
 
 void PaddingLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     for (int i = 0; i < this->_batch; ++i)
     {
@@ -87,7 +87,7 @@ void PaddingLayer::forward(NetworkState &netState)
         }
     }
 
-    this->_forwardTime = TimeUtil::getElapsedTime();
+    this->_forwardTime = TimeUtil::getElapsedTime(st);
 
 }
 
