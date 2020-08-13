@@ -18,7 +18,12 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *src, int inw, int inh,  int
         float *out1 =  dest + (cc + 1) * (outw * outh);
         float bias0 = 0;
         float bias1 = 0;
-        
+        float *k0 = kernel + cc * inch * 3 * 3;
+        float *k1 = kernel + (cc + 1) * inch * 3 * 3;
+
+        for(int q = 0; q < inch; q++){
+            
+        }
     }
 }
 
