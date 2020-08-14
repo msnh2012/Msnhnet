@@ -31,37 +31,6 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - **ps. Please check your card wheather fp16 full speed is supported.**
 - Working on it...(**Weekend Only  (╮（╯＿╰）╭)**)
 
-**Yolo Test** 
-- Win10 MSVC 2017 I7-10700F
-
-  |net|yolov3|yolov3_tiny|yolov4|
-  |:---:|:---:|:---:|:---:|
-  |time|465ms|75ms|600ms|
-
-
-- ARM(Yolov3Tiny cpu)
-  |cpu|raspberry 3B|raspberry 4B|Jeston NX|
-  |:---:|:---:|:---:|:---:|
-  |without NNPack|6s|2.5s|1.2s|
-  |with NNPack|2.5s|1.1s|0.6s|
-
-**Yolo GPU Test**
-- Ubuntu16.04  GCC  Cuda10.1  GTX1080Ti
-  |net|yolov3|yolov3_tiny|yolov4|
-  |:---:|:---:|:---:|:---:|
-  |time|30ms|8ms|30ms|
-  
-- Jetson NX
-  |net|yolov3|yolov3_tiny|yolov4|
-  |:---:|:---:|:---:|:---:|
-  |time|280ms|30ms|210ms|
-  
-**Yolo GPU cuDnn FP16 Test**
-- Jetson NX
-  |net|yolov3|yolov4|
-  |:---:|:---:|:---:|
-  |time|140ms|120ms|
-
 **Tested networks**
 - lenet5
 - lenet5_bn
@@ -92,6 +61,43 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - **pretrained models** 链接：https://pan.baidu.com/s/1mBaJvGx7tp2ZsLKzT5ifOg 
 提取码：x53z 
 
+**Yolo Test** 
+- Win10 MSVC 2017 I7-10700F
+
+  |net|yolov3|yolov3_tiny|yolov4|
+  |:---:|:---:|:---:|:---:|
+  |time|465ms|75ms|600ms|
+
+
+- ARM(Yolov3Tiny cpu)
+  |cpu|raspberry 3B|raspberry 4B|Jeston NX|
+  |:---:|:---:|:---:|:---:|
+  |without NNPack|6s|2.5s|1.2s|
+  |with NNPack|2.5s|1.1s|0.6s|
+
+**Yolo GPU Test**
+- Ubuntu16.04  GCC  Cuda10.1  GTX1080Ti
+  |net|yolov3|yolov3_tiny|yolov4|
+  |:---:|:---:|:---:|:---:|
+  |time|30ms|8ms|30ms|
+  
+- Jetson NX
+  |net|yolov3|yolov3_tiny|yolov4|
+  |:---:|:---:|:---:|:---:|
+  |time|280ms|30ms|210ms|
+  
+**Yolo GPU cuDnn FP16 Test**
+- Jetson NX
+  |net|yolov3|yolov4|
+  |:---:|:---:|:---:|
+  |time|140ms|120ms|
+  
+**Mobilenet Yolo GPU cuDnn Test**
+- Jetson NX
+  |net|yoloface100k|yoloface500k|mobilenetv2_yolov3_nano|mobilenetv2_yolov3_lite|
+  |:---:|:---:|:---:|:---:|:---:|
+  |time|7ms|20ms|20ms|30|
+  
 **Requirements**
   * OpenCV4 https://github.com/opencv/opencv
   * yaml-cpp https://github.com/jbeder/yaml-cpp
