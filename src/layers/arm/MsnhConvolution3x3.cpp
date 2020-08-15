@@ -8,24 +8,24 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
                         const int &kh, float* &dest, const int &outw, const int &outh, const int &outch){
     int cc_outch = outch >> 1;
     int cc_remain_outch = outch << 1;
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
-#endif 
     const int in_size = inw * inh;
     const int out_size = outw * outh;
     //deal two conv output 
+#ifdef USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif 
     for(int cc = 0; cc < cc_outch; cc++){
         int c = cc * 2;
         //get two conv output in same time
-        float *dest0 = dest + cc * out_size;
-        float *dest1 =  dest + (cc + 1) * out_size;
+        float *dest0 = dest + c * out_size;
+        float *dest1 =  dest + (c + 1) * out_size;
 
         for(int j = 0; j < out_size; j++) dest0[j] = 0.f;
         for(int j = 0; j < out_size; j++) dest1[j] = 0.f;
 
         //two output rely on two kernel
-        float *k0 = kernel + cc * inch * 3 * 3;
-        float *k1 = kernel + (cc + 1) * inch * 3 * 3;
+        float *k0 = kernel + c * inch * 3 * 3;
+        float *k1 = kernel + (c + 1) * inch * 3 * 3;
 
         for(int q = 0; q < inch; q++){
             float* destptr0 = dest0;
@@ -171,16 +171,116 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
                 r2 += 2;
             }
 
-            //mov conv channel
+            //mov conv kernel
             k0 += 9;
             k1 += 9;
         }
     }
 
     //deal one conv output
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif 
     for(int cc = cc_remain_outch; cc < outch; cc++){
         int c = cc;
-        
+        float *dest0 = dest + c * out_size;
+        for(int j = 0; j < out_size; j++) dest[j] = 0.f;
+        const float* kernel0 = kernel + c * inch * 3 * 3;
+
+        for(int q = 0; q < inch; q++){
+            float *destptr0 = dest;
+            float *destptr1 = dest + outw;
+
+            const float* src0 = src + q * in_size;
+            //deal four lines and get two outputs in a feature map
+            const float* r0 = src0;
+            const float* r1 = src0 + inw;
+            const float* r2 = src0 + inw * 2;
+            const float* r3 = src0 + inw * 3;
+
+            const float* k0 = kernel0;
+            const float* k1 = kernel0 + 3;
+            const float* k2 = kernel0 + 6;
+
+            int i = 0;
+            for(; i + 1 < outh; i += 2){
+                int remain = outw;
+                for(; remain > 0; remain--){
+                    float sum0 = 0;
+                    float sum1 = 0;
+
+                    //conv output1->chanel q output1 
+                    sum0 += r0[0] * k0[0];
+                    sum0 += r0[1] * k0[1];
+                    sum0 += r0[2] * k0[2];
+                    sum0 += r1[0] * k1[0];
+                    sum0 += r1[1] * k1[1];
+                    sum0 += r1[2] * k1[2];
+                    sum0 += r2[0] * k2[0];
+                    sum0 += r2[1] * k2[1];
+                    sum0 += r2[2] * k2[2];
+
+                    //conv output1->channel q output2
+                    sum1 += r1[0] * k0[0];
+                    sum1 += r1[1] * k0[1];
+                    sum1 += r1[2] * k0[2];
+                    sum1 += r2[0] * k1[0];
+                    sum1 += r2[1] * k1[1];
+                    sum1 += r2[2] * k1[2];
+                    sum1 += r3[0] * k2[0];
+                    sum1 += r3[1] * k2[1];
+                    sum1 += r3[2] * k2[2];
+
+                    *destptr0 += sum0;
+                    *destptr1 += sum1;
+
+                    r0++;
+                    r1++;
+                    r2++;
+                    r3++;
+                    destptr0++;
+                    destptr1++;
+                }
+
+                r0 += 2 + inw;
+                r1 += 2 + inw;
+                r2 += 2 + inw;
+                r3 += 2 + inw;
+
+                destptr0 += outw;
+                destptr1 += outw;
+            }
+
+            for(; i < outh; i++){
+                int remain = outw;
+
+                for(; remain > 0; remain--){
+                    float sum0 = 0;
+
+                    sum0 += r0[0] * k0[0];
+                    sum0 += r0[1] * k0[1];
+                    sum0 += r0[2] * k0[2];
+                    sum0 += r1[0] * k1[0];
+                    sum0 += r1[1] * k1[1];
+                    sum0 += r1[2] * k1[2];
+                    sum0 += r2[0] * k2[0];
+                    sum0 += r2[1] * k2[1];
+                    sum0 += r2[2] * k2[2];
+
+                    *destptr0 += sum0;
+
+                    r0++;
+                    r1++;
+                    r2++;
+                    destptr0++;
+                }
+
+                r0 += 2;
+                r1 += 2;
+                r2 += 2;
+            }
+            kernel0 += 9;
+        }
     }
 }
 
