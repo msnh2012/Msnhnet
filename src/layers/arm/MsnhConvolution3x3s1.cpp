@@ -491,7 +491,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
                 r1 += 2;
                 r2 += 2;
             }
-            kernel0 += 9;
+            k0 += 9;
         }
     }
 }
