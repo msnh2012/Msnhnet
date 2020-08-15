@@ -18,6 +18,10 @@
 #include <arm_neon.h>
 #endif
 
+#ifdef USE_AARCH64
+#include <arm_neon.h>
+#endif
+
 #ifdef USE_OPEN_BLAS
 #include <cblas.h>
 #endif
@@ -29,6 +33,7 @@
 #ifndef OMP_THREAD
 #define OMP_THREAD omp_get_max_threads()
 #endif
+
 
 enum ActivationType
 {

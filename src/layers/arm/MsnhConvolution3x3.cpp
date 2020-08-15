@@ -11,7 +11,7 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
     const int in_size = inw * inh;
     const int out_size = outw * outh;
     //deal two conv output 
-#ifdef USE_OMP
+#if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif 
     for(int cc = 0; cc < cc_outch; cc++){
@@ -40,12 +40,93 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
             const float* r2 = src0 + inw * 2;
             const float* r3 = src0 + inw * 3;
 
+#if USE_NEON
+            float32x4_t k012 = vld1q_f32(k0);
+            float32x4_t k345 = vld1q_f32(k0 + 3);
+            float32x4_t k678 = v1d1q_f32(k0 + 6);
+
+            float32x4_t k012_next = vld1q_f32(k1);
+            float32x4_t k345_next = vld1q_f32(k1 + 3);
+            float32x4_t k678_next = vld1q_f32(k1 + 6);
+#endif
+
             int i = 0;
             for(; i + 1 < outh; i += 2){
                 
+#if USE_NEON
+                int nn = outw >> 2;
+                int remain = outw - (nn << 2);
+#else
                 int remain = outw;
+#endif
+
+
+#if USE_NEON
+                //assembly
+                if(nn > 0){
+
+                }
+#endif
 
                 for(; remain > 0; remain--){
+
+#if USE_NEON
+                    float32x4_t r00 = vld1q_f32(r0);
+                    float32x4_t r10 = vld1q_f32(r1);
+                    float32x4_t r20 = vld1q_f32(r2);
+                    float32x4_t r30 = vld1q_f32(r3);
+
+                    //conv output1->chanel q output1 
+                    float32x4_t sum0 = vmulq_f32(r00, k012);
+                    //conv output1->channel q output2
+                    float32x4_t sum1 = vmulq_f32(r00, k012_next);
+                    sum0 = vmlaq_f32(sum0, r10, k345);
+                    sum1 = vmlaq_f32(sum1, r10, k345_next);
+                    sum0 = vmlaq_f32(sum0, r20, k678);
+                    sum1 = vmlaq_f32(sum1, r20, k678_next);
+
+                    //conv output2->channel q output1
+                    float32x4_t sum0next = vmulq_f32(r10, k012);
+                    //conv output2->channel q output2
+                    float32x4_t sum1next = vmulq_f32(r10, k012_next);
+                    sum0next = vmlaq_f32(sum0next, r20, k345);
+                    sum1next = vmlaq_f32(sum1next, r20, k345_next);
+                    sum0next = vmlaq_f32(sum0next, r30, k678);
+                    sum1next = vmlaq_f32(sum1next, r30, k678_next);
+                    
+                    // use *destptr0 's data repalce sum0[3]
+                    sum0 = vsetq_lane_f32(*destptr0, sum0, 3);
+                    sum1 = vsetq_lane_f32(*destptr1, sum1, 3);
+                    sum0next = vsetq_lane_f32(*destptr0_next, sum0next, 3);
+                    sum1next = vsetq_lane_f32(*destptr1_next, sum1next, 3);
+
+                    //accumulate
+
+#if USE_AARCH64
+                    *destptr0 = vaddvq_f32(sum0);
+                    *destptr1 = vaddvq_f32(sum1);
+                    *destptr0_next = vaddvq_f32(sum0next);
+                    *destptr1_next = vaddvq_f32(sum1next);           
+#else
+                    //https://github.com/BBuf/ArmNeonOptimization/blob/master/src/boxFilterBetter.cpp
+                    float32x2_t _ss0 = vadd_f32(vget_low_f32(sum0), vget_high_f32(sum0));
+                    float32x2_t _ss1 = vadd_f32(vget_low_f32(sum1), vget_high_f32(sum1));
+                    float32x2_t _ss0next = vadd_f32(vget_low_f32(sum0next), vget_high_f32(sum0next));
+                    float32x2_t _ss1next = vadd_f32(vget_low_f32(sum1next), vget_high_f32(sum1next));
+
+                    float32x2_t _ss01 = vpadd_f32(_ss0, _ss1);
+                    float32x2_t _ss01next = vpadd_f32(_ss0next, _ss1next);
+
+                    *destptr0 =  vget_lane_f32(_ss01, 0);
+                    *destptr1 =  vget_lane_f32(_ss01, 1);
+                    *destptr0_next =  vget_lane_f32(_ss01next, 0);
+                    *destptr1_next = vget_lane_f32(_ss01next, 1);      
+
+#endif
+
+
+#else
+
                     float sum0 = 0.f;
                     float sum1 = 0.f;
                     float sum0next = 0.f;
@@ -101,6 +182,7 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
                     *destptr0_next += sum0next;
                     *destptr1_next += sum1next;
 
+#endif
                     //update point address
                     r0++;
                     r1++;
@@ -124,6 +206,7 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
             
             //deal three lines and get one output in a feature map
             for(; i < outh; i++){
+                
                 
                 int remain = outw;
 
