@@ -1,10 +1,10 @@
-#include "Msnhnet/layers/arm/MsnhConvolution3x3.h"
+#include "Msnhnet/layers/arm/MsnhConvolution3x3s1.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 
 namespace Msnhnet
 {
 //src conv kernel
-void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw, const int &inh,  const int &inch, float *const &kernel, const int &kw, 
+void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &inw, const int &inh,  const int &inch, float *const &kernel, const int &kw, 
                         const int &kh, float* &dest, const int &outw, const int &outh, const int &outch){
     int cc_outch = outch >> 1;
     int cc_remain_outch = outch << 1;
