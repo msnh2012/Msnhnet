@@ -18,9 +18,6 @@
 #include <arm_neon.h>
 #endif
 
-#ifdef USE_AARCH64
-#include <arm_neon.h>
-#endif
 
 #ifdef USE_OPEN_BLAS
 #include <cblas.h>
