@@ -207,10 +207,56 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
             //deal three lines and get one output in a feature map
             for(; i < outh; i++){
                 
-                
+#if USE_NEON
+                int nn = outw >> 2;
+                int remain = outw - (nn << 2);
+#else                
                 int remain = outw;
 
+#endif
+
+#if USE_NEON
+                if(nn > 0){
+
+                }
+
+#endif
+
                 for(; remain > 0; remain--){
+#if USE_NEON
+                    float32x4_t r00 = vld1q_f32(r0);
+                    float32x4_t r10 = vld1q_f32(r1);
+                    float32x4_t r20 = vld1q_f32(r2);
+
+                    //conv output1->chanel q output1 
+                    float32x4_t sum0 = vmulq_f32(r00, k012);
+                    //conv output1->channel q output2
+                    float32x4_t sum1 = vmulq_f32(r00, k012_next);
+                    sum0 = vmlaq_f32(sum0, r10, k345);
+                    sum1 = vmlaq_f32(sum1, r10, k345_next);
+                    sum0 = vmlaq_f32(sum0, r20, k678);
+                    sum1 = vmlaq_f32(sum1, r20, k678_next);
+
+
+                    // use *destptr0 's data repalce sum0[3]
+                    sum0 = vsetq_lane_f32(*destptr0, sum0, 3);
+                    sum1 = vsetq_lane_f32(*destptr1, sum1, 3);
+
+#if USE_AARCH64
+                    *destptr0 = vaddvq_f32(sum0);
+                    *destptr1 = vaddvq_f32(sum1);
+#else
+                    float32x2_t _ss0 = vadd_f32(vget_low_f32(sum0), vget_high_f32(sum0));
+                    float32x2_t _ss1 = vadd_f32(vget_low_f32(sum1), vget_high_f32(sum1));
+
+                    float32x2_t _ss01 = vpadd_f32(_ss0, _ss1);
+
+                    *destptr0 =  vget_lane_f32(_ss01, 0);
+                    *destptr1 =  vget_lane_f32(_ss01, 1);     
+#endif
+
+#else
+
                     float sum0 = 0.f;
                     float sum1 = 0.f;
 
@@ -239,8 +285,8 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
                     //sum to dest
                     *destptr0 += sum0;
                     *destptr1 += sum1;
-
                     //update point address
+#endif
                     r0++;
                     r1++;
                     r2++;
@@ -268,7 +314,7 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
         int c = cc;
         float *dest0 = dest + c * out_size;
         for(int j = 0; j < out_size; j++) dest[j] = 0.f;
-        const float* kernel0 = kernel + c * inch * 3 * 3;
+        const float* k0 = kernel + c * inch * 3 * 3;
 
         for(int q = 0; q < inch; q++){
             float *destptr0 = dest;
@@ -281,14 +327,62 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
             const float* r2 = src0 + inw * 2;
             const float* r3 = src0 + inw * 3;
 
-            const float* k0 = kernel0;
-            const float* k1 = kernel0 + 3;
-            const float* k2 = kernel0 + 6;
+#if USE_NEON
+            float32x4_t k012 = vld1q_f32(k0);
+            float32x4_t k345 = vld1q_f32(k0 + 3);
+            float32x4_t k678 = vld1q_f32(k0 + 6);
+#else
+            const float* k0 = k0;
+            const float* k1 = k0 + 3;
+            const float* k2 = k0 + 6;
+#endif
 
             int i = 0;
             for(; i + 1 < outh; i += 2){
+#if USE_NEON
+                int nn = outw >> 2;
+                int remain = outw - (nn << 2);
+#else
                 int remain = outw;
+#endif
+
+#if USE_NEON
+
+                if(nn > 0){
+
+                } 
+
+#endif
+
                 for(; remain > 0; remain--){
+#if USE_NEON
+                    float32x4_t r00 = vld1q_f32(r0);
+                    float32x4_t r10 = vld1q_f32(r1);
+                    float32x4_t r20 = vld1q_f32(r2);
+                    float32x4_t r30 = vld1q_f32(r3);
+
+                    float32x4_t sum0 = vmulq_f32(r00, k012);
+                    sum0 = vmlaq_f32(sum0, r10, k345);
+                    sum0 = vmlaq_f32(sum0, r20, k678);
+
+                    float32x4_t sum1 = vmulq_f32(r10, k012);
+                    sum1 = vmlaq_f32(sum1, r20, k345);
+                    sum1 = vmlaq_f32(sum1, r30, k678);
+
+#if USE_AARCH64
+                    *destptr0 = vaddvq_f32(sum0);
+                    *destptr1 = vaddvq_f32(sum1);
+#else
+                    float32x2_t _ss0 = vadd_f32(vget_low_f32(sum0), vget_high_f32(sum0));
+                    float32x2_t _ss1 = vadd_f32(vget_low_f32(sum1), vget_high_f32(sum1));
+
+                    float32x2_t _ss01 = vpadd_f32(_ss0, _ss1);
+
+                    *destptr0 = vaddvq_f32(_ss01, 0);
+                    *destptr1 = vaddvq_f32(_ss01, 1);
+#endif      
+                
+#else
                     float sum0 = 0;
                     float sum1 = 0;
 
@@ -316,7 +410,7 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
 
                     *destptr0 += sum0;
                     *destptr1 += sum1;
-
+#endif
                     r0++;
                     r1++;
                     r2++;
@@ -335,9 +429,23 @@ void ConvolutionalLayerArm3x3::conv3x3s1_neon(float *const &src, const int &inw,
             }
 
             for(; i < outh; i++){
+#if USE_NEON
+                int nn = outw >> 2;
+                int remain = outw - (nn << 2);
+#else
                 int remain = outw;
+#endif
+
+#if USE_NEON
+
+                if(nn > 0){
+
+                } 
+
+#endif
 
                 for(; remain > 0; remain--){
+                    
                     float sum0 = 0;
 
                     sum0 += r0[0] * k0[0];
