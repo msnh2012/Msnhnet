@@ -64,6 +64,9 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
 #if USE_NEON
                 //assembly
                 if(nn > 0){
+#if __aarch64__
+
+else
                     asm volatile(
                         //
                         "0:                             \n"
@@ -253,6 +256,9 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
                         : "cc", "memory", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
                     );
                 }
+
+#endif
+
 #endif
 
                 for(; remain > 0; remain--){
@@ -404,7 +410,11 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
 
 #if USE_NEON
                 if(nn > 0){
+#if __aarch64__
 
+#else
+                    
+#endif
                 }
 
 #endif
