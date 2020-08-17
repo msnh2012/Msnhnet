@@ -653,23 +653,85 @@ else
                 if(nn > 0){
                     asm volatile(
                         "0:                             \n"
-                        //r0
+                        // r0 = [a, b, c, d, e, f]
                         "pld        [%3, #192]          \n"
                         "vld1.f32   {d18-d20}, [%3 :64] \n" 
                         "add        %3, #16             \n"
                         
+                        // q9 = [a, b, c, d]
+                        // q10 = [e, f, *, *]
+                        // q11 = [b, c, d, e]
                         "vext.32    q11, q9, q10, #1    \n"
+                        // q12 = [c, d, e, f]
                         "vext.32    q12, q9, q10, #2    \n"
 
                         //sum0
                         "pld        [%1, #128]          \n"
                         "vld1.f32   {d14-d15}, [%1 :64] \n"
+                        // sum1
+                        "pld        [%2, #128]          \n"
+                        "vld1.f32   {d16-d17}, [%2]     \n" 
 
+                        //分别和k012的对应元素相乘
                         "vmla.f32   q7, q9, %e14[0]     \n"
                         "vmul.f32   q6, q11, %e14[1]    \n"
                         "vmul.f32   q13, q12, %f14[0]   \n"
 
-                        
+                        // r1 = [a1, b1, c1, d1, e1, f1]
+                        "pld        [%4, #192]          \n"
+                        "vld1.f32   {d18-d20}, [%4]     \n" 
+                        "add        %4, #16             \n"
+
+                        "vext.32    q11, q9, q10, #1    \n"
+                        "vext.32    q12, q9, q10, #2    \n"
+
+                        "vmla.f32   q7, q9, %e15[0]     \n"
+                        "vmla.f32   q6, q11, %e15[1]    \n"
+                        "vmla.f32   q13, q12, %f15[0]   \n"
+
+                        "vmla.f32   q8, q9, %e14[0]     \n"
+                        "vmul.f32   q14, q11, %e14[1]   \n"
+                        "vmul.f32   q15, q12, %f14[0]   \n"
+
+                        // r2 = [a2, b2, c2, d2, e2, f2]
+                        "pld        [%5, #192]          \n"
+                        "vld1.f32   {d18-d20}, [%5 :64] \n" 
+                        "add        %5, #16             \n"
+
+                        "vext.32    q11, q9, q10, #1    \n"
+                        "vext.32    q12, q9, q10, #2    \n"
+
+                        "vmla.f32   q7, q9, %e16[0]     \n"
+                        "vmla.f32   q6, q11, %e16[1]    \n"
+                        "vmla.f32   q13, q12, %f16[0]   \n"
+
+                        "vmla.f32   q8, q9, %e15[0]     \n"
+                        "vmla.f32   q14, q11, %e15[1]   \n"
+                        "vmla.f32   q15, q12, %f15[0]   \n"
+
+                        // r3 = [a3, b3, c3, d3, e3, f3]
+                        "pld        [%6, #192]          \n"
+                        "vld1.f32   {d18-d20}, [%6]     \n" 
+                        "add        %6, #16             \n"
+
+                        "vext.32    q11, q9, q10, #1    \n"
+                        "vext.32    q12, q9, q10, #2    \n"
+
+                        "vmla.f32   q8, q9, %e16[0]     \n"
+                        "vmla.f32   q14, q11, %e16[1]   \n"
+                        "vmla.f32   q15, q12, %f16[0]   \n"
+
+                        "vadd.f32   q7, q7, q6          \n"
+                        "vadd.f32   q7, q7, q13         \n"
+                        "vadd.f32   q8, q8, q14         \n"
+                        "vadd.f32   q8, q8, q15         \n"
+
+                        "vst1.f32   {d14-d15}, [%1]!    \n"
+                        "vst1.f32   {d16-d17}, [%2]!    \n"
+
+                        "subs       %0, #1              \n"
+                        "bne        0b                  \n"
+
 
                         : "=r"(nn),      // %0
                         "=r"(destptr0),  // %1
@@ -779,7 +841,11 @@ else
 #if USE_NEON
 
                 if(nn > 0){
+#if __aarch64__
 
+else
+                    
+#endif
                 } 
 
 #endif
