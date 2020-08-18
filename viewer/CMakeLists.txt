@@ -69,5 +69,6 @@ target_link_libraries(MsnhnetViewer Qt5::Widgets)
 target_link_libraries(MsnhnetViewer Qt5::Svg)
 target_link_libraries(MsnhnetViewer Qt5::PrintSupport)
 target_link_libraries(MsnhnetViewer yaml-cpp)
+target_link_libraries(MsnhnetViewer ${OMP_LIB})
 install(TARGETS MsnhnetViewer
     RUNTIME DESTINATION bin)
