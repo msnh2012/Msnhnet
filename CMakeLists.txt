@@ -1,8 +1,10 @@
-﻿cmake_minimum_required(VERSION 3.10) # cuda
+cmake_minimum_required(VERSION 3.10) # cuda
 
 project(Msnhnet
     LANGUAGES CXX C
     VERSION 1.0)
+    
+set(CMAKE_CXX_STANDARD 11)
 
 message(STATUS "OS is ${CMAKE_SYSTEM}")
 
