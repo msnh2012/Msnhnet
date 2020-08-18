@@ -11,5 +11,4 @@ public:
 };
 
 }
-#endif 
-
+#endif // MSNHVIEWERNODESELECT_H

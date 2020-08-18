@@ -56,14 +56,16 @@ Attribute::Attribute (QGraphicsItem* parent, AttributeInfo const& info, QRect co
     prepareGeometryChange();
 }
 
+
 Attribute::~Attribute()
 {
-
+    // Disconnect related links.
     for (auto& link : links_)
     {
         link->disconnect();
     }
 }
+
 
 void Attribute::setColor(QColor const& color)
 {
@@ -72,12 +74,15 @@ void Attribute::setColor(QColor const& color)
     update();
 }
 
+
 void Attribute::connect(Link* link)
 {
     DataTypeTheme typeTheme = ThemeManager::instance().getDataTypeTheme(dataType());
     links_.append(link);
     link->setColor(typeTheme.enable);
 }
+
+
 
 void Attribute::refresh()
 {
@@ -86,6 +91,7 @@ void Attribute::refresh()
         link->updatePath();
     }
 }
+
 
 void Attribute::applyFontStyle(QPainter* painter, DisplayMode mode)
 {
@@ -137,21 +143,26 @@ void Attribute::applyStyle(QPainter* painter, DisplayMode mode)
     }
 }
 
+
 void Attribute::paint(QPainter* painter, QStyleOptionGraphicsItem const*, QWidget*)
 {
-
+    // NodeAttribute background.
     painter->setBrush(background_brush_);
     painter->setPen(Qt::NoPen);
     painter->drawRect(backgroundRect_);
 
+    // NodeAttribute label.
     applyFontStyle(painter, mode_);
     painter->drawText(labelRect_, Qt::AlignVCenter, name());
 }
+
+
 
 AttributeOutput::AttributeOutput(QGraphicsItem* parent, AttributeInfo const& info, QRect const& boundingRect)
     : AttributeMember (parent, info, boundingRect)
 {
 
+    // Compute connector rectangle.
     qreal const length = boundingRect_.height() / 4.0;
 
     connectorRectLeft_  = QRectF{ boundingRect_.left() - length - 1, length,
@@ -160,16 +171,18 @@ AttributeOutput::AttributeOutput(QGraphicsItem* parent, AttributeInfo const& inf
     connectorRectRight_ = QRectF{ boundingRect_.right() - length + 1, length,
             length * 2, length * 2 };
 
+    // Update bounding rect to include connector positions
     boundingRect_ = boundingRect_.united(connectorRectLeft_);
     boundingRect_ = boundingRect_.united(connectorRectRight_);
     boundingRect_ += QMargins(20, 0, 20, 0);
 
     connectorRect_ = &connectorRectRight_;
-
+    // Compute connector center to position the path.
     connectorPos_ = { connectorRect_->x() + connectorRect_->width()  / 2.0,
                       connectorRect_->y() + connectorRect_->height() / 2.0 };
     prepareGeometryChange();
 }
+
 
 void AttributeOutput::setColor(QColor const& color)
 {
@@ -180,14 +193,16 @@ void AttributeOutput::setColor(QColor const& color)
     }
 }
 
+
 void AttributeOutput::paint(QPainter* painter, QStyleOptionGraphicsItem const*, QWidget*)
 {
-
+    // Draw generic part (label&&background).
     AttributeMember::paint(painter, nullptr, nullptr);
 
     applyStyle(painter, mode_);
     painter->drawEllipse(*connectorRect_);
 }
+
 
 void AttributeOutput::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
@@ -216,11 +231,12 @@ void AttributeOutput::mousePressEvent(QGraphicsSceneMouseEvent* event)
     Attribute::mousePressEvent(event);
 }
 
+
 void AttributeOutput::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 {
     if (newConnection_ == nullptr)
     {
-
+        // Nothing to do
         Attribute::mouseMoveEvent(event);
         return;
     }
@@ -228,16 +244,18 @@ void AttributeOutput::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
     newConnection_->updatePath(event->scenePos());
 }
 
+
 void AttributeOutput::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 {
     Scene* pScene =  static_cast<Scene*>(scene());
     if ((newConnection_ == nullptr) || (event->button() != Qt::LeftButton))
     {
-
+        // Nothing to do
         Attribute::mouseReleaseEvent(event);
         return;
     }
 
+    // Disable highlight
     for (auto const& item : pScene->nodes())
     {
         item->unhighlight();
@@ -249,20 +267,24 @@ void AttributeOutput::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
         if (input->accept(this))
         {
             newConnection_->connectTo(input);
-            newConnection_ = nullptr; 
-
+            newConnection_ = nullptr; // connection finished.
             return;
         }
     }
 
+    // cleanup unfinalized connection.
     delete newConnection_;
     newConnection_ = nullptr;
 }
 
+
+
 AttributeInput::AttributeInput (QGraphicsItem* parent, AttributeInfo const& info, QRect const& boundingRect)
     : AttributeMember (parent, info, boundingRect)
 {
+    //        data_ = false; // Use data member to store connector position.
 
+    // Compute input inputTriangle_
     qreal length = boundingRect_.height() / 4.0;
     inputTriangleLeft_[0] = QPointF(boundingRect_.left() - 1, length);
     inputTriangleLeft_[1] = QPointF(boundingRect_.left() + length * 1.5, length * 2);
@@ -274,25 +296,31 @@ AttributeInput::AttributeInput (QGraphicsItem* parent, AttributeInfo const& info
 
     boundingRect_ += QMargins(2, 0, 2, 0);
 
+
+    //   inputTriangle_ = inputTriangleRight_;
+
     inputTriangle_ = inputTriangleLeft_;
 
+    // Compute connector center to position the path.
     qreal x = inputTriangle_[0].x();;
     qreal y = inputTriangle_[2].y() - inputTriangle_[0].y();
     connectorPos_ = { x, y };
     prepareGeometryChange();
 }
 
+
+
 bool AttributeInput::accept(Attribute* attribute) const
 {
     if (attribute->dataType() != dataType())
     {
-
+        // Incompatible type.
         return false;
     }
 
     if (attribute->parentItem() == parentItem())
     {
-
+        // can't be connected to another attribute of the same item.
         return false;
     }
 
@@ -300,7 +328,7 @@ bool AttributeInput::accept(Attribute* attribute) const
     {
         if (link->from() == attribute)
         {
-
+            // We are already connected to this guy.
             return false;
         }
     }
@@ -308,14 +336,16 @@ bool AttributeInput::accept(Attribute* attribute) const
     return true;
 }
 
+
 void AttributeInput::paint(QPainter* painter, QStyleOptionGraphicsItem const*, QWidget*)
 {
-
+    // Draw generic part (label&&background).
     AttributeMember::paint(painter, nullptr, nullptr);
 
     applyStyle(painter, mode_);
     painter->drawConvexPolygon(inputTriangle_, 3);
 }
+
 
 void AttributeInput::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
@@ -326,13 +356,16 @@ void AttributeInput::mousePressEvent(QGraphicsSceneMouseEvent* event)
     Attribute::mousePressEvent(event);
 }
 
+
+
 AttributeMember::AttributeMember(QGraphicsItem* parent, AttributeInfo const& info, const QRect& boundingRect)
     : Attribute (parent, info, boundingRect)
 {
-
+    // Reduce the label area to add the form.
     labelRect_ = QRectF{boundingRect_.left() + 15, boundingRect_.top(),
             boundingRect_.width() / 3, boundingRect_.height()};
 
+    // Construct the form (area, background color, widget, widgets options etc).
     QRectF formRect{0, 0, boundingRect_.width() * 2 / 3 - 20, boundingRect_.height() - 10};
     QBrush brush {{180, 180, 180, 255}, Qt::SolidPattern};
     form_ = new MemberForm(this, data_, formRect, brush);

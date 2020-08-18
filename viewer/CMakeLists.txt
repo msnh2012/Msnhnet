@@ -37,6 +37,7 @@ set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhRes2BlockLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhResBlockLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhRouteLayer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhVariableOpLayer.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhSoftMaxLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhUpSampleLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhYolov3Layer.cpp

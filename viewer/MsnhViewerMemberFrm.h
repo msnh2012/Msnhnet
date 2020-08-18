@@ -6,7 +6,7 @@
 
 namespace MsnhViewer
 {
-
+    /// \brief Handle the member form (draw the backround and own the dedicated QWidget)
     class MemberForm : public QGraphicsProxyWidget
     {
         Q_OBJECT
@@ -27,8 +27,7 @@ namespace MsnhViewer
         QRectF boundingRect() const override { return boundingRect_; }
 
     private:
-        QVariant& data_; 
-
+        QVariant& data_; // reference on attribute's data
         QRectF boundingRect_;
         QBrush brush_;
     };

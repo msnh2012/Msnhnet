@@ -24,6 +24,7 @@ public:
     static QPlainTextEdit *logger;
 
 private slots:
+    //void on_pushButton_clicked();
 
     void on_actionOpen_triggered();
 
@@ -51,5 +52,4 @@ private:
     Msnhnet::NetBuilder builder;
     QProgressBar *progressBar;
 };
-#endif 
-
+#endif // MAINWINDOW_H

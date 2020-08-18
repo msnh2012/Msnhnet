@@ -28,6 +28,7 @@ public:
         });
         ColorTabel::instance().addColor("ConcatOutputs",QColor(0xCF7531));
 
+
         NodeCreator::instance().addItem("Empty",
         {
             {"input", "string", AttributeInfo::Type::input},
@@ -101,6 +102,7 @@ public:
         });
         ColorTabel::instance().addColor("DeConv",QColor(0x27F2BD));
 
+
         NodeCreator::instance().addItem("ConvBN",
         {
             {"input", "string", AttributeInfo::Type::input},
@@ -165,6 +167,7 @@ public:
         });
         ColorTabel::instance().addColor("MaxPool",QColor(0x3353CA));
 
+
         NodeCreator::instance().addItem("Padding",
         {
             {"input", "string", AttributeInfo::Type::input},
@@ -194,6 +197,7 @@ public:
             {"input", "string", AttributeInfo::Type::input},
             {"group", "string", AttributeInfo::Type::member},
             {"type", "string", AttributeInfo::Type::member},
+            {"act", "string", AttributeInfo::Type::member},
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("Route",QColor(0xBB87FF));
@@ -234,6 +238,7 @@ public:
     }
 };
 
-}
-#endif 
 
+
+}
+#endif // MSNHVIEWERNODECFG_H

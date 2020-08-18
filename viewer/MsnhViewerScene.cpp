@@ -23,9 +23,10 @@ Scene::Scene (QObject* parent)
 
 }
 
+
 Scene::~Scene()
 {
-
+    // Manually delete nodes&&links because order are important
     QVector<Node*> deleteNodes = nodes_;
     for (auto& node : deleteNodes)
     {
@@ -65,6 +66,7 @@ void Scene::drawBackground(QPainter* painter, QRectF const& rect)
     painter->drawPoints(points.data(), points.size());
 }
 
+
 void Scene::keyReleaseEvent(QKeyEvent* keyEvent)
 {
     if (keyEvent->key() == Qt::Key::Key_Delete)
@@ -75,6 +77,7 @@ void Scene::keyReleaseEvent(QKeyEvent* keyEvent)
         }
     }
 
+    // destroy orphans link
     QVector<Link*> deleteLinks = links_;
     for (auto& link : deleteLinks)
     {
@@ -105,18 +108,30 @@ void Scene::setSceneH(const qreal &value)
     sceneH = value>300?value:300;
 }
 
+
+
 void Scene::addNode(Node* node)
 {
     addItem(node);
     nodes_.append(node);
 }
 
+
 void Scene::removeNode(Node* node)
 {
+    // Remove from mode
+    //        for (int i = 0; i < modes_->rowCount(); ++i)
+    //        {
+    //            QStandardItem* mode = modes_->item(i, 0);
+    //            QHash<QString, QVariant> nodeMode = mode->data(Qt::UserRole + 2).toHash();
+    //            nodeMode.remove(node->name());
+    //            mode->setData(nodeMode, Qt::UserRole + 2);
+    //        }
 
     removeItem(node);
     nodes_.removeAll(node);
 }
+
 
 void Scene::addLink(Link* link)
 {
@@ -124,11 +139,13 @@ void Scene::addLink(Link* link)
     links_.append(link);
 }
 
+
 void Scene::removeLink(Link* link)
 {
     removeItem(link);
     links_.removeAll(link);
 }
+
 
 void Scene::connectNode(QString const& from, QString const& out, QString const& to, QString const& in)
 {
@@ -215,11 +232,9 @@ void Scene::clear()
 
 QColor generateRandomColor()
 {
-
-    static double nextColorHue = 1.0 / (rand() % 100); 
-
-    constexpr double golden_ratio_conjugate = 0.618033988749895; 
-
+    // procedural color generator: the gold ratio
+    static double nextColorHue = 1.0 / (rand() % 100); // don't need a proper random here
+    constexpr double golden_ratio_conjugate = 0.618033988749895; // 1 / phi
     nextColorHue += golden_ratio_conjugate;
     nextColorHue = std::fmod(nextColorHue, 1.0);
 

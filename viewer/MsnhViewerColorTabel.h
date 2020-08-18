@@ -16,5 +16,5 @@ private:
 };
 }
 
-#endif 
 
+#endif // MSNHVIEWERCOLORTABEL_H

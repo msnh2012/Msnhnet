@@ -35,6 +35,7 @@ namespace MsnhViewer
 
         void updatePath(QPointF const& start, QPointF const& end);
 
+        // Compute bezier control point to 'glue' properly two bezier curves
         void computeControlPoint(QPointF const& p0, QPointF const& p1, QPointF const& p2, double t,
                                  QPointF& ctrl1, QPointF& ctrl2);
         void drawSplines(QVector<QPointF> const& waypoints, double t);

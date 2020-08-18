@@ -27,6 +27,7 @@ enum DisplayMode
     highlight
 };
 
+
 class Attribute : public QGraphicsItem
 {
 public:
@@ -49,8 +50,10 @@ public:
     void disconnect(Link* link) { links_.removeAll(link); }
     void refresh();
 
+    // Highlight compatible attributes and geyed out other.
     void highlight();
 
+    // Revert back the highlight state.
     void unhighlight();
 
     QVariant const& data() const { return data_; }
@@ -58,6 +61,7 @@ public:
 
     void setMode(DisplayMode mode)  { mode_ = mode; }
 
+    // Enable the use of qgraphicsitem_cast with this item.
     enum { Type = UserType + 1 };
     int type() const override { return Type; }
 
@@ -95,11 +99,13 @@ protected:
 
 };
 
+///\brief A Node attribute that can be edited by the user.
 class AttributeMember : public Attribute
 {
 public:
     AttributeMember(QGraphicsItem* parent, AttributeInfo const& info, QRect const& boundingRect);
 
+    // Set the data by working closely with the MemberForm class.
     void setData(QVariant const& data) override;
 protected:
     QWidget* createWidget();
@@ -128,11 +134,13 @@ protected:
     Link* newConnection_{nullptr};
 };
 
+
 class AttributeInput : public AttributeMember
 {
 public:
     AttributeInput(QGraphicsItem* parent, AttributeInfo const& info, QRect const& boundingRect);
 
+    //void setData(QVariant const& data) override;
     bool accept(Attribute* attribute) const override;
     QPointF connectorPos() const override { return mapToScene(connectorPos_); }
 
@@ -145,6 +153,7 @@ protected:
     QPointF* inputTriangle_;
     QPointF connectorPos_;
 };
+
 
 }
 

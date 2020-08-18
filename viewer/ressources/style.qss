@@ -30,7 +30,7 @@ QDoubleSpinBox::down-button
 {
     subcontrol-origin: content;
     subcontrol-position: right bottom;
-
+    
     width: 10px;
     height: 7px;
     border-width: 1px;
