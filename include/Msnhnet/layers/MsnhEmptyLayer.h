@@ -11,7 +11,7 @@ namespace Msnhnet
 class MsnhNet_API EmptyLayer : public BaseLayer
 {
 public:
-    EmptyLayer(const int &_batch, const int &_width, const int &_height, const int &_channel);
+    EmptyLayer(const int &batch, const int &width, const int &height, const int &channel);
     ~EmptyLayer();
 
     virtual  void forward(NetworkState &netState);

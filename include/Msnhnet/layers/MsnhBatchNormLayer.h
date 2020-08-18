@@ -13,15 +13,15 @@ namespace Msnhnet
 class MsnhNet_API BatchNormLayer : public BaseLayer
 {
 public:
-    BatchNormLayer(const int &_batch, const int &_width, const int &_height, const int &_channel, const ActivationType &_activation, const std::vector<float> &_actParams);
+    BatchNormLayer(const int &batch, const int &width, const int &height, const int &channel, const ActivationType &activation, const std::vector<float> &actParams);
 
     virtual void forward(NetworkState &netState);
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);
 #endif
 
-    static void addBias(float *const &_output, float *const &_biases, const int &_batch, const int &_channel, const int &whSize);
-    static void scaleBias(float *const &_output, float *const &_scales, const int &_batch, const int &_channel, const int &whSize);
+    static void addBias(float *const &output, float *const &biases, const int &batch, const int &channel, const int &whSize);
+    static void scaleBias(float *const &output, float *const &scales, const int &batch, const int &channel, const int &whSize);
 
     void resize(int _width, int _height);
 
@@ -29,8 +29,8 @@ public:
 
     void loadScales(float *const &weights, const int& len);
     void loadBias(float *const &bias, const int& len);
-    void loadRollMean(float *const &_rollMean, const int& len);
-    void loadRollVariance(float *const &_rollVariance, const int& len);
+    void loadRollMean(float *const &rollMean, const int& len);
+    void loadRollVariance(float *const &rollVariance, const int& len);
     ~BatchNormLayer();
 
     float *getScales() const;

@@ -12,9 +12,9 @@ namespace Msnhnet
 class MsnhNet_API MaxPoolLayer:public BaseLayer
 {
 public:
-    MaxPoolLayer(const int &_batch,  const int &_height, const int &_width, const int &_channel, const int &_kSizeX, const int &_kSizeY,
-                 const int &_strideX, const int &_strideY, const int &_paddingX, const int &_paddingY, const int &_maxPoolDepth,
-                 const int &_outChannelsMp, const int &_ceilMode, const int &_antialiasing);
+    MaxPoolLayer(const int &batch,  const int &height, const int &width, const int &channel, const int &kSizeX, const int &kSizeY,
+                 const int &strideX, const int &strideY, const int &paddingX, const int &paddingY, const int &maxPoolDepth,
+                 const int &outChannelsMp, const int &ceilMode, const int &antialiasing);
 
     virtual void forward(NetworkState &netState);
 
@@ -23,9 +23,9 @@ public:
 #endif
 
 #ifdef USE_X86
-    void forwardAvx(float *const &src, float *const &dst, const int &_kSizeX, const int &_kSizeY, const int &_width,
-                    const int &_height, const int &_outWidth, const int &_outHeight, const int &_channel, const int &_paddingX,
-                    const int &_paddingY, const int &_stride, const int &_batch);
+    void forwardAvx(float *const &src, float *const &dst, const int &kSizeX, const int &kSizeY, const int &width,
+                    const int &height, const int &outWidth, const int &outHeight, const int &channel, const int &paddingX,
+                    const int &paddingY, const int &stride, const int &batch);
 #endif
 
     ~MaxPoolLayer();

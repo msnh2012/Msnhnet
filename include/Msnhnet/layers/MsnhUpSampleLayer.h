@@ -11,14 +11,14 @@ namespace Msnhnet
 class MsnhNet_API UpSampleLayer : public BaseLayer
 {
 public:
-    UpSampleLayer(const int &_batch, const int &_width, const int &_height, const int &_channel, const int &_stride, const float &_scale);
+    UpSampleLayer(const int &batch, const int &width, const int &height, const int &channel, const int &stride, const float &scale);
 
     virtual void forward(NetworkState &netState);
 
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);
 #endif
-    void resize(const int &_width, const int &_height);
+    void resize(const int &width, const int &height);
 
     int getReverse() const;
 

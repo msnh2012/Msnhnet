@@ -66,6 +66,7 @@ enum LayerType
     SOFTMAX,
     CROP,
     ROUTE,
+    VARIABLE_OP,
     NORMALIZATION,
     AVGPOOL,
     ACTIVE,
@@ -84,6 +85,16 @@ enum LayerType
     CONCAT_BLOCK,
     ADD_BLOCK,
     PADDING
+};
+
+enum Arithmetic
+{
+    ARITH_ADD = 0,
+    ARITH_SUB,
+    ARITH_SUB_INV,
+    ARITH_MUL,
+    ARITH_DIV,
+    ARITH_DIV_INV
 };
 
 enum WeightsType

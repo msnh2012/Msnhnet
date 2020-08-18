@@ -13,6 +13,7 @@
 #include "Msnhnet/layers/MsnhGlobalAvgPoolLayer.h"
 #include "Msnhnet/layers/MsnhMaxPoolLayer.h"
 #include "Msnhnet/layers/MsnhRouteLayer.h"
+#include "Msnhnet/layers/MsnhVariableOpLayer.h"
 #include "Msnhnet/layers/MsnhSoftMaxLayer.h"
 #include "Msnhnet/layers/MsnhUpSampleLayer.h"
 #include "Msnhnet/layers/MsnhResBlockLayer.h"
@@ -65,6 +66,8 @@ public:
     std::string getLayerDetail();
     std::string getTimeDetail();
     float getGpuInferenceTime() const;
+
+    Network *getNet() const;
 
 private:
 

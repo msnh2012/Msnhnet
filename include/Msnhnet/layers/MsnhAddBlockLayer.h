@@ -27,7 +27,7 @@ class NetBuildParams;
 class MsnhNet_API AddBlockLayer:public BaseLayer
 {
 public:
-    AddBlockLayer(const int &_batch, NetBuildParams &params, std::vector<std::vector<BaseParams*>> &branchParams, ActivationType &_activation, const std::vector<float> &_actParams);
+    AddBlockLayer(const int &batch, NetBuildParams &params, std::vector<std::vector<BaseParams*>> &branchParams, ActivationType &activation, const std::vector<float> &actParams);
 
     std::vector<std::vector<BaseLayer *>> branchLayers;
     float       *activationInput    =   nullptr;

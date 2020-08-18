@@ -22,6 +22,8 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes, st
     this->_inputLayerIndexes =   inputLayerIndexes;
     this->_inputLayerOutputs =   inputLayerOutputs;
 
+    this->_actParams         =  actParams;
+
     for (size_t i = 0; i < inputLayerIndexes.size(); ++i)
     {
 #ifdef WIN32

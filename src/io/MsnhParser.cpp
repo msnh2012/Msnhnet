@@ -83,6 +83,10 @@ void Parser::clearParams()
             {
                 delete reinterpret_cast<RouteParams*>(params[i]);
             }
+            else if(params[i]->type == LayerType::VARIABLE_OP)
+            {
+                delete reinterpret_cast<VariableOpParams*>(params[i]);
+            }
             else if(params[i]->type == LayerType::UPSAMPLE)
             {
                 delete reinterpret_cast<UpSampleParams*>(params[i]);
@@ -488,6 +492,19 @@ void Parser::readCfg(const std::string &path)
                 else
                 {
                     throw Exception(1,"[route] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "varop")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    VariableOpParams *variableOpParams = new VariableOpParams(true);
+                    parseVariableOpParams(variableOpParams, it);
+                    params.push_back(variableOpParams);
+                }
+                else
+                {
+                    throw Exception(1,"[varop] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "softmax")
@@ -1323,6 +1340,13 @@ void Parser::parseConnectParams(ConnectParams *connectParams, YAML::const_iterat
                 throw Exception(1,"[connect] batchNorm can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
+        else if(key == "useBias")
+        {
+            if(!ExString::strToInt(value, connectParams->useBias))
+            {
+                throw Exception(1,"[connect] useBias can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
         else if(key == "activation")
         {
             std::vector<std::string> splits;
@@ -1421,7 +1445,7 @@ void Parser::parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterat
         {
             if(!ExString::strToFloat(value, paddingParams->paddingVal))
             {
-                throw Exception(1,"[padding] paddingVal can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[padding] paddingVal can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
@@ -1838,6 +1862,155 @@ void Parser::parseRouteParams(RouteParams *routeParams, YAML::const_iterator &it
     }
 }
 
+string VariableOpParams::getStrFromVarOpType(const VariableOpParams::VarOpType &varOpType)
+{
+    switch (varOpType)
+    {
+    case VAR_OP_ADD:
+        return "add";
+        break;
+    case VAR_OP_SUB:
+        return "sub";
+        break;
+    case VAR_OP_SUB_INV:
+        return "sub_inv";
+        break;
+    case VAR_OP_MUL:
+        return "mul";
+        break;
+    case VAR_OP_DIV:
+        return "div";
+        break;
+    case VAR_OP_DIV_INV:
+        return "div_inv";
+        break;
+    case VAR_OP_ADD_CONST:
+        return "add_c";
+        break;
+    case VAR_OP_SUB_CONST:
+        return "sub_c";
+        break;
+    case VAR_OP_SUB_CONST_INV:
+        return "sub_c_inv";
+        break;
+    case VAR_OP_MUL_CONST:
+        return "mul_c";
+        break;
+    case VAR_OP_DIV_CONST:
+        return "div_c";
+        break;
+    case VAR_OP_DIV_CONST_INV:
+        return "div_c_inv";
+        break;
+    default:
+        throw Exception(1, "[varop] var op no supported : " + std::to_string(varOpType), __FILE__, __LINE__, __FUNCTION__);
+        break;
+    }
+}
+
+VariableOpParams::VarOpType VariableOpParams::getVarOpTypeFromStr(const string &varOpStr)
+{
+    if(varOpStr == "add")
+    {
+        return VAR_OP_ADD;
+    }
+    else if(varOpStr == "sub")
+    {
+        return VAR_OP_SUB;
+    }
+    else if(varOpStr == "sub_inv")
+    {
+        return VAR_OP_SUB_INV;
+    }
+    else if(varOpStr == "mul")
+    {
+        return VAR_OP_MUL;
+    }
+    else if(varOpStr == "div")
+    {
+        return VAR_OP_DIV;
+    }
+    else if(varOpStr == "div_INV")
+    {
+        return VAR_OP_DIV_INV;
+    }
+    else if(varOpStr == "add_c")
+    {
+        return VAR_OP_ADD_CONST;
+    }
+    else if(varOpStr == "sub_c")
+    {
+        return VAR_OP_SUB_CONST;
+    }
+    else if(varOpStr == "sub_c_inv")
+    {
+        return VAR_OP_SUB_CONST_INV;
+    }
+    else if(varOpStr == "mul_c")
+    {
+        return VAR_OP_MUL_CONST;
+    }
+    else if(varOpStr == "div_c")
+    {
+        return VAR_OP_DIV_CONST;
+    }
+    else if(varOpStr == "div_c_inv")
+    {
+        return VAR_OP_DIV_CONST_INV;
+    }
+    else
+    {
+        throw Exception(1, "[varop] var op no supported : " + varOpStr, __FILE__, __LINE__, __FUNCTION__);
+    }
+}
+
+void Parser::parseVariableOpParams(VariableOpParams *variableOpParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "layers")
+        {
+            std::vector<std::string> layerIndexes;
+            ExString::split(layerIndexes, value, ",");
+
+            for (size_t i = 0; i < layerIndexes.size(); ++i)
+            {
+                int index   =  0;
+
+                if(!ExString::strToInt(layerIndexes[i], index))
+                {
+                    throw Exception(1,"[varop] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                }
+
+                if(index < 0)
+                {
+                    index   = index + variableOpParams->index - 1;
+                }
+
+                variableOpParams->layerIndexes.push_back(index);
+            }
+        }
+        else if(key == "mode")
+        {
+            variableOpParams->varOpType = variableOpParams->getVarOpTypeFromStr(value);
+        }
+        else if(key == "constVal")
+        {
+            if(!ExString::strToFloat(value, variableOpParams->constVal))
+            {
+                throw Exception(1,"[varop] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [varop]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+}
+
 void Parser::parseSoftMaxParams(SoftMaxParams *softmaxParams, YAML::const_iterator &iter)
 {
     for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
@@ -1856,7 +2029,7 @@ void Parser::parseSoftMaxParams(SoftMaxParams *softmaxParams, YAML::const_iterat
         {
             if(!ExString::strToFloat(value, softmaxParams->temperature))
             {
-                throw Exception(1,"[softmax] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[softmax] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
@@ -1884,7 +2057,7 @@ void Parser::parseUpSampleParams(UpSampleParams *upSampleParams, YAML::const_ite
         {
             if(!ExString::strToFloat(value, upSampleParams->scale))
             {
-                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[unsample] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
@@ -1972,14 +2145,14 @@ void Parser::parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_
         {
             if(!ExString::strToFloat(value, yolov3OutParams->confThresh))
             {
-                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[yolov3out] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "nmsThresh")
         {
             if(!ExString::strToFloat(value, yolov3OutParams->nmsThresh))
             {
-                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[yolov3out] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "useSoftNms")
@@ -2252,4 +2425,5 @@ ResBlockParams::~ResBlockParams()
         }
     }
 }
+
 }

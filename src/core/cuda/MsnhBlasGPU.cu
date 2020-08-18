@@ -65,6 +65,80 @@ void BlasGPU::gpuAxpy(const int &n, const float &alpha, float * const x, const i
     CUDA_CHECK(cudaPeekAtLastError());
 }
 
+__global__ void  arithmeticKernel(const Arithmetic type, const int n, float * const x, const int stepX, float * const y, const int stepY, float *out, const int stepOut)
+{
+    int i = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
+    if(i<n)
+    {
+        switch (type)
+        {
+        case ARITH_ADD:
+            out[i*stepOut] = x[i*stepX] + y[i*stepY];
+            break;
+        case ARITH_SUB:
+            out[i*stepOut] = x[i*stepX] - y[i*stepY];
+            break;
+        case ARITH_SUB_INV:
+            out[i*stepOut] = y[i*stepY] - x[i*stepX];
+            break;
+        case ARITH_MUL:
+            out[i*stepOut] = x[i*stepX] * y[i*stepY];
+            break;
+        case ARITH_DIV:
+            float tmp1 = (y[i*stepY]==0?0.000001:y[i*stepY]);
+            out[i*stepOut] = x[i*stepX] / tmp1 ;
+            break;
+        case ARITH_DIV_INV:
+            float tmp2 = (x[i*stepX]==0?0.000001:x[i*stepX]);
+            out[i*stepOut] = y[i*stepX] / tmp2;
+            break;
+        }
+    }
+}
+
+void BlasGPU::gpuArithmetic(const Arithmetic &type, const int &n, float * const &x, const int &stepX, float * const &y, const int &stepY, float *out, const int &stepOut)
+{
+    arithmeticKernel<<<Cuda::getGrid(n), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(type, n, x, stepX, y, stepY, out, stepOut);
+    CUDA_CHECK(cudaPeekAtLastError());
+}
+
+__global__ void  arithmeticConstKernel(const Arithmetic type, const int n, float * const x, const int stepX, const float alpha, float *out, const int stepOut)
+{
+    int i = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
+    if(i<n)
+    {
+        switch (type)
+        {
+        case ARITH_ADD:
+            out[i*stepOut] = x[i*stepX] + alpha;
+            break;
+        case ARITH_SUB:
+            out[i*stepOut] = x[i*stepX] - alpha;
+            break;
+        case ARITH_SUB_INV:
+            out[i*stepOut] = alpha - x[i*stepX];
+            break;
+        case ARITH_MUL:
+            out[i*stepOut] = x[i*stepX] * alpha;
+            break;
+        case ARITH_DIV:
+            float tmp1 = (alpha==0?0.000001:alpha);
+            out[i*stepOut] = x[i*stepX] / tmp1 ;
+            break;
+        case ARITH_DIV_INV:
+            float tmp2 = (x[i*stepX]==0?0.000001:x[i*stepX]);
+            out[i*stepOut] = alpha / tmp2;
+            break;
+        }
+    }
+}
+
+void BlasGPU::gpuArithmetic(const Arithmetic &type, const int &n, float * const &x, const int &stepX, const float &alpha, float *out, const int &stepOut)
+{
+    arithmeticConstKernel<<<Cuda::getGrid(n), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(type, n, x, stepX, alpha, out, stepOut);
+    CUDA_CHECK(cudaPeekAtLastError());
+}
+
 __global__ void  scaleKernel(const int n, const float alpha, float * const x, const int step)
 {
     int i = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;

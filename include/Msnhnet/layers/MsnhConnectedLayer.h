@@ -13,8 +13,8 @@ namespace Msnhnet
 class MsnhNet_API ConnectedLayer : public BaseLayer
 {
 public:
-    ConnectedLayer(const int &_batch, const int &steps, const int &_inputNum, const int &_outputNum,
-                   const ActivationType &_activation, const std::vector<float> &_actParams, const int &_batchNorm);
+    ConnectedLayer(const int &batch, const int &steps, const int &inputNum, const int &outputNum,
+                   const ActivationType &activation, const std::vector<float> &actParams, const int &batchNorm, const int &useBias);
 
     ~ConnectedLayer();
 
@@ -24,13 +24,17 @@ public:
     virtual void forwardGPU(NetworkState &netState);
 #endif
 
-    void loadAllWeigths(std::vector<float> &_weights);
+    void loadAllWeigths(std::vector<float> &weights);
 
-    void loadScales(float *const &_weights, const int& len);
+    void loadScales(float *const &weights, const int& len);
+
     void loadBias(float *const &bias, const int& len);
-    void loadWeights(float *const &_weights, const int& len);
-    void loadRollMean(float *const &_rollMean, const int& len);
-    void loadRollVariance(float *const &_rollVariance, const int& len);
+
+    void loadWeights(float *const &weights, const int& len);
+
+    void loadRollMean(float *const &rollMean, const int& len);
+
+    void loadRollVariance(float *const &rollVariance, const int& len);
 
     float *getWeights() const;
 
@@ -72,6 +76,8 @@ protected:
     float       *_scales             =   nullptr;
     float       *_rollMean           =   nullptr;
     float       *_rollVariance       =   nullptr;
+
+    int         _useBias             =   0;
 
 #ifdef USE_GPU
     float       *_gpuWeights         =   nullptr;

@@ -407,12 +407,11 @@ int ConvolutionalLayer::convOutWidth()
 
 int ConvolutionalLayer::getWorkSpaceSize32()
 {
+    size_t space = 0;
 #ifdef USE_GPU
 #ifdef USE_CUDNN
-    size_t space = 0;
     CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(Cuda::getCudnnHandle(), this->_inputDesc, this->_weightDesc, this->_convDesc,
                                                         this->_outputDesc, this->_fwAlgo, &space));
-    return space;
 #endif
 #endif
 
@@ -427,7 +426,9 @@ int ConvolutionalLayer::getWorkSpaceSize32()
         }
     }
 
-    return this->_outHeight * this->_outWidth * this->_kSizeX * this->_kSizeY * (this->_channel / this->_groups)*static_cast<int>(sizeof(float));
+    size_t space1 = this->_outHeight * this->_outWidth * this->_kSizeX * this->_kSizeY * (this->_channel / this->_groups)*static_cast<int>(sizeof(float));
+
+    return (space1>space)?space1:space;
 }
 
 int ConvolutionalLayer::getWorkSpaceSize16()

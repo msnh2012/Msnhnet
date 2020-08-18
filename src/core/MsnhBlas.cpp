@@ -87,6 +87,140 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
 #endif
 }
 
+void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * const &x, const int &stepX, float * const &y, const int &stepY, float *out, const int &stepOut)
+{
+    if(type == Arithmetic::ARITH_ADD)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            out[i*stepOut]  = x[i*stepX] + y[i*stepY];
+        }
+    }
+    else if(type == Arithmetic::ARITH_SUB)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            out[i*stepOut]  = x[i*stepX] - y[i*stepY];
+        }
+    }
+    else if(type == Arithmetic::ARITH_SUB_INV)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            out[i*stepOut]  = y[i*stepY] - x[i*stepX];
+        }
+    }
+    else if(type == Arithmetic::ARITH_MUL)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            out[i*stepOut]  = x[i*stepX] * y[i*stepY];
+        }
+    }
+    else if(type == Arithmetic::ARITH_DIV)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            float tmp   = (y[i*stepY]==0?0.000001f:y[i*stepY]);
+            out[i*stepOut]      = x[i*stepX] / tmp;
+        }
+    }
+    else if(type == Arithmetic::ARITH_DIV_INV)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            float tmp   = (x[i*stepX]==0?0.000001f:x[i*stepX]);
+            out[i*stepOut]      = y[i*stepY] / tmp;
+        }
+    }
+
+}
+
+void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * const &x, const int &stepX, const float alpha, float *out, const int &stepOut)
+{
+    if(type == Arithmetic::ARITH_ADD)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            out[i*stepOut]  = x[i*stepX] + alpha;
+        }
+    }
+    else if(type == Arithmetic::ARITH_SUB)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            out[i*stepOut]  = x[i*stepX] - alpha;
+        }
+    }
+    else if(type == Arithmetic::ARITH_SUB_INV)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            out[i*stepOut]  = alpha - x[i*stepX];
+        }
+    }
+    else if(type == Arithmetic::ARITH_MUL)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            out[i*stepOut]  = x[i*stepX] * alpha;
+        }
+    }
+    else if(type == Arithmetic::ARITH_DIV)
+    {
+        float tmp   = (alpha==0?0.000001f:alpha);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            out[i*stepOut]      = x[i*stepX] / tmp;
+        }
+    }
+    else if(type == Arithmetic::ARITH_DIV_INV)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            float tmp   = x[i*stepX]==0?0.000001f:x[i*stepX];
+            out[i*stepOut]      = alpha / tmp;
+        }
+    }
+
+}
+
 void Blas::cpuScale(const int &inputN, const float &alpha, float *const &x, const int &stepX)
 {
 #ifdef USE_OPEN_BLAS

@@ -189,6 +189,8 @@ public:
     }
     int             output      =   0;
     int             batchNorm   =   0;
+    int             useBias     =   1; 
+
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
 };
@@ -278,6 +280,38 @@ public:
     int     addModel    =   0;
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
+};
+
+class VariableOpParams : public BaseParams
+{
+public:
+    VariableOpParams(bool incIndex) : BaseParams(incIndex)
+    {
+        this->type = LayerType::VARIABLE_OP;
+    }
+
+    enum VarOpType
+    {
+        VAR_OP_ADD=0,
+        VAR_OP_SUB,
+        VAR_OP_SUB_INV,
+        VAR_OP_MUL,
+        VAR_OP_DIV,
+        VAR_OP_DIV_INV,
+        VAR_OP_ADD_CONST,
+        VAR_OP_SUB_CONST,
+        VAR_OP_SUB_CONST_INV,
+        VAR_OP_MUL_CONST,
+        VAR_OP_DIV_CONST,
+        VAR_OP_DIV_CONST_INV
+    };
+
+    std::vector<int> layerIndexes;
+    VarOpType varOpType;
+    float constVal = 0;
+
+    std::string getStrFromVarOpType(const VarOpType &varOpType);
+    VarOpType getVarOpTypeFromStr(const std::string &varOpStr);
 };
 
 class SoftMaxParams : public BaseParams
@@ -396,6 +430,7 @@ public:
     void parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::const_iterator &iter);
     void parseAddBlockParams(AddBlockParams *addBlockParams, YAML::const_iterator &iter);
     void parseRouteParams(RouteParams *routeParams, YAML::const_iterator &iter);
+    void parseVariableOpParams(VariableOpParams *variableOpParams, YAML::const_iterator &iter);
     void parseSoftMaxParams(SoftMaxParams *softmaxParams, YAML::const_iterator &iter);
     void parseUpSampleParams(UpSampleParams *upSampleParams, YAML::const_iterator &iter);
     void parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator &iter);

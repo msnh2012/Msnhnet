@@ -10,7 +10,7 @@ namespace Msnhnet
 class MsnhNet_API SoftMaxLayer : public BaseLayer
 {
 public:
-    SoftMaxLayer(const int &_batch, const int &_inputNum, const int &_groups, const float &_temperature);
+    SoftMaxLayer(const int &batch, const int &inputNum, const int &groups, const float &temperature);
 
     ~SoftMaxLayer();
 

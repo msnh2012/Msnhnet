@@ -2,7 +2,7 @@
 namespace Msnhnet
 {
 ConnectedLayer::ConnectedLayer(const int &batch, const int &steps, const int &inputNum,
-                               const int &outputNum, const ActivationType &activation, const std::vector<float> &actParams, const int &batchNorm)
+                               const int &outputNum, const ActivationType &activation, const std::vector<float> &actParams, const int &batchNorm, const int &useBias)
 {
     int totalBatch      =   batch*steps;
     this->_type          =   LayerType::CONNECTED;
@@ -29,8 +29,18 @@ ConnectedLayer::ConnectedLayer(const int &batch, const int &steps, const int &in
     this->_activation    =   activation;
     this->_actParams     =   actParams;
 
+    this->_useBias       =   useBias;
+
     this->_nWeights      =   inputNum * outputNum;
-    this->_nBiases       =   outputNum;
+
+    if(this->_useBias)
+    {
+        this->_nBiases   =   outputNum;
+    }
+    else
+    {
+        this->_nBiases   =   0;
+    }
 
     if(!BaseLayer::isPreviewMode)
     {
@@ -121,11 +131,20 @@ void ConnectedLayer::forward(NetworkState &netState)
 
         ConvolutionalLayer::scaleBias(this->_output, this->_scales, this->_batch, this->_outputNum, 1);
 
+        for (int i = 0; i < this->_batch; ++i)
+        {
+            Blas::cpuAxpy(this->_outputNum, 1, this->_biases, 1, this->_output + i * this->_outputNum, 1);
+        }
     }
-
-    for (int i = 0; i < this->_batch; ++i)
+    else
     {
-        Blas::cpuAxpy(this->_outputNum, 1, this->_biases, 1, this->_output + i * this->_outputNum, 1);
+        if(this->_useBias)
+        {
+            for (int i = 0; i < this->_batch; ++i)
+            {
+                Blas::cpuAxpy(this->_outputNum, 1, this->_biases, 1, this->_output + i * this->_outputNum, 1);
+            }
+        }
     }
 
     if(     this->_activation==ActivationType::NORM_CHAN||
@@ -176,7 +195,10 @@ void ConnectedLayer::forwardGPU(NetworkState &netState)
     }
     else
     {
-        BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+        if(this->_useBias)
+        {
+            BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+        }
     }
 
     if(     this->_activation==ActivationType::NORM_CHAN||

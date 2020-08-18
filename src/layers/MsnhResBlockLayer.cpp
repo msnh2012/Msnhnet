@@ -42,7 +42,7 @@ ResBlockLayer::ResBlockLayer(const int &batch, NetBuildParams &params, std::vect
         {
             ConnectParams *connectParams=   reinterpret_cast<ConnectParams*>(baseParams[i]);
             layer                       =   new ConnectedLayer(params.batch, 1, params.inputNums, connectParams->output, connectParams->activation,
-                                                               connectParams->actParams, connectParams->batchNorm);
+                                                               connectParams->actParams, connectParams->batchNorm, connectParams->useBias);
             if(i == 0)
             {
                 this->_inputNum = layer->getInputNum();

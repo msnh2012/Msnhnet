@@ -12,8 +12,8 @@ namespace Msnhnet
 class MsnhNet_API LocalAvgPoolLayer : public BaseLayer
 {
 public:
-    LocalAvgPoolLayer(const int &_batch, const int &_height, const int &_width, const int &_channel, const int &_kSizeX, const int &_kSizeY,
-                      const int &_strideX, const int &_strideY, const int &_paddingX, const int &_paddingY, const int&_ceilMode, const int &_antialiasing);
+    LocalAvgPoolLayer(const int &batch, const int &height, const int &width, const int &channel, const int &kSizeX, const int &kSizeY,
+                      const int &strideX, const int &strideY, const int &paddingX, const int &paddingY, const int&ceilMode, const int &antialiasing);
 
     virtual void forward(NetworkState &netState);
 

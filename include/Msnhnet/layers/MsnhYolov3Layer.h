@@ -14,7 +14,7 @@ namespace Msnhnet
 class MsnhNet_API Yolov3Layer : public BaseLayer
 {
 public:
-    Yolov3Layer(const int &_batch, const int &_width, const int &_height, const int &_num, const int &_orgWidth, const int &_orgHeight, const int &_classNum, const std::vector<float> &anchors);
+    Yolov3Layer(const int &batch, const int &width, const int &height, const int &num, const int &orgWidth, const int &orgHeight, const int &classNum, const std::vector<float> &anchors);
 
     std::vector<float> anchors;
 
@@ -24,11 +24,11 @@ public:
     virtual void forwardGPU(NetworkState &netState);
 #endif
 
-    void sigmoid(float *val, const int &_num);
+    void sigmoid(float *val, const int &num);
 
-    void exSigmoid(float *val, const int &_width, const int &_height, const float& _ratios, const bool &addGridW);
+    void exSigmoid(float *val, const int &width, const int &height, const float& _ratios, const bool &addGridW);
 
-    void aExpT(float *val, const int &_num, const float &a);
+    void aExpT(float *val, const int &num, const float &a);
 
     int getClassNum() const;
 

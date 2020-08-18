@@ -21,6 +21,7 @@ ActivationType Activations::getActivation(const std::string &msg)
     if (msg=="ramp") return RAMP;
     if (msg=="leaky") return LEAKY;
     if (msg=="tanh") return TANH;
+    if (msg=="softplus") return SOFT_PLUS;
     if (msg=="stair") return STAIR;
     if (msg=="none") return NONE;
     return RELU;
@@ -46,11 +47,11 @@ string Activations::getActivationStr(const ActivationType &type)
     if (type==RAMP) return "ramp";
     if (type==LEAKY) return "leaky";
     if (type==TANH) return "tanh";
+    if (type==SOFT_PLUS) return "softplus";
     if (type==STAIR) return "stair";
     if (type==NONE) return "none";
     return "unknow";
 }
-
 float Activations::activate(const float &x, const ActivationType &actType, const float &params)
 {
     switch (actType)
