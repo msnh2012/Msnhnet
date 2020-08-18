@@ -18,8 +18,8 @@ class Msnhnet:
 
         if str(inAddr._cdata) != self.getLastKey():
             try:
-                ID = self.name_index_dict[inAddr._cdata]
-                self.buildRoute(inAddr._cdata,str(ID),False)
+                ID = self.name_index_dict[str(inAddr._cdata)]
+                self.buildRoute(str(inAddr._cdata),str(ID),False)
             except:
                 raise NotImplementedError("last op is not supported " + fun + str(inAddr._cdata))
             
