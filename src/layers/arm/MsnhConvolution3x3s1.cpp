@@ -611,7 +611,7 @@ else
     }
 
     //deal one conv output
-#ifdef USE_OMP
+#if USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif 
     for(int cc = cc_remain_outch; cc < outch; cc++){
