@@ -65,7 +65,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
                 //assembly
                 if(nn > 0){
 #if __aarch64__
-
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 else
                     asm volatile(
                         //
@@ -411,7 +411,7 @@ else
 #if USE_NEON
                 if(nn > 0){
 #if __aarch64__
-
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
                   asm  volatile(
                        "0:                             \n"
@@ -650,6 +650,9 @@ else
 
 #if USE_NEON
 
+#if  __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
                 if(nn > 0){
                     asm volatile(
                         "0:                             \n"
@@ -753,6 +756,7 @@ else
                         : "cc", "memory", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
                     );
                 } 
+#endif
 
 #endif
 
@@ -842,7 +846,7 @@ else
 
                 if(nn > 0){
 #if __aarch64__
-
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 else
                     
 #endif
@@ -865,10 +869,10 @@ else
 #if __aarch64__
                     *destptr0 = vaddvq_f32(sum0);
 #else
-                    float32x2_t _ss = vadd_f32(vget_low_f32(sum0), vget_high_f32(sum0));
-                    _ss = vpadd_fp32(_ss, _ss);
+                    float32x2_t _ss0 = vadd_f32(vget_low_f32(sum0), vget_high_f32(sum0));
+                    _ss0 = vpadd_fp32(_ss0, _ss0);
 
-                    *destptr0 = vget_lane_f32(_ss, 0);
+                    *destptr0 = vget_lane_f32(_ss0, 0);
 #endif
 
 #else
