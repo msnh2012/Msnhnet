@@ -62,11 +62,12 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
 
 
 #if USE_NEON
-                //assembly
-                if(nn > 0){
+
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 else
+                //assembly
+                if(nn > 0){
                     asm volatile(
                         //
                         "0:                             \n"
@@ -409,10 +410,11 @@ else
 #endif
 
 #if USE_NEON
-                if(nn > 0){
+
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
+                if(nn > 0){
                   asm  volatile(
                        "0:                             \n"
 
@@ -519,8 +521,8 @@ else
                         "w"(k678_next)  // %17
                         : "cc", "memory", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13");
                   );
-#endif
                 }
+#endif
 
 #endif
 
@@ -844,13 +846,76 @@ else
 
 #if USE_NEON
 
-                if(nn > 0){
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-else
+else    
+                if(nn > 0){
+                    "0:                             \n"
+                    // r0 = [a, b, c, d, e, f]
+                    "pld        [%2, #192]          \n"
+                    "vld1.f32   {d16-d18}, [%2]     \n" 
+                    "add        %2, #16             \n"
+
+                    "vext.32    q10, q8, q9, #1     \n"
+                    "vext.32    q11, q8, q9, #2     \n"
+
+                    //sum0
+                    "pld        [%1, #128]          \n"
+                    "vld1.f32   {d14-d15}, [%1]     \n"
+
+                    "vmla.f32   q7, q8, %e10[0]     \n"
+                    "vmul.f32   q13, q10, %e10[1]   \n"
+                    "vmul.f32   q14, q11, %f10[0]   \n"
+
+                    // r1 = [a1, b1, c1, d1, e1, f1]
+                    "pld        [%3, #192]          \n"
+                    "vld1.f32   {d16-d18}, [%3]     \n"
+                    "add        %3, #16             \n"
+
+                    "vext.32    q10, q8, q9, #1     \n"
+                    "vext.32    q11, q8, q9, #2     \n"
                     
-#endif
+                    "vmla.f32   q7, q8, %e11[0]     \n"
+                    "vmla.f32   q13, q10, %e11[1]   \n"
+                    "vmla.f32   q14, q11, %f11[0]   \n"
+
+                    // r2 = [a2, b2, c2, d2, e2, f2]
+                    "pld        [%4, #192]          \n"
+                    "vld1.f32   {d16-d18}, [%4]     \n"
+                    "add        %4, #16             \n"
+
+                    "vext.32    q10, q8, q9, #1     \n"
+                    "vext.32    q11, q8, q9, #2     \n"
+
+                    "vmla.f32   q7, q8, %e12[0]     \n"
+                    "vmla.f32   q13, q10, %e12[1]   \n"
+                    "vmla.f32   q14, q11, %f12[0]   \n"
+
+                    "vadd.f32   q7, q7, q13         \n"
+                    "vadd.f32   q7, q7, q14         \n"
+
+                    "vst1.f32   {d14-d15}, [%1]!    \n"
+
+                    "subs       %0, #1              \n"
+                    "bne        0b                  \n"
+
+                    : "=r"(nn),     // %0
+                    "=r"(destptr0), // %1
+                    "=r"(r0),     // %2
+                    "=r"(r1),     // %3
+                    "=r"(r2)      // %4
+                    : "0"(nn),
+                    "1"(destptr0),
+                    "2"(r0),
+                    "3"(r1),
+                    "4"(r2),
+                    "w"(k012), // %10
+                    "w"(k345), // %11
+                    "w"(k678)  // %12
+                    : "cc", "memory", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
                 } 
+#endif
+                
 
 #endif
 
