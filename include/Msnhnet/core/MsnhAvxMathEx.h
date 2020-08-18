@@ -40,8 +40,9 @@
 #endif
 #include <Msnhnet/config/MsnhnetCfg.h>
 
+#ifndef __AVX2__
 #define __AVX2__ 
-
+#endif
 /* yes I know, the top of this file is quite ugly */
 #if defined(__GNUC__)
 #define ALIGN32_BEG __attribute__((aligned(32)))
