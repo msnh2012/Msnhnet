@@ -93,6 +93,7 @@ set(SRCS
     src/layers/MsnhRes2BlockLayer.cpp
     src/layers/MsnhResBlockLayer.cpp
     src/layers/MsnhRouteLayer.cpp
+    src/layers/MsnhVariableOpLayer.cpp
     src/layers/MsnhSoftMaxLayer.cpp
     src/layers/MsnhUpSampleLayer.cpp
     src/layers/MsnhYolov3Layer.cpp
