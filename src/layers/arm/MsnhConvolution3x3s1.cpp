@@ -7,7 +7,7 @@ namespace Msnhnet
 void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &inw, const int &inh,  const int &inch, float *const &kernel, const int &kw, 
                         const int &kh, float* &dest, const int &outw, const int &outh, const int &outch){
     int cc_outch = outch >> 1;
-    int cc_remain_outch = outch << 1;
+    int cc_remain_outch = cc_outch << 1;
     const int in_size = inw * inh;
     const int out_size = outw * outh;
     //deal two conv output 
