@@ -137,7 +137,7 @@ make -j4
 sudo make install 
 
 #config 
-sudo echo /usr/local/lib > /etc/ld.so.conf/usrlib.conf
+sudo echo /usr/local/lib > /etc/ld.so.conf.d/usrlib.conf
 sudo ldconfig
 
 # build Msnhnet
