@@ -132,7 +132,7 @@ git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp
 mdir build 
 cd build 
-cmake ..
+cmake .. -DYAML_BUILD_SHARED_LIBS=True -DYAML_CPP_BUILD_TESTS=False
 make -j4
 sudo make install 
 
