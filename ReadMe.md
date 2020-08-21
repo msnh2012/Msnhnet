@@ -120,7 +120,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 
 - Linux(Ubuntu)
 
-ps. If you want to build with Jetson, please uncheck NNPACK, OMP, OPENBLAS, NEON, OMP_MAX_THREAD.
+ps. If you want to build with Jetson, please uncheck NNPACK, OPENBLAS, NEON.
 
 ```
 sudo apt-get install qt5-default      #optional
