@@ -4,18 +4,18 @@
 namespace Msnhnet
 {
 //src conv kernel
-void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &inw, const int &inh,  const int &inch, float *const &kernel, const int &kw, 
-                        const int &kh, float* &dest, const int &outw, const int &outh, const int &outch){
-    int cc_outch = outch >> 1;
-    int cc_remain_outch = cc_outch << 1;
+void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel, 
+                                        float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
+    int ccOutChannel = outChannel >> 1;
+    int ccRemainOutChannel = outChannel << 1;
 
-    const int in_size = inw * inh;
-    const int out_size = outw * outh;
+    const int in_size = inWidth * inHeight;
+    const int out_size = outWidth * outHeight;
     //deal two conv output 
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif 
-    for(int cc = 0; cc < cc_outch; cc++){
+    for(int cc = 0; cc < ccOutChannel; cc++){
         int c = cc << 1;
         //get two conv output in same time
         float *dest0 = dest + c * out_size;
@@ -25,21 +25,21 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
         for(int j = 0; j < out_size; j++) dest1[j] = 0.f;
 
         //two output rely on two kernel
-        float *k0 = kernel + c * inch * 3 * 3;
-        float *k1 = kernel + (c + 1) * inch * 3 * 3;
+        float *k0 = kernel + c * inChannel * 3 * 3;
+        float *k1 = kernel + (c + 1) * inChannel * 3 * 3;
 
-        for(int q = 0; q < inch; q++){
+        for(int q = 0; q < inChannel; q++){
             float* destptr0 = dest0;
             float* destptr1 = dest1;
-            float* destptr0_next = destptr0 + outw;
-            float* destptr1_next = destptr1 + outw;
+            float* destptr0_next = destptr0 + outWidth;
+            float* destptr1_next = destptr1 + outWidth;
 
             const float* src0 = src + q * in_size;
             //deal four lines and get two outputs in a feature map
             const float* r0 = src0;
-            const float* r1 = src0 + inw;
-            const float* r2 = src0 + inw * 2;
-            const float* r3 = src0 + inw * 3;
+            const float* r1 = src0 + inWidth;
+            const float* r2 = src0 + inWidth * 2;
+            const float* r3 = src0 + inWidth * 3;
 
 
 
@@ -54,13 +54,13 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
 #endif
 
             int i = 0;
-            for(; i + 1 < outh; i += 2){
+            for(; i + 1 < outHeight; i += 2){
                 
 #if USE_NEON
-                int nn = outw >> 2;
-                int remain = outw - (nn << 2);
+                int nn = outWidth >> 2;
+                int remain = outWidth - (nn << 2);
 #else
-                int remain = outw;
+                int remain = outWidth;
 #endif
 
 
@@ -391,25 +391,25 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
                     destptr1_next++;
                 }
 
-                r0 += 2 + inw;
-                r1 += 2 + inw;
-                r2 += 2 + inw;
-                r3 += 2 + inw;
+                r0 += 2 + inWidth;
+                r1 += 2 + inWidth;
+                r2 += 2 + inWidth;
+                r3 += 2 + inWidth;
 
-                destptr0 += outw;
-                destptr1 += outw;
-                destptr0_next += outw;
-                destptr1_next += outw;
+                destptr0 += outWidth;
+                destptr1 += outWidth;
+                destptr0_next += outWidth;
+                destptr1_next += outWidth;
             }
             
             //deal three lines and get one output in a feature map
-            for(; i < outh; i++){
+            for(; i < outHeight; i++){
                 
 #if USE_NEON
-                int nn = outw >> 2;
-                int remain = outw - (nn << 2);
+                int nn = outWidth >> 2;
+                int remain = outWidth - (nn << 2);
 #else                
-                int remain = outw;
+                int remain = outWidth;
 
 #endif
 
@@ -619,23 +619,23 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
 #endif 
 
 
-    for(int cc = cc_remain_outch; cc < outch; cc++){
+    for(int cc = ccRemainOutChannel; cc < outChannel; cc++){
         printf("*************Tail*************\n");
         int c = cc;
         float *dest0 = dest + c * out_size;
         for(int j = 0; j < out_size; j++) dest0[j] = 0.f;
-        const float* kernel0 = kernel + c * inch * 3 * 3;
+        const float* kernel0 = kernel + c * inChannel * 3 * 3;
 
-        for(int q = 0; q < inch; q++){
+        for(int q = 0; q < inChannel; q++){
             float *destptr0 = dest0;
-            float *destptr1 = dest0 + outw;
+            float *destptr1 = dest0 + outWidth;
 
             const float* src0 = src + q * in_size;
             //deal four lines and get two outputs in a feature map
             const float* r0 = src0;
-            const float* r1 = src0 + inw;
-            const float* r2 = src0 + inw * 2;
-            const float* r3 = src0 + inw * 3;
+            const float* r1 = src0 + inWidth;
+            const float* r2 = src0 + inWidth * 2;
+            const float* r3 = src0 + inWidth * 3;
 
 #if USE_NEON
             float32x4_t k012 = vld1q_f32(kernel0);
@@ -648,12 +648,12 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
 #endif
 
             int i = 0;
-            for(; i + 1 < outh; i += 2){
+            for(; i + 1 < outHeight; i += 2){
 #if USE_NEON
-                int nn = outw >> 2;
-                int remain = outw - (nn << 2);
+                int nn = outWidth >> 2;
+                int remain = outWidth - (nn << 2);
 #else
-                int remain = outw;
+                int remain = outWidth;
 #endif
 
 #if USE_NEON
@@ -833,21 +833,21 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
                     destptr1++;
                 }
 
-                r0 += 2 + inw;
-                r1 += 2 + inw;
-                r2 += 2 + inw;
-                r3 += 2 + inw;
+                r0 += 2 + inWidth;
+                r1 += 2 + inWidth;
+                r2 += 2 + inWidth;
+                r3 += 2 + inWidth;
 
-                destptr0 += outw;
-                destptr1 += outw;
+                destptr0 += outWidth;
+                destptr1 += outWidth;
             }
 
-            for(; i < outh; i++){
+            for(; i < outHeight; i++){
 #if USE_NEON
-                int nn = outw >> 2;
-                int remain = outw - (nn << 2);
+                int nn = outWidth >> 2;
+                int remain = outWidth - (nn << 2);
 #else
-                int remain = outw;
+                int remain = outWidth;
 #endif
 
 #if USE_NEON
