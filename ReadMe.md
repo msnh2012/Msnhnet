@@ -84,13 +84,13 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - Jetson NX
   |net|yolov3|yolov3_tiny|yolov4|
   |:---:|:---:|:---:|:---:|
-  |time|280ms|30ms|210ms|
+  |time|200ms|20ms|210ms|
   
 **Yolo GPU cuDnn FP16 Test**
 - Jetson NX
   |net|yolov3|yolov4|
   |:---:|:---:|:---:|
-  |time|140ms|120ms|
+  |time|115ms|120ms|
   
 **Mobilenet Yolo GPU cuDnn Test**
 - Jetson NX
