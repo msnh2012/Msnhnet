@@ -149,7 +149,7 @@ make -j4
 sudo make install
 
 vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
-
+sudo ldconfig
 ```
 **Test Msnhnet**
 - 1. Download pretrained model and extract. eg.D:/models. 
