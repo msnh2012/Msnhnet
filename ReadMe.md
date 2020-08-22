@@ -226,5 +226,14 @@ with open("alexnet.msnhbin","wb") as f:
 
 Enjoy it! :D
 
+**Acknowledgement**
+
+Msnhnet got ideas and developed based on these projects：
+
+- [DarkNet](https://github.com/pjreddie/darknet)
+- [NCNN](https://github.com/Tencent/ncnn)
+- [ACL](https://github.com/ARM-software/ComputeLibrary)
+
+
 **加群交流**</br>
 ![](readme_imgs/qq.png)</br>
