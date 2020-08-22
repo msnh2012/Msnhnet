@@ -107,6 +107,7 @@ set(SRCS
     src/utils/MsnhMathUtils.cpp
     src/utils/MsnhOpencvUtil.cpp
     src/utils/MsnhTimeUtil.cpp
+    src/c_api/MsnhnetLib.cpp
     )
 
 # config GPU
