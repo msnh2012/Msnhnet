@@ -620,7 +620,6 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
 
 
     for(int cc = ccRemainOutChannel; cc < outChannel; cc++){
-        printf("*************Tail*************\n");
         int c = cc;
         float *dest0 = dest + c * out_size;
         for(int j = 0; j < out_size; j++) dest0[j] = 0.f;
