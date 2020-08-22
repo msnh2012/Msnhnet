@@ -6,7 +6,6 @@
 ![Msnhnet](https://img.shields.io/badge/Msnh-Msnhnet-blue)</br>
 ![](readme_imgs/banner.jpg)</br>
 **Ps:** <font color=#ff0000> 目前本框架在持续开发中，由于是业余时间开发，更新速度不会很快。也欢迎有志之士一块维护本框架. 欢迎三连</font>.
-**git地址:**[https://github.com/msnh2012/Msnhnet](https://github.com/msnh2012/Msnhnet)
 
 **目前测试过的操作系统** (你可以自己测试下mac os)
 | |windows|linux|mac|
