@@ -1,5 +1,5 @@
 # Msnhnet
-English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br>
+English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/details/107216704)</br>
 ###  A mini pytorch inference framework which inspired from darknet.
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![c++](https://img.shields.io/badge/lauguage-c%2B%2B-green)
@@ -84,13 +84,13 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - Jetson NX
   |net|yolov3|yolov3_tiny|yolov4|
   |:---:|:---:|:---:|:---:|
-  |time|280ms|30ms|210ms|
+  |time|200ms|20ms|210ms|
   
 **Yolo GPU cuDnn FP16 Test**
 - Jetson NX
   |net|yolov3|yolov4|
   |:---:|:---:|:---:|
-  |time|140ms|120ms|
+  |time|115ms|120ms|
   
 **Mobilenet Yolo GPU cuDnn Test**
 - Jetson NX
@@ -109,7 +109,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - Viewer can not build with GPU.
 - Options</br>
 ![](readme_imgs/cmake_option.png)</br>
-**ps. You can change omp threads by unchecking OMP_MAX_THREAD and modifying "num" val at CMakeLists.txt:43** </br>
+**ps. You can change omp threads by unchecking OMP_MAX_THREAD and modifying "num" val at CMakeLists.txt:52** </br>
 
 - Windows
 1. Compile opencv4 and yaml-cpp.
@@ -120,7 +120,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 
 - Linux(Ubuntu)
 
-ps. If you want to build with Jetson, please uncheck NNPACK, OMP, OPENBLAS, NEON, OMP_MAX_THREAD.
+ps. If you want to build with Jetson, please uncheck NNPACK, OPENBLAS, NEON.
 
 ```
 sudo apt-get install qt5-default      #optional
@@ -132,12 +132,12 @@ git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp
 mdir build 
 cd build 
-cmake ..
+cmake .. -DYAML_BUILD_SHARED_LIBS=True -DYAML_CPP_BUILD_TESTS=False
 make -j4
 sudo make install 
 
 #config 
-sudo echo /usr/local/lib > /etc/ld.so.conf/usrlib.conf
+sudo echo /usr/local/lib > /etc/ld.so.conf.d/usrlib.conf
 sudo ldconfig
 
 # build Msnhnet
@@ -149,7 +149,7 @@ make -j4
 sudo make install
 
 vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
-
+sudo ldconfig
 ```
 **Test Msnhnet**
 - 1. Download pretrained model and extract. eg.D:/models. 
@@ -179,7 +179,7 @@ vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
 **ConcatBlock**</br>
 ![](readme_imgs/ConcatBlock.png)</br>
 
-**How to convert your own pytorch network**
+**How to convert your own pytorch network(Working on pytorch 2 msnhnet directly, temporary way is below)**
 1. Use pytorch to load network
 ```
 import torchvision.models as models
