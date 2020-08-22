@@ -17,6 +17,7 @@
 | |Intel i7|raspberry 3B|raspberry 4B|Jeston NX|
 |:---:|:---:|:---:|:---:|:---:|
 |checked|![i7](https://img.shields.io/badge/build-passing-brightgreen.svg)|![3B](https://img.shields.io/badge/build-passing-brightgreen.svg)|![4B](https://img.shields.io/badge/build-passing-brightgreen.svg)|![NX](https://img.shields.io/badge/build-passing-brightgreen.svg)|
+
 **特点**
 - 由纯c++编写完成, 不依赖其它第三方计算库, 同时也支持OpenBlas库.
 - 支持目前主流的操作系统,Windows, linux(Ubuntu测试), mac os(未测试).
