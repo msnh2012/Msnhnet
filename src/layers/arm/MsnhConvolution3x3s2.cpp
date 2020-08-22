@@ -70,6 +70,7 @@ namespace Msnhnet
                     if(nn > 0){
                         asm  volatile(
                             "0:                             \n"
+                            // r0
                             // q8 = [a, c, e, g]
                             // q9 = [b, d, f, h]
                             "pld        [%3, #256]          \n"
@@ -83,7 +84,31 @@ namespace Msnhnet
                             "pld        [%2, #128]          \n"
                             "vld1.f32   {d14-d15}, [%2]     \n"
 
+                            // q8和k012的第一个元素相乘
+                            "vmul.f32   q12, q8, %e12[0]    \n"
+                            // q8和k012_next的第一个元素相乘
+                            "vmul.f32   q13, q8, %e15[0]    \n"
+                            // q10 = [a, b, c, d]
+                            "pld        [%3, #128]          \n"
+                            "vld2.f32   {d20-d21}, [%3]     \n" 
 
+                            // q9 = [b, d, f, h] 和 k012的第二个元素相乘
+                            "vmla.f32   q6, q9, %e12[1]     \n"
+                            // q9 = [b, d, f, h] 和 k012_next的第二个元素相乘
+                            "vmla.f32   q7, q9, %e15[1]     \n"
+
+                            // q8 = [a, c, e, g]
+                            // q10 = [i, j, k, l]
+                            // q11 = [c, e, g, i]
+                            "vext.32    q11, q8, q10, #1    \n"
+
+                            // q11 = [c, e, g, i] 和 k012的第三个元素相乘
+                            // q11 = [c, e, g, i] 和 k012_next的第三个元素相乘
+                            "vmla.f32   q12, q11, %f12[0]   \n"
+                            "vmla.f32   q13, q11, %f15[0]   \n"
+
+
+                            // r1
 
                             // OutputOperands 
                             : "=r"(nn),      // %0
