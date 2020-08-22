@@ -49,6 +49,18 @@ public:
     }
 };
 
+class PermuteParams : public BaseParams
+{
+public:
+    PermuteParams(bool incIndex) : BaseParams(incIndex)
+    {
+        this->type     = LayerType::PERMUTE;
+    }
+    int             dim0        =   0;
+    int             dim1        =   1;
+    int             dim2        =   2;
+};
+
 class ActivationParams : public BaseParams
 {
 public:
@@ -424,6 +436,7 @@ public:
     void parseConnectParams(ConnectParams *connectParams, YAML::const_iterator &iter);
     void parseBatchNormParams(BatchNormParams *batchNormParams, YAML::const_iterator &iter);
     void parseEmptyNormParams(EmptyParams *emptyParams, YAML::const_iterator &iter);
+    void parsePermuteNormParams(PermuteParams *permuteParams, YAML::const_iterator &iter);
     void parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterator &iter);
     void parseResBlockParams(ResBlockParams *resBlockParams, YAML::const_iterator &iter);
     void parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_iterator &iter);

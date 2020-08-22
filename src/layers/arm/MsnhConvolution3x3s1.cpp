@@ -1,10 +1,9 @@
+#ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolution3x3s1.h"
-#include "Msnhnet/config/MsnhnetCfg.h"
-
 namespace Msnhnet
 {
 //src conv kernel
-void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel, 
+void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                                         float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
     int ccOutChannel = outChannel >> 1;
     int ccRemainOutChannel = outChannel << 1;
@@ -978,3 +977,5 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
 }
 
 }
+
+#endif

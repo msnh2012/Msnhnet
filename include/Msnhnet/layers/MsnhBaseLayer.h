@@ -47,7 +47,9 @@ public:
     virtual void loadAllWeigths(std::vector<float> &weights);
 
     static void initSimd();
-    inline void releaseArr(void * value)
+
+    template<typename T>
+    inline void releaseAll(T *& value)
     {
         if(value!=nullptr)
         {

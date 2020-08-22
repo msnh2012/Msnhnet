@@ -14,6 +14,8 @@
 #include "Msnhnet/layers/MsnhMaxPoolLayer.h"
 #include "Msnhnet/layers/MsnhRouteLayer.h"
 #include "Msnhnet/layers/MsnhVariableOpLayer.h"
+#include "Msnhnet/layers/MsnhEmptyLayer.h"
+#include "Msnhnet/layers/MsnhPermuteLayer.h"
 #include "Msnhnet/layers/MsnhSoftMaxLayer.h"
 #include "Msnhnet/layers/MsnhUpSampleLayer.h"
 #include "Msnhnet/layers/MsnhResBlockLayer.h"

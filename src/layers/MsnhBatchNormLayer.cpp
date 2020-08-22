@@ -333,11 +333,11 @@ void BatchNormLayer::loadRollVariance(float * const &rollVariance, const int &le
 
 BatchNormLayer::~BatchNormLayer()
 {
-    releaseArr(_scales);
-    releaseArr(_biases);
-    releaseArr(_rollMean);
-    releaseArr(_rollVariance);
-    releaseArr(_activationInput);
+    releaseAll(_scales);
+    releaseAll(_biases);
+    releaseAll(_rollMean);
+    releaseAll(_rollVariance);
+    releaseAll(_activationInput);
 
 #ifdef USE_GPU
     Cuda::freeCuda(_gpuScales);

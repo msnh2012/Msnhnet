@@ -7,7 +7,7 @@
 namespace Msnhnet
 {
 
-class GlobalAvgPoolLayerGPU
+class MsnhNet_API GlobalAvgPoolLayerGPU
 {
 public:
     static void forwardNormalGPU(const int &width, const int &height, const int &channel, const int &batch, float *const &input, float *const &output);

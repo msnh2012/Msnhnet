@@ -41,7 +41,7 @@ EmptyLayer::~EmptyLayer()
 void EmptyLayer::forward(NetworkState &netState)
 {
     auto st = TimeUtil::startRecord();
-    Blas::cpuCopy(netState.inputNum, netState.input, 1, this->_output, 1);
+    Blas::cpuCopy(netState.inputNum*this->_batch, netState.input, 1, this->_output, 1);
     this->_forwardTime = TimeUtil::getElapsedTime(st);
 }
 

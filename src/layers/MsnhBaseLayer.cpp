@@ -181,7 +181,7 @@ BaseLayer::BaseLayer()
 
 BaseLayer::~BaseLayer()
 {
-    releaseArr(_output);
+    releaseAll(_output);
 #ifdef USE_GPU
     Cuda::freeCuda(_gpuOutput);
 

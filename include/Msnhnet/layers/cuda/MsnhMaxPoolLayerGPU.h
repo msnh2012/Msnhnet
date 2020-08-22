@@ -7,7 +7,7 @@
 namespace Msnhnet
 {
 
-class MaxPoolLayerGPU
+class MsnhNet_API MaxPoolLayerGPU
 {
 public:
     static void forwardDepthGPU(const int &width, const int &height, const int &channel, const int &outWidth, const int &outHeight,

@@ -18,7 +18,6 @@
 #include <arm_neon.h>
 #endif
 
-
 #ifdef USE_OPEN_BLAS
 #include <cblas.h>
 #endif
@@ -30,7 +29,6 @@
 #ifndef OMP_THREAD
 #define OMP_THREAD omp_get_max_threads()
 #endif
-
 
 enum ActivationType
 {
@@ -80,6 +78,7 @@ enum LayerType
     UPSAMPLE,
     L2NORM,
     EMPTY,
+    PERMUTE,
     BLANK,
     CONFIG,
     RES_BLOCK,

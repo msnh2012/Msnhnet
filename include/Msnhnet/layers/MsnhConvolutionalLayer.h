@@ -15,6 +15,10 @@
 #include <nnpack.h>
 #endif
 
+#ifdef USE_ARM
+#include "Msnhnet/layers/arm/MsnhConvolution3x3s1.h"
+#endif
+
 namespace Msnhnet
 {
 class MsnhNet_API ConvolutionalLayer:public BaseLayer

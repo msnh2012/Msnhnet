@@ -187,6 +187,19 @@ void Parser::readCfg(const std::string &path)
                     throw Exception(1,"[padding] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
+            else if(node == "permute")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    PermuteParams *permuteParams = new PermuteParams(true);
+                    parsePermuteNormParams(permuteParams, it);
+                    params.push_back(permuteParams);
+                }
+                else
+                {
+                    throw Exception(1,"[padding] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
             else if(node == "localavgpool")
             {
                 if(it->second.Type() == YAML::NodeType::Map)
@@ -1404,6 +1417,41 @@ void Parser::parseEmptyNormParams(EmptyParams *emptyParams, YAML::const_iterator
 {
     (void)iter;
     (void)emptyParams;
+}
+
+void Parser::parsePermuteNormParams(PermuteParams *permuteParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "dim0")
+        {
+            if(!ExString::strToInt(value, permuteParams->dim0))
+            {
+                throw Exception(1,"[dim0] top can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "dim1")
+        {
+            if(!ExString::strToInt(value, permuteParams->dim1))
+            {
+                throw Exception(1,"[dim1] down can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "dim2")
+        {
+            if(!ExString::strToInt(value, permuteParams->dim2))
+            {
+                throw Exception(1,"[dim2] down can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [permute]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
 }
 
 void Parser::parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterator &iter)

@@ -61,7 +61,7 @@ Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int 
 
 Yolov3OutLayer::~Yolov3OutLayer()
 {
-    releaseArr(_allInput);
+    releaseAll(_allInput);
 #ifndef USE_GPU
     releaseArr(_shuffleInput);
 #endif
@@ -96,6 +96,9 @@ void Yolov3OutLayer::forward(NetworkState &netState)
             int WxH             =   netState.net->layers[index]->getOutWidth()*netState.net->layers[index]->getOutHeight();
             int chn             =   netState.net->layers[index]->getOutChannel()/3;
 
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
             for (int k = 0; k < 3; ++k)
             {
                 for (int n = 0; n < WxH; ++n)
@@ -121,9 +124,9 @@ void Yolov3OutLayer::forward(NetworkState &netState)
                 Yolov3Box box;
 
                 box.xywhBox         =   Box::XYWHBox(this->_shuffleInput[ptr + i*this->_channel],
-                        this->_shuffleInput[ptr + i*this->_channel + 1],
-                        this->_shuffleInput[ptr + i*this->_channel + 2],
-                        this->_shuffleInput[ptr + i*this->_channel + 3]);
+                                                    this->_shuffleInput[ptr + i*this->_channel + 1],
+                                                    this->_shuffleInput[ptr + i*this->_channel + 2],
+                                                    this->_shuffleInput[ptr + i*this->_channel + 3]);
 
                 box.conf            =   this->_shuffleInput[ptr + i*this->_channel + 4];
 

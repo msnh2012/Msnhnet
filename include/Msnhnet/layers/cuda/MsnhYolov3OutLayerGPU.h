@@ -6,7 +6,7 @@
 
 namespace Msnhnet
 {
-class Yolov3OutLayerGPU
+class MsnhNet_API Yolov3OutLayerGPU
 {
 public:
     static void shuffleData(const int &kn, const int &wxh, const int &chn, float *const &allInput, float *const &shuffled, const int &offset);

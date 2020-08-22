@@ -7,7 +7,7 @@
 namespace Msnhnet
 {
 
-class Yolov3LayerGPU
+class MsnhNet_API Yolov3LayerGPU
 {
 public:
     static void exSigmoidGpu(const int &n, float *const &input, const int &width, const float &ratios, const int &addGrid);

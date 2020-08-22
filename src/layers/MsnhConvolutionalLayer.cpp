@@ -97,10 +97,10 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
             this->_gpuWeights    = Cuda::makeCudaArray(this->_weights, this->_nWeights);
             this->_gpuBiases     = Cuda::makeCudaArray(this->_biases , this->_num);
 #ifdef USE_CUDNN
-			if (useFp16)
-			{
-				this->_gpuWeightsFp16 = Cuda::makeCudaArray(this->_weights, this->_nWeights);
-			}
+            if (useFp16)
+            {
+                this->_gpuWeightsFp16 = Cuda::makeCudaArray(this->_weights, this->_nWeights);
+            }
 #endif 
 #endif
         }
@@ -122,10 +122,10 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 #ifdef USE_GPU
         this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
 #ifdef USE_CUDNN
-		if (useFp16)
-		{
-			this->_gpuOutputFp16 = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-		}
+        if (useFp16)
+        {
+            this->_gpuOutputFp16 = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+        }
 #endif 
 
 #endif
@@ -356,18 +356,18 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 
 ConvolutionalLayer::~ConvolutionalLayer()
 {
-    releaseArr(_weights);
-    releaseArr(_biases);
-    releaseArr(_scales);
-    releaseArr(_rollMean);
-    releaseArr(_rollVariance);
-    releaseArr(_cWeights);
-    releaseArr(_binaryInputs);
-    releaseArr(_binaryWeights);
-    releaseArr(_meanArr);
-    releaseArr(_binRePackedIn);
-    releaseArr(_tBitInput);
-    releaseArr(_alignBitWeights);
+    releaseAll(_weights);
+    releaseAll(_biases);
+    releaseAll(_scales);
+    releaseAll(_rollMean);
+    releaseAll(_rollVariance);
+    releaseAll(_cWeights);
+    releaseAll(_binaryInputs);
+    releaseAll(_binaryWeights);
+    releaseAll(_meanArr);
+    releaseAll(_binRePackedIn);
+    releaseAll(_tBitInput);
+    releaseAll(_alignBitWeights);
 
 #ifdef USE_GPU
 #ifdef USE_CUDNN
@@ -378,11 +378,11 @@ ConvolutionalLayer::~ConvolutionalLayer()
     CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc16));
     CUDNN_CHECK(cudnnDestroyFilterDescriptor(_weightDesc16));
     CUDNN_CHECK(cudnnDestroyConvolutionDescriptor(_convDesc));
-	if (useFp16)
-	{
-		Cuda::freeCuda(_gpuWeightsFp16);
-		Cuda::freeCuda(_gpuOutputFp16);
-	}
+    if (useFp16)
+    {
+        Cuda::freeCuda(_gpuWeightsFp16);
+        Cuda::freeCuda(_gpuOutputFp16);
+    }
 #endif
     Cuda::freeCuda(_gpuWeights);
     Cuda::freeCuda(_gpuBiases);
@@ -615,21 +615,34 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                 }
 #else
 
-                if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+#ifdef USE_ARM
+                if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1&& this->_paddingX == 0 && this->_paddingY == 0)
                 {
-                    b = im;
-
+                    ConvolutionalLayerArm3x3s1::conv3x3s1Neon(im, this->_width, this->_height, this->_channel, a , this->_output, this->_outWidth, this->_outHeight, c);
                 }
                 else
                 {
+#endif
 
-                    Gemm::cpuIm2colEx(im, this->_channel/this->_groups, this->_height, this->_width, this->_kSizeX, this->_kSizeY,
-                                      this->_paddingX, this->_paddingY, this->_strideX, this->_strideY, this->_dilationX, this->_dilationY,
-                                      b);
+                    if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+                    {
+                        b = im;
 
+                    }
+                    else
+                    {
+
+                        Gemm::cpuIm2colEx(im, this->_channel/this->_groups, this->_height, this->_width, this->_kSizeX, this->_kSizeY,
+                                          this->_paddingX, this->_paddingY, this->_strideX, this->_strideY, this->_dilationX, this->_dilationY,
+                                          b);
+
+                    }
+
+                    Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
+#ifdef USE_ARM
                 }
+#endif
 
-                Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
 #endif
 
             }
