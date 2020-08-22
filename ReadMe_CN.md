@@ -217,7 +217,7 @@
   ```
 **关于训练**
 - 使用pytorch版本的各个模型训练即可,训练完成后,按照上一步,构建Msnhnet即可.
-如yolov3/4. 使用U版: [https://github.com/ultralytics/yolov3](https://github.com/ultralytics/yolov3)
+- 如yolov3/4. 使用U版: [https://github.com/ultralytics/yolov3](https://github.com/ultralytics/yolov3)
 
 Enjoy it! :D
 
