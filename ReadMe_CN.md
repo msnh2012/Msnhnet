@@ -33,7 +33,7 @@
 - 支持keras转Msnhnet. (Keras 2 and tensorflow 1.x, 部分op)
 - 支持pytorch一键转msnhnet(目前只支持部分Op, 持续更新中)。
 - 支持c_api。
-- 支持C#语言，MsnhnetSharp。
+- 支持C#语言，[MsnhnetSharp](https://github.com/msnh2012/MsnhnetSharp)。
 ![pic](readme_imgs/ui.png)
 - 支持msnhnet可视化，类似netron。
 ![pic](readme_imgs/viewer.png)

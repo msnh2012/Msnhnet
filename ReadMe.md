@@ -20,15 +20,23 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 **Features**
 
 - C++ Only. 3rdparty blas lib is optional, also you can use OpenBlas.
-- A viewer for msnhnet is supported.(netron like)
-![](readme_imgs/msnhnetviewer.png)
 - OS supported: Windows, Linux(Ubuntu checked) and Mac os(unchecked).
 - CPU supported: Intel X86, AMD(unchecked) and ARM(checked: armv7 armv8 arrch64).
+- x86 avx2 supported.(Working....)
+- arm neon supported.(Working....)。
+- NNPack supported.(arm)。
 - Keras to Msnhnet is supported. (Keras 2 and tensorflow 1.x)
 - GPU cuda supported.(Checked GTX1080Ti, Jetson NX)
 - GPU cudnn supported.(Checked GTX1080Ti, Jetson NX)
 - GPU fp16 mode supported.(Checked GTX1080Ti, Jetson NX.)
 - **ps. Please check your card wheather fp16 full speed is supported.**
+- c_api supported.
+- keras 2 msnhnet supported.(Keras 2 and tensorflow 1.x, part of op)
+- pytorch 2 msnhnet supported.(Part of op, working on it)
+- [MsnhnetSharp](https://github.com/msnh2012/MsnhnetSharp) supported.
+![pic](readme_imgs/ui.png)
+- A viewer for msnhnet is supported.(netron like)
+![](readme_imgs/msnhnetviewer.png)
 - Working on it...(**Weekend Only  (╮（╯＿╰）╭)**)
 
 **Tested networks**
