@@ -114,8 +114,9 @@
 **如何编译**
 - CMake要求: CMake 3.10+
 - 注意Viewer不能在GPU模式下编译
+  
 ![](readme_imgs/cmake_option.png)</br>
-**ps. 你可以在CMakeLists.txt:52设置最大OMP占用线程, 默认是OMP使用所有CPU线程.(需取消勾选OMP_MAX_THREAD** </br>
+**ps. 你可以在CMakeLists.txt:52设置最大OMP占用线程, 默认是OMP使用所有CPU线程.(需取消勾选OMP_MAX_THREAD)** </br>
 
 - **Windows平台编译(MSVC)**
     - 1.使用CMake编译安装OpenCV4和Yaml-cpp.
