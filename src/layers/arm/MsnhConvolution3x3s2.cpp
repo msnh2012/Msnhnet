@@ -69,7 +69,44 @@ namespace Msnhnet
     #else
                     if(nn > 0){
                         asm  volatile(
-                            
+                            "0:                             \n"
+                            // q8 = [a, c, e, g]
+                            // q9 = [b, d, f, h]
+                            "pld        [%3, #256]          \n"
+                            "vld2.f32   {d16-d19}, [%3]!    \n" 
+
+                            //sum0 = q6
+                            "pld        [%1, #128]          \n"
+                            "vld1.f32   {d12-d13}, [%1]     \n"
+
+                            //sum1 = q7
+                            "pld        [%2, #128]          \n"
+                            "vld1.f32   {d14-d15}, [%2]     \n"
+
+
+
+                            // OutputOperands 
+                            : "=r"(nn),      // %0
+                            "=r"(destptr0), // %1
+                            "=r"(destptr1), // %2
+                            "=r"(r0),      // %3
+                            "=r"(r1),      // %4
+                            "=r"(r2)       // %5
+                            //InputOperands
+                            : "0"(nn),
+                            "1"(destptr0),
+                            "2"(destptr1),
+                            "3"(r0),
+                            "4"(r1),
+                            "5"(r2),
+                            "w"(k012), // %12
+                            "w"(k345), // %13
+                            "w"(k678), // %14
+                            "w"(k012_next), // %15
+                            "w"(k345_next), // %16
+                            "w"(k678_next)  // %17
+                            //Clobbers
+                            : "cc", "memory", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
                         );
                     }
     #endif
@@ -211,6 +248,8 @@ namespace Msnhnet
     #else    
                     if(nn > 0){
                         asm volatile(
+                            
+                        )
                            
                     } 
     #endif
