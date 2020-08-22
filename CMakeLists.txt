@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.10) # cuda
+﻿cmake_minimum_required(VERSION 3.10) # cuda
 
 project(Msnhnet
     LANGUAGES CXX C
     VERSION 1.0)
-    
+
 set(CMAKE_CXX_STANDARD 11)
 
 message(STATUS "OS is ${CMAKE_SYSTEM}")
@@ -92,14 +92,15 @@ set(SRCS
     src/layers/MsnhGlobalAvgPoolLayer.cpp
     src/layers/MsnhMaxPoolLayer.cpp
     src/layers/MsnhPaddingLayer.cpp
+    src/layers/MsnhPermuteLayer.cpp
     src/layers/MsnhRes2BlockLayer.cpp
     src/layers/MsnhResBlockLayer.cpp
     src/layers/MsnhRouteLayer.cpp
-    src/layers/MsnhVariableOpLayer.cpp
     src/layers/MsnhSoftMaxLayer.cpp
     src/layers/MsnhUpSampleLayer.cpp
     src/layers/MsnhYolov3Layer.cpp
     src/layers/MsnhYolov3OutLayer.cpp
+    src/layers/MsnhVariableOpLayer.cpp 
     src/net/MsnhNetBuilder.cpp
     src/net/MsnhNetwork.cpp
     src/utils/MsnhExString.cpp
@@ -108,6 +109,7 @@ set(SRCS
     src/utils/MsnhOpencvUtil.cpp
     src/utils/MsnhTimeUtil.cpp
     src/c_api/MsnhnetLib.cpp
+    src/layers/arm/MsnhConvolution3x3s1.cpp 
     )
 
 # config GPU
@@ -132,6 +134,7 @@ if(BUILD_USE_GPU MATCHES ON)
         src/layers/cuda/MsnhLocalAvgPoolLayerGPU.cu
         src/layers/cuda/MsnhGlobalAvgPoolLayerGPU.cu
         src/layers/cuda/MsnhPaddingLayerGPU.cu
+        src/layers/cuda/MsnhPermuteLayerGPU.cu
         src/layers/cuda/MsnhYolov3LayerGPU.cu
         src/layers/cuda/MsnhYolov3OutLayerGPU.cu
         )
