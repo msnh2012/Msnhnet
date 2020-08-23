@@ -20,7 +20,13 @@ namespace Msnhnet
         }
 
         // fill center
-        
+        for(; i < Top + inHeight; i++){
+            int j = 0;
+            for(; j < Left; j++){
+                destPtr[j] = Val;
+            }
+            
+        }
     }
 }
 
