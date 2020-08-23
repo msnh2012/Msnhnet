@@ -104,13 +104,18 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 - Jetson NX
   |net|yoloface100k|yoloface500k|mobilenetv2_yolov3_nano|mobilenetv2_yolov3_lite|
   |:---:|:---:|:---:|:---:|:---:|
-  |time|7ms|20ms|20ms|30|
+  |time|7ms|20ms|20ms|30ms|
   
 **Requirements**
   * OpenCV4 https://github.com/opencv/opencv
   * yaml-cpp https://github.com/jbeder/yaml-cpp
   * Qt5 (**optional**. for Msnhnet viewer) http://download.qt.io/archive/qt/
   * cuda10+ cudnn 7.0+.(for GPU)
+
+**Video tutorials(bilibili)**
+- [Build on Linux](https://www.bilibili.com/video/BV1ai4y1g7Nf)
+- [Build on Windows](https://www.bilibili.com/video/BV1DD4y127VB)
+- [Pytorch Params to msnhbin](https://www.bilibili.com/video/BV1DD4y127VB)
 
 **How to build**
 - With CMake 3.10+

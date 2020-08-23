@@ -210,10 +210,10 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(armv7l)")
         set(USE_NNPACK_MACRO "#define USE_NNPACK\n")
         set(NNPACK_LIBS
                 -L$ENV{NNPACK_LIB_DIR}
-		-lclog 
+		        -lclog 
                 -lnnpack
                 -lpthreadpool
-		-lcpuinfo
+		        -lcpuinfo
                )
         message(STATUS "Use NNPACK")
         message(STATUS "NNPACK lib ${NNPACK_LIBS}")
