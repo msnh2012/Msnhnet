@@ -61,7 +61,7 @@ Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int 
 
 Yolov3OutLayer::~Yolov3OutLayer()
 {
-    releaseAll(_allInput);
+    releaseArr(_allInput);
 #ifndef USE_GPU
     releaseArr(_shuffleInput);
 #endif

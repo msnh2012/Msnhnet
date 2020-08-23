@@ -49,7 +49,7 @@ public:
     static void initSimd();
 
     template<typename T>
-    inline void releaseAll(T *& value)
+    inline void releaseArr(T *& value)
     {
         if(value!=nullptr)
         {

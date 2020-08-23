@@ -356,18 +356,18 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 
 ConvolutionalLayer::~ConvolutionalLayer()
 {
-    releaseAll(_weights);
-    releaseAll(_biases);
-    releaseAll(_scales);
-    releaseAll(_rollMean);
-    releaseAll(_rollVariance);
-    releaseAll(_cWeights);
-    releaseAll(_binaryInputs);
-    releaseAll(_binaryWeights);
-    releaseAll(_meanArr);
-    releaseAll(_binRePackedIn);
-    releaseAll(_tBitInput);
-    releaseAll(_alignBitWeights);
+    releaseArr(_weights);
+    releaseArr(_biases);
+    releaseArr(_scales);
+    releaseArr(_rollMean);
+    releaseArr(_rollVariance);
+    releaseArr(_cWeights);
+    releaseArr(_binaryInputs);
+    releaseArr(_binaryWeights);
+    releaseArr(_meanArr);
+    releaseArr(_binRePackedIn);
+    releaseArr(_tBitInput);
+    releaseArr(_alignBitWeights);
 
 #ifdef USE_GPU
 #ifdef USE_CUDNN
@@ -618,7 +618,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 #ifdef USE_ARM
                 if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1&& this->_paddingX == 0 && this->_paddingY == 0)
                 {
-                    ConvolutionalLayerArm3x3s1::conv3x3s1Neon(im, this->_width, this->_height, this->_channel, a , c, this->_outWidth, this->_outHeight, this->_outChannel);
+                    ConvolutionalLayerArm3x3s1::conv3x3s1Neon(im, this->_width, this->_height, this->_channel, a, c, this->_outWidth, this->_outHeight, this->_outChannel);
                 }
                 else
                 {

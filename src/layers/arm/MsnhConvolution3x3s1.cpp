@@ -7,7 +7,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                                         float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
     int ccOutChannel = outChannel >> 1;
     int ccRemainOutChannel = ccOutChannel << 1;
-    
+
     const int in_size = inWidth * inHeight;
     const int out_size = outWidth * outHeight;
     //deal two conv output 
