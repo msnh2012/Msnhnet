@@ -1,7 +1,7 @@
 ﻿#ifndef MSNHACTIONVATIONSNEON_H
 #define MSNHACTIONVATIONSNEON_H
 #ifdef USE_NEON
-#include "Msnhnet/core/MsnhnetNeonMathEx.h"
+#include "Msnhnet/core/MsnhNeonMathEx.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 
 namespace Msnhnet

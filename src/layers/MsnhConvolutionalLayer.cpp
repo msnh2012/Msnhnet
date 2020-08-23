@@ -618,7 +618,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 #ifdef USE_ARM
                 if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1&& this->_paddingX == 0 && this->_paddingY == 0)
                 {
-                    ConvolutionalLayerArm3x3s1::conv3x3s1Neon(im, this->_width, this->_height, this->_channel, a , this->_output, this->_outWidth, this->_outHeight, c);
+                    ConvolutionalLayerArm3x3s1::conv3x3s1Neon(im, this->_width, this->_height, this->_channel, a , c, this->_outWidth, this->_outHeight, this->_outChannel);
                 }
                 else
                 {
