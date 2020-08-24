@@ -175,7 +175,7 @@ namespace Msnhnet
                             "w"(k345_next), // %16
                             "w"(k678_next)  // %17
                             //Clobbers
-                            : "cc", "memory", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
+                            : "cc", "memory", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
                         );
                     }
     #endif
@@ -402,8 +402,8 @@ namespace Msnhnet
                             "w"(k345), // %11
                             "w"(k678)  // %12
                             // Clobbers
-                            : "cc", "memory", "q0", "q1", "q2", "q3", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
-                        )
+                            : "cc", "memory", "q0", "q1", "q2", "q3", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
+                        );
                            
                     } 
     #endif
