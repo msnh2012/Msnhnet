@@ -140,7 +140,7 @@
   # build yaml-cpp
   git clone https://github.com/jbeder/yaml-cpp.git
   cd yaml-cpp
-  mdir build 
+  mkdir build 
   cd build 
   cmake .. -DYAML_BUILD_SHARED_LIBS=True -DYAML_CPP_BUILD_TESTS=False
   make -j4
@@ -152,7 +152,8 @@
 
   # build Msnhnet
   git clone https://github.com/msnh2012/Msnhnet.git
-
+  mkdir build 
+  
   cd Msnhnet/build
   cmake -DCMAKE_BUILD_TYPE=Release ..  
   make -j4
