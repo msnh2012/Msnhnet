@@ -9,23 +9,43 @@ namespace Msnhnet
         int outWidth = inWidth + Left + Right;
         int outHeight = inHeight + Top + Down;
         int i = 0;
-        float *destPtr = dest;
+        const float* img = src;
+        float *destptr = dest;
+
         // fill top
         for(; i < Top; i++){
             int j = 0;
             for(; j < outWidth; j++){
-                destPtr[j] = Val;
+                destptr[j] = Val;
             }
-            destPtr += outWidth;
+            destptr += outWidth;
         }
 
         // fill center
         for(; i < Top + inHeight; i++){
             int j = 0;
             for(; j < Left; j++){
-                destPtr[j] = Val;
+                destptr[j] = Val;
             }
+
+            memcpy(destptr + Left, img, inWidth * sizeof(float));
+            j += inWidth;
             
+            for(; j < inWidth; j++){
+                destptr[j] = Val; 
+            }
+
+            img += inWidth;
+            destptr += outWidth;
+        }
+
+        //fill bottom
+        for(; i < outHeight; i++){
+            int j = 0;
+            for(; j < outWidth; j++){
+                destptr[j] = Val;
+            }
+            destptr += outWidth;
         }
     }
 }
