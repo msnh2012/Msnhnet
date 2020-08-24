@@ -114,7 +114,7 @@
 **视频教程(B站)**
 - [如何在Linux上编译](https://www.bilibili.com/video/BV1ai4y1g7Nf)
 - [如何在winows上编译](https://www.bilibili.com/video/BV1DD4y127VB)
-- [Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1DD4y127VB)
+- [Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
 
 **如何编译**
 - CMake要求: CMake 3.10+

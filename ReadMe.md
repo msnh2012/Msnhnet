@@ -115,7 +115,7 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 **Video tutorials(bilibili)**
 - [Build on Linux](https://www.bilibili.com/video/BV1ai4y1g7Nf)
 - [Build on Windows](https://www.bilibili.com/video/BV1DD4y127VB)
-- [Pytorch Params to msnhbin](https://www.bilibili.com/video/BV1DD4y127VB)
+- [Pytorch Params to msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
 
 **How to build**
 - With CMake 3.10+
