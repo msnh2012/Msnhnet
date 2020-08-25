@@ -20,8 +20,8 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
         float *dest0 = dest + c * out_size;
         float *dest1 =  dest + (c + 1) * out_size;
 
-        for(int j = 0; j < out_size; j++) dest0[j] = 0.f;
-        for(int j = 0; j < out_size; j++) dest1[j] = 0.f;
+        // for(int j = 0; j < out_size; j++) dest0[j] = 0.f;
+        // for(int j = 0; j < out_size; j++) dest1[j] = 0.f;
 
         //two output rely on two kernel
         float *k0 = kernel + c * inChannel * 3 * 3;
