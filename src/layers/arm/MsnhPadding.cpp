@@ -27,7 +27,6 @@ namespace Msnhnet
             for(; j < Left; j++){
                 destptr[j] = Val;
             }
-
             memcpy(destptr + Left, img, inWidth * sizeof(float));
             j += inWidth;
             
