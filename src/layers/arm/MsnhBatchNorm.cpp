@@ -4,7 +4,7 @@
 namespace Msnhnet
 {
     void BatchNormLayerArm::BatchNorm(float * &src, const int &inWidth, const int &inHeight,  const int &inChannel,
-                    float *const &Scales, float *const &rollMean, float *const &rollVariance, float *const &Biases){
+                    float *const &Scales, float *const &rollMean, float *const &rollVariance, float *const &biases){
         // a = bias - slope * mean / sqrt(var)
         // b = slope / sqrt(var)
         // value = b * value + a
@@ -18,7 +18,7 @@ namespace Msnhnet
         for(int i = 0; i < inChannel; i++){
 
             float sqrtVar = sqrt(rollVariance[i]);
-            float a = Biases[i] - Scales[i] * rollMean[i] / sqrtVar;
+            float a = biases[i] - Scales[i] * rollMean[i] / sqrtVar;
             float b = Scales[i] / sqrtVar;
             
             
