@@ -141,14 +141,6 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         //q9[b3, c3, d3, e3]只和k678_next的第二个元素相乘并累加到q13
                         "vmla.f32   q13, q9, %e23[1]    \n"
 
-						// q10[b, c, d, e]只和k012的第二个元素相乘并累加到q6
-                        "vmla.f32   q6, q10, %e18[1]    \n"
-						// q10[b, c, d, e]只和k012_next的第二个元素相乘并累加到q7
-                        "vmla.f32   q7, q10, %e21[1]    \n"
-						// q11[c3, d3, e3, f3]只和k678的第三个元素相乘并累加到q11
-                        "vmla.f32   q12, q11, %f20[0]   \n"
-						// q11[c3, d3, e3, f3]只和k678_next的第三个元素相乘并累加到q13
-                        "vmla.f32   q13, q11, %f23[0]   \n"
 
                         /********* conv output2->chanel q output **********/
                         //r1 [a1, b1, c1, d1, e1, f1]
@@ -156,6 +148,15 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         // d28 -> [a1, b1], d29 -> [c1, d1], d30 -> [e1, f1]
                         "vld1.f32   {d28-d30}, [%6]     \n" // r1
                         "add        %6, #16             \n"
+
+                        // q10[b, c, d, e]只和k012的第二个元素相乘并累加到q6
+                        "vmla.f32   q6, q10, %e18[1]    \n"
+						// q10[b, c, d, e]只和k012_next的第二个元素相乘并累加到q7
+                        "vmla.f32   q7, q10, %e21[1]    \n"
+						// q11[c3, d3, e3, f3]只和k678的第三个元素相乘并累加到q11
+                        "vmla.f32   q12, q11, %f20[0]   \n"
+						// q11[c3, d3, e3, f3]只和k678_next的第三个元素相乘并累加到q13
+                        "vmla.f32   q13, q11, %f23[0]   \n"
 
                         // q14 = [a1, b1, c1, d1]
                         // q15 = [e1, f1, *, *]
@@ -185,6 +186,12 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         // q10[b1, c1, d1, e1] 和 k012_next的第二个元素相乘并累加到q13
                         "vmla.f32   q13, q10, %e21[1]   \n"
 
+                        // r2: [a2, b2, c2, d2, e2, f2]
+                        "pld        [%7, #192]          \n"
+                        // d16->[a2, b2], d17->[c2, d2], d18->[e2, f2]
+                        "vld1.f32   {d16-d18}, [%7] \n" // r2
+                        "add        %7, #16             \n"
+
                         // q11[c1, d1, e1, f1] 和 k345的第三个元素相乘并累加到q6
                         "vmla.f32   q6, q11, %f19[0]    \n"
                         // q11[c1, d1, e1, f1] 和 k345_next的第三个元素相乘并累加到q7
@@ -193,13 +200,6 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         "vmla.f32   q12, q11, %f18[0]   \n"
                         // q11[c1, d1, e1, f1] 和 k012_next的第三个元素相乘并累加到q7
                         "vmla.f32   q13, q11, %f21[0]   \n"
-
-                        // r2: [a2, b2, c2, d2, e2, f2]
-                        "pld        [%7, #192]          \n"
-                        // d16->[a2, b2], d17->[c2, d2], d18->[e2, f2]
-                        "vld1.f32   {d16-d18}, [%7] \n" // r2
-                        "add        %7, #16             \n"
-
 
 
                         "vext.32    q10, q8, q9, #1     \n"
@@ -451,15 +451,15 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         // q10=[b, c, d, e]和k012_next的第三个元素相乘并累加到q7
                         "vmla.f32   q7, q10, %e15[1]    \n"
 
-                        // q11=[c, d, e, f]和k012的第三个元素相乘并累加到q12
-                        "vmla.f32   q12, q11, %f12[0]   \n"
-                        // q11=[c, d, e, f]和k012_next的第三个元素相乘并累加到q13
-                        "vmla.f32   q13, q11, %f15[0]   \n"
-
                         //r1
                         "pld        [%4, #192]          \n"
                         "vld1.f32   {d16-d18}, [%4]     \n" 
                         "add        %4, #16             \n"
+
+                        // q11=[c, d, e, f]和k012的第三个元素相乘并累加到q12
+                        "vmla.f32   q12, q11, %f12[0]   \n"
+                        // q11=[c, d, e, f]和k012_next的第三个元素相乘并累加到q13
+                        "vmla.f32   q13, q11, %f15[0]   \n"
 
                         "vmla.f32   q6, q8, %e13[0]     \n"
                         "vmla.f32   q7, q8, %e16[0]     \n"
@@ -470,13 +470,13 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         "vmla.f32   q6, q11, %f13[0]    \n"
                         "vmla.f32   q7, q11, %f16[0]    \n"
 
-                        "vmla.f32   q12, q10, %e13[1]   \n"
-                        "vmla.f32   q13, q10, %e16[1]   \n"
-                        
                         //r2
                         "pld        [%5, #192]          \n"
                         "vld1.f32   {d16-d18}, [%5]     \n" 
                         "add        %5, #16             \n"
+
+                        "vmla.f32   q12, q10, %e13[1]   \n"
+                        "vmla.f32   q13, q10, %e16[1]   \n"
 
                         "vmla.f32   q12, q8, %e14[0]    \n"
                         "vmla.f32   q13, q8, %e17[0]    \n"
