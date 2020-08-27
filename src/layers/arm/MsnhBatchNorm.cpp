@@ -15,13 +15,12 @@ namespace Msnhnet
         int in_size = inWidth * inHeight;
         float *srcPtr = src;
         int nn, remain;
+        cout << inChannel << " " << in_size << endl;
         for(int i = 0; i < inChannel; i++){
 
-            float sqrtVar = sqrt(rollVariance[i]);
+            float sqrtVar = sqrt(rollVariance[i] + 0.00001f);
             float a = biases[i] - Scales[i] * rollMean[i] / sqrtVar;
             float b = Scales[i] / sqrtVar;
-            
-            
 
             #if USE_NEON
                 nn = in_size >> 2;
@@ -38,9 +37,9 @@ namespace Msnhnet
                         throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
                     #else
                         float32x4_t tmp = vld1q_f32(srcPtr);
-                        float32x4_t sum = vmulq_f32(tmp, a_new);
-                        sum = vaddq_f32(sum, b);
-                        vstlq_f32(srcPtr, sum);
+                        float32x4_t sum = vmulq_f32(tmp, b_new);
+                        sum = vaddq_f32(sum, a_new);
+                        vst1q_f32(srcPtr, sum);
                         srcPtr += 4;
                     #endif 
                 }
@@ -50,7 +49,6 @@ namespace Msnhnet
                 *srcPtr = b * (*srcPtr) + a;
                 srcPtr++;
             }
-            srcPtr += in_size;
         }
 
     }
