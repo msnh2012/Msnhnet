@@ -1,2 +1,2 @@
 Attention!
-Test version, not ready.
+Alpha version, maybe has some bugs.

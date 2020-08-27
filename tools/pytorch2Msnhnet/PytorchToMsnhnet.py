@@ -12,7 +12,6 @@ msnhnet = Msnhnet()
 ccc = []
 index   = 0
 
-
 class Hook(object):
     def __init__(self,raw,replace,**kwargs):
         self.obj=replace
@@ -271,7 +270,13 @@ def _add(inData, *args):
     except:
         raise NotImplementedError(args[0]._cdata," not contain [add]")
 
-    layers = str(layer1) + "," + str(layer2)
+    if layer1 == msnhnet.getLastVal() :
+        layers = str(layer2)
+    elif layer2 == msnhnet.getLastVal() :
+        layers = str(layer1)
+    else:
+        layers = str(layer1) + "," + str(layer2)    
+
     msnhnet.buildVariableOp(str(x._cdata), layers, "add")
     return x
 
@@ -293,7 +298,13 @@ def _iadd(inData, *args):
     except:
         raise NotImplementedError(args[0]._cdata," not contain [add]")
 
-    layers = str(layer1) + "," + str(layer2)
+    if layer1 == msnhnet.getLastVal() :
+        layers = str(layer2)
+    elif layer2 == msnhnet.getLastVal() :
+        layers = str(layer1)
+    else:
+        layers = str(layer1) + "," + str(layer2)    
+
     msnhnet.buildVariableOp(str(x._cdata), layers, "add")
     return x
 
@@ -313,9 +324,17 @@ def _sub(inData, *args):
         layer2 = msnhnet.name_index_dict[str(args[0]._cdata)]
     except:
         raise NotImplementedError(args[0]._cdata," not contain [sub]")
+    
+    subMode = "sub"
+    if layer1 == msnhnet.getLastVal() :
+        layers = str(layer2)
+    elif layer2 == msnhnet.getLastVal() :
+        subMode = "subInv"
+        layers = str(layer1)
+    else:
+        layers = str(layer1) + "," + str(layer2)  
 
-    layers = str(layer1) + "," + str(layer2)
-    msnhnet.buildVariableOp(str(x._cdata), layers, "sub")
+    msnhnet.buildVariableOp(str(x._cdata), layers, subMode)
     return x
 
 def _isub(inData, *args):
@@ -335,9 +354,17 @@ def _isub(inData, *args):
         layer2 = msnhnet.name_index_dict[str(args[0]._cdata)]
     except:
         raise NotImplementedError(args[0]._cdata," not contain [sub]")
+    
+    subMode = "sub"
+    if layer1 == msnhnet.getLastVal() :
+        layers = str(layer2)
+    elif layer2 == msnhnet.getLastVal() :
+        subMode = "subInv"
+        layers = str(layer1)
+    else:
+        layers = str(layer1) + "," + str(layer2) 
 
-    layers = str(layer1) + "," + str(layer2)
-    msnhnet.buildVariableOp(str(x._cdata), layers, "sub")
+    msnhnet.buildVariableOp(str(x._cdata), layers, subMode)
     return x
 
 def _mul(inData, *args):
@@ -357,7 +384,13 @@ def _mul(inData, *args):
     except:
         raise NotImplementedError(args[0]._cdata," not contain [mul]")
 
-    layers = str(layer1) + "," + str(layer2)
+    if layer1 == msnhnet.getLastVal() :
+        layers = str(layer2)
+    elif layer2 == msnhnet.getLastVal() :
+        layers = str(layer1)
+    else:
+        layers = str(layer1) + "," + str(layer2) 
+
     msnhnet.buildVariableOp(str(x._cdata), layers, "mul")
     return x
 
@@ -379,55 +412,241 @@ def _imul(inData, *args):
     except:
         raise NotImplementedError(args[0]._cdata," not contain [mul]")
 
-    layers = str(layer1) + "," + str(layer2)
+    if layer1 == msnhnet.getLastVal() :
+        layers = str(layer2)
+    elif layer2 == msnhnet.getLastVal() :
+        layers = str(layer1)
+    else:
+        layers = str(layer1) + "," + str(layer2)  
+
     msnhnet.buildVariableOp(str(x._cdata), layers, "mul")
+    return x
+
+def _permute(inData, *args):
+    log( "permute-i" , inData._cdata)
+    x = raw__permute__(inData, *args)
+    ccc.append(x)
+    log( "permute-o" , x._cdata)
+
+    dim  = args[0]
+    dim0 = args[1]
+    dim1 = args[2]
+    dim2 = args[3]
+
+    if dim != 0:
+        raise NotImplementedError("permute dim0 must be 0")
+    msnhnet.buildPermute(str(x._cdata), dim0, dim1, dim2)
+    return x   
+    
+def _mean(inData, *args,**kwargs):
+    log( "mean-i" , inData._cdata)
+    x=raw_mean(inData, *args,**kwargs)
+    ccc.append(x)
+    log( "mean-o" , x._cdata)
+
+    if len(args)==1:
+        dim=args[0]
+    elif 'dim' in kwargs:
+        dim=kwargs['dim']
+    else:
+        raise NotImplementedError('mean operation must specify a dim')
+
+    if dim == 0:
+        raise NotImplementedError("mean dim0 is not supported")
+
+    msnhnet.buildReduction(str(x._cdata),"mean",dim)
+    return x   
+
+def _sum(inData, *args):
+    log( "sum-i" , inData._cdata)
+    x = raw__sum__(inData, *args)
+    ccc.append(x)
+    log( "sum-o" , x._cdata)
+    if len(args)==1:
+        dim=args[0]
+    else:
+        raise NotImplementedError('sum operation must specify a dim')
+    msnhnet.buildReduction(str(x._cdata),"sum",dim)
+    return x
+
+def _div(raw,inputs, inputs2):
+    log( "div-i1" , inputs._cdata)
+    log( "div-i2" , inputs2._cdata)
+    x=raw(inputs, inputs2)
+    ccc.append(x)
+    log( "div-o" , x._cdata)
+
+    try:
+        layer1 = msnhnet.name_index_dict[str(inData._cdata)]
+    except:
+        raise NotImplementedError(inData._cdata," not contain [div]")
+
+    try:
+        layer2 = msnhnet.name_index_dict[str(args[0]._cdata)]
+    except:
+        raise NotImplementedError(args[0]._cdata," not contain [div]")
+
+    divMode = "div"
+    if layer1 == msnhnet.getLastVal() :
+        layers = str(layer2)
+    elif layer2 == msnhnet.getLastVal() :
+        divMode = "divInv"
+        layers = str(layer1)
+    else:
+        layers = str(layer1) + "," + str(layer2) 
+
+    msnhnet.buildVariableOp(str(x._cdata), layers, divMode)
+
+    return x   
+
+def _pow(inData, *args):
+    log( "pow-i" , inData._cdata)
+    x = raw__pow__(inData, *args)
+    constVal = args[0]
+    ccc.append(x)
+    log( "pow-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","pow",constVal)
+    return x
+
+def _sqrt(inData, *args):
+    log( "sqrt-i" , inData._cdata)
+    x = raw__sqrt__(inData, *args)
+    ccc.append(x)
+    log( "sqrt-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","sqrt")
+    return x
+
+def _abs(raw, inData, *args):
+    log( "abs-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "abs-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","abs")
+    return x
+
+def _acos(raw, inData, *args):
+    log( "acos-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "acos-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","acos")
+    return x
+
+def _asin(raw, inData, *args):
+    log( "asin-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "asin-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","asin")
+    return x
+
+def _atan(raw, inData, *args):
+    log( "atan-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "atan-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","atan")
+    return x
+
+def _cos(raw, inData, *args):
+    log( "cos-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "cos-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","cos")
+    return x
+
+def _cosh(raw, inData, *args):
+    log( "cosh-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "cosh-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","cosh")
+    return x
+
+def _sin(raw, inData, *args):
+    log( "sin-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "sin-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","sin")
+    return x
+
+def _sinh(raw, inData, *args):
+    log( "sinh-i" , inData._cdata)
+    x = raw__sinh__(inData, *args)
+    ccc.append(x)
+    log( "sinh-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","sinh")
+    return x
+
+def _tan(raw, inData, *args):
+    log( "tan-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "tan-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","tan")
+    return x
+
+def _exp(raw, inData, *args):
+    log( "exp-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "exp-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","exp")
+    return x
+
+def _log(raw, inData, *args):
+    log( "log-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "log-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","log")
+    return x
+
+def _log10(raw, inData, *args):
+    log( "log10-i" , inData._cdata)
+    x = raw(inData, *args)
+    ccc.append(x)
+    log( "log10-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    msnhnet.buildVariableOp(str(x._cdata),"","log10")
     return x
 
 # =====  Variable op not supported ======
 ''' TODO '''
-def _permute(inData, *args):
-    x = raw__permute__(inData, *args)
-    ccc.append(x)
-    raise NotImplementedError("permute not supported yet")
-    return x   
-    
-''' TODO '''
-def _mean(inData, *args,**kwargs):
-    x=raw_mean(inData, *args,**kwargs)
-    ccc.append(x)
-    raise NotImplementedError("mean not supported yet")
-    return x   
-
-
-def _div(raw,inputs, inputs2):
-    x=raw(inputs, inputs2)
-    ccc.append(x)
-    raise NotImplementedError("div not supported yet")
-    return x   
-
 def _view(inData, *args):
     x=raw_view(inData, *args)
     ccc.append(x)
     raise NotImplementedError("view not supported yet")
     return x  
-
-def _pow(inData, *args):
-    x = raw__pow__(inData, *args)
-    ccc.append(x)
-    raise NotImplementedError("pow not supported yet")
-    return x
-
-def _sum(inData, *args):
-    x = raw__sum__(inData, *args)
-    ccc.append(x)
-    raise NotImplementedError("sum not supported yet")
-    return x
-
-def _sqrt(inData, *args):
-    x = raw__sqrt__(inData, *args)
-    ccc.append(x)
-    raise NotImplementedError("sqrt not supported yet")
-    return x
 
 def _unsqueeze(inData, *args):
     x = raw__unsqueeze__(inData, *args)
@@ -456,6 +675,18 @@ torch.flatten   =   Hook(torch.flatten,_flatten)
 F.dropout       =   Hook(F.dropout,_dropout)
 F.batch_norm    =   Hook(F.batch_norm,_batch_norm)
 F.interpolate   =   Hook(F.interpolate,_interpolate)
+torch.abs       =   Hook(torch.abs,_abs)
+torch.acos      =   Hook(torch.acos,_acos)
+torch.asin      =   Hook(torch.asin,_asin)
+torch.atan      =   Hook(torch.atan,_atan)
+torch.cos       =   Hook(torch.cos,_cos)
+torch.cosh      =   Hook(torch.cosh,_cosh)
+torch.sin       =   Hook(torch.sin,_sin)
+torch.sinh      =   Hook(torch.sinh,_sinh)
+torch.tan       =   Hook(torch.tan,_tan)
+torch.exp       =   Hook(torch.exp,_exp)
+torch.log       =   Hook(torch.log,_log)
+torch.log10     =   Hook(torch.log10,_log10)
 
 # =====  Activation ======
 F.elu           =   Hook(F.elu,_elu)
@@ -500,6 +731,8 @@ for t in [torch.Tensor]:
     t.unsqueeze = _unsqueeze
     raw__expand_as__ = t.expand_as
     t.expand_as = _expand_as
+
+
 
 def transNet(net, inputVar, msnhnet_path, msnhbin_path):
     msnhnet.buildConfig(str(id(inputVar)), inputVar.size())
