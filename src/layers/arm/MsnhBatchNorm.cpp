@@ -11,13 +11,15 @@ namespace Msnhnet
 
 
         int in_size = inWidth * inHeight;
-        const float *srcPtr = src;
-        float *destPtr = dest;
+        
         int nn, remain;
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
         for(int i = 0; i < inChannel; i++){
+
+            const float *srcPtr = src + i * in_size;
+            float *destPtr = dest + i * in_size;
 
             float sqrtVar = sqrt(rollVariance[i] + 0.00001f);
             float a = biases[i] - Scales[i] * rollMean[i] / sqrtVar;
