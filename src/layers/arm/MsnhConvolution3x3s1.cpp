@@ -69,7 +69,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
-                //assembly
+                 //assembly
                 if(nn > 0){
                     asm volatile(
                         //
@@ -975,6 +975,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1_neon(float *const &src, const int &in
             kernel0 += 9;
         }
     }
+    
 }
 
 }
