@@ -13,13 +13,17 @@ ccc = []
 index   = 0
 
 class Hook(object):
+    hookInited = False
     def __init__(self,raw,replace,**kwargs):
         self.obj=replace
         self.raw=raw
 
     def __call__(self,*args,**kwargs):
-        out=self.obj(self.raw,*args,**kwargs)
-        return out
+        if not Hook.hookInited:
+            return self.raw(*args,**kwargs)
+        else:
+            out=self.obj(self.raw,*args,**kwargs)
+            return out
 
 def log(*args):
     print(*args)
@@ -108,13 +112,28 @@ def _flatten(raw,*args):
     log( "flatten-i" , args[0]._cdata)
     x=raw(*args)
     ccc.append(x)
+    log( "flatten-o" , x._cdata)
 
     key = msnhnet.getLastKey()
     val = msnhnet.name_index_dict[key]
     msnhnet.name_index_dict.pop(key)
     msnhnet.name_index_dict[str(x._cdata)] = val
-    
-    log( "flatten-o" , x._cdata)
+    return x
+
+def _cat(raw,inputs, dim=0):
+    k = 0
+    layers = ""
+    for input in inputs:
+        log( "cat"+str(k)+"-i" , input._cdata)
+        layers = layers + str(msnhnet.name_index_dict[str(input._cdata)]) + ","
+    x=raw(inputs, dim)
+    ccc.append(x)
+    log( "cat-o" , x._cdata)
+    layers = layers[:-1]
+    if dim != 1:
+        raise NotImplementedError("cat only supported with dim 1")
+
+    msnhnet.buildRoute(str(x._cdata),layers,False)
     return x
 
 def _dropout(raw,*args):
@@ -142,21 +161,62 @@ def _batch_norm(raw,inData, running_mean, running_var, weight=None, bias=None,
 
 def _interpolate(raw, inData,size=None, scale_factor=None, mode='nearest', align_corners=None):
     # for nearest _interpolate
-    if mode != "nearest" or align_corners != None:
-        raise NotImplementedError("unsample nearest only")
-    log( "upsample-i" , inData._cdata)
-    x = raw(inData,size , scale_factor ,mode)
-
-    if size == None:
-        size = 0
     
-    if scale_factor == None:
-        scale_factor = 1
- 
-    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
-    msnhnet.buildUpsample2D(str(x._cdata), size, scale_factor)
+    log( "upsample-i" , inData._cdata)
+    x = raw(inData,size , scale_factor ,mode, align_corners)
     ccc.append(x)
     log( "upsample-o" , x._cdata)
+
+    msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+    
+    if mode == "nearest" or align_corners == None:
+        if size == None and scale_factor != None:
+            
+            if 10*int(scale_factor) != int(10*scale_factor) :
+                raise NotImplementedError("scale must be int")
+
+            strideX = scale_factor
+            strideY = scale_factor
+
+            msnhnet.buildUpsample2D(str(x._cdata), strideX, strideY, 1,1, "nearest", 0) 
+        elif scale_factor == None and size != None:
+            mx = inData.shape[-1]
+            my = inData.shape[-2]
+
+            
+            if size[0]%x != 0 or size[1]%y != 0 :
+                raise NotImplementedError("scale must be int")
+            
+            strideX = size[0]/mx
+            strideY = size[1]/my
+
+            msnhnet.buildUpsample2D(str(x._cdata), strideX, strideY, 1, 1,"nearest",0) 
+        else:
+            raise NotImplementedError("upsample params error")
+    elif mode == "bilinear" :
+        if align_corners == None:
+            alignCorners = 0
+        else:
+            if align_corners == True :
+                alignCorners = 1
+            else:
+                alignCorners = 0
+
+        if size == None and scale_factor != None:
+            msnhnet.buildUpsample2D(str(x._cdata), 1, 1, scale_factor,scale_factor,"bilinear",alignCorners) 
+        elif scale_factor == None and size != None:
+            mx = inData.shape[-1]
+            my = inData.shape[-2]
+
+            scaleX = size[0]/mx 
+            scaleY = size[1]/my 
+            msnhnet.buildUpsample2D(str(x._cdata), 1, 1, scaleX,scaleY,"bilinear",alignCorners)
+        else:
+            raise NotImplementedError("upsample params error")
+    else:
+        raise NotImplementedError("unsupported type, only nearest/bilinear is supported")
+
+    #print(msnhnet.net)
     return x
 
 def _softmax(raw, inData, dim=None, _stacklevel=3):
@@ -687,6 +747,7 @@ torch.tan       =   Hook(torch.tan,_tan)
 torch.exp       =   Hook(torch.exp,_exp)
 torch.log       =   Hook(torch.log,_log)
 torch.log10     =   Hook(torch.log10,_log10)
+torch.cat       =   Hook(torch.cat,_cat)
 
 # =====  Activation ======
 F.elu           =   Hook(F.elu,_elu)
@@ -734,7 +795,8 @@ for t in [torch.Tensor]:
 
 
 
-def transNet(net, inputVar, msnhnet_path, msnhbin_path):
+def trans(net, inputVar, msnhnet_path, msnhbin_path):
+    Hook.hookInited = True
     msnhnet.buildConfig(str(id(inputVar)), inputVar.size())
     net.forward(inputVar)
 
@@ -753,3 +815,25 @@ def transNet(net, inputVar, msnhnet_path, msnhbin_path):
     with open(msnhbin_path,"wb") as f:
         for i in val :
             f.write(pack('f',i))
+
+def transBin(net, msnhbin_path):
+    val = []
+    dd = 0
+    for name in net.state_dict():
+            if "num_batches_tracked" not in name:
+                    c = net.state_dict()[name].data.flatten().numpy().tolist()
+                    dd = dd + len(c)
+                    print(name, ":", len(c))
+                    val.extend(c)
+
+    with open(msnhbin_path,"wb") as f:
+        for i in val :
+            f.write(pack('f',i))
+
+def transNet(net, inputVar, msnhnet_path):
+    Hook.hookInited = True
+    msnhnet.buildConfig(str(id(inputVar)), inputVar.size())
+    net.forward(inputVar)
+
+    with open(msnhnet_path,"w") as f1:
+        f1.write(msnhnet.net)    

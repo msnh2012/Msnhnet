@@ -138,14 +138,18 @@ class Msnhnet:
         self.net = self.net + "  output: " + str(int(output)) + "\n"
         self.net = self.net + "  useBias: " + str(int(useBias)) + "\n"
 
-    def buildUpsample2D(self, name, stride, scale):
+    def buildUpsample2D(self, name, strideX, strideY, scaleX, scaleY, type, alignCorners):
         self.name_index_dict[name]=self.index
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "upsample:\n"
-        self.net = self.net + "  stride: " + str(int(stride)) + "\n"
-        self.net = self.net + "  scale: " + str(float(scale)) + "\n"
-
+        self.net = self.net + "  type: " + type + "\n"
+        self.net = self.net + "  strideX: " + str(int(strideX)) + "\n"
+        self.net = self.net + "  strideY: " + str(int(strideY)) + "\n"
+        self.net = self.net + "  scaleX: " + str(float(scaleX)) + "\n"
+        self.net = self.net + "  scaleY: " + str(float(scaleY)) + "\n"
+        self.net = self.net + "  alignCorners: " + str(int(alignCorners)) + "\n"
+    
     def buildRoute(self, name, layers, addModel):
         self.name_index_dict[name]=self.index
         self.net = self.net + "#" + str(self.index) +  "\n"
