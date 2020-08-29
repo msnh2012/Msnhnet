@@ -14,13 +14,15 @@ void ActivationLayerArm::loggyActivate(float * &src, const int &inWidth, const i
 
 void ActivationLayerArm::reluActivate(float * &src, const int &inWidth, const int &inHeight,  const int &inChannel){
     int in_size = inWidth * inHeight;
-    const float *srcPtr = src;
     int nn, remain;
 
     #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
     for(int i = 0; i < inChannel; i++){
+
+        float *srcPtr = src + i * in_size;
+
         #if USE_NEON
                 nn = in_size >> 2;
                 remain = in_size - nn << 2;
@@ -52,9 +54,8 @@ void ActivationLayerArm::reluActivate(float * &src, const int &inWidth, const in
         #endif
 
         for(; remain > 0; remain--){
-            *destPtr = std::max(*srcPtr, 0.f);
+            *srcPtr = std::max(*srcPtr, 0.f);
             srcPtr++;
-            destPtr++;
         }
     }
 }
