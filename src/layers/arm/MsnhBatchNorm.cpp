@@ -75,21 +75,13 @@ namespace Msnhnet
                         : "cc", "memory", "q0", "q1", "q2", "q3", "q4"
                     );
                 }
-
-                for(; remain > 0; remain--){
-                    *destPtr = b * (*srcPtr) + a;
-                    srcPtr++;
-                    destPtr++;
-                }
-
-            #else
-                    for(; remain > 0; remain--){
-                    *destPtr = b * (*srcPtr) + a;
-                    srcPtr++;
-                    destPtr++;
-                }
-
             #endif
+
+            for(; remain > 0; remain--){
+                *destPtr = b * (*srcPtr) + a;
+                srcPtr++;
+                destPtr++;
+            }
         }
     }
 
