@@ -8,14 +8,14 @@ namespace Msnhnet
         // a = bias - slope * mean / sqrt(var)
         // b = slope / sqrt(var)
         // value = b * value + a
-#if USE_OMP
-    #pragma omp parallel for num_threads(OMP_THREAD)
-#endif
-
         int in_size = inWidth * inHeight;
         const float *srcPtr = src;
         float *destPtr = dest;
         int nn, remain;
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+
         for(int i = 0; i < inChannel; i++){
 
             float sqrtVar = sqrt(rollVariance[i] + 0.00001f);
