@@ -176,6 +176,35 @@ public:
         });
         ColorTabel::instance().addColor("Padding",QColor(0xFFAA5A));
 
+        NodeCreator::instance().addItem("Permute",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"dim0", "string", AttributeInfo::Type::member},
+            {"dim1", "string", AttributeInfo::Type::member},
+            {"dim2", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("Permute",QColor(0xaf2178));
+
+        NodeCreator::instance().addItem("Reduction",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"type", "string", AttributeInfo::Type::member},
+            {"axis", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("Reduction",QColor(0xe0710f));
+
+        NodeCreator::instance().addItem("VarOp",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"type", "string", AttributeInfo::Type::member},
+            {"layer", "string", AttributeInfo::Type::member},
+            {"const", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("VarOp",QColor(0xff4e1e));
+
         NodeCreator::instance().addItem("Res2Block",
         {
             {"input", "string", AttributeInfo::Type::input},
@@ -214,8 +243,10 @@ public:
         NodeCreator::instance().addItem("UpSample",
         {
             {"input", "string", AttributeInfo::Type::input},
-            {"scale", "string", AttributeInfo::Type::member},
+            {"type", "string", AttributeInfo::Type::member},
             {"stride", "string", AttributeInfo::Type::member},
+            {"scale", "string", AttributeInfo::Type::member},
+            {"algin", "string", AttributeInfo::Type::member},
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("UpSample",QColor(0x886BFF));

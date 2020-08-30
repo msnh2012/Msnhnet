@@ -50,7 +50,10 @@ SOURCES += \
     ../src/layers/MsnhMaxPoolLayer.cpp \
     ../src/layers/MsnhPaddingLayer.cpp \
     ../src/layers/MsnhRes2BlockLayer.cpp \
+    ../src/layers/MsnhPermuteLayer.cpp \
     ../src/layers/MsnhResBlockLayer.cpp \
+    ../src/layers/MsnhReductionLayer.cpp \
+    ../src/layers/MsnhVariableOpLayer.cpp\
     ../src/layers/MsnhRouteLayer.cpp \
     ../src/layers/MsnhVariableOpLayer.cpp \
     ../src/layers/MsnhSoftMaxLayer.cpp \
@@ -101,3 +104,5 @@ LIBS         += D:/libs/yaml/lib/libyaml-cppmdd.lib
 CONFIG(release,debug|release){                                              #release模式
 LIBS         +=  D:/libs/yaml/lib/libyaml-cppmd.lib
 }
+
+DISTFILES +=
