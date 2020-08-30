@@ -5,15 +5,16 @@ namespace Msnhnet
 void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float* dest,
                                   float *const &Scales, float *const &rollMean, float *const &rollVariance, float *const &biases)
 {
+
     int in_size = inWidth * inHeight;
     const float *srcPtr = src;
     float *destPtr = dest;
     int nn, remain;
+
 #if USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
     for(int i = 0; i < inChannel; i++){
-
         float sqrtVar = sqrt(rollVariance[i] + 0.00001f);
         float a = biases[i] - Scales[i] * rollMean[i] / sqrtVar;
         float b = Scales[i] / sqrtVar;
@@ -40,7 +41,6 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
         //     srcPtr += 4;
         //     destPtr += 4;
         // }
-
         if(nn > 0){
             asm volatile(
                         "vdup.f32   q0, %6              \n"
@@ -69,6 +69,7 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
                         "r"(b) // %7
                         : "cc", "memory", "q0", "q1", "q2", "q3", "q4"
                         );
+
         }
 
         for(; remain > 0; remain--){
@@ -78,10 +79,8 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
         }
 
 #else
-        for(; remain > 0; remain--){
-            *destPtr = b * (*srcPtr) + a;
-            srcPtr++;
-            destPtr++;
+        for(int j=0; j<remain; j++){
+            *(destPtr + i*remain + j) = b * (*(srcPtr + i*remain + j)) + a;
         }
 
 #endif
