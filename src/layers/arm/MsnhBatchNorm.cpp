@@ -27,7 +27,6 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
 #endif
 
 #if USE_NEON
-<<<<<<< HEAD
         // for(; nn > 0; nn--){
         //     #if __aarch64__
         //         throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
@@ -40,9 +39,6 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
         //     srcPtr += 4;
         //     destPtr += 4;
         // }
-=======
-
->>>>>>> 43958cfcb22f5bb0fdfcbb2a781e8b92a423ee57
         if(nn > 0){
             asm volatile(
                         "vdup.f32   q0, %6              \n"
@@ -80,16 +76,13 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
             srcPtr++;
             destPtr++;
         }
-
-<<<<<<< HEAD
 #else
         for(int j=0; j<remain; j++){
             *(destPtr + i*remain + j) = b * (*(srcPtr + i*remain + j)) + a;
         }
 
 #endif
-=======
->>>>>>> 43958cfcb22f5bb0fdfcbb2a781e8b92a423ee57
+
     }
 }
 
