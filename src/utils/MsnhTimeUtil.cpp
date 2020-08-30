@@ -1,23 +1,21 @@
-#include "Msnhnet/utils/MsnhTimeUtil.h"
+﻿#include "Msnhnet/utils/MsnhTimeUtil.h"
 
 namespace Msnhnet
 {
-std::chrono::time_point<std::chrono::high_resolution_clock> TimeUtil::st;
-std::chrono::time_point<std::chrono::high_resolution_clock> TimeUtil::so;
 
 TimeUtil::TimeUtil()
 {
-    std::chrono::high_resolution_clock::now();
+
 }
 
-void TimeUtil::startRecord()
+std::chrono::time_point<std::chrono::high_resolution_clock> TimeUtil::startRecord()
 {
-    st = std::chrono::high_resolution_clock::now();
+    return std::chrono::high_resolution_clock::now();
 }
 
-float TimeUtil::getElapsedTime()
+float TimeUtil::getElapsedTime(std::chrono::time_point<std::chrono::high_resolution_clock> &st)
 {
-    so = std::chrono::high_resolution_clock::now();
+    auto so = std::chrono::high_resolution_clock::now();
     return std::chrono::duration<float,std::milli>(so - st).count();
 }
 

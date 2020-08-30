@@ -39,7 +39,7 @@ CropLayer::CropLayer(const int &batch, const int &height, const int &width, cons
 
 void CropLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     int flip        =   (this->_flip && rand() % 2);
     int dh          =   rand()%(this->_height - this->_outHeight + 1);
@@ -86,7 +86,7 @@ void CropLayer::forward(NetworkState &netState)
         }
     }
 
-    this->_forwardTime =   TimeUtil::getElapsedTime();
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 
 }
 

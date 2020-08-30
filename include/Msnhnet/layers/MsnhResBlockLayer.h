@@ -25,7 +25,7 @@ class NetBuildParams;
 class MsnhNet_API ResBlockLayer : public BaseLayer
 {
 public:
-    ResBlockLayer(const int &_batch, NetBuildParams &params, std::vector<BaseParams*> &baseParams, ActivationType &_activation, const std::vector<float> &_actParams);
+    ResBlockLayer(const int &batch, NetBuildParams &params, std::vector<BaseParams*> &baseParams, ActivationType &activation, const std::vector<float> &actParams);
     float       *activationInput    =   nullptr;
 
     void loadAllWeigths(std::vector<float> &weights);

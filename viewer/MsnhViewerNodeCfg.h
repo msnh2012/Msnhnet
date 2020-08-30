@@ -28,6 +28,7 @@ public:
         });
         ColorTabel::instance().addColor("ConcatOutputs",QColor(0xCF7531));
 
+
         NodeCreator::instance().addItem("Empty",
         {
             {"input", "string", AttributeInfo::Type::input},
@@ -101,6 +102,7 @@ public:
         });
         ColorTabel::instance().addColor("DeConv",QColor(0x27F2BD));
 
+
         NodeCreator::instance().addItem("ConvBN",
         {
             {"input", "string", AttributeInfo::Type::input},
@@ -165,6 +167,7 @@ public:
         });
         ColorTabel::instance().addColor("MaxPool",QColor(0x3353CA));
 
+
         NodeCreator::instance().addItem("Padding",
         {
             {"input", "string", AttributeInfo::Type::input},
@@ -172,6 +175,35 @@ public:
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("Padding",QColor(0xFFAA5A));
+
+        NodeCreator::instance().addItem("Permute",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"dim0", "string", AttributeInfo::Type::member},
+            {"dim1", "string", AttributeInfo::Type::member},
+            {"dim2", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("Permute",QColor(0xaf2178));
+
+        NodeCreator::instance().addItem("Reduction",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"type", "string", AttributeInfo::Type::member},
+            {"axis", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("Reduction",QColor(0xe0710f));
+
+        NodeCreator::instance().addItem("VarOp",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"type", "string", AttributeInfo::Type::member},
+            {"layer", "string", AttributeInfo::Type::member},
+            {"const", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("VarOp",QColor(0xff4e1e));
 
         NodeCreator::instance().addItem("Res2Block",
         {
@@ -194,6 +226,7 @@ public:
             {"input", "string", AttributeInfo::Type::input},
             {"group", "string", AttributeInfo::Type::member},
             {"type", "string", AttributeInfo::Type::member},
+            {"act", "string", AttributeInfo::Type::member},
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("Route",QColor(0xBB87FF));
@@ -210,8 +243,10 @@ public:
         NodeCreator::instance().addItem("UpSample",
         {
             {"input", "string", AttributeInfo::Type::input},
-            {"scale", "string", AttributeInfo::Type::member},
+            {"type", "string", AttributeInfo::Type::member},
             {"stride", "string", AttributeInfo::Type::member},
+            {"scale", "string", AttributeInfo::Type::member},
+            {"algin", "string", AttributeInfo::Type::member},
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("UpSample",QColor(0x886BFF));
@@ -234,6 +269,7 @@ public:
     }
 };
 
-}
-#endif 
 
+
+}
+#endif // MSNHVIEWERNODECFG_H

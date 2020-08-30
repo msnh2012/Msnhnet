@@ -55,12 +55,12 @@ SoftMaxLayer::~SoftMaxLayer()
 
 void SoftMaxLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     Blas::cpuSoftmax(netState.input, this->_inputNum/this->_groups, this->_batch, this->_inputNum,
                      this->_groups, this->_inputNum/this->_groups, this->_temperature, 1, this->_output, BaseLayer::supportAvx);
 
-    this->_forwardTime =   TimeUtil::getElapsedTime();
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 }
 
 #ifdef USE_GPU

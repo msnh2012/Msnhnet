@@ -1,4 +1,4 @@
-#ifndef MSNHTIMEUTIL_H
+﻿#ifndef MSNHTIMEUTIL_H
 #define MSNHTIMEUTIL_H
 
 #include <chrono>
@@ -11,11 +11,9 @@ class MsnhNet_API TimeUtil
 {
 public:
     TimeUtil();
-    static std::chrono::time_point<std::chrono::high_resolution_clock> st;
-    static std::chrono::time_point<std::chrono::high_resolution_clock> so;
 
-    static void  startRecord();
-    static float getElapsedTime();
+    static std::chrono::time_point<std::chrono::high_resolution_clock> startRecord();
+    static float getElapsedTime(std::chrono::time_point<std::chrono::high_resolution_clock> &st);
 };
 
 }

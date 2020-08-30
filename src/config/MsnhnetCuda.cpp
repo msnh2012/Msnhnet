@@ -2,7 +2,7 @@
 
 namespace Msnhnet
 {
-int  Cuda::blockThread  = 512;
+int  Cuda::blockThread  = CUDA_THREADS;
 
 cudaStream_t Cuda::stream;
 bool Cuda::streamInited = false;

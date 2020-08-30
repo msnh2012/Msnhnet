@@ -11,12 +11,12 @@ namespace Msnhnet
 class MsnhNet_API CropLayer : public BaseLayer
 {
 public:
-    CropLayer(const int &_batch, const int &_height, const int &_width, const int &_channel,
-              const int &cropHeight, const int &cropWidth, const int &_flip, const float &angle,
-              const float &_saturation, const float &_exposure);
+    CropLayer(const int &batch, const int &height, const int &width, const int &channel,
+              const int &cropHeight, const int &cropWidth, const int &flip, const float &angle,
+              const float &saturation, const float &exposure);
 
     virtual void forward(NetworkState &netState);
-    void resize(const int &_width, const int &_height);
+    void resize(const int &width, const int &height);
 
     int getKSize() const;
 

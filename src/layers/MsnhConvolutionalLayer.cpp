@@ -97,10 +97,10 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
             this->_gpuWeights    = Cuda::makeCudaArray(this->_weights, this->_nWeights);
             this->_gpuBiases     = Cuda::makeCudaArray(this->_biases , this->_num);
 #ifdef USE_CUDNN
-			if (useFp16)
-			{
-				this->_gpuWeightsFp16 = Cuda::makeCudaArray(this->_weights, this->_nWeights);
-			}
+            if (useFp16)
+            {
+                this->_gpuWeightsFp16 = Cuda::makeCudaArray(this->_weights, this->_nWeights);
+            }
 #endif 
 #endif
         }
@@ -122,10 +122,10 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 #ifdef USE_GPU
         this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
 #ifdef USE_CUDNN
-		if (useFp16)
-		{
-			this->_gpuOutputFp16 = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-		}
+        if (useFp16)
+        {
+            this->_gpuOutputFp16 = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+        }
 #endif 
 
 #endif
@@ -232,7 +232,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     CUDNN_CHECK(cudnnSetConvolutionGroupCount(this->_convDesc,this->_groups));
     CUDNN_CHECK(cudnnSetConvolutionMathType(this->_convDesc, CUDNN_TENSOR_OP_MATH));
 
-    CUDNN_CHECK(cudnnSetConvolution2dDescriptor(this->_convDesc, this->_paddingY*this->_dilationY, this->_paddingX*this->_dilationX, this->_strideY, this->_strideX,
+    CUDNN_CHECK(cudnnSetConvolution2dDescriptor(this->_convDesc, this->_paddingY, this->_paddingX, this->_strideY, this->_strideX,
                                                 this->_dilationY, this->_dilationX, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
 
     this->_fwAlgo16 = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
@@ -378,11 +378,11 @@ ConvolutionalLayer::~ConvolutionalLayer()
     CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc16));
     CUDNN_CHECK(cudnnDestroyFilterDescriptor(_weightDesc16));
     CUDNN_CHECK(cudnnDestroyConvolutionDescriptor(_convDesc));
-	if (useFp16)
-	{
-		Cuda::freeCuda(_gpuWeightsFp16);
-		Cuda::freeCuda(_gpuOutputFp16);
-	}
+    if (useFp16)
+    {
+        Cuda::freeCuda(_gpuWeightsFp16);
+        Cuda::freeCuda(_gpuOutputFp16);
+    }
 #endif
     Cuda::freeCuda(_gpuWeights);
     Cuda::freeCuda(_gpuBiases);
@@ -407,12 +407,11 @@ int ConvolutionalLayer::convOutWidth()
 
 int ConvolutionalLayer::getWorkSpaceSize32()
 {
+    size_t space = 0;
 #ifdef USE_GPU
 #ifdef USE_CUDNN
-    size_t space = 0;
     CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(Cuda::getCudnnHandle(), this->_inputDesc, this->_weightDesc, this->_convDesc,
                                                         this->_outputDesc, this->_fwAlgo, &space));
-    return space;
 #endif
 #endif
 
@@ -427,7 +426,9 @@ int ConvolutionalLayer::getWorkSpaceSize32()
         }
     }
 
-    return this->_outHeight * this->_outWidth * this->_kSizeX * this->_kSizeY * (this->_channel / this->_groups)*static_cast<int>(sizeof(float));
+    size_t space1 = this->_outHeight * this->_outWidth * this->_kSizeX * this->_kSizeY * (this->_channel / this->_groups)*static_cast<int>(sizeof(float));
+
+    return (space1>space)?space1:space;
 }
 
 int ConvolutionalLayer::getWorkSpaceSize16()
@@ -534,7 +535,7 @@ void ConvolutionalLayer::swapBinary()
 
 void ConvolutionalLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     int m       =  this->_num / this->_groups; 
 
@@ -614,23 +615,47 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                 }
 #else
 
-                if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+#ifdef USE_ARM
+                if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1&& this->_paddingX == 0 && this->_paddingY == 0)
                 {
-                    b = im;
 
+#ifdef __arrch64__
+                    goto TempARRCH64;
+#endif
+                    ConvolutionalLayerArm3x3s1::conv3x3s1Neon(im, this->_width, this->_height, this->_channel, a, c, this->_outWidth, this->_outHeight, this->_outChannel);
+                }
+                else if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 2 && this->_strideX == 2&& this->_paddingX == 0 && this->_paddingY == 0)
+                {
+#ifdef __arrch64__
+                    goto TempARRCH64;
+#endif
+                    ConvolutionalLayerArm3x3s2::conv3x3s2Neon(im, this->_width, this->_height, this->_channel, a, c, this->_outWidth, this->_outHeight, this->_outChannel);
                 }
                 else
                 {
+#endif
+TempARRCH64:
 
-                    Gemm::cpuIm2colEx(im, this->_channel/this->_groups, this->_height, this->_width, this->_kSizeX, this->_kSizeY,
-                                      this->_paddingX, this->_paddingY, this->_strideX, this->_strideY, this->_dilationX, this->_dilationY,
-                                      b);
+                    if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+                    {
+                        b = im;
 
+                    }
+                    else
+                    {
+
+                        Gemm::cpuIm2colEx(im, this->_channel/this->_groups, this->_height, this->_width, this->_kSizeX, this->_kSizeY,
+                                          this->_paddingX, this->_paddingY, this->_strideX, this->_strideY, this->_dilationX, this->_dilationY,
+                                          b);
+
+                    }
+
+                    Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
+#ifdef USE_ARM
                 }
-
-                Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
 #endif
 
+#endif
             }
 
         }
@@ -639,63 +664,72 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 
     if(this->_batchNorm==1)
     {
-
         for (int b = 0; b < this->_batch; ++b)
         {
+#ifdef USE_ARM
+#ifdef USE_NEON
+        int step = b*this->_outChannel*this->_outHeight*this->_outWidth;
+        BatchNormLayerArm::BatchNorm(this->_output + step,
+                                     this->_width,
+                                     this->_height,
+                                     this->_channel,
+                                     this->_output + step,
+                                     this->_scales,
+                                     this->_rollMean,
+                                     this->_rollVariance,
+                                     this->_biases
+                                     );
+#else
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
+            {
+                int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
+
+                this->_output[index]  = scaleSqrt*this->_output[index] + meanSqrt + this->_biases[c];
+            }
+#endif
+#endif
+
+#ifdef USE_X86
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
             for (int c = 0; c < this->_outChannel; ++c)
             {
-#ifdef USE_ARM
-                for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
-                {
-                    int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
-
-                    this->_output[index]  = this->_scales[c]*(this->_output[index] - this->_rollMean[c])/sqrt(this->_rollVariance[c] + 0.00001f) + this->_biases[c];
-                }
-#endif
-
-#ifdef USE_X86
+                float sqrtVal   = sqrt(this->_rollVariance[c] + 0.00001f);
+                float scaleSqrt = this->_scales[c]/sqrtVal;
+                float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
                 if(this->supportAvx)
                 {
-                    int i = 0;
-                    for (; i < (this->_outHeight*this->_outWidth)/8; ++i)
+                    for (int i = 0; i < (this->_outHeight*this->_outWidth)/8; ++i)
                     {
 
                         int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i*8;
 
-                        __m256 mScale;
+                        __m256 mScaleSqrt;
                         __m256 mInput;
-                        __m256 mMean;
-                        __m256 mVariance;
-                        __m256 mEsp;
+                        __m256 mMeanSqrt;
                         __m256 mBias;
-                        __m256 mResult1;
-                        __m256 mResult2;
+                        __m256 mResult;
 
-                        mScale      =   _mm256_set1_ps(this->_scales[c]);
+                        mScaleSqrt  =   _mm256_set1_ps(scaleSqrt);
                         mInput      =   _mm256_loadu_ps(this->_output+index);
-                        mMean       =   _mm256_set1_ps(this->_rollMean[c]);
-                        mVariance   =   _mm256_set1_ps(this->_rollVariance[c]);
-                        mEsp        =   _mm256_set1_ps(0.00001f);
+                        mMeanSqrt   =   _mm256_set1_ps(meanSqrt);
                         mBias       =   _mm256_set1_ps(this->_biases[c]);
-                        mResult1    =   _mm256_sub_ps(mInput, mMean);
-                        mResult1    =   _mm256_mul_ps(mScale, mResult1);
-                        mResult2    =   _mm256_add_ps(mVariance,mEsp);
-                        mResult2    =   _mm256_sqrt_ps(mResult2);
+                        mResult     =   _mm256_mul_ps(mScaleSqrt, mInput);
+                        mResult     =   _mm256_add_ps(mResult, mMeanSqrt);
+                        mResult     =   _mm256_add_ps(mResult, mBias);
 
-                        mResult2    =   _mm256_div_ps(mResult1,mResult2);
-                        mResult2    =   _mm256_add_ps(mResult2,mBias);
-
-                        _mm256_storeu_ps(this->_output+index, mResult2);
+                        _mm256_storeu_ps(this->_output+index, mResult);
 
                     }
 
-                    for (int j = i*8; j < this->_outHeight*this->_outWidth; ++j)
+                    for (int j = (this->_outHeight*this->_outWidth)/8*8; j < this->_outHeight*this->_outWidth; ++j)
                     {
                         int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + j;
-                        this->_output[index]  = this->_scales[c]*(this->_output[index] - this->_rollMean[c])/sqrt(this->_rollVariance[c] + 0.00001f) + this->_biases[c];
+                        this->_output[index]  = scaleSqrt*this->_output[index] + meanSqrt + this->_biases[c];
                     }
                 }
                 else
@@ -704,12 +738,11 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                     for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
                     {
                         int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
-
-                        this->_output[index]  = this->_scales[c]*(this->_output[index] - this->_rollMean[c])/sqrt(this->_rollVariance[c] + 0.00001f) + this->_biases[c];
+                        this->_output[index]  = scaleSqrt*this->_output[index] + meanSqrt + this->_biases[c];
                     }
                 }
-#endif
             }
+#endif
         }
 
     }
@@ -756,7 +789,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
         swapBinary();
     }
 
-    this->_forwardTime =   TimeUtil::getElapsedTime();
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 
 }
 

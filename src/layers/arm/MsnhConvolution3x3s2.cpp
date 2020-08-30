@@ -1,12 +1,11 @@
+#ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolution3x3s2.h"
-#include "Msnhnet/config/MsnhnetCfg.h"
-
 namespace Msnhnet
 {
-    void ConvolutionalLayerArm3x3s2::conv3x3s2_neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel, 
+    void ConvolutionalLayerArm3x3s2::conv3x3s2Neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                                         float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
         int ccOutChannel = outChannel >> 1;
-        int ccRemainOutChannel = outChannel << 1;
+        int ccRemainOutChannel = ccOutChannel << 1;
 
         const int in_size = inWidth * inHeight;
         const int out_size = outWidth * outHeight;
@@ -20,8 +19,8 @@ namespace Msnhnet
             float *dest0 = dest + c * out_size;
             float *dest1 =  dest + (c + 1) * out_size;
 
-            for(int j = 0; j < out_size; j++) dest0[j] = 0.f;
-            for(int j = 0; j < out_size; j++) dest1[j] = 0.f;
+            // for(int j = 0; j < out_size; j++) dest0[j] = 0.f;
+            // for(int j = 0; j < out_size; j++) dest1[j] = 0.f;
 
             //two output rely on two kernel
             float *k0 = kernel + c * inChannel * 3 * 3;
@@ -317,6 +316,7 @@ namespace Msnhnet
     #else    
                     if(nn > 0){
                         asm volatile(
+                            "0:                             \n"
                             // r0
                             // q8 = [a, c, e, g]
                             // q9 = [b, d, f, h]
@@ -463,3 +463,4 @@ namespace Msnhnet
         }
     }
 }
+#endif

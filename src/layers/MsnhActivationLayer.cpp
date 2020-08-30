@@ -32,7 +32,7 @@ ActivationLayer::ActivationLayer(const int &batch, const int &width, const int &
 
 void ActivationLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
     Blas::cpuCopy(this->_outputNum*this->_batch,
                   netState.input,
                   1,
@@ -44,7 +44,7 @@ void ActivationLayer::forward(NetworkState &netState)
                                _activation,
                                this->supportAvx
                                );
-    this->_forwardTime = TimeUtil::getElapsedTime();
+    this->_forwardTime = TimeUtil::getElapsedTime(st);
 }
 
 #ifdef USE_GPU

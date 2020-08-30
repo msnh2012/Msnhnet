@@ -21,6 +21,7 @@ void View::fitView()
     this->centerOn(0,0);
 }
 
+
 void View::wheelEvent(QWheelEvent* event)
 {
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
@@ -37,9 +38,10 @@ void View::wheelEvent(QWheelEvent* event)
     scale(zoomFactor, zoomFactor);
 }
 
+
 void View::keyPressEvent(QKeyEvent* event)
 {
-
+    // Keyboard zoom
     setTransformationAnchor(QGraphicsView::AnchorViewCenter);
     constexpr qreal inFactor = 1.1f;
     constexpr qreal outFactor = 1 / inFactor;

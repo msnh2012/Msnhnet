@@ -17,19 +17,6 @@ struct Yolov3Info
     int getOutputNum(){return outChannel*outWidth*outHeight;}
 };
 
-struct Yolov3FinalBox
-{
-    Yolov3FinalBox(const float &x, const float &y, const float &w, const float &h, const float &conf, const int &bestCls)
-                :x(x),y(y),w(w),h(h),conf(conf),bestCls(bestCls){}
-    float    x      =   0;
-    float    y      =   0;
-    float    w      =   0;
-    float    h      =   0;
-    float    conf   =   0;
-    int      bestCls=   0;
-
-};
-
 struct Yolov3Box
 {
     Box::XYWHBox xywhBox;
@@ -37,7 +24,8 @@ struct Yolov3Box
     float   bestClsConf     =   0;
     int     bestClsIdx      =   0;
     float   angle           =   0;
-    float   regAngle        =   0;
+    float   regAngle        =   0; 
+
     std::vector<float> classesVal;
     std::vector<float> angleSplits;
 };

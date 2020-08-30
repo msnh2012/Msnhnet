@@ -18,6 +18,7 @@ namespace MsnhViewer
         void keyPressEvent(QKeyEvent* e) override;
     };
 
+
     class Node : public QGraphicsItem
     {
         friend Link* connect(QString const& from, QString const& out, QString const& to, QString const& in);
@@ -26,6 +27,7 @@ namespace MsnhViewer
         Node (QString const& type = "", QString const& name = "");
         ~Node();
 
+        // highlight attribute that are compatible with dataType
         void highlight(Attribute* emitter);
         void unhighlight();
         QString name() const;
@@ -39,6 +41,7 @@ namespace MsnhViewer
             update();
         }
 
+        // Create attributes of this item.
         void createAttributes(QVector<AttributeInfo> const& attributesInfo);
 
         QVector<Attribute*> const& attributes() const { return attributes_; }

@@ -37,6 +37,9 @@ set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhRes2BlockLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhResBlockLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhRouteLayer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhVariableOpLayer.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhPermuteLayer.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhReductionLayer.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhSoftMaxLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhUpSampleLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhYolov3Layer.cpp
@@ -68,5 +71,6 @@ target_link_libraries(MsnhnetViewer Qt5::Widgets)
 target_link_libraries(MsnhnetViewer Qt5::Svg)
 target_link_libraries(MsnhnetViewer Qt5::PrintSupport)
 target_link_libraries(MsnhnetViewer yaml-cpp)
+target_link_libraries(MsnhnetViewer ${OMP_LIB})
 install(TARGETS MsnhnetViewer
     RUNTIME DESTINATION bin)

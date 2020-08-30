@@ -15,16 +15,21 @@
 #include <nnpack.h>
 #endif
 
+#ifdef USE_ARM
+#include "Msnhnet/layers/arm/MsnhConvolution3x3s1.h"
+#include "Msnhnet/layers/arm/MsnhConvolution3x3s2.h"
+#endif
+
 namespace Msnhnet
 {
 class MsnhNet_API ConvolutionalLayer:public BaseLayer
 {
 public:
 
-    ConvolutionalLayer(const int &_batch, const int &_steps, const int &_height, const int &_width, const int &_channel, const int &_num, const int &_groups,
-                      const int &_kSizeX, const int &_kSizeY, const int &_strideX, const int &_strideY, const int &_dilationX, const int &_dilationY, const int &_paddingX, const int &_paddingY, ActivationType _activation, const std::vector<float> &_actParams,
-                      const int &_batchNorm,  const int &_useBias, const int &_binary, const int &_xnor, const int &_useBinOutput, const int &_groupIndex,
-                      const int &_antialiasing, ConvolutionalLayer *const &_shareLayer, const int &assistedExcitation, const int &deform);
+    ConvolutionalLayer(const int &batch, const int &steps, const int &height, const int &width, const int &channel, const int &num, const int &groups,
+                      const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY, const int &dilationX, const int &dilationY, const int &paddingX, const int &paddingY, ActivationType _activation, const std::vector<float> &actParams,
+                      const int &batchNorm,  const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex,
+                      const int &antialiasing, ConvolutionalLayer *const &shareLayer, const int &assistedExcitation, const int &deform);
     ~ConvolutionalLayer();
 
     int convOutHeight();
@@ -34,24 +39,24 @@ public:
     int getWorkSpaceSize32();
     int getWorkSpaceSize16();
 
-    static void  addBias(float *const &_output, float *const &_biases, const int &_batch, const int &_num, const int &whSize);
-    static void  scaleBias(float *const &_output, float *const &_scales, const int &_batch, const int &_num, const int &whSize);
+    static void  addBias(float *const &output, float *const &biases, const int &batch, const int &num, const int &whSize);
+    static void  scaleBias(float *const &output, float *const &scales, const int &batch, const int &num, const int &whSize);
 
-    void binarizeWeights(float *const &_weights, const int &_num, const int &wtSize, float *const &_binary);
-    void cpuBinarize(float *const &x, const int &xNum, float *const &_binary);
+    void binarizeWeights(float *const &weights, const int &num, const int &wtSize, float *const &binary);
+    void cpuBinarize(float *const &x, const int &xNum, float *const &binary);
     void swapBinary();
 
     void forward(NetworkState &netState);
 #ifdef USE_GPU
     void forwardGPU(NetworkState &netState);
 #endif
-    void loadAllWeigths(std::vector<float> &_weights);
+    void loadAllWeigths(std::vector<float> &weights);
 
-    void loadScales(float *const &_weights, const int& len);
+    void loadScales(float *const &weights, const int& len);
     void loadBias(float *const &bias, const int& len);
-    void loadWeights(float *const &_weights, const int& len);
-    void loadRollMean(float * const &_rollMean, const int &len);
-    void loadRollVariance(float * const &_rollVariance, const int &len);
+    void loadWeights(float *const &weights, const int& len);
+    void loadRollMean(float * const &rollMean, const int &len);
+    void loadRollVariance(float * const &rollVariance, const int &len);
 
     float *getWeights() const;
 

@@ -1,8 +1,5 @@
 ﻿#include <iostream>
-#include "Msnhnet/net/MsnhNetBuilder.h"
-#include "Msnhnet/io/MsnhIO.h"
-#include "Msnhnet/config/MsnhnetCfg.h"
-#include "Msnhnet/utils/MsnhOpencvUtil.h"
+#include "Msnhnet/Msnhnet.h"
 
 int main(int argc, char** argv) 
 {
@@ -51,7 +48,7 @@ int main(int argc, char** argv)
     }
     catch (Msnhnet::Exception ex)
     {
-        std::cout<<ex.what()<<std::endl;
+        std::cout<<ex.what()<<" "<<ex.getErrFile() << " " <<ex.getErrLine()<< " "<<ex.getErrFun()<<std::endl;
     }
     return 0;
 }

@@ -18,7 +18,6 @@
 #include <arm_neon.h>
 #endif
 
-
 #ifdef USE_OPEN_BLAS
 #include <cblas.h>
 #endif
@@ -31,6 +30,9 @@
 #define OMP_THREAD omp_get_max_threads()
 #endif
 
+#define CUDA_THREADS 512
+
+#define MIN_OMP_DATA 10000
 
 enum ActivationType
 {
@@ -68,6 +70,7 @@ enum LayerType
     SOFTMAX,
     CROP,
     ROUTE,
+    VARIABLE_OP,
     NORMALIZATION,
     AVGPOOL,
     ACTIVE,
@@ -79,13 +82,49 @@ enum LayerType
     UPSAMPLE,
     L2NORM,
     EMPTY,
-    BLANK,
+    PERMUTE,
+    REDUCTION,
     CONFIG,
     RES_BLOCK,
     RES_2_BLOCK,
     CONCAT_BLOCK,
     ADD_BLOCK,
     PADDING
+};
+
+enum Arithmetic
+{
+    ARITH_ADD = 0,
+    ARITH_SUB,
+    ARITH_SUB_INV,
+    ARITH_MUL,
+    ARITH_DIV,
+    ARITH_DIV_INV
+};
+
+enum Scientific
+{
+    SCI_ABS=0,
+    SCI_ACOS,
+    SCI_ASIN,
+    SCI_ATAN,
+    SCI_COS,
+    SCI_COSH,
+    SCI_SIN,
+    SCI_SINH,
+    SCI_TAN,
+    SCI_TANH,
+    SCI_EXP,
+    SCI_POW,
+    SCI_LOG,
+    SCI_LOG10,
+    SCI_SQRT
+};
+
+enum ReductionType
+{
+    REDUCTION_SUM,
+    REDUCTION_MEAN
 };
 
 enum WeightsType

@@ -36,6 +36,15 @@ public:
     static void cpuAxpy(const int &inputN, const float &alpha, float *const &x,
                         const int &stepX, float *const &y, const int &stepY);
 
+    static void cpuArithmetic(const Arithmetic &type, const int &inputN, float *const &x, const int &stepX,
+                               float *const &y, const int &stepY, float *out, const int &stepOut);
+
+    static void cpuArithmetic(const Arithmetic &type, const int &inputN, float *const &x, const int &stepX,
+                               const float alpha, float *out, const int &stepOut);
+
+    static void cpuScientific(const Scientific &type, const int &inputN, float *const &x, const int &stepX,
+                               const float alpha, float *out, const int &stepOut, const bool &supportAvx);
+
     static void cpuScale(const int &inputN, const float &alpha, float *const &x, const int &stepX);
 
     static void cpuMean(float *const &x, const int &batch, const int &filters, const int &outSize, float *const &mean);
@@ -63,8 +72,11 @@ public:
 
     static void cpuLogisticCorssEntropy(const int &num, float *const &pred, float *const &truth, float *const &delta, float *const &error);
 
-    static void cpuUpSample(float *const &in, const int &width, const int &height, const int &channel, const int &batch, const int &stride,
-                            const int &forward, const float &scale, float *const &out);
+    static void cpuUpSample(float *const &in, const int &width, const int &height, const int &channel, const int &batch, const int &strideX,
+                             const int &strideY, const float &scale, float *const &out);
+
+    static void cpuBilinearResize(float *const &in, const int &width, const int &height, const int &channel, const int &batch, const int &outWidth,
+                                    const int &outHeight, const int &alignCorners, float *const &out);
 
 };
 

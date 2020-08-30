@@ -46,7 +46,7 @@ Yolov3Layer::Yolov3Layer(const int &batch, const int &width, const int &height, 
 
 void Yolov3Layer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     Blas::cpuCopy(netState.inputNum, netState.input, 1, this->_output, 1);
 
@@ -75,7 +75,7 @@ void Yolov3Layer::forward(NetworkState &netState)
 
     }
 
-    this->_forwardTime =   TimeUtil::getElapsedTime();
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 }
 
 #ifdef USE_GPU

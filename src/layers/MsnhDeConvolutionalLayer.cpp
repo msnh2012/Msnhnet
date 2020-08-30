@@ -82,7 +82,7 @@ DeConvolutionalLayer::DeConvolutionalLayer(const int &batch, const int &height, 
 
 void DeConvolutionalLayer::forward(NetworkState &netState)
 {
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     int mOutH           =   deConvOutHeight();
     int mOutW           =   deConvOutWidth();
@@ -141,7 +141,7 @@ void DeConvolutionalLayer::forward(NetworkState &netState)
         }
     }
 
-    this->_forwardTime =  TimeUtil::getElapsedTime();
+    this->_forwardTime =  TimeUtil::getElapsedTime(st);
 
 }
 

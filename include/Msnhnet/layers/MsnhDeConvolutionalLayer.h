@@ -12,14 +12,14 @@ namespace Msnhnet
 class MsnhNet_API DeConvolutionalLayer:public BaseLayer
 {
 public:
-    DeConvolutionalLayer(const int &_batch, const int &_height, const int &_width, const int &_channel, const int &_num,
-                         const int &_kSizeX, const int &_kSizeY, const int &_strideX, const int &_strideY,const int &_paddingX, const int &_paddingY,
-                         const int &_groups, const ActivationType &_activation, const std::vector<float> &_actParams,const int &_useBias);
+    DeConvolutionalLayer(const int &batch, const int &height, const int &width, const int &channel, const int &num,
+                         const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY,const int &paddingX, const int &paddingY,
+                         const int &groups, const ActivationType &activation, const std::vector<float> &actParams,const int &useBias);
 
     virtual void forward(NetworkState &netState);
-    virtual void loadAllWeigths(std::vector<float> &_weights);
+    virtual void loadAllWeigths(std::vector<float> &weights);
     void loadBias(float *const &bias, const int& len);
-    void loadWeights(float *const &_weights, const int& len);
+    void loadWeights(float *const &weights, const int& len);
 
     int deConvOutHeight();
     int deConvOutWidth();

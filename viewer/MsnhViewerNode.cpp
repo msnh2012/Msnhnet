@@ -15,6 +15,7 @@ namespace MsnhViewer
     constexpr int baseHeight = 26;
     constexpr int baseWidth  = 188;
 
+
     NodeName::NodeName(QGraphicsItem* parent) : QGraphicsTextItem(parent)
     {
         QTextOption options;
@@ -23,14 +24,17 @@ namespace MsnhViewer
         document()->setDefaultTextOption(options);
     }
 
+
     void NodeName::adjustPosition()
     {
         setPos(-(boundingRect().width() - parentItem()->boundingRect().width()) * 0.5, -boundingRect().height());
     }
 
+
     void NodeName::keyPressEvent(QKeyEvent* e)
     {
     }
+
 
     Node::Node(QString const& type, QString const& name)
         : QGraphicsItem(nullptr)
@@ -42,20 +46,21 @@ namespace MsnhViewer
         , height_{baseHeight}
         , attributes_{}
     {
-
+        // Configure item behavior.
         setFlag(QGraphicsItem::ItemIsMovable);
         setFlag(QGraphicsItem::ItemIsSelectable);
         setFlag(QGraphicsItem::ItemIsFocusable);
 
+        // Configure node name
         name_->setTextInteractionFlags(Qt::TextEditorInteraction);
         setName(name);
 
         createStyle();
 
         typeRect_ = QRectF{1, 13, width_ - 2.0, (qreal)attributeHeight};
-        height_ += attributeHeight; 
-
+        height_ += attributeHeight; // Give some space for type section
     }
+
 
     Node::~Node()
     {
@@ -63,13 +68,14 @@ namespace MsnhViewer
         pScene->removeNode(this);
     }
 
+
     void Node::highlight(Attribute* emitter)
     {
         for (auto& attr : attributes_)
         {
             if (attr == emitter)
             {
-
+                // special case: do not change emitter mode.
                 continue;
             }
 
@@ -85,6 +91,7 @@ namespace MsnhViewer
         }
     }
 
+
     void Node::unhighlight()
     {
         for (auto& attr : attributes_)
@@ -94,6 +101,7 @@ namespace MsnhViewer
         }
     }
 
+
     void Node::createAttributes(QVector<AttributeInfo> const& attributesInfo)
     {
         if (!attributes_.empty())
@@ -102,23 +110,24 @@ namespace MsnhViewer
             return;
         }
 
+        // Compute width.
         QFont attributeFont = ThemeManager::instance().getAttributeTheme().normal.font;
         QFontMetrics metrics(attributeFont);
-        QRect boundingRect{0, 0, baseWidth - 32, attributeHeight}; 
-
+        QRect boundingRect{0, 0, baseWidth - 32, attributeHeight}; // -30 to keep space for attribute custom display / -2 for node border
         for (auto const& info : attributesInfo)
         {
             boundingRect = boundingRect.united(metrics.boundingRect(info.name));
         }
-
+        // Adjust bounding rect position / width / height.
         boundingRect.setTopLeft({0, 0});
-        boundingRect.setWidth(boundingRect.width() + 30); 
-
+        boundingRect.setWidth(boundingRect.width() + 30); // add space again
         boundingRect.setHeight(attributeHeight);
 
+        // Adjust node width
         width_ = boundingRect.width() + 2;
         typeRect_.setWidth(boundingRect.width());
 
+        // Create attributes
         for (auto const& info : attributesInfo)
         {
             Attribute* attr{nullptr};
@@ -156,9 +165,9 @@ namespace MsnhViewer
         }
 
         prepareGeometryChange();
-        name_->adjustPosition(); 
-
+        name_->adjustPosition(); // readjust name position.
     }
+
 
     void Node::createStyle()
     {
@@ -194,14 +203,16 @@ namespace MsnhViewer
         typeFont_ = node_theme.type_font;
     }
 
+
     QRectF Node::boundingRect() const
     {
         return boundingRect_;
     }
 
+
     void Node::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*)
     {
-
+        // Base shape.
         painter->setBrush(backgroundBrush_);
 
         if (isSelected())
@@ -216,18 +227,21 @@ namespace MsnhViewer
         qint32 radius = 10;
         painter->drawRoundedRect(0, 0, width_, height_, radius, radius);
 
+        // type background.
         painter->setBrush(typeBrush_);
         painter->setPen(Qt::NoPen);
         painter->drawRect(typeRect_);
 
+        // type label.
         painter->setFont(typeFont_);
         painter->setPen(typePen_);
         painter->drawText(typeRect_, Qt::AlignCenter, type_);
     }
 
+
     void Node::mousePressEvent(QGraphicsSceneMouseEvent* event)
     {
-
+        // Force selected node on top layer
         for (auto& item : scene()->items())
         {
             if (item->zValue() > 1)
@@ -245,24 +259,27 @@ namespace MsnhViewer
     {
         for (auto& attr : attributes_)
         {
-            attr->refresh(); 
-
+            attr->refresh(); // let the attribute refresh their data if required.
         }
 
         QGraphicsItem::mouseMoveEvent(event);
     }
+
 
     QString Node::name() const
     {
         return name_->toPlainText();
     }
 
+
     void Node::setName(QString const& name)
     {
         name_->setPlainText(name);
 
+        // Compute position
         name_->adjustPosition();
     }
+
 
     void Node::setMode(Mode mode)
     {
@@ -283,6 +300,7 @@ namespace MsnhViewer
             }
         }
     }
+
 
     void Node::keyPressEvent(QKeyEvent* event)
     {
@@ -319,5 +337,6 @@ namespace MsnhViewer
          QGraphicsItem::mouseDoubleClickEvent(event);
 
     }
+
 
 }

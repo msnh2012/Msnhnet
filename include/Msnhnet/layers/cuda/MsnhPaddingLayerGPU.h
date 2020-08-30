@@ -7,7 +7,7 @@
 namespace Msnhnet
 {
 
-class PaddingLayerGPU
+class MsnhNet_API PaddingLayerGPU
 {
 public:
     static void forwardNormalGPU(const int &batch, const int &outChannel, const int &outHeight, const int &outWidth,

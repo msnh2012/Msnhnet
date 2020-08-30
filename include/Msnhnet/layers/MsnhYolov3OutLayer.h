@@ -18,8 +18,8 @@ namespace Msnhnet
 class MsnhNet_API Yolov3OutLayer:public BaseLayer
 {
 public:
-    Yolov3OutLayer(const int &_batch, const int &_orgWidth, const int &_orgHeight, std::vector<int> &_yolov3Indexes, std::vector<Yolov3Info> &_yolov3LayersInfo,
-                   const float &_confThresh, const float &_nmsThresh, const int &_useSoftNms, const YoloType &_yoloType);
+    Yolov3OutLayer(const int &batch, const int &orgWidth, const int &orgHeight, std::vector<int> &yolov3Indexes, std::vector<Yolov3Info> &yolov3LayersInfo,
+                   const float &confThresh, const float &nmsThresh, const int &useSoftNms, const YoloType &yoloType);
     ~Yolov3OutLayer();
 
     std::vector<bool> batchHasBox;
@@ -33,7 +33,7 @@ public:
 
     static Yolov3Box bboxResize2org(Yolov3Box &box, const Point2I &currentShape , const Point2I &orgShape);
 
-    static std::vector<Yolov3Box> nms(const std::vector<Yolov3Box> &bboxes, const float& _nmsThresh, const bool &_useSoftNms=false, const float &sigma =0.3f);
+    static std::vector<Yolov3Box> nms(const std::vector<Yolov3Box> &bboxes, const float& _nmsThresh, const bool &useSoftNms=false, const float &sigma =0.3f);
 
     float getConfThresh() const;
 

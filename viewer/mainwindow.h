@@ -6,6 +6,7 @@
 #include <QPlainTextEdit>
 #include <QFileDialog>
 #include <Msnhnet/net/MsnhNetBuilder.h>
+#include <Msnhnet/io/MsnhParser.h>
 #include <QSvgGenerator>
 #include <omp.h>
 #include <QTimer>
@@ -24,6 +25,7 @@ public:
     static QPlainTextEdit *logger;
 
 private slots:
+    //void on_pushButton_clicked();
 
     void on_actionOpen_triggered();
 
@@ -51,5 +53,4 @@ private:
     Msnhnet::NetBuilder builder;
     QProgressBar *progressBar;
 };
-#endif 
-
+#endif // MAINWINDOW_H

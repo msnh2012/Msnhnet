@@ -47,8 +47,12 @@ Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int 
     if(!BaseLayer::isPreviewMode)
     {
         this->_allInput             =   new float[static_cast<size_t>(this->_yolov3AllInputNum * this->_batch)]();
+#ifndef USE_GPU
         this->_shuffleInput         =   new float[static_cast<size_t>(this->_yolov3AllInputNum * this->_batch)]();
+#endif
 #ifdef USE_GPU
+        CUDA_CHECK(cudaHostAlloc(&this->_shuffleInput, this->_yolov3AllInputNum * this->_batch * sizeof(float), cudaHostRegisterMapped));  
+
         this->_allInputGpu          =   Cuda::makeCudaArray(this->_allInput, this->_yolov3AllInputNum * this->_batch);
         this->_shuffleInputGpu      =   Cuda::makeCudaArray(this->_shuffleInput, this->_yolov3AllInputNum * this->_batch);
 #endif
@@ -58,13 +62,21 @@ Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int 
 Yolov3OutLayer::~Yolov3OutLayer()
 {
     releaseArr(_allInput);
+#ifndef USE_GPU
     releaseArr(_shuffleInput);
+#endif
+
+#ifdef USE_GPU
+    CUDA_CHECK(cudaFreeHost(_shuffleInput));
+    Cuda::freeCuda(_allInputGpu);
+    Cuda::freeCuda(_shuffleInputGpu);
+#endif
 }
 
 void Yolov3OutLayer::forward(NetworkState &netState)
 {
 
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     batchHasBox.clear();
     finalOut.clear();
@@ -84,6 +96,9 @@ void Yolov3OutLayer::forward(NetworkState &netState)
             int WxH             =   netState.net->layers[index]->getOutWidth()*netState.net->layers[index]->getOutHeight();
             int chn             =   netState.net->layers[index]->getOutChannel()/3;
 
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
             for (int k = 0; k < 3; ++k)
             {
                 for (int n = 0; n < WxH; ++n)
@@ -109,9 +124,9 @@ void Yolov3OutLayer::forward(NetworkState &netState)
                 Yolov3Box box;
 
                 box.xywhBox         =   Box::XYWHBox(this->_shuffleInput[ptr + i*this->_channel],
-                        this->_shuffleInput[ptr + i*this->_channel + 1],
-                        this->_shuffleInput[ptr + i*this->_channel + 2],
-                        this->_shuffleInput[ptr + i*this->_channel + 3]);
+                                                    this->_shuffleInput[ptr + i*this->_channel + 1],
+                                                    this->_shuffleInput[ptr + i*this->_channel + 2],
+                                                    this->_shuffleInput[ptr + i*this->_channel + 3]);
 
                 box.conf            =   this->_shuffleInput[ptr + i*this->_channel + 4];
 
@@ -180,7 +195,7 @@ void Yolov3OutLayer::forward(NetworkState &netState)
 
     this->batchHasBox   =   tmpBatchHasBox;
 
-    this->_forwardTime  =   TimeUtil::getElapsedTime();
+    this->_forwardTime  =   TimeUtil::getElapsedTime(st);
 
 }
 
@@ -189,7 +204,8 @@ void Yolov3OutLayer::forwardGPU(NetworkState &netState)
 {
     batchHasBox.clear();
     finalOut.clear();
-    auto st = std::chrono::high_resolution_clock::now();
+    auto st = TimeUtil::startRecord();
+
     std::vector<bool> tmpBatchHasBox(static_cast<size_t>(this->_batch),false);
 
     int offset          =   0;
@@ -198,12 +214,11 @@ void Yolov3OutLayer::forwardGPU(NetworkState &netState)
     {
         for (int i = 0; i < this->_yolov3Indexes.size(); ++i)
         {
-
             size_t index        =   static_cast<size_t>(this->_yolov3Indexes[i]);
             float *mInput       =   netState.net->layers[index]->getGpuOutput();
             int yolov3InputNum  =   netState.net->layers[index]->getOutputNum();
 
-            cudaMemcpy(this->_allInputGpu + offset, mInput, yolov3InputNum*sizeof(float), cudaMemcpyDeviceToDevice);
+            CUDA_CHECK(cudaMemcpyAsync(this->_allInputGpu + offset, mInput, yolov3InputNum*sizeof(float), cudaMemcpyDeviceToDevice,Cuda::getCudaStream()));
 
             int WxH             =   netState.net->layers[index]->getOutWidth()*netState.net->layers[index]->getOutHeight();
             int chn             =   netState.net->layers[index]->getOutChannel()/3;
@@ -212,7 +227,7 @@ void Yolov3OutLayer::forwardGPU(NetworkState &netState)
             offset              =   offset + yolov3InputNum;
         }
 
-        cudaMemcpy(this->_shuffleInput, this->_shuffleInputGpu, this->_yolov3AllInputNum * this->_batch*sizeof(float), cudaMemcpyDeviceToHost);
+        CUDA_CHECK(cudaMemcpy(this->_shuffleInput, this->_shuffleInputGpu, this->_yolov3AllInputNum * this->_batch*sizeof(float), cudaMemcpyDeviceToHost));
 
         std::vector<Yolov3Box> tmpBox;
 
@@ -295,15 +310,13 @@ void Yolov3OutLayer::forwardGPU(NetworkState &netState)
 
     this->batchHasBox   =   tmpBatchHasBox;
 
-    auto so = std::chrono::high_resolution_clock::now();
-    this->_forwardTime =   std::chrono::duration <double, milli> (so-st).count();
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 
 }
 #endif
 
 Yolov3Box Yolov3OutLayer::bboxResize2org( Yolov3Box &box, const Point2I &currentShape, const Point2I &orgShape)
 {
-
     /*
          w > h       w < h
         =padwh=     =padxy=

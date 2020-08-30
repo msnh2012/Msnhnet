@@ -1,10 +1,10 @@
 # Msnhnet
-English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br>
+English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/details/107216704)</br>
 ###  A mini pytorch inference framework which inspired from darknet.
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![c++](https://img.shields.io/badge/lauguage-c%2B%2B-green)
 ![Msnhnet](https://img.shields.io/badge/Msnh-Msnhnet-blue)</br>
-![](readme_imgs/msnhnetviewer.png)</br>
+![](readme_imgs/banner.jpg)</br>
 **OS supported** (you can check other OS by yourself)
 
 | |windows|linux|mac|
@@ -20,23 +20,62 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 **Features**
 
 - C++ Only. 3rdparty blas lib is optional, also you can use OpenBlas.
-- A viewer for msnhnet is supported.(netron like)
-![](readme_imgs/msnhnetviewer.png)
 - OS supported: Windows, Linux(Ubuntu checked) and Mac os(unchecked).
 - CPU supported: Intel X86, AMD(unchecked) and ARM(checked: armv7 armv8 arrch64).
+- x86 avx2 supported.(Working....)
+- arm neon supported.(Working....)。
+- NNPack supported.(arm)。
 - Keras to Msnhnet is supported. (Keras 2 and tensorflow 1.x)
 - GPU cuda supported.(Checked GTX1080Ti, Jetson NX)
 - GPU cudnn supported.(Checked GTX1080Ti, Jetson NX)
 - GPU fp16 mode supported.(Checked GTX1080Ti, Jetson NX.)
 - **ps. Please check your card wheather fp16 full speed is supported.**
+- c_api supported.
+- keras 2 msnhnet supported.(Keras 2 and tensorflow 1.x, part of op)
+- pytorch 2 msnhnet supported.(Part of op, working on it)
+- [MsnhnetSharp](https://github.com/msnh2012/MsnhnetSharp) supported.
+![pic](readme_imgs/ui.png)
+- A viewer for msnhnet is supported.(netron like)
+![](readme_imgs/msnhnetviewer.png)
 - Working on it...(**Weekend Only  (╮（╯＿╰）╭)**)
+
+**Tested networks**
+- lenet5
+- lenet5_bn
+- alexnet(**torchvision**)
+- vgg16(**torchvision**)
+- vgg16_bn(**torchvision**)
+- resnet18(**torchvision**)
+- resnet34(**torchvision**)
+- resnet50(**torchvision**)
+- resnet101(**torchvision**)
+- resnet152(**torchvision**)
+- darknet53[(Pytorch_Darknet53)](https://github.com/developer0hye/PyTorch-Darknet53)
+- googLenet(**torchvision**)
+- mobilenetv2(**torchvision**)
+- yolov3[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- yolov3_spp[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- yolov3_tiny[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- yolov4[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- fcns[(pytorch-FCN-easiest-demo)](https://github.com/bat67/pytorch-FCN-easiest-demo)
+- unet[(bbuf keras)](https://github.com/BBuf/Keras-Semantic-Segmentation)
+- deeplabv3(**torchvision**)</br>
+==============================================================
+- mobilenetv2_yolov3_lite (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
+- mobilenetv2_yolov3_nano (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
+- yoloface100k (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
+- yoloface500k (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
+- Thanks: https://github.com/dog-qiuqiu/MobileNetv2-YOLOV3
+==============================================================
+- **pretrained models** 链接：https://pan.baidu.com/s/1mBaJvGx7tp2ZsLKzT5ifOg 
+提取码：x53z 
 
 **Yolo Test** 
 - Win10 MSVC 2017 I7-10700F
 
   |net|yolov3|yolov3_tiny|yolov4|
   |:---:|:---:|:---:|:---:|
-  |time|465ms|75ms|600ms|
+  |time|380ms|50ms|432ms|
 
 
 - ARM(Yolov3Tiny cpu)
@@ -54,56 +93,37 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 - Jetson NX
   |net|yolov3|yolov3_tiny|yolov4|
   |:---:|:---:|:---:|:---:|
-  |time|280ms|30ms|210ms|
+  |time|200ms|20ms|210ms|
   
 **Yolo GPU cuDnn FP16 Test**
 - Jetson NX
   |net|yolov3|yolov4|
   |:---:|:---:|:---:|
-  |time|140ms|120ms|
-
-**Tested networks**
-- lenet5
-- lenet5_bn
-- alexnet
-- vgg16
-- vgg16_bn
-- resnet18
-- resnet34
-- resnet50
-- resnet101
-- resnet152
-- darknet53
-- googLenet
-- mobilenetv2
-- yolov3
-- yolov3_spp
-- yolov3_tiny
-- yolov4
-- fcns
-- unet</br>
-==============================================================
-- mobilenetv2_yolov3_lite (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
-- mobilenetv2_yolov3_nano (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
-- yoloface100k (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
-- yoloface500k (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
-- Thanks: https://github.com/dog-qiuqiu/MobileNetv2-YOLOV3
-==============================================================
-- **pretrained models** 链接：https://pan.baidu.com/s/1mBaJvGx7tp2ZsLKzT5ifOg 
-提取码：x53z 
-
+  |time|115ms|120ms|
+  
+**Mobilenet Yolo GPU cuDnn Test**
+- Jetson NX
+  |net|yoloface100k|yoloface500k|mobilenetv2_yolov3_nano|mobilenetv2_yolov3_lite|
+  |:---:|:---:|:---:|:---:|:---:|
+  |time|7ms|20ms|20ms|30ms|
+  
 **Requirements**
   * OpenCV4 https://github.com/opencv/opencv
   * yaml-cpp https://github.com/jbeder/yaml-cpp
   * Qt5 (**optional**. for Msnhnet viewer) http://download.qt.io/archive/qt/
   * cuda10+ cudnn 7.0+.(for GPU)
 
+**Video tutorials(bilibili)**
+- [Build on Linux](https://www.bilibili.com/video/BV1ai4y1g7Nf)
+- [Build on Windows](https://www.bilibili.com/video/BV1DD4y127VB)
+- [Pytorch Params to msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
+
 **How to build**
 - With CMake 3.10+
 - Viewer can not build with GPU.
 - Options</br>
 ![](readme_imgs/cmake_option.png)</br>
-**ps. You can change omp threads by unchecking OMP_MAX_THREAD and modifying "num" val at CMakeLists.txt:43** </br>
+**ps. You can change omp threads by unchecking OMP_MAX_THREAD and modifying "num" val at CMakeLists.txt:52** </br>
 
 - Windows
 1. Compile opencv4 and yaml-cpp.
@@ -114,7 +134,7 @@ English | [中文](https://blog.csdn.net/MSNH2012/article/details/107216704)</br
 
 - Linux(Ubuntu)
 
-ps. If you want to build with Jetson, please uncheck NNPACK, OMP, OPENBLAS, NEON, OMP_MAX_THREAD.
+ps. If you want to build with Jetson, please uncheck NNPACK, OPENBLAS, NEON.
 
 ```
 sudo apt-get install qt5-default      #optional
@@ -124,18 +144,19 @@ sudo apt-get install libopencv-dev
 # build yaml-cpp
 git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp
-mdir build 
+mkdir build 
 cd build 
-cmake ..
+cmake .. -DYAML_BUILD_SHARED_LIBS=True -DYAML_CPP_BUILD_TESTS=False
 make -j4
 sudo make install 
 
 #config 
-sudo echo /usr/local/lib > /etc/ld.so.conf/usrlib.conf
+sudo echo /usr/local/lib > /etc/ld.so.conf.d/usrlib.conf
 sudo ldconfig
 
 # build Msnhnet
 git clone https://github.com/msnh2012/Msnhnet.git
+mkdir build 
 
 cd Msnhnet/build
 cmake -DCMAKE_BUILD_TYPE=Release ..  
@@ -143,7 +164,7 @@ make -j4
 sudo make install
 
 vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
-
+sudo ldconfig
 ```
 **Test Msnhnet**
 - 1. Download pretrained model and extract. eg.D:/models. 
@@ -174,37 +195,8 @@ vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
 ![](readme_imgs/ConcatBlock.png)</br>
 
 **How to convert your own pytorch network**
-1. Use pytorch to load network
-```
-import torchvision.models as models
-import torch
-from torchsummary import summary 
-
-md = models.resnet18(pretrained = True)
-md.to("cpu")
-md.eval()
-
-print(md, file = open("net.txt", "a"))
-
-summary(md, (3, 224, 224),device='cpu')
-```
-2. Write msnhnet file according to net.txt and summary result.(Manually :o. Like darnet cfg)
-3. Export msnhbin 
-```
-val = []
-dd = 0
-for name in md.state_dict():
-        if "num_batches_tracked" not in name:
-                c = md.state_dict()[name].data.flatten().numpy().tolist()
-                dd = dd + len(c)
-                print(name, ":", len(c))
-                val.extend(c)
-
-with open("alexnet.msnhbin","wb") as f:
-    for i in val :
-        f.write(pack('f',i))
-```
-**Ps. More detail in file "pytorch2msnhbin/pytorch2msnhbin.py"**
+[pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
+ps. ultralytics yolov3 is not supported. Another way:[Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
 
 **About Train**
 - Just use pytorch to train your model, and export as msnhbin.

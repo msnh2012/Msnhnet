@@ -15,15 +15,18 @@ namespace MsnhViewer
         return instance;
     }
 
+
     NodeTheme ThemeManager::getNodeTheme() const
     {
         return nodeTheme_;
     }
 
+
     AttributeTheme ThemeManager::getAttributeTheme() const
     {
         return attributeTheme_;
     }
+
 
     DataTypeTheme ThemeManager::getDataTypeTheme(QString const& dataType)
     {
@@ -33,6 +36,7 @@ namespace MsnhViewer
         }
         return dataTypeThemes_["default"];
     }
+
 
     bool ThemeManager::load(const QString& themeFilename)
     {
@@ -69,6 +73,7 @@ namespace MsnhViewer
         return true;
     }
 
+
     bool ThemeManager::parseNode(QJsonObject const& json)
     {
         if (!(json.contains("node")&&json["node"].isObject()))
@@ -95,6 +100,7 @@ namespace MsnhViewer
 
         return true;
     }
+
 
     bool ThemeManager::parseAttribute(QJsonObject const& json)
     {
@@ -125,6 +131,7 @@ namespace MsnhViewer
         return true;
     }
 
+
     bool ThemeManager::parseDataType(QJsonObject const& json)
     {
         if (!(json.contains("data_type")&&json["data_type"].isObject()))
@@ -150,11 +157,13 @@ namespace MsnhViewer
         return true;
     }
 
+
     QColor ThemeManager::parseColor(QJsonObject const& json)
     {
         QJsonArray rgba = json["rgba"].toArray();
         return QColor{ rgba[0].toInt(), rgba[1].toInt(), rgba[2].toInt(), rgba[3].toInt()};
     }
+
 
     QFont ThemeManager::parseFont(QJsonObject const& json)
     {

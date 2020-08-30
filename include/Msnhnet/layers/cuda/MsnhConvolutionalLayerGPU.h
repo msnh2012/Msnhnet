@@ -7,7 +7,7 @@
 namespace Msnhnet
 {
 
-class ConvolutionalLayerGPU
+class MsnhNet_API ConvolutionalLayerGPU
 {
 public:
     static void convBn(const int &batch, const int &outChannel, const int &outHeight, const int &outWidth, float* const &gpuScales,

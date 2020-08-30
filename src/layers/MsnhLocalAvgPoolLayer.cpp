@@ -215,7 +215,7 @@ int LocalAvgPoolLayer::getAntialiasing() const
 void LocalAvgPoolLayer::forward(NetworkState &netState)
 {
 
-    TimeUtil::startRecord();
+    auto st = TimeUtil::startRecord();
 
     int widthOffset  =     -(this->_paddingX + 1) / 2;
     int heightOffset =     -(this->_paddingY + 1) / 2;
@@ -277,7 +277,7 @@ void LocalAvgPoolLayer::forward(NetworkState &netState)
         }
     }
 
-    this->_forwardTime =   TimeUtil::getElapsedTime();
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 
 }
 

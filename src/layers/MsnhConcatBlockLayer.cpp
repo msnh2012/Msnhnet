@@ -58,7 +58,7 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
             {
                 ConnectParams *connectParams=   reinterpret_cast<ConnectParams*>(branchParams[i][j]);
                 layer                       =   new ConnectedLayer(branchBuildParams.batch, 1, branchBuildParams.inputNums, connectParams->output, connectParams->activation, connectParams->actParams,
-                                                                   connectParams->batchNorm);
+                                                                   connectParams->batchNorm, connectParams->useBias);
                 if(i == 0 && j == 0)
                 {
                     this->_inputNum = layer->getInputNum();

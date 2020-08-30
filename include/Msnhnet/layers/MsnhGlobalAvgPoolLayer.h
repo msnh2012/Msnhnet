@@ -13,7 +13,7 @@ namespace Msnhnet
 class MsnhNet_API GlobalAvgPoolLayer: public BaseLayer
 {
 public:
-    GlobalAvgPoolLayer(const int &_batch, const int &_height, const int &_width, const int &_channel);
+    GlobalAvgPoolLayer(const int &batch, const int &height, const int &width, const int &channel);
     ~GlobalAvgPoolLayer();
 
 #ifdef USE_GPU

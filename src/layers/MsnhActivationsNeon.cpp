@@ -1,5 +1,5 @@
-﻿#include "Msnhnet/layers/MsnhActivationsNeon.h"
-#ifdef USE_NEON
+﻿#ifdef USE_NEON
+#include "Msnhnet/layers/MsnhActivationsNeon.h"
 namespace Msnhnet
 {
 void ActivationsNeon::activateNeon4(float * const &x, const ActivationType &actType, const float &params)

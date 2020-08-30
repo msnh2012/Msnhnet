@@ -45,7 +45,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         {
             ConnectParams *connectParams=   reinterpret_cast<ConnectParams*>(baseParams[i]);
             layer                       =   new ConnectedLayer(params.batch, 1, params.inputNums, connectParams->output, connectParams->activation,
-                                                               connectParams->actParams, connectParams->batchNorm);
+                                                               connectParams->actParams, connectParams->batchNorm, connectParams->useBias);
             if(i == 0)
             {
                 this->_inputNum = layer->getInputNum();
@@ -134,7 +134,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         {
             ConnectParams *connectParams=   reinterpret_cast<ConnectParams*>(branchParams[i]);
             layer                       =   new ConnectedLayer(branchBuildParams.batch, 1, branchBuildParams.inputNums, connectParams->output, connectParams->activation, connectParams->actParams,
-                                                               connectParams->batchNorm);
+                                                               connectParams->batchNorm, connectParams->useBias);
         }
         else if(branchParams[i]->type == LayerType::MAXPOOL)
         {
