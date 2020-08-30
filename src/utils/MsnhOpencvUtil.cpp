@@ -367,10 +367,13 @@ void OpencvUtil::drawYolov3Box(cv::Mat &mat, std::vector<std::string> &labels, s
 
 void OpencvUtil::drawSegMask(const int &channel, const int &wxh, std::vector<float> &inVal, cv::Mat &mask)
 {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
     for (int i = 0; i < wxh; ++i)
     {
         float maxVal    = -FLT_MAX;
-        float maxIndex  = 0;
+        int maxIndex  = 0;
         for (int j = 0; j < channel; ++j)
         {
             if(maxVal<(inVal[j*wxh + i]))
@@ -382,9 +385,9 @@ void OpencvUtil::drawSegMask(const int &channel, const int &wxh, std::vector<flo
 
         cv::Scalar color = OpencvUtil::colorTable[maxIndex];
 
-        mask.data[i*3+0] += (color[0]/1.5);
-        mask.data[i*3+1] += (color[1]/1.5);
-        mask.data[i*3+2] += (color[2]/1.5);
+        mask.data[i*3+0] += static_cast<uint8_t>(color[0]/1.5);
+        mask.data[i*3+1] += static_cast<uint8_t>(color[1]/1.5);
+        mask.data[i*3+2] += static_cast<uint8_t>(color[2]/1.5);
     }
 }
 }
