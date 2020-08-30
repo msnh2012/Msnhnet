@@ -42,23 +42,24 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 **Tested networks**
 - lenet5
 - lenet5_bn
-- alexnet
-- vgg16
-- vgg16_bn
-- resnet18
-- resnet34
-- resnet50
-- resnet101
-- resnet152
-- darknet53
-- googLenet
-- mobilenetv2
-- yolov3
-- yolov3_spp
-- yolov3_tiny
-- yolov4
-- fcns
-- unet</br>
+- alexnet(**torchvision**)
+- vgg16(**torchvision**)
+- vgg16_bn(**torchvision**)
+- resnet18(**torchvision**)
+- resnet34(**torchvision**)
+- resnet50(**torchvision**)
+- resnet101(**torchvision**)
+- resnet152(**torchvision**)
+- darknet53[(Pytorch_Darknet53)](https://github.com/developer0hye/PyTorch-Darknet53)
+- googLenet(**torchvision**)
+- mobilenetv2(**torchvision**)
+- yolov3[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- yolov3_spp[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- yolov3_tiny[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- yolov4[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- fcns[(pytorch-FCN-easiest-demo)](https://github.com/bat67/pytorch-FCN-easiest-demo)
+- unet[(bbuf keras)](https://github.com/BBuf/Keras-Semantic-Segmentation)
+- deeplabv3(**torchvision**)</br>
 ==============================================================
 - mobilenetv2_yolov3_lite (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
 - mobilenetv2_yolov3_nano (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
@@ -74,7 +75,7 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 
   |net|yolov3|yolov3_tiny|yolov4|
   |:---:|:---:|:---:|:---:|
-  |time|465ms|75ms|600ms|
+  |time|380ms|50ms|432ms|
 
 
 - ARM(Yolov3Tiny cpu)
@@ -193,38 +194,9 @@ sudo ldconfig
 **ConcatBlock**</br>
 ![](readme_imgs/ConcatBlock.png)</br>
 
-**How to convert your own pytorch network(Working on pytorch 2 msnhnet directly, temporary way is below)**
-1. Use pytorch to load network
-```
-import torchvision.models as models
-import torch
-from torchsummary import summary 
-
-md = models.resnet18(pretrained = True)
-md.to("cpu")
-md.eval()
-
-print(md, file = open("net.txt", "a"))
-
-summary(md, (3, 224, 224),device='cpu')
-```
-2. Write msnhnet file according to net.txt and summary result.(Manually :o. Like darnet cfg)
-3. Export msnhbin 
-```
-val = []
-dd = 0
-for name in md.state_dict():
-        if "num_batches_tracked" not in name:
-                c = md.state_dict()[name].data.flatten().numpy().tolist()
-                dd = dd + len(c)
-                print(name, ":", len(c))
-                val.extend(c)
-
-with open("alexnet.msnhbin","wb") as f:
-    for i in val :
-        f.write(pack('f',i))
-```
-**Ps. More detail in file "pytorch2msnhbin/pytorch2msnhbin.py"**
+**How to convert your own pytorch network**
+[pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
+ps. ultralytics yolov3 is not supported. Another way:[Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
 
 **About Train**
 - Just use pytorch to train your model, and export as msnhbin.

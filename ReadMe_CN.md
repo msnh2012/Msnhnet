@@ -42,23 +42,24 @@
 **已测试的网络**
 - lenet5
 - lenet5_bn
-- alexnet
-- vgg16
-- vgg16_bn
-- resnet18
-- resnet34
-- resnet50
-- resnet101
-- resnet152
-- darknet53
-- googLenet
-- mobilenetv2
-- yolov3
-- yolov3_spp
-- yolov3_tiny
-- yolov4
-- fcns
-- unet</br>
+- alexnet(**torchvision**)
+- vgg16(**torchvision**)
+- vgg16_bn(**torchvision**)
+- resnet18(**torchvision**)
+- resnet34(**torchvision**)
+- resnet50(**torchvision**)
+- resnet101(**torchvision**)
+- resnet152(**torchvision**)
+- darknet53[(Pytorch_Darknet53)](https://github.com/developer0hye/PyTorch-Darknet53)
+- googLenet(**torchvision**)
+- mobilenetv2(**torchvision**)
+- yolov3[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- yolov3_spp[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- yolov3_tiny[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- yolov4[(u版yolov3)](https://github.com/ultralytics/yolov3)
+- fcns[(pytorch-FCN-easiest-demo)](https://github.com/bat67/pytorch-FCN-easiest-demo)
+- unet[(bbuf keras)](https://github.com/BBuf/Keras-Semantic-Segmentation)
+- deeplabv3(**torchvision**)</br>
 ==============================================================
 - mobilenetv2_yolov3_lite (cudnn分组卷积对Gtx10系列的Pascal显卡支持不好，请使用GPU模式)
 - mobilenetv2_yolov3_nano (cudnn分组卷积对Gtx10系列的Pascal显卡支持不好，请使用GPU模式)
@@ -74,7 +75,7 @@
 
   |net|yolov3|yolov3_tiny|yolov4|
   |:---:|:---:|:---:|:---:|
-  |time|465ms|75ms|600ms|
+  |time|380ms|50ms|432ms|
 
 - ARM(Yolov3Tiny cpu)
   |cpu|raspberry 3B|raspberry 4B|Jeston NX|
@@ -190,37 +191,11 @@
 **ConcatBlock**</br>
 ![](readme_imgs/ConcatBlock.png)</br>
 
-**如何转换模型(正在编写pytorch自动转msnhnet脚本，以下方法为临时方案)**
-- 1.使用Pytorch加载你的模型, 并输出网络结构.
-  ```
-  import torchvision.models as models
-  import torch
-  from torchsummary import summary 
+**如何转换模型**
+[pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
+ps. 对于u版yolo不支持以该方式进行转换，具体方法参看视频教程:[Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
 
-  md = models.resnet18(pretrained = True)
-  md.to("cpu")
-  md.eval()
 
-  print(md, file = open("net.txt", "a"))
-
-  summary(md, (3, 224, 224),device='cpu')
-  ```
-- 2.根据网络结构, 编写Msnhnet文件, 跟darknet和caffe类似.
-- 3.导出msnhBin (具体细节请查看"pytorch2msnhbin/pytorch2msnhbin.py")
-  ```
-  val = []
-  dd = 0
-  for name in md.state_dict():
-          if "num_batches_tracked" not in name:
-                  c = md.state_dict()[name].data.flatten().numpy().tolist()
-                  dd = dd + len(c)
-                  print(name, ":", len(c))
-                  val.extend(c)
-
-  with open("alexnet.msnhbin","wb") as f:
-      for i in val :
-          f.write(pack('f',i))
-  ```
 **关于训练**
 - 使用pytorch版本的各个模型训练即可,训练完成后,按照上一步,构建Msnhnet即可.
 - 如yolov3/4. 使用U版: [https://github.com/ultralytics/yolov3](https://github.com/ultralytics/yolov3)
