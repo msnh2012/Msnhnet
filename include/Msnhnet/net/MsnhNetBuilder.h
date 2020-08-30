@@ -16,6 +16,7 @@
 #include "Msnhnet/layers/MsnhVariableOpLayer.h"
 #include "Msnhnet/layers/MsnhEmptyLayer.h"
 #include "Msnhnet/layers/MsnhPermuteLayer.h"
+#include "Msnhnet/layers/MsnhReductionLayer.h"
 #include "Msnhnet/layers/MsnhSoftMaxLayer.h"
 #include "Msnhnet/layers/MsnhUpSampleLayer.h"
 #include "Msnhnet/layers/MsnhResBlockLayer.h"
@@ -62,21 +63,39 @@ public:
 #endif
 
     Point2I getInputSize();
+
     int getInputChannel();
+
     void  clearLayers();
+
     float getInferenceTime();
+
     std::string getLayerDetail();
+
     std::string getTimeDetail();
+
     float getGpuInferenceTime() const;
 
     Network *getNet() const;
+
+    int getLastLayerOutWidth() const;
+
+    int getLastLayerOutHeight() const;
+
+    int getLastLayerOutChannel() const;
+
+    size_t getLastLayerOutNum() const;
 
 private:
 
     Parser          *_parser;
     Network         *_net;
     NetworkState    *_netState;
-    float           _gpuInferenceTime = 0.f;
+    float           _gpuInferenceTime       = 0.f;
+    int             _lastLayerOutWidth      = 0;
+    int             _lastLayerOutHeight     = 0;
+    int             _lastLayerOutChannel    = 0;
+    size_t          _lastLayerOutNum       = 0;
 };
 }
 #endif 

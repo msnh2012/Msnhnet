@@ -3,23 +3,28 @@
 namespace Msnhnet
 {
 
-VariableOpLayer::VariableOpLayer(const int &batch, std::vector<int> &inputLayerIndexes, std::vector<int> &inputLayerOutputs, const VariableOpParams::VarOpType &varOpType, const float &constVal)
+VariableOpLayer::VariableOpLayer(const int &batch, const int &width, const int &height, const int &channel, std::vector<int> &inputLayerIndexes, const VariableOpParams::VarOpType &varOpType, const float &constVal)
 {
     this->_type              =   LayerType::VARIABLE_OP;
 
     this->_layerName         =   "VarOp           ";
 
     this->_batch             =   batch;
+    this->_width             =   width;
+    this->_height            =   height;
+    this->_channel           =   channel;
+
+    this->_outWidth          =   width;
+    this->_outHeight         =   height;
+    this->_outChannel        =   channel;
+
     this->_varOpType         =   varOpType;
     this->_constVal          =   constVal;
 
-    int mOutputNum           =   0;
-
-    this->_layerDetail.append("VarOp ");
+    this->_layerDetail.append("VarOp   : " + VariableOpParams::getStrFromVarOpType(varOpType));
     char msg[100];
 
     this->_inputLayerIndexes =   inputLayerIndexes;
-    this->_inputLayerOutputs =   inputLayerOutputs;
 
     for (size_t i = 0; i < inputLayerIndexes.size(); ++i)
     {
@@ -33,10 +38,8 @@ VariableOpLayer::VariableOpLayer(const int &batch, std::vector<int> &inputLayerI
 
     this->_layerDetail.append("\n");
 
-    mOutputNum = inputLayerOutputs[0];
-
-    this->_outputNum     =   mOutputNum;
-    this->_inputNum      =   mOutputNum;
+    this->_inputNum  =   width * height * channel;
+    this->_outputNum =   this->_outWidth * this->_outHeight * this->_outChannel;
 
     if(!BaseLayer::isPreviewMode)
     {
@@ -45,7 +48,6 @@ VariableOpLayer::VariableOpLayer(const int &batch, std::vector<int> &inputLayerI
         this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
 #endif
     }
-
 }
 
 void VariableOpLayer::forward(NetworkState &netState)
@@ -55,73 +57,53 @@ void VariableOpLayer::forward(NetworkState &netState)
     if(this->_varOpType == VariableOpParams::VAR_OP_ADD || this->_varOpType == VariableOpParams::VAR_OP_SUB || this->_varOpType == VariableOpParams::VAR_OP_SUB_INV||
             this->_varOpType == VariableOpParams::VAR_OP_MUL || this->_varOpType == VariableOpParams::VAR_OP_DIV || this->_varOpType == VariableOpParams::VAR_OP_DIV_INV)
     {
-
-        int indexA              =   this->_inputLayerIndexes[0];
-        int indexB              =   this->_inputLayerIndexes[1];
-
-        float *inputA           =   netState.net->layers[static_cast<size_t>(indexA)]->getOutput();
-        float *inputB           =   netState.net->layers[static_cast<size_t>(indexB)]->getOutput();
-
-        int inputLayerOutputs   =   this->_inputLayerOutputs[0];
+        float *inputA;
+        float *inputB;
+        if(this->_inputLayerIndexes.size() == 2)
+        {
+            int indexA          =   this->_inputLayerIndexes[0];
+            inputA              =   netState.net->layers[static_cast<size_t>(indexA)]->getOutput();
+            int indexB          =   this->_inputLayerIndexes[1];
+            inputB              =   netState.net->layers[static_cast<size_t>(indexB)]->getOutput();
+        }
+        else
+        {
+            inputA              =   netState.input;
+            int indexB          =   this->_inputLayerIndexes[0];
+            inputB              =   netState.net->layers[static_cast<size_t>(indexB)]->getOutput();
+        }
 
         for (int j = 0; j < this->_batch; ++j)
         {
-            switch (this->_varOpType)
-            {
-            case VariableOpParams::VAR_OP_ADD:
-                Blas::cpuArithmetic(Arithmetic::ARITH_ADD, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, inputB  + j*inputLayerOutputs, 1 , this->_output  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_SUB:
-                Blas::cpuArithmetic(Arithmetic::ARITH_SUB, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, inputB  + j*inputLayerOutputs, 1 , this->_output  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_SUB_INV:
-                Blas::cpuArithmetic(Arithmetic::ARITH_SUB_INV, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, inputB  + j*inputLayerOutputs, 1 , this->_output  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_MUL:
-                Blas::cpuArithmetic(Arithmetic::ARITH_MUL, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, inputB  + j*inputLayerOutputs, 1 , this->_output  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_DIV:
-                Blas::cpuArithmetic(Arithmetic::ARITH_DIV, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, inputB  + j*inputLayerOutputs, 1 , this->_output  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_DIV_INV:
-                Blas::cpuArithmetic(Arithmetic::ARITH_DIV_INV, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, inputB  + j*inputLayerOutputs, 1 , this->_output  + j*inputLayerOutputs, 1);
-                break;
-            }
-
+            int id = (this->_varOpType - VariableOpParams::VAR_OP_ADD);
+            Blas::cpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, inputA + j*this->_inputNum, 1, inputB  + j*this->_inputNum, 1 , this->_output  + j*this->_inputNum, 1);
         }
     }
     else if(this->_varOpType == VariableOpParams::VAR_OP_ADD_CONST || this->_varOpType == VariableOpParams::VAR_OP_SUB_CONST || this->_varOpType == VariableOpParams::VAR_OP_SUB_CONST_INV||
             this->_varOpType == VariableOpParams::VAR_OP_MUL_CONST || this->_varOpType == VariableOpParams::VAR_OP_DIV_CONST || this->_varOpType == VariableOpParams::VAR_OP_DIV_CONST_INV)
     {
 
-        int indexA              =   this->_inputLayerIndexes[0];
-        float *inputA           =   netState.net->layers[static_cast<size_t>(indexA)]->getOutput();
-        int inputLayerOutputs   =   this->_inputLayerOutputs[0];
+        float *inputA           =   netState.input;
 
         for (int j = 0; j < this->_batch; ++j)
         {
-            switch (this->_varOpType)
-            {
-            case VariableOpParams::VAR_OP_ADD:
-                Blas::cpuArithmetic(Arithmetic::ARITH_ADD, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, this->_constVal, this->_output  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_SUB:
-                Blas::cpuArithmetic(Arithmetic::ARITH_SUB, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, this->_constVal, this->_output  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_SUB_INV:
-                Blas::cpuArithmetic(Arithmetic::ARITH_SUB_INV, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, this->_constVal, this->_output  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_MUL:
-                Blas::cpuArithmetic(Arithmetic::ARITH_MUL, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, this->_constVal, this->_output  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_DIV:
-                Blas::cpuArithmetic(Arithmetic::ARITH_DIV, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, this->_constVal, this->_output  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_DIV_INV:
-                Blas::cpuArithmetic(Arithmetic::ARITH_DIV_INV, inputLayerOutputs, inputA + j*inputLayerOutputs, 1, this->_constVal, this->_output  + j*inputLayerOutputs, 1);
-                break;
-            }
+            int id = (this->_varOpType - VariableOpParams::VAR_OP_ADD_CONST);
+            Blas::cpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, inputA + j*this->_inputNum, 1, this->_constVal, this->_output  + j*this->_inputNum, 1);
+        }
+    }
+    else if(this->_varOpType == VariableOpParams::VAR_OP_ABS || this->_varOpType == VariableOpParams::VAR_OP_ACOS || this->_varOpType == VariableOpParams::VAR_OP_ASIN||
+            this->_varOpType == VariableOpParams::VAR_OP_ATAN || this->_varOpType == VariableOpParams::VAR_OP_COS||this->_varOpType == VariableOpParams::VAR_OP_COSH ||
+            this->_varOpType == VariableOpParams::VAR_OP_SIN || this->_varOpType == VariableOpParams::VAR_OP_SINH||this->_varOpType == VariableOpParams::VAR_OP_TAN ||
+            this->_varOpType == VariableOpParams::VAR_OP_TANH || this->_varOpType == VariableOpParams::VAR_OP_EXP||this->_varOpType == VariableOpParams::VAR_OP_POW ||
+            this->_varOpType == VariableOpParams::VAR_OP_LOG || this->_varOpType == VariableOpParams::VAR_OP_LOG10||this->_varOpType == VariableOpParams::VAR_OP_SQRT
+            )
+    {
+        float *inputA           =   netState.input;
 
+        for (int j = 0; j < this->_batch; ++j)
+        {
+            int id = (this->_varOpType - VariableOpParams::VAR_OP_ABS);
+            Blas::cpuScientific(static_cast<Scientific>(id),this->_inputNum, inputA + j*this->_inputNum, 1, this->_constVal, this->_output  + j*this->_inputNum, 1, BaseLayer::supportAvx);
         }
     }
 
@@ -133,96 +115,71 @@ void VariableOpLayer::forward(NetworkState &netState)
 void VariableOpLayer::forwardGPU(NetworkState &netState)
 {
     if(this->_varOpType == VariableOpParams::VAR_OP_ADD || this->_varOpType == VariableOpParams::VAR_OP_SUB || this->_varOpType == VariableOpParams::VAR_OP_SUB_INV||
-       this->_varOpType == VariableOpParams::VAR_OP_MUL || this->_varOpType == VariableOpParams::VAR_OP_DIV || this->_varOpType == VariableOpParams::VAR_OP_DIV_INV)
+            this->_varOpType == VariableOpParams::VAR_OP_MUL || this->_varOpType == VariableOpParams::VAR_OP_DIV || this->_varOpType == VariableOpParams::VAR_OP_DIV_INV)
     {
 
-        int indexA              =   this->_inputLayerIndexes[0];
-        int indexB              =   this->_inputLayerIndexes[1];
-
-        float *gpuInputA           =   netState.net->layers[static_cast<size_t>(indexA)]->getGpuOutput();
-        float *gpuInputB           =   netState.net->layers[static_cast<size_t>(indexB)]->getGpuOutput();
-
-        int inputLayerOutputs   =   this->_inputLayerOutputs[0];
+        float *gpuInputA;
+        float *gpuInputB;
+        if(this->_inputLayerIndexes.size() == 2)
+        {
+            int indexA          =   this->_inputLayerIndexes[0];
+            gpuInputA           =   netState.net->layers[static_cast<size_t>(indexA)]->getGpuOutput();
+            int indexB          =   this->_inputLayerIndexes[1];
+            gpuInputB           =   netState.net->layers[static_cast<size_t>(indexB)]->getGpuOutput();
+        }
+        else
+        {
+            gpuInputA           =   netState.input;
+            int indexB          =   this->_inputLayerIndexes[0];
+            gpuInputB           =   netState.net->layers[static_cast<size_t>(indexB)]->getGpuOutput();
+        }
 
         for (int j = 0; j < this->_batch; ++j)
         {
-            switch (this->_varOpType)
-            {
-            case VariableOpParams::VAR_OP_ADD:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_ADD, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, gpuInputB  + j*inputLayerOutputs, 1 , this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_SUB:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_SUB, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, gpuInputB  + j*inputLayerOutputs, 1 , this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_SUB_INV:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_SUB_INV, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, gpuInputB  + j*inputLayerOutputs, 1 , this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_MUL:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_MUL, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, gpuInputB  + j*inputLayerOutputs, 1 , this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_DIV:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_DIV, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, gpuInputB  + j*inputLayerOutputs, 1 , this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_DIV_INV:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_DIV_INV, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, gpuInputB  + j*inputLayerOutputs, 1 , this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            }
-
+            int id = (this->_varOpType - VariableOpParams::VAR_OP_ADD);
+            BlasGPU::gpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, gpuInputA + j*this->_inputNum, 1, gpuInputB  + j*this->_inputNum, 1 , this->_gpuOutput  + j*this->_inputNum, 1);
         }
     }
     else if(this->_varOpType == VariableOpParams::VAR_OP_ADD_CONST || this->_varOpType == VariableOpParams::VAR_OP_SUB_CONST || this->_varOpType == VariableOpParams::VAR_OP_SUB_CONST_INV||
             this->_varOpType == VariableOpParams::VAR_OP_MUL_CONST || this->_varOpType == VariableOpParams::VAR_OP_DIV_CONST || this->_varOpType == VariableOpParams::VAR_OP_DIV_CONST_INV)
     {
-
-        int indexA              =   this->_inputLayerIndexes[0];
-        float *gpuInputA           =   netState.net->layers[static_cast<size_t>(indexA)]->getGpuOutput();
-        int inputLayerOutputs   =   this->_inputLayerOutputs[0];
+        float *gpuInputA           =   netState.input;
 
         for (int j = 0; j < this->_batch; ++j)
         {
-            switch (this->_varOpType)
-            {
-            case VariableOpParams::VAR_OP_ADD:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_ADD, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, this->_constVal, this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_SUB:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_SUB, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, this->_constVal, this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_SUB_INV:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_SUB_INV, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, this->_constVal, this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_MUL:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_MUL, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, this->_constVal, this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_DIV:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_DIV, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, this->_constVal, this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            case VariableOpParams::VAR_OP_DIV_INV:
-                BlasGPU::gpuArithmetic(Arithmetic::ARITH_DIV_INV, inputLayerOutputs, gpuInputA + j*inputLayerOutputs, 1, this->_constVal, this->_gpuOutput  + j*inputLayerOutputs, 1);
-                break;
-            }
+            int id = (this->_varOpType - VariableOpParams::VAR_OP_ADD_CONST);
+            BlasGPU::gpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, gpuInputA + j*this->_inputNum, 1, this->_constVal, this->_gpuOutput  + j*this->_inputNum, 1);
+        }
+    }
+    else if(this->_varOpType == VariableOpParams::VAR_OP_ABS || this->_varOpType == VariableOpParams::VAR_OP_ACOS || this->_varOpType == VariableOpParams::VAR_OP_ASIN||
+            this->_varOpType == VariableOpParams::VAR_OP_ATAN || this->_varOpType == VariableOpParams::VAR_OP_COS||this->_varOpType == VariableOpParams::VAR_OP_COSH ||
+            this->_varOpType == VariableOpParams::VAR_OP_SIN || this->_varOpType == VariableOpParams::VAR_OP_SINH||this->_varOpType == VariableOpParams::VAR_OP_TAN ||
+            this->_varOpType == VariableOpParams::VAR_OP_TANH || this->_varOpType == VariableOpParams::VAR_OP_EXP||this->_varOpType == VariableOpParams::VAR_OP_POW ||
+            this->_varOpType == VariableOpParams::VAR_OP_LOG || this->_varOpType == VariableOpParams::VAR_OP_LOG10||this->_varOpType == VariableOpParams::VAR_OP_SQRT
+            )
+    {
+        float *inputA           =   netState.input;
 
+        for (int j = 0; j < this->_batch; ++j)
+        {
+            int id = (this->_varOpType - VariableOpParams::VAR_OP_ABS);
+            BlasGPU::gpuScientific(static_cast<Scientific>(id),this->_inputNum, inputA + j*this->_inputNum, 1, this->_constVal, this->_output  + j*this->_inputNum, 1);
         }
     }
 }
 #endif
 
-std::vector<int> VariableOpLayer::inputLayerIndexes() const
+std::vector<int> VariableOpLayer::getInputLayerIndexes() const
 {
     return _inputLayerIndexes;
 }
 
-std::vector<int> VariableOpLayer::inputLayerOutputs() const
-{
-    return _inputLayerOutputs;
-}
-
-float VariableOpLayer::constVal() const
+float VariableOpLayer::getConstVal() const
 {
     return _constVal;
 }
 
-VariableOpParams::VarOpType VariableOpLayer::varOpType() const
+VariableOpParams::VarOpType VariableOpLayer::getVarOpType() const
 {
     return _varOpType;
 }

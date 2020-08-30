@@ -2,10 +2,10 @@
 namespace Msnhnet
 {
 
-__global__ void permuteKernel(const int num, const int outChannel, const int outHeight, const int outWidth,
+__global__ void permuteKernel(const int num, const int outHeight, const int outWidth, const int outChannel,
                                 const int height, const int width, const int channel,
                                 const int dim0, const int dim1, const int dim2,
-                                float *const &input, float *const &output)
+                                float *const input, float *const output)
 {
 
     int index = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
@@ -22,6 +22,7 @@ __global__ void permuteKernel(const int num, const int outChannel, const int out
         int cc = 0;
         int hh = 0;
         int ww = 0;
+
         if(dim0 == 0 && dim1 == 1 &&dim2 == 2)
         {
             cc = c;

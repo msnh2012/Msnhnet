@@ -14,7 +14,7 @@ namespace Msnhnet
 class MsnhNet_API VariableOpLayer : public BaseLayer
 {
 public:
-    VariableOpLayer(const int &batch, std::vector<int> &inputLayerIndexes, std::vector<int> &inputLayerOutputs, const VariableOpParams::VarOpType &varOpType, const float &constVal);
+    VariableOpLayer(const int &batch, const int &width, const int &height, const int &channel, std::vector<int> &getInputLayerIndexes, const VariableOpParams::VarOpType &getVarOpType, const float &getConstVal);
 
     virtual void forward(NetworkState &netState);
 
@@ -22,14 +22,12 @@ public:
     virtual void forwardGPU(NetworkState &netState);
 #endif
 
-    std::vector<int> inputLayerIndexes() const;
-    std::vector<int> inputLayerOutputs() const;
-    float constVal() const;
-    VariableOpParams::VarOpType varOpType() const;
+    std::vector<int> getInputLayerIndexes() const;
+    float getConstVal() const;
+    VariableOpParams::VarOpType getVarOpType() const;
 
 private:
     std::vector<int> _inputLayerIndexes;
-    std::vector<int> _inputLayerOutputs;
     VariableOpParams::VarOpType _varOpType;
     float            _constVal;
 };

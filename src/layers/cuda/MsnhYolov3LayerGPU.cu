@@ -37,15 +37,6 @@ __global__ void aExpTKernel(const int n, float *const input, const float a)
     }
 }
 
-__global__ void shDataKernel(const int n)
-{
-    int i = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
-    if(i < n)
-    {
-        printf("%d\n",i);
-    }
-}
-
 void Yolov3LayerGPU::exSigmoidGpu(const int &n, float *const &input, const int &width, const float &ratios, const int &addGrid)
 {
     exSigmoidKernel<<<Cuda::getGrid(n), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(n, input, width, ratios, addGrid);

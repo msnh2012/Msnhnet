@@ -93,6 +93,7 @@ set(SRCS
     src/layers/MsnhMaxPoolLayer.cpp
     src/layers/MsnhPaddingLayer.cpp
     src/layers/MsnhPermuteLayer.cpp
+    src/layers/MsnhReductionLayer.cpp
     src/layers/MsnhRes2BlockLayer.cpp
     src/layers/MsnhResBlockLayer.cpp
     src/layers/MsnhRouteLayer.cpp
@@ -110,6 +111,8 @@ set(SRCS
     src/utils/MsnhTimeUtil.cpp
     src/c_api/MsnhnetLib.cpp
     src/layers/arm/MsnhConvolution3x3s1.cpp 
+    src/layers/arm/MsnhConvolution3x3s1.cpp 
+    src/layers/arm/MsnhBatchNorm.cpp 
     )
 
 # config GPU
@@ -197,7 +200,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(armv7l)")
         set(USE_NEON_MACRO "#define USE_NEON\n")
 
         if (CMAKE_SYSTEM_PROCESSOR MATCHES "(armv7l)") # aarch64 neon is default
-            set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -mfpu=neon")
+            set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -mfpu=neon-vfpv4")
         endif()
         message(STATUS "Use neon")
     else()

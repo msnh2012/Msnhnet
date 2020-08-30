@@ -71,73 +71,85 @@ void BatchNormLayer::forward(NetworkState &netState)
     auto st = TimeUtil::startRecord();
     for (int b = 0; b < this->_batch; ++b)
     {
+
+#ifdef USE_ARM
+#ifdef USE_NEON
+        int step = b*this->_outChannel*this->_outHeight*this->_outWidth;
+        BatchNormLayerArm::BatchNorm(netState.input + step,
+                                     this->_width,
+                                     this->_height,
+                                     this->_channel,
+                                     this->_output + step,
+                                     this->_scales,
+                                     this->_rollMean,
+                                     this->_rollVariance,
+                                     this->_biases
+                                     );
+#else
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-        for (int c = 0; c < this->_channel; ++c)
+        for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
         {
-#ifdef USE_ARM
-            for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
-            {
-                int index = b*this->_channel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
+            int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
 
-                this->_output[index]  = this->_scales[c]*(netState.input[index] - this->_rollMean[c])/sqrt(this->_rollVariance[c] + 0.00001f) + this->_biases[c];
-            }
+            this->_output[index]  = scaleSqrt*netState.input[index] + meanSqrt + this->_biases[c];
+        }
+#endif
 #endif
 
 #ifdef USE_X86
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int c = 0; c < this->_outChannel; ++c)
+        {
+            float sqrtVal   = sqrt(this->_rollVariance[c] + 0.00001f);
+            float scaleSqrt = this->_scales[c]/sqrtVal;
+            float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
+
             if(this->supportAvx)
             {
-                int i = 0;
-                for (; i < (this->_outHeight*this->_outWidth)/8; ++i)
+                for (int i = 0; i < (this->_outHeight*this->_outWidth)/8; ++i)
                 {
 
-                    int index = b*this->_channel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i*8;
+                    int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i*8;
 
-                    __m256 mScale;
+                    __m256 mScaleSqrt;
                     __m256 mInput;
-                    __m256 mMean;
-                    __m256 mVariance;
-                    __m256 mEsp;
+                    __m256 mMeanSqrt;
                     __m256 mBias;
-                    __m256 mResult1;
-                    __m256 mResult2;
+                    __m256 mResult;
 
-                    mScale      =   _mm256_set1_ps(this->_scales[c]);
+                    mScaleSqrt  =   _mm256_set1_ps(scaleSqrt);
                     mInput      =   _mm256_loadu_ps(netState.input+index);
-                    mMean       =   _mm256_set1_ps(this->_rollMean[c]);
-                    mVariance   =   _mm256_set1_ps(this->_rollVariance[c]);
-                    mEsp        =   _mm256_set1_ps(0.00001f);
+                    mMeanSqrt   =   _mm256_set1_ps(meanSqrt);
                     mBias       =   _mm256_set1_ps(this->_biases[c]);
-                    mResult1    =   _mm256_sub_ps(mInput, mMean);
-                    mResult1    =   _mm256_mul_ps(mScale, mResult1);
-                    mResult2    =   _mm256_add_ps(mVariance,mEsp);
-                    mResult2    =   _mm256_sqrt_ps(mResult2);
+                    mResult     =   _mm256_mul_ps(mScaleSqrt, mInput);
+                    mResult     =   _mm256_add_ps(mResult, mMeanSqrt);
+                    mResult     =   _mm256_add_ps(mResult, mBias);
 
-                    mResult2    =   _mm256_div_ps(mResult1,mResult2);
-                    mResult2    =   _mm256_add_ps(mResult2,mBias);
-
-                    _mm256_storeu_ps(this->_output+index, mResult2);
+                    _mm256_storeu_ps(this->_output+index, mResult);
 
                 }
 
-                for (int j = i*8; j < this->_outHeight*this->_outWidth; ++j)
+                for (int j = (this->_outHeight*this->_outWidth)/8*8; j < this->_outHeight*this->_outWidth; ++j)
                 {
-                    int index = b*this->_channel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + j;
-                    this->_output[index]  = this->_scales[c]*(netState.input[index] - this->_rollMean[c])/sqrt(this->_rollVariance[c] + 0.00001f) + this->_biases[c];
+                    int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + j;
+                    this->_output[index]  = scaleSqrt*netState.input[index] + meanSqrt + this->_biases[c];
                 }
             }
             else
             {
+
                 for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
                 {
-                    int index = b*this->_channel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
-                    this->_output[index]  = this->_scales[c]*(netState.input[index] - this->_rollMean[c])/sqrt(this->_rollVariance[c] + 0.00001f) + this->_biases[c];
+                    int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
+                    this->_output[index]  = scaleSqrt*netState.input[index] + meanSqrt + this->_biases[c];
                 }
             }
-#endif
         }
-
+#endif
     }
 
     if(this->_activation == ActivationType::NORM_CHAN)
@@ -188,17 +200,17 @@ void BatchNormLayer::forwardGPU(NetworkState &netState)
     if(this->_activation == ActivationType::NORM_CHAN)
     {
         ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                            this->_outWidth*this->_outHeight, this->_gpuOutput);
+                                               this->_outWidth*this->_outHeight, this->_gpuOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
         ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
         ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {

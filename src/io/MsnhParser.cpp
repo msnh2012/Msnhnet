@@ -83,6 +83,14 @@ void Parser::clearParams()
             {
                 delete reinterpret_cast<RouteParams*>(params[i]);
             }
+            else if(params[i]->type == LayerType::PERMUTE)
+            {
+                delete reinterpret_cast<PermuteParams*>(params[i]);
+            }
+            else if(params[i]->type == LayerType::REDUCTION)
+            {
+                delete reinterpret_cast<ReductionParams*>(params[i]);
+            }
             else if(params[i]->type == LayerType::VARIABLE_OP)
             {
                 delete reinterpret_cast<VariableOpParams*>(params[i]);
@@ -185,6 +193,19 @@ void Parser::readCfg(const std::string &path)
                 else
                 {
                     throw Exception(1,"[padding] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "reduction")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    ReductionParams *reductionParams = new ReductionParams(true);
+                    parseReductionParams(reductionParams, it);
+                    params.push_back(reductionParams);
+                }
+                else
+                {
+                    throw Exception(1,"[reduction] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "permute")
@@ -1503,6 +1524,38 @@ void Parser::parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterat
     }
 }
 
+void Parser::parseReductionParams(ReductionParams *reductionParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "axis")
+        {
+            if(!ExString::strToInt(value, reductionParams->axis))
+            {
+                throw Exception(1,"[reduction] top can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+
+            int tmpAxis = reductionParams->axis;
+
+            if(tmpAxis != 0 && tmpAxis != 1 && tmpAxis !=2 && tmpAxis != -1)
+            {
+                throw Exception(1,"[reduction] axis must be 0/1/2 : "+ std::to_string(tmpAxis) + " is error"  , __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "type")
+        {
+            reductionParams->reduceType = ReductionParams::getReduceTypeFromStr(value);
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [padding]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+}
+
 void Parser::parseResBlockParams(ResBlockParams *resBlockParams, YAML::const_iterator &iter)
 {
 
@@ -1916,40 +1969,58 @@ string VariableOpParams::getStrFromVarOpType(const VariableOpParams::VarOpType &
     {
     case VAR_OP_ADD:
         return "add";
-        break;
     case VAR_OP_SUB:
         return "sub";
-        break;
     case VAR_OP_SUB_INV:
-        return "sub_inv";
-        break;
+        return "subInv";
     case VAR_OP_MUL:
         return "mul";
-        break;
     case VAR_OP_DIV:
         return "div";
-        break;
     case VAR_OP_DIV_INV:
-        return "div_inv";
-        break;
+        return "divInv";
     case VAR_OP_ADD_CONST:
-        return "add_c";
-        break;
+        return "addConst";
     case VAR_OP_SUB_CONST:
-        return "sub_c";
-        break;
+        return "subConst";
     case VAR_OP_SUB_CONST_INV:
-        return "sub_c_inv";
-        break;
+        return "subConstInv";
     case VAR_OP_MUL_CONST:
-        return "mul_c";
-        break;
+        return "mulConst";
     case VAR_OP_DIV_CONST:
-        return "div_c";
-        break;
+        return "divConst";
     case VAR_OP_DIV_CONST_INV:
-        return "div_c_inv";
-        break;
+        return "divConstInv";
+    case VAR_OP_ABS:
+        return "abs";
+    case VAR_OP_ACOS:
+        return "acos";
+    case VAR_OP_ASIN:
+        return "asin";
+    case VAR_OP_ATAN:
+        return "atan";
+    case VAR_OP_COS:
+        return "cos";
+    case VAR_OP_COSH:
+        return "cosh";
+    case VAR_OP_SIN:
+        return "sin";
+    case VAR_OP_SINH:
+        return "sinh";
+    case VAR_OP_TAN:
+        return "tan";
+    case VAR_OP_TANH:
+        return "tanh";
+    case VAR_OP_EXP:
+        return "exp";
+    case VAR_OP_POW:
+        return "pow";
+    case VAR_OP_LOG:
+        return "log";
+    case VAR_OP_LOG10:
+        return "log10";
+    case VAR_OP_SQRT:
+        return "sqrt";
     default:
         throw Exception(1, "[varop] var op no supported : " + std::to_string(varOpType), __FILE__, __LINE__, __FUNCTION__);
         break;
@@ -1966,7 +2037,7 @@ VariableOpParams::VarOpType VariableOpParams::getVarOpTypeFromStr(const string &
     {
         return VAR_OP_SUB;
     }
-    else if(varOpStr == "sub_inv")
+    else if(varOpStr == "subInv")
     {
         return VAR_OP_SUB_INV;
     }
@@ -1978,33 +2049,93 @@ VariableOpParams::VarOpType VariableOpParams::getVarOpTypeFromStr(const string &
     {
         return VAR_OP_DIV;
     }
-    else if(varOpStr == "div_INV")
+    else if(varOpStr == "divInv")
     {
         return VAR_OP_DIV_INV;
     }
-    else if(varOpStr == "add_c")
+    else if(varOpStr == "addConst")
     {
         return VAR_OP_ADD_CONST;
     }
-    else if(varOpStr == "sub_c")
+    else if(varOpStr == "subConst")
     {
         return VAR_OP_SUB_CONST;
     }
-    else if(varOpStr == "sub_c_inv")
+    else if(varOpStr == "subConstInv")
     {
         return VAR_OP_SUB_CONST_INV;
     }
-    else if(varOpStr == "mul_c")
+    else if(varOpStr == "mulConst")
     {
         return VAR_OP_MUL_CONST;
     }
-    else if(varOpStr == "div_c")
+    else if(varOpStr == "divConst")
     {
         return VAR_OP_DIV_CONST;
     }
-    else if(varOpStr == "div_c_inv")
+    else if(varOpStr == "divConstInv")
     {
         return VAR_OP_DIV_CONST_INV;
+    }
+    else if(varOpStr == "abs")
+    {
+        return VAR_OP_ABS;
+    }
+    else if(varOpStr == "acos")
+    {
+        return VAR_OP_ACOS;
+    }
+    else if(varOpStr == "asin")
+    {
+        return VAR_OP_ASIN;
+    }
+    else if(varOpStr == "atan")
+    {
+        return VAR_OP_ATAN;
+    }
+    else if(varOpStr == "cos")
+    {
+        return VAR_OP_COS;
+    }
+    else if(varOpStr == "cosh")
+    {
+        return VAR_OP_COSH;
+    }
+    else if(varOpStr == "sin")
+    {
+        return VAR_OP_SIN;
+    }
+    else if(varOpStr == "sinh")
+    {
+        return VAR_OP_SINH;
+    }
+    else if(varOpStr == "tan")
+    {
+        return VAR_OP_TAN;
+    }
+    else if(varOpStr == "tanh")
+    {
+        return VAR_OP_TANH;
+    }
+    else if(varOpStr == "exp")
+    {
+        return VAR_OP_EXP;
+    }
+    else if(varOpStr == "pow")
+    {
+        return VAR_OP_POW;
+    }
+    else if(varOpStr == "log")
+    {
+        return VAR_OP_LOG;
+    }
+    else if(varOpStr == "log10")
+    {
+        return VAR_OP_LOG10;
+    }
+    else if(varOpStr == "sqrt")
+    {
+        return VAR_OP_SQRT;
     }
     else
     {
@@ -2041,7 +2172,7 @@ void Parser::parseVariableOpParams(VariableOpParams *variableOpParams, YAML::con
                 variableOpParams->layerIndexes.push_back(index);
             }
         }
-        else if(key == "mode")
+        else if(key == "type")
         {
             variableOpParams->varOpType = variableOpParams->getVarOpTypeFromStr(value);
         }
@@ -2101,6 +2232,20 @@ void Parser::parseUpSampleParams(UpSampleParams *upSampleParams, YAML::const_ite
                 throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
+        else if(key == "strideX")
+        {
+            if(!ExString::strToInt(value, upSampleParams->strideX))
+            {
+                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "strideY")
+        {
+            if(!ExString::strToInt(value, upSampleParams->strideY))
+            {
+                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
         else if(key == "scale")
         {
             if(!ExString::strToFloat(value, upSampleParams->scale))
@@ -2108,9 +2253,46 @@ void Parser::parseUpSampleParams(UpSampleParams *upSampleParams, YAML::const_ite
                 throw Exception(1,"[unsample] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
+        else if(key == "type")
+        {
+            upSampleParams->upsampleType = UpSampleParams::getUnsampleTypeFromStr(value);
+        }
+        else if(key == "scaleX")
+        {
+            if(!ExString::strToFloat(value, upSampleParams->scaleX))
+            {
+                throw Exception(1,"[unsample] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "scaleY")
+        {
+            if(!ExString::strToFloat(value, upSampleParams->scaleY))
+            {
+                throw Exception(1,"[unsample] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "alignCorners")
+        {
+            if(!ExString::strToInt(value, upSampleParams->alignCorners))
+            {
+                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
         else
         {
             throw Exception(1, key + " is not supported in [unsample]", __FILE__, __LINE__, __FUNCTION__);
+        }
+
+        if(upSampleParams->strideX == -1 || upSampleParams->strideY == -1)
+        {
+            upSampleParams->strideX = upSampleParams->stride;
+            upSampleParams->strideY = upSampleParams->stride;
+        }
+
+        if(upSampleParams->scaleX < 0 || upSampleParams->scaleY < 0)
+        {
+            upSampleParams->scaleX = upSampleParams->scale;
+            upSampleParams->scaleY = upSampleParams->scale;
         }
     }
 }
@@ -2471,6 +2653,65 @@ ResBlockParams::~ResBlockParams()
         {
             baseParams.clear();
         }
+    }
+}
+
+string ReductionParams::getStrFromReduceType(ReductionType type)
+{
+    switch (type)
+    {
+    case ReductionType::REDUCTION_SUM:
+        return "sum";
+    case ReductionType::REDUCTION_MEAN:
+        return "mean";
+    default:
+        throw Exception(1,"[reduction] type is not supported", __FILE__, __LINE__, __FUNCTION__);
+    }
+}
+
+ReductionType ReductionParams::getReduceTypeFromStr(string typeStr)
+{
+    if(typeStr == "sum")
+    {
+        return  ReductionType::REDUCTION_SUM;
+    }
+    else if(typeStr == "mean")
+    {
+        return  ReductionType::REDUCTION_MEAN;
+    }
+    else
+    {
+        throw Exception(1,"[reduction] " + typeStr + " is not supported", __FILE__, __LINE__, __FUNCTION__);
+    }
+}
+
+UpSampleParams::UpsampleType UpSampleParams::getUnsampleTypeFromStr(const string &str)
+{
+    if(str == "nearest")
+    {
+        return UpsampleType::NEAREST;
+    }
+    else if(str == "bilinear")
+    {
+        return UpsampleType::BILINEAR;
+    }
+    else
+    {
+        throw Exception(1,"[upsample] " + str + " is not supported", __FILE__, __LINE__, __FUNCTION__);
+    }
+}
+
+string UpSampleParams::getStrFromUnsampleType(const UpSampleParams::UpsampleType &type)
+{
+    switch (type)
+    {
+    case UpsampleType::NEAREST:
+        return "nearest";
+    case UpsampleType::BILINEAR:
+        return "bilinear";
+    default:
+        throw Exception(1,"[upsample] type is not supported", __FILE__, __LINE__, __FUNCTION__);
+
     }
 }
 
