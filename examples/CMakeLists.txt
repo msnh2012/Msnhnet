@@ -26,6 +26,8 @@ if(BUILD_USE_GPU MATCHES ON)
     add_subdirectory(yolov4_gpu)
 
     add_subdirectory(unet_gpu)
+
+    add_subdirectory(deeplabv3_gpu)
     
     if(BUILD_USE_CUDNN MATCHES ON)
 
