@@ -70,8 +70,7 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
                         );
 
         }
-
-#endif
+        
         for(; remain > 0; remain--){
             *destPtr = b * (*srcPtr) + a;
             srcPtr++;
