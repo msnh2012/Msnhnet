@@ -111,7 +111,7 @@ set(SRCS
     src/utils/MsnhTimeUtil.cpp
     src/c_api/MsnhnetLib.cpp
     src/layers/arm/MsnhConvolution3x3s1.cpp 
-    src/layers/arm/MsnhConvolution3x3s1.cpp 
+    src/layers/arm/MsnhConvolution3x3s2.cpp 
     src/layers/arm/MsnhBatchNorm.cpp 
     )
 
