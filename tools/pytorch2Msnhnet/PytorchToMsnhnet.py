@@ -274,7 +274,7 @@ def _relu6(raw, inData, inplace=False):
 
 def _leaky_relu(raw, inData, negative_slope=0.01, inplace=False):
     log( "leaky-i" , args[0]._cdata)
-    x = raw(inData, negative_slope)
+    x = raw(inData, negative_slope,inplace)
     ccc.append(x)
     log( "leaky-o" , x._cdata)
 
