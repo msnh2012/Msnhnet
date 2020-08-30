@@ -5,25 +5,26 @@ namespace Msnhnet
 void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float* dest,
                                   float *const &Scales, float *const &rollMean, float *const &rollVariance, float *const &biases)
 {
-
-    int in_size = inWidth * inHeight;
-    const float *srcPtr = src;
-    float *destPtr = dest;
-    int nn, remain;
-
+    const int in_size = inWidth * inHeight;
+    const float *srcPtr0 = src ;
+    float *destPtr0 = dest;
 #if USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
     for(int i = 0; i < inChannel; i++){
+
+        const float *srcPtr = src + i * in_size;
+        float *destPtr = dest + i * in_size;
+
         float sqrtVar = sqrt(rollVariance[i] + 0.00001f);
         float a = biases[i] - Scales[i] * rollMean[i] / sqrtVar;
         float b = Scales[i] / sqrtVar;
 
 #if USE_NEON
-        nn = in_size >> 2;
-        remain = in_size - (nn << 2);
+        int nn = in_size >> 2;
+        int remain = in_size - (nn << 2);
 #else
-        remain = in_size;
+        int remain = in_size;
 #endif
 
 #if USE_NEON
@@ -78,7 +79,7 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
         }
 #else
         for(int j=0; j<remain; j++){
-            *(destPtr + i*remain + j) = b * (*(srcPtr + i*remain + j)) + a;
+            *(destPtr0 + i*remain + j) = b * (*(srcPtr0 + i*remain + j)) + a;
         }
 
 #endif

@@ -14,7 +14,6 @@ void ActivationLayerArm::loggyActivate(float * &src, const int &inWidth, const i
 
 void ActivationLayerArm::reluActivate(float * &src, const int &inWidth, const int &inHeight,  const int &inChannel){
     int in_size = inWidth * inHeight;
-    int nn, remain;
 
     #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
@@ -24,10 +23,10 @@ void ActivationLayerArm::reluActivate(float * &src, const int &inWidth, const in
         float *srcPtr = src + i * in_size;
 
         #if USE_NEON
-                nn = in_size >> 2;
-                remain = in_size - nn << 2;
+                int nn = in_size >> 2;
+                int remain = in_size - nn << 2;
         #else
-                remain = in_size;
+                int remain = in_size;
         #endif
 
         #if USE_NEON
@@ -64,7 +63,6 @@ void ActivationLayerArm::reluActivate(float * &src, const int &inWidth, const in
 
 void ActivationLayerArm::relu6Activate(float * &src, const int &inWidth, const int &inHeight,  const int &inChannel){
     int in_size = inWidth * inHeight;
-    int nn, remain;
 
     const float six = 6.0;
 
@@ -76,10 +74,10 @@ void ActivationLayerArm::relu6Activate(float * &src, const int &inWidth, const i
         float *srcPtr = src + i * in_size;
 
         #if USE_NEON
-                nn = in_size >> 2;
-                remain = in_size - nn << 2;
+                int nn = in_size >> 2;
+                int remain = in_size - nn << 2;
         #else
-                remain = in_size;
+                int remain = in_size;
         #endif
 
         #if USE_NEON
@@ -136,7 +134,6 @@ void ActivationLayerArm::rampActivate(float * &src, const int &inWidth, const in
 
 void ActivationLayerArm::leakyActivate(float * &src, const int &inWidth, const int &inHeight,  const int &inChannel, const float &params){
     int in_size = inWidth * inHeight;
-    int nn, remain;
 
     #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
@@ -146,10 +143,10 @@ void ActivationLayerArm::leakyActivate(float * &src, const int &inWidth, const i
         float *srcPtr = src + i * in_size;
 
         #if USE_NEON
-                nn = in_size >> 2;
-                remain = in_size - nn << 2;
+                int nn = in_size >> 2;
+                int remain = in_size - nn << 2;
         #else
-                remain = in_size;
+                int remain = in_size;
         #endif
 
         #if USE_NEON
