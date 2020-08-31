@@ -93,6 +93,7 @@ set(SRCS
     src/layers/MsnhMaxPoolLayer.cpp
     src/layers/MsnhPaddingLayer.cpp
     src/layers/MsnhPermuteLayer.cpp
+    src/layers/MsnhViewLayer.cpp
     src/layers/MsnhReductionLayer.cpp
     src/layers/MsnhRes2BlockLayer.cpp
     src/layers/MsnhResBlockLayer.cpp
