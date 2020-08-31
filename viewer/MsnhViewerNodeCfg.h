@@ -186,6 +186,13 @@ public:
         });
         ColorTabel::instance().addColor("Permute",QColor(0xaf2178));
 
+        NodeCreator::instance().addItem("View",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("View",QColor(0x1f4aa3));
+
         NodeCreator::instance().addItem("Reduction",
         {
             {"input", "string", AttributeInfo::Type::input},

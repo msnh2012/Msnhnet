@@ -51,6 +51,7 @@ SOURCES += \
     ../src/layers/MsnhPaddingLayer.cpp \
     ../src/layers/MsnhRes2BlockLayer.cpp \
     ../src/layers/MsnhPermuteLayer.cpp \
+    ../src/layers/MsnhViewLayer.cpp \
     ../src/layers/MsnhResBlockLayer.cpp \
     ../src/layers/MsnhReductionLayer.cpp \
     ../src/layers/MsnhVariableOpLayer.cpp\
