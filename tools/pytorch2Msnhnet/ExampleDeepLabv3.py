@@ -17,7 +17,10 @@ del ccc["aux_classifier.4.bias"]
 deeplabv3.load_state_dict(ccc)
 deeplabv3.eval()
 
+
 input=torch.ones([1,3,224,224])
+
+input.view()
 
 ''' 
 # trans msnhnet file only  

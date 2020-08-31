@@ -36,6 +36,8 @@ Alpha version, maybe have some bugs. Only official op is supported, customized o
 -  log10  
 -  mean
 -  permute
+-  view
+-  contiguous
 -  sqrt
 -  pow
 -  sum

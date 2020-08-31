@@ -8,6 +8,7 @@ from MsnhBuilder import Msnhnet
 import sys
 from struct import pack
 
+
 msnhnet = Msnhnet()
 ccc = []
 index   = 0
@@ -700,14 +701,124 @@ def _log10(raw, inData, *args):
     msnhnet.buildVariableOp(str(x._cdata),"","log10")
     return x
 
-# =====  Variable op not supported ======
-''' TODO '''
+def _contiguous(inData, *args):
+    log( "contiguous-i" , args[0]._cdata)
+    x = raw__contiguous__(inData, *args)
+    ccc.append(x)
+
+    key = msnhnet.getLastKey()
+    val = msnhnet.name_index_dict[key]
+    msnhnet.name_index_dict.pop(key)
+    msnhnet.name_index_dict[str(x._cdata)] = val
+    log( "contiguous-o" , x._cdata)
+    return x
+
 def _view(inData, *args):
     x=raw_view(inData, *args)
     ccc.append(x)
-    raise NotImplementedError("view not supported yet")
+    dataSize = inData.shape[1]*inData.shape[2]*inData.shape[3]
+
+    if inData.shape[0] != 1:
+        raise NotImplementedError("params error")
+
+    if len(list(args)) == 1:
+        if args[0] != -1:
+            raise NotImplementedError("params error")
+        msnhnet.buildView(str(x._cdata),1,1,dataSize)
+
+    if len(list(args)) == 2:
+        if args[0] == -1 and args[1] != -1:
+            if dataSize % args[1] != 0:
+                raise NotImplementedError("params error")
+            dim1 = dataSize/args[1]
+            dim2 = args[1]
+            msnhnet.buildView(str(x._cdata),1,dim1,dim2)
+        elif args[0] != -1 and args[1] == -1:
+            if dataSize % args[1] != 0:
+                raise NotImplementedError("params error")
+            dim1 = args[0]
+            dim2 = dataSize/args[0]
+            msnhnet.buildView(str(x._cdata),1,dim1,dim2)
+        elif args[0] != -1 and args[1] != -1:
+            if dataSize % (args[1]*args[0]) != 0:
+                raise NotImplementedError("params error")
+            dim1 = arg[0]
+            dim2 = arg[1]
+            msnhnet.buildView(str(x._cdata),1,dim1,dim2)
+        else:
+            raise NotImplementedError("params error")
+    if len(list(args)) == 3:
+        if args[0] == -1 and args[1] != -1 and args[2] != -1:
+            if dataSize % (args[1]*args[2]) != 0:
+                raise NotImplementedError("params error")
+            dim0 = dataSize /(args[1]*args[2])
+            dim1 = args[1]
+            dim2 = args[2]
+            msnhnet.buildView(str(x._cdata),dim0,dim1,dim2)
+        elif args[0] != -1 and args[1] == -1 and args[2] != -1:
+            if dataSize % (args[0]*args[2]) != 0:
+                raise NotImplementedError("params error")
+            dim0 = args[0]
+            dim1 = dataSize/(args[0]*args[2])
+            dim2 = args[2]
+            msnhnet.buildView(str(x._cdata),dim0,dim1,dim2)
+        elif args[0] != -1 and args[1] != -1 and args[2] == -1:
+            if dataSize % (args[0]*args[1]) != 0:
+                raise NotImplementedError("params error")
+            dim0 = args[0]
+            dim1 = args[1]
+            dim2 = dataSize/(args[0]*args[1])
+            msnhnet.buildView(str(x._cdata),dim0,dim1,dim2)
+        elif args[0] != -1 and args[1] != -1 and args[2] != -1:
+            if dataSize / (args[0]*args[1]*args[2]) != 1:
+                raise NotImplementedError("params error")
+            dim0 = args[0]
+            dim1 = args[1]
+            dim2 = args[2]
+            msnhnet.buildView(str(x._cdata),dim0,dim1,dim2)
+    if len(list(args)) == 4:
+        if args[0] == -1:
+            if dataSize/(args[1]*args[2]*args[3])==1 :
+                dim0 = args[1]
+                dim1 = args[2]
+                dim2 = args[3]
+                msnhnet.buildView(str(x._cdata),dim0,dim1,dim2)
+            else:
+                raise NotImplementedError("params error")
+        elif args[0] == 1:
+            if args[1] == -1 and args[2] != -1 and args[3] != -1:
+                if dataSize % (args[1]*args[2]) != 0:
+                    raise NotImplementedError("params error")
+                dim0 = dataSize /(args[2]*args[3])
+                dim1 = args[2]
+                dim2 = args[3]
+                msnhnet.buildView(str(x._cdata),dim0,dim1,dim2)
+            elif args[1] != -1 and args[2] == -1 and args[3] != -1:
+                if dataSize % (args[1]*args[3]) != 0:
+                    raise NotImplementedError("params error")
+                dim0 = args[1]
+                dim1 = dataSize/(args[1]*args[3])
+                dim2 = args[3]
+                msnhnet.buildView(str(x._cdata),dim0,dim1,dim2)
+            elif args[1] != -1 and args[2] != -1 and args[3] == -1:
+                if dataSize % (args[1]*args[2]) != 0:
+                    raise NotImplementedError("params error")
+                dim0 = args[1]
+                dim1 = args[2]
+                dim2 = dataSize/(args[1]*args[2])
+                msnhnet.buildView(str(x._cdata),dim0,dim1,dim2)
+            elif args[1] != -1 and args[2] != -1 and args[3] != -1:
+                if dataSize / (args[1]*args[2]*args[3]) != 1:
+                    raise NotImplementedError("params error")
+                dim0 = args[1]
+                dim1 = args[2]
+                dim2 = args[3]
+                msnhnet.buildView(str(x._cdata),dim0,dim1,dim2)
+    print(msnhnet.net)
     return x  
 
+# =====  Variable op not supported ======
+''' TODO '''
 def _unsqueeze(inData, *args):
     x = raw__unsqueeze__(inData, *args)
     ccc.append(x)
@@ -718,12 +829,6 @@ def _expand_as(inData, *args):
     x = raw__expand_as__(inData, *args)
     ccc.append(x)
     raise NotImplementedError("expand_as not supported yet")
-    return x
-
-def _contiguous(inData, *args):
-    x = raw__contiguous__(inData, *args)
-    ccc.append(x)
-    raise NotImplementedError("contiguous not supported yet")
     return x
 
 F.conv2d        =   Hook(F.conv2d,_conv2d)

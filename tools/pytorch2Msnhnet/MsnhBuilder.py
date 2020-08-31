@@ -195,3 +195,12 @@ class Msnhnet:
         self.net = self.net + "reduction:\n"
         self.net = self.net + "  type: " + type + "\n"
         self.net = self.net + "  axis: " + str(int(axis-1)) + "\n"
+
+    def buildView(self, name, dim0, dim1, dim2):
+        self.name_index_dict[name]=self.index
+        self.net = self.net + "#" + str(self.index) +  "\n"
+        self.index = self.index + 1
+        self.net = self.net + "view:\n"
+        self.net = self.net + "  dim0: " + str(int(dim0)) + "\n"
+        self.net = self.net + "  dim1: " + str(int(dim1)) + "\n"
+        self.net = self.net + "  dim2: " + str(int(dim2)) + "\n"
