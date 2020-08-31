@@ -82,6 +82,7 @@ enum LayerType
     UPSAMPLE,
     L2NORM,
     EMPTY,
+    VIEW,
     PERMUTE,
     REDUCTION,
     CONFIG,

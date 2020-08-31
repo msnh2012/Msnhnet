@@ -27,7 +27,7 @@ ActivationLayer::ActivationLayer(const int &batch, const int &width, const int &
 #endif
     }
 
-    this->_layerDetail   = "Activate: " + Activations::getActivationStr(this->activation()) + "\n";
+    this->_layerDetail   = "Activate Layer: " + Activations::getActivationStr(this->activation()) + "\n";
 }
 
 void ActivationLayer::forward(NetworkState &netState)

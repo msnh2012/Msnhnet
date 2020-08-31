@@ -50,7 +50,7 @@ UpSampleLayer::UpSampleLayer(const int &batch, const int &width, const int &heig
     if(upsampleType == UpSampleParams::NEAREST)
     {
 #ifdef WIN32
-        sprintf_s(msg, "upsample nearest      %2dx%2d  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->_strideX, this->_strideY, this->_width, this->_height, this->_channel,
+        sprintf_s(msg, "Upsample nearest      %2dx%2d  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->_strideX, this->_strideY, this->_width, this->_height, this->_channel,
                   this->_outHeight, this->_outHeight, this->_outChannel);
 #else
         sprintf(msg, "upsample              %2dx%2d  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->_strideX, this->_strideY, this->_width, this->_height, this->_channel,
@@ -60,7 +60,7 @@ UpSampleLayer::UpSampleLayer(const int &batch, const int &width, const int &heig
     else if(upsampleType == UpSampleParams::BILINEAR)
     {
 #ifdef WIN32
-        sprintf_s(msg, "upsample bili %4fx%4f  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->_scaleX, this->_scaleY, this->_width, this->_height, this->_channel,
+        sprintf_s(msg, "Upsample bili %4fx%4f  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->_scaleX, this->_scaleY, this->_width, this->_height, this->_channel,
                   this->_outHeight, this->_outHeight, this->_outChannel);
 #else
         sprintf(msg, "upsample bili %4fx%4f  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->_scaleX, this->_scaleY, this->_width, this->_height, this->_channel,

@@ -83,6 +83,10 @@ void Parser::clearParams()
             {
                 delete reinterpret_cast<RouteParams*>(params[i]);
             }
+            else if(params[i]->type == LayerType::VIEW)
+            {
+                delete reinterpret_cast<ViewParams*>(params[i]);
+            }
             else if(params[i]->type == LayerType::PERMUTE)
             {
                 delete reinterpret_cast<PermuteParams*>(params[i]);
@@ -213,12 +217,25 @@ void Parser::readCfg(const std::string &path)
                 if(it->second.Type() == YAML::NodeType::Map)
                 {
                     PermuteParams *permuteParams = new PermuteParams(true);
-                    parsePermuteNormParams(permuteParams, it);
+                    parsePermuteParams(permuteParams, it);
                     params.push_back(permuteParams);
                 }
                 else
                 {
-                    throw Exception(1,"[padding] content error", __FILE__, __LINE__, __FUNCTION__);
+                    throw Exception(1,"[permute] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "view")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    ViewParams *viewParams = new ViewParams(true);
+                    parseViewParams(viewParams, it);
+                    params.push_back(viewParams);
+                }
+                else
+                {
+                    throw Exception(1,"[view] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "localavgpool")
@@ -262,7 +279,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[conv] content error", __FILE__, __LINE__, __FUNCTION__);
+                    throw Exception(1,"[deconv] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "connect")
@@ -594,7 +611,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[yolov3] content error", __FILE__, __LINE__, __FUNCTION__);
+                    throw Exception(1,"[yolov3out] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else
@@ -1434,13 +1451,48 @@ void Parser::parseBatchNormParams(BatchNormParams *batchNormParams, YAML::const_
     }
 }
 
-void Parser::parseEmptyNormParams(EmptyParams *emptyParams, YAML::const_iterator &iter)
+void Parser::parseEmptyParams(EmptyParams *emptyParams, YAML::const_iterator &iter)
 {
     (void)iter;
     (void)emptyParams;
 }
 
-void Parser::parsePermuteNormParams(PermuteParams *permuteParams, YAML::const_iterator &iter)
+void Parser::parseViewParams(ViewParams *viewParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "dim0")
+        {
+            if(!ExString::strToInt(value, viewParams->dim0))
+            {
+                throw Exception(1,"[view] dim0 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "dim1")
+        {
+            if(!ExString::strToInt(value, viewParams->dim1))
+            {
+                throw Exception(1,"[view] dim1 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "dim2")
+        {
+            if(!ExString::strToInt(value, viewParams->dim2))
+            {
+                throw Exception(1,"[view] dim2 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [view]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+}
+
+void Parser::parsePermuteParams(PermuteParams *permuteParams, YAML::const_iterator &iter)
 {
     for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
@@ -1451,21 +1503,21 @@ void Parser::parsePermuteNormParams(PermuteParams *permuteParams, YAML::const_it
         {
             if(!ExString::strToInt(value, permuteParams->dim0))
             {
-                throw Exception(1,"[dim0] top can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[permute] dim0 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "dim1")
         {
             if(!ExString::strToInt(value, permuteParams->dim1))
             {
-                throw Exception(1,"[dim1] down can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[permute] dim1 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "dim2")
         {
             if(!ExString::strToInt(value, permuteParams->dim2))
             {
-                throw Exception(1,"[dim2] down can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[permute] dim2 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
@@ -1772,7 +1824,7 @@ void Parser::parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::
                     else if(key2 == "empty")
                     {
                         EmptyParams *emptyParams = new EmptyParams(false);
-                        parseEmptyNormParams(emptyParams, it2);
+                        parseEmptyParams(emptyParams, it2);
                         tmpParams.push_back(emptyParams);
                     }
                     else if(key2 == "concatblock")
@@ -1856,7 +1908,7 @@ void Parser::parseAddBlockParams(AddBlockParams *addBlockParams, YAML::const_ite
                     else if(key2 == "empty")
                     {
                         EmptyParams *emptyParams = new EmptyParams(false);
-                        parseEmptyNormParams(emptyParams, it2);
+                        parseEmptyParams(emptyParams, it2);
                         tmpParams.push_back(emptyParams);
                     }
                     else if(key2 == "concatblock")

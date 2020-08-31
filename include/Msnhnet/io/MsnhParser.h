@@ -49,6 +49,18 @@ public:
     }
 };
 
+class MsnhNet_API ViewParams : public BaseParams
+{
+public:
+    ViewParams(bool incIndex) : BaseParams(incIndex)
+    {
+        this->type     = LayerType::VIEW;
+    }
+    int             dim0        =   -1;
+    int             dim1        =   -1;
+    int             dim2        =   -1;
+};
+
 class MsnhNet_API PermuteParams : public BaseParams
 {
 public:
@@ -508,8 +520,9 @@ public:
     void parseDeConvParams(DeConvParams *deconvParams, YAML::const_iterator &iter);
     void parseConnectParams(ConnectParams *connectParams, YAML::const_iterator &iter);
     void parseBatchNormParams(BatchNormParams *batchNormParams, YAML::const_iterator &iter);
-    void parseEmptyNormParams(EmptyParams *emptyParams, YAML::const_iterator &iter);
-    void parsePermuteNormParams(PermuteParams *permuteParams, YAML::const_iterator &iter);
+    void parseEmptyParams(EmptyParams *emptyParams, YAML::const_iterator &iter);
+    void parseViewParams(ViewParams *viewParams, YAML::const_iterator &iter);
+    void parsePermuteParams(PermuteParams *permuteParams, YAML::const_iterator &iter);
     void parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterator &iter);
     void parseReductionParams(ReductionParams *reductionParams, YAML::const_iterator &iter);
     void parseResBlockParams(ResBlockParams *resBlockParams, YAML::const_iterator &iter);

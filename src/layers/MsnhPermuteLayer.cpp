@@ -79,10 +79,10 @@ PermuteLayer::PermuteLayer(const int &batch, const int &height, const int &width
     }
     char msg[100];
 #ifdef WIN32
-    sprintf_s(msg, "Permute Layer                %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
+    sprintf_s(msg, "Permute                      %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
               this->_outWidth, this->_outHeight, this->_outChannel, this->_bFlops);
 #else
-    sprintf(msg, "Permute Layer                %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
+    sprintf(msg, "Permute                      %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
             this->_outWidth, this->_outHeight, this->_outChannel, this->_bFlops);
 #endif
     this->_layerDetail = msg;

@@ -48,7 +48,8 @@ public:
 
     float           *gpuInputFp16   =  nullptr;
 #endif
-    inline void releaseArr(float * value)
+    template<typename T>
+    inline void releaseArr(T *& value)
     {
         if(value!=nullptr)
         {

@@ -15,6 +15,7 @@
 #include "Msnhnet/layers/MsnhRouteLayer.h"
 #include "Msnhnet/layers/MsnhVariableOpLayer.h"
 #include "Msnhnet/layers/MsnhEmptyLayer.h"
+#include "Msnhnet/layers/MsnhViewLayer.h"
 #include "Msnhnet/layers/MsnhPermuteLayer.h"
 #include "Msnhnet/layers/MsnhReductionLayer.h"
 #include "Msnhnet/layers/MsnhSoftMaxLayer.h"

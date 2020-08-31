@@ -17,7 +17,7 @@ Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int 
     this->_orgHeight         =   orgHeight;
     this->_orgWidth          =   orgWidth;
 
-    this->_layerDetail.append("yolov3out  ");
+    this->_layerDetail.append("Yolov3out  ");
     char msg[100];
 
     this->_yolov3Indexes     =   yolov3Indexes;

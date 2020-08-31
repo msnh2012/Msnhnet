@@ -393,6 +393,11 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             PermuteParams *permuteParams            =   reinterpret_cast<PermuteParams*>(_parser->params[i]);
             layer                                   =   new PermuteLayer(params.batch, params.height, params.width, params.channels, permuteParams->dim0, permuteParams->dim1, permuteParams->dim2);
         }
+        else if(_parser->params[i]->type == LayerType::VIEW)
+        {
+            ViewParams *viewParams                  =   reinterpret_cast<ViewParams*>(_parser->params[i]);
+            layer                                   =   new ViewLayer(params.batch, params.height, params.width, params.channels, viewParams->dim0, viewParams->dim1, viewParams->dim2);
+        }
         else if(_parser->params[i]->type == LayerType::REDUCTION)
         {
             ReductionParams *reductionParams        =   reinterpret_cast<ReductionParams*>(_parser->params[i]);
@@ -653,6 +658,13 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
     for (size_t i = 0; i < _net->layers.size(); ++i)
     {
         _net->layers[i]->forwardGPU(*_netState);
+        if(i == 0)
+        {
+            if(_netState->input!=nullptr)
+            {
+                Cuda::freeCuda(_netState->input);
+            }
+        }
         _netState->input     =   _net->layers[i]->getGpuOutput();
         _netState->inputNum  =   _net->layers[i]->getOutputNum();
 
@@ -707,6 +719,14 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3GPU(std::vector<float> 
         }
 
         _net->layers[i]->forwardGPU(*_netState);
+
+        if(i == 0)
+        {
+            if(_netState->input!=nullptr)
+            {
+                Cuda::freeCuda(_netState->input);
+            }
+        }
 
         _netState->input     =   _net->layers[i]->getGpuOutput();
         _netState->inputNum  =   _net->layers[i]->getOutputNum();
@@ -843,6 +863,10 @@ void NetBuilder::clearLayers()
             else if(_net->layers[i]->type() == LayerType::PERMUTE)
             {
                 delete reinterpret_cast<PermuteLayer*>(_net->layers[i]);
+            }
+            else if(_net->layers[i]->type() == LayerType::VIEW)
+            {
+                delete reinterpret_cast<ViewLayer*>(_net->layers[i]);
             }
             else if(_net->layers[i]->type() == LayerType::REDUCTION)
             {

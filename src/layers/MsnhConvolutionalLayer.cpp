@@ -668,26 +668,32 @@ TempARRCH64:
         {
 #ifdef USE_ARM
 #ifdef USE_NEON
-        int step = b*this->_outChannel*this->_outHeight*this->_outWidth;
-        BatchNormLayerArm::BatchNorm(this->_output + step,
-                                     this->_width,
-                                     this->_height,
-                                     this->_channel,
-                                     this->_output + step,
-                                     this->_scales,
-                                     this->_rollMean,
-                                     this->_rollVariance,
-                                     this->_biases
-                                     );
+            int step = b*this->_outChannel*this->_outHeight*this->_outWidth;
+            BatchNormLayerArm::BatchNorm(this->_output + step,
+                                         this->_width,
+                                         this->_height,
+                                         this->_channel,
+                                         this->_output + step,
+                                         this->_scales,
+                                         this->_rollMean,
+                                         this->_rollVariance,
+                                         this->_biases
+                                         );
 #else
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-            for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
+            for (int c = 0; c < this->_outChannel; ++c)
             {
-                int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
+                float sqrtVal   = sqrt(this->_rollVariance[c] + 0.00001f);
+                float scaleSqrt = this->_scales[c]/sqrtVal;
+                float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
+                for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
+                {
+                    int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
 
-                this->_output[index]  = scaleSqrt*this->_output[index] + meanSqrt + this->_biases[c];
+                    this->_output[index]  = scaleSqrt*this->_output[index] + meanSqrt + this->_biases[c];
+                }
             }
 #endif
 #endif
