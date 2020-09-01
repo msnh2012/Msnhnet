@@ -13,7 +13,7 @@ namespace Msnhnet
 
         float *src_im2col = new float[outWidth * outHeight * kernelH * kernelW * inChannel];
         
-        const int stride = kernelW * kernelH * outHeight * outWidth;
+        const int Stride = kernelW * kernelH * outHeight * outWidth;
         const int inSize = inHeight * inWidth;
         const int outSize = outHeight * outWidth; 
         const int kernelSize = kernelH * kernelW;
@@ -27,7 +27,7 @@ namespace Msnhnet
 
         for(int cc = 0; cc < inChannel; cc++){
             const float *src0 = src + cc * inSize;
-            int dst_idx = stride * cc;
+            int dst_idx = Stride * cc;
             for(int i = 0; i < kernelH; i++){
                 for(int j = 0; j < kernelW; j++){
                     for(int x = 0; x < outHeight; x++){
