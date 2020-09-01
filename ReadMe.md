@@ -106,6 +106,12 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
   |net|yoloface100k|yoloface500k|mobilenetv2_yolov3_nano|mobilenetv2_yolov3_lite|
   |:---:|:---:|:---:|:---:|:---:|
   |time|7ms|20ms|20ms|30ms|
+
+**DeepLabv3 GPU Test**
+- Ubuntu18.04  GCC  Cuda10.1  GTX2080Ti
+  |net|deeplabv3_resnet101|deeplabv3_resnet50|
+  |:---:|:---:|:---:|
+  |time|22.51ms|16.46ms|
   
 **Requirements**
   * OpenCV4 https://github.com/opencv/opencv
