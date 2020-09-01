@@ -274,7 +274,7 @@ def _relu6(raw, inData, inplace=False):
     return x
 
 def _leaky_relu(raw, inData, negative_slope=0.01, inplace=False):
-    log( "leaky-i" , args[0]._cdata)
+    log( "leaky-i" , inData._cdata)
     x = raw(inData, negative_slope,inplace)
     ccc.append(x)
     log( "leaky-o" , x._cdata)
@@ -702,7 +702,7 @@ def _log10(raw, inData, *args):
     return x
 
 def _contiguous(inData, *args):
-    log( "contiguous-i" , args[0]._cdata)
+    log( "contiguous-i" , inData._cdata)
     x = raw__contiguous__(inData, *args)
     ccc.append(x)
 
