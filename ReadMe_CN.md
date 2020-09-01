@@ -82,6 +82,7 @@
   |:---:|:---:|:---:|:---:|
   |without NNPack|6s|2.5s|1.2s|
   |with NNPack|2.5s|1.1s|0.6s|
+  |with neon asm|?|0.432s|?|
   
 **Yolo GPU 测试**
 - Ubuntu16.04  GCC  Cuda10.1  GTX1080Ti
