@@ -1,9 +1,12 @@
+#define USE_ARM 0
+
+#ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolutionSgemm.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 
 namespace Msnhnet
 {
-    void ConvolutionLayerSgemm::convolution_im2col_sgemm(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
+    void ConvolutionLayerSgemm::convolutionIm2colSgemm(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                             const int &kernelW, const int &kernelH, float* &dest, const int &outWidth, const int &outHeight, const int &outChannel, 
                             const int& StrideH, const int &StrideW){
         // 1. im2col
@@ -117,9 +120,12 @@ namespace Msnhnet
 
 //pack end
 
-//sgemm (int M, int N, int L, float *A, float *B, float *C)
+// sgemm (int M, int N, int K, float *A, float *B, float *C)
+// A (M x N)
+// B (N x K)
+// C (M x K)
 
-        
+
 
 
         free(src_im2col);
@@ -127,3 +133,5 @@ namespace Msnhnet
 
     }
 }
+
+#endif
