@@ -83,7 +83,7 @@
   |without NNPack|6s|2.5s|1.2s|
   |with NNPack|2.5s|1.1s|0.6s|
   |with neon asm|?|0.432s|?|
-  
+
 **Yolo GPU 测试**
 - Ubuntu16.04  GCC  Cuda10.1  GTX1080Ti
   |net|yolov3|yolov3_tiny|yolov4|
@@ -193,9 +193,8 @@
 ![](readme_imgs/ConcatBlock.png)</br>
 
 **如何转换模型**
-[pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
-ps. 对于u版yolo不支持以该方式进行转换，具体方法参看视频教程:[Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
-
+- [pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
+- ps. 对于u版yolo不支持以该方式进行转换，需要先导出主干网络，再手动添加op.
 
 **关于训练**
 - 使用pytorch版本的各个模型训练即可,训练完成后,按照上一步,构建Msnhnet即可.

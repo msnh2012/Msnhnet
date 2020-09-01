@@ -196,8 +196,8 @@ sudo ldconfig
 ![](readme_imgs/ConcatBlock.png)</br>
 
 **How to convert your own pytorch network**
-[pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
-ps. ultralytics yolov3 is not supported. Another way:[Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
+- [pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
+- ps. ultralytics yolov3 is not supported. You can trans backbone first and then add some OPs manually. 
 
 **About Train**
 - Just use pytorch to train your model, and export as msnhbin.
