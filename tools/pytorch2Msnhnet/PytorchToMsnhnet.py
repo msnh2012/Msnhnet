@@ -714,8 +714,10 @@ def _contiguous(inData, *args):
     return x
 
 def _view(inData, *args):
+    log( "view-i" , inData._cdata)
     x=raw_view(inData, *args)
     ccc.append(x)
+    log( "view-o" , x._cdata)
     dataSize = inData.shape[1]*inData.shape[2]*inData.shape[3]
 
     if inData.shape[0] != 1:
@@ -817,8 +819,10 @@ def _view(inData, *args):
     return x  
     
 def _reshape(inData, *args):
+    log( "reshape-i" , inData._cdata)
     x=raw_reshape(inData, *args)
     ccc.append(x)
+    log( "reshape-0" , x._cdata)
     dataSize = inData.shape[1]*inData.shape[2]*inData.shape[3]
 
     if inData.shape[0] != 1:

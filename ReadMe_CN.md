@@ -107,6 +107,12 @@
   |:---:|:---:|:---:|:---:|:---:|
   |time|7ms|20ms|20ms|30ms|
 
+**DeepLabv3 GPU 测试**
+- Ubuntu18.04  GCC  Cuda10.1  GTX2080Ti
+  |net|deeplabv3_resnet101|deeplabv3_resnet50|
+  |:---:|:---:|:---:|
+  |time|22.51ms|16.46ms|
+
 **依赖**
   * OpenCV4 [https://github.com/opencv/opencv](https://github.com/opencv/opencv)
   * yaml-cpp [https://github.com/jbeder/yaml-cpp](https://github.com/jbeder/yaml-cpp)
