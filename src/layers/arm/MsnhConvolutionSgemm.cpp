@@ -14,13 +14,11 @@ namespace Msnhnet
         int ccOutChannel = 0;
         int ccRemainOutChannel = 0;
         int Stride = 0;
-#if __aarch64__
-        throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-#endif
+        
         ccOutChannel = (outChannel - ccRemainOutChannel) >> 2;
         ccRemainOutChannel = ccOutChannel << 2;
 
-        for(int cc = 0;  cc < outChannel; cc ++){
+        for(int cc = 0;  cc < ccOutChannel; cc ++){
             int c = cc << 2;
             const float* k0 = kernel + c * inChannel * kernelSize;
             const float* k1 = kernel + (c + 1) * inChannel * kernelSize;
@@ -287,7 +285,7 @@ namespace Msnhnet
                     ptrB += 64;
 
                 }
-
+                // K = kernelSize * inChannel
                 for(; j < K; j++){
                     for(int n = 0; n < 8; n++){
                         sum0[n] += ptrA[0] * ptrB[n];
@@ -317,6 +315,45 @@ namespace Msnhnet
             // N = outChannel
             for(; i < N; i++){
                 const float *ptrB = src_im2col_pack + (i / 8 + i % 8) *  packHeight * packWidth;
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                const float *ptrA = kernel_im2col_pack + (c / 4) * kernelPackHeight * kernelPackWidth;
+#endif
+                
+#if USE_NEON
+
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                asm volatile();
+#endif
+
+#else 
+                float sum0 = 0;
+                float sum1 = 0;
+                float sum2 = 0;
+                float sum3 = 0;
+                for(int j = 0; j < K; j++){
+                    sum0 += ptrA[0] * ptrB[0];
+                    sum1 += ptrA[1] * ptrB[1];
+                    sum2 += ptrA[2] * ptrB[2];
+                    sum3 += ptrA[3] * ptrB[3];
+
+                    ptrA += 4;
+                    ptrB += 1;
+                }
+
+                destptr0[0] = sum0;
+                destptr1[0] = sum1;
+                destptr2[0] = sum2;
+                destptr3[0] = sum3;
+
+#endif
+                destptr0++;
+                destptr1++;
+                destptr2++;
+                destptr3++;
             }
 
 
