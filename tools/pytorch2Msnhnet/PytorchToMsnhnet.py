@@ -37,7 +37,7 @@ def _conv2d(raw,inData, weight, bias=None, stride=1, padding=0, dilation=1, grou
     log( "conv2d-o" , x._cdata)
 
     useBias = True
-    if bias== None:
+    if bias is None:
         useBias = False
 
     msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
@@ -99,7 +99,7 @@ def _linear(raw,inData, weight, bias=None):
     x=raw(inData,weight,bias)
     
     useBias = True
-    if bias== None:
+    if bias is None:
         useBias = False
 
     msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
@@ -171,7 +171,7 @@ def _interpolate(raw, inData,size=None, scale_factor=None, mode='nearest', align
     msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
     
     if mode == "nearest" or align_corners == None:
-        if size == None and scale_factor != None:
+        if size is None and scale_factor is not None:
             
             if 10*int(scale_factor) != int(10*scale_factor) :
                 raise NotImplementedError("scale must be int")
@@ -180,7 +180,7 @@ def _interpolate(raw, inData,size=None, scale_factor=None, mode='nearest', align
             strideY = scale_factor
 
             msnhnet.buildUpsample2D(str(x._cdata), strideX, strideY, 1,1, "nearest", 0) 
-        elif scale_factor == None and size != None:
+        elif scale_factor is None and size is not None:
             mx = inData.shape[-1]
             my = inData.shape[-2]
 
@@ -195,7 +195,7 @@ def _interpolate(raw, inData,size=None, scale_factor=None, mode='nearest', align
         else:
             raise NotImplementedError("upsample params error")
     elif mode == "bilinear" :
-        if align_corners == None:
+        if align_corners is None:
             alignCorners = 0
         else:
             if align_corners == True :
@@ -203,9 +203,9 @@ def _interpolate(raw, inData,size=None, scale_factor=None, mode='nearest', align
             else:
                 alignCorners = 0
 
-        if size == None and scale_factor != None:
+        if size is None and scale_factor is not None:
             msnhnet.buildUpsample2D(str(x._cdata), 1, 1, scale_factor,scale_factor,"bilinear",alignCorners) 
-        elif scale_factor == None and size != None:
+        elif scale_factor is None and size is not None:
             mx = inData.shape[-1]
             my = inData.shape[-2]
 
@@ -222,7 +222,7 @@ def _interpolate(raw, inData,size=None, scale_factor=None, mode='nearest', align
 
 def _softmax(raw, inData, dim=None, _stacklevel=3):
     log( "softmax-i" , inData._cdata)
-    if dim != None:
+    if dim is not None:
         raise NotImplementedError("Soft max not supported yet")
     x=raw(inData, dim=dim)
     ccc.append(x)
