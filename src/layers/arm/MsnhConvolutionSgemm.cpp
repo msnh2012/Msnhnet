@@ -70,7 +70,7 @@ namespace Msnhnet
         float *src_im2col = new float[outWidth * outHeight * kernelH * kernelW * inChannel];
         
         const int Stride = kernelW * kernelH * outHeight * outWidth;
-        const int inSize = inHeight * inWidth;
+        //const int inSize = inHeight * inWidth;
         const int outSize = outHeight * outWidth; 
         const int kernelSize = kernelH * kernelW;
 
@@ -81,7 +81,7 @@ namespace Msnhnet
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
         for(int cc = 0; cc < inChannel; cc++){
-            const float *src0 = src + cc * inSize;
+            const float *src0 = src + cc * kernelH * kernelW * inChannel;
             int dst_idx = Stride * cc;
             for(int i = 0; i < kernelH; i++){
                 for(int j = 0; j < kernelW; j++){
@@ -98,7 +98,7 @@ namespace Msnhnet
             }
         }
 
-        // pack 8x8 []
+        // pack 8x8
         // preapare
 
 
@@ -286,6 +286,7 @@ namespace Msnhnet
 
                 }
                 // K = kernelSize * inChannel
+                // 如果是pack4那么末尾一定是4的倍数
                 for(; j < K; j++){
                     for(int n = 0; n < 8; n++){
                         sum0[n] += ptrA[0] * ptrB[n];
@@ -356,14 +357,96 @@ namespace Msnhnet
                 destptr3++;
             }
 
-
         }
 
 
+        //tail
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int cc = remainColCount; cc < outChannel; cc++){
+            int c = cc;
+            float *destptr0 = dest + c * outSize;
+            int i = 0;
+            for(; i + 7 < N; i = i + 8){
+                const float *ptrB = src_im2col_pack + (i / 8) *  packHeight * packWidth;
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                const float *ptrA = kernel_im2col_pack + (c / 4 + c % 4) * kernelPackHeight * kernelPackWidth;
+#endif
 
+#if USE_NEON
 
-        free(src_im2col);
-        free(src_im2col_pack);
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                asm vilatile();
+#endif
+
+#else
+                float sum[8]= {0};
+                int j = 0;
+                for(; j + 7 < K; j = j + 8){
+                    for(int n = 0; n < 8; n++){
+                        sum[n] += ptrA[0] * ptrB[n];
+                        sum[n] += ptrA[1] * ptrB[n + 8];
+                        sum[n] += ptrA[2] * ptrB[n + 16];
+                        sum[n] += ptrA[3] * ptrB[n + 24];
+                        sum[n] += ptrA[4] * ptrB[n + 32];
+                        sum[n] += ptrA[5] * ptrB[n + 40];
+                        sum[n] += ptrA[6] * ptrB[n + 48];
+                        sum[n] += ptrA[7] * ptrB[n + 56];
+                    }
+
+                    ptrA += 8;
+                    ptrB += 64;
+                }
+                
+                for(; j < K; j++){
+                    for(int n = 0; n < 8; n++){
+                        sum[n] += ptrA[0] * ptrB[n];
+                    }
+
+                    ptrA += 1;
+                    ptrB += 8;
+                }
+
+                for(int n = 0; n < 8; n++){
+                    destptr0[n] = sum[n];
+                }
+
+#endif
+                destptr0 += 8;
+
+            }
+
+            for(; i < N; i++){
+                const float *ptrB = src_im2col_pack + (i / 8 + i % 8) *  packHeight * packWidth;
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                const float *ptrA = kernel_im2col_pack + (c / 4 + c % 4) * kernelPackHeight * kernelPackWidth;
+#endif
+                int j = 0;        
+                float sum = 0;
+
+                for(; j < K; j++){
+                    sum += ptrA[0] * ptrB[0];
+
+                    ptrA += 1;
+                    ptrB += 1;
+                }
+
+                destptr0[0] = sum;
+
+                destptr0++;
+
+            }
+        }
+
+        delete [] src_im2col;
+        delete [] src_im2col_pack;
 
     }
 }
