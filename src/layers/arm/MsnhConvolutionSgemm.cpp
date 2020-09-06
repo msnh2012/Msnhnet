@@ -6,7 +6,8 @@
 
 namespace Msnhnet
 {
-    // pack 4x4 dest[4 * kernelSize, inChannel, outChannel / 4 + outChanne l %4]
+    // pack 4x4
+    // shape[c, h, w]: [outChannel / 4 + outChannel %4， 4 * kernelSize， inChannel]
     void ConvolutionLayerSgemm::convolutionTransformKernel(float *const &kernel, const int &kernelW, const int &kernelH, float* &dest, const int &inChannel,
                             const int &outChannel){
         
@@ -15,7 +16,7 @@ namespace Msnhnet
         int ccRemainOutChannel = 0;
         int Stride = 0;
         
-        ccOutChannel = (outChannel - ccRemainOutChannel) >> 2;
+        ccOutChannel = outChannel >> 2;
         ccRemainOutChannel = ccOutChannel << 2;
 
         for(int cc = 0;  cc < ccOutChannel; cc ++){
@@ -24,12 +25,10 @@ namespace Msnhnet
             const float* k1 = kernel + (c + 1) * inChannel * kernelSize;
             const float* k2 = kernel + (c + 2) * inChannel * kernelSize;
             const float* k3 = kernel + (c + 3) * inChannel * kernelSize;
-#if __aarch64__
-           throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-#else
-            Stride = inChannel * (outChannel/4+outChannel%4);
+
+            Stride = 4 * kernelSize * inChannel;
             float* destptr = dest + (c / 4) * Stride;
-#endif
+
             for(int i = 0; i < inChannel * kernelSize; i++){
                 destptr[0] = k0[0];
                 destptr[1] = k1[0];
@@ -48,12 +47,8 @@ namespace Msnhnet
         for(int cc = ccRemainOutChannel; cc < outChannel; cc++){
             int c = cc;
             const float* k0 = kernel + c * inChannel * kernelSize;
-#if __aarch64__
-            throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-#else
-            Stride = inChannel * (outChannel/4+outChannel%4);
+            Stride = 4 * kernelSize * inChannel;
             float* destptr = dest + (c / 4 + c % 4) * Stride;
-#endif
             for(int i = 0; i < inChannel * kernelSize; i++){
                 destptr[0] = k0[0];
                 destptr += 1;
@@ -66,7 +61,7 @@ namespace Msnhnet
                             const int &kernelW, const int &kernelH, float* &dest, const int &outWidth, const int &outHeight, const int &outChannel, 
                             const int& StrideH, const int &StrideW){
         // 1. im2col
-
+        // src_im2col : width=outWidth * outHeight, height=kernelH * kernelW * inChannel
         float *src_im2col = new float[outWidth * outHeight * kernelH * kernelW * inChannel];
         
         const int Stride = kernelW * kernelH * outHeight * outWidth;
@@ -102,13 +97,13 @@ namespace Msnhnet
         // preapare
 
 
-        const int packChannel = 8 * kernelSize;
+        const int packChannel = outSize / 8 + outSize % 8;
         const int packHeight = inChannel;    
-        const int packWidth = outSize / 8 + outSize % 8;
+        const int packWidth = 8 * kernelSize;
 
-        int kernelPackChannel = 4 * kernelSize;
+        int kernelPackChannel = outChannel / 4 + outChannel % 4;
         const int kernelPackHeight = inChannel;
-        const int kernelPackWidth = outChannel / 4 + outChannel % 4;
+        const int kernelPackWidth = 4 * kernelSize;
 
         float *src_im2col_pack = new float[packHeight * packWidth * packChannel];
 
@@ -204,6 +199,7 @@ namespace Msnhnet
             float *destptr3 = dest + (c + 3) * outSize;
 
             int i = 0;
+            // N = outHeight*outWidth
             for(; i + 7 < N; i = i+8){
                 const float *ptrB = src_im2col_pack + (i / 8) *  packHeight * packWidth;
 #if __aarch64__
@@ -229,6 +225,7 @@ namespace Msnhnet
                 float sum3[8] = {0};
                 int j = 0;
                 // K = kernelSize * inChannel
+                // 同时计算4行，同时在每一列计算8个输出
                 for(; j + 7 < K; j = j + 8){
                     for(int n = 0; n < 8; n++){
                         sum0[n] += ptrA[0] * ptrB[n];
@@ -285,8 +282,8 @@ namespace Msnhnet
                     ptrB += 64;
 
                 }
-                // K = kernelSize * inChannel
-                // 如果是pack4那么末尾一定是4的倍数
+                // K = kernelSize * inChannel * 4
+                // 如果是pack4x4那么末尾一定是4的倍数
                 for(; j < K; j++){
                     for(int n = 0; n < 8; n++){
                         sum0[n] += ptrA[0] * ptrB[n];
@@ -314,6 +311,7 @@ namespace Msnhnet
             }
 
             // N = outChannel
+            // 拖尾部分，在列方向上只能逐个计算
             for(; i < N; i++){
                 const float *ptrB = src_im2col_pack + (i / 8 + i % 8) *  packHeight * packWidth;
 #if __aarch64__
@@ -387,6 +385,8 @@ namespace Msnhnet
 #else
                 float sum[8]= {0};
                 int j = 0;
+                // K = kernelSize * inChannel * 4
+                // 只计算一行，在列方向同时计算8个输出
                 for(; j + 7 < K; j = j + 8){
                     for(int n = 0; n < 8; n++){
                         sum[n] += ptrA[0] * ptrB[n];
@@ -402,7 +402,7 @@ namespace Msnhnet
                     ptrA += 8;
                     ptrB += 64;
                 }
-                
+                // 拖尾部分
                 for(; j < K; j++){
                     for(int n = 0; n < 8; n++){
                         sum[n] += ptrA[0] * ptrB[n];
