@@ -39,15 +39,15 @@ float MathUtils::randNorm()
     static double  rand1    = 0;
     static double  rand2    = 0;
 
-   if(haveSapre)
+    if(haveSapre)
     {
         haveSapre = 0;
         return static_cast<float>(sqrt(rand1) * sin(rand2));
     }
 
-   haveSapre   = 1;
+    haveSapre   = 1;
 
-   rand1       =   randomGen() / ((double)RAND_MAX);
+    rand1       =   randomGen() / ((double)RAND_MAX);
     if(rand1 < 1e-100)
     {
         rand1   =  1e-100;
@@ -55,7 +55,7 @@ float MathUtils::randNorm()
     rand1       =   -2 * log(rand1);
     rand2       =   (randomGen() / ((double)RAND_MAX)) * 2.0 *M_PI;
 
-   return static_cast<float>(sqrt(rand1) * cos(rand2));
+    return static_cast<float>(sqrt(rand1) * cos(rand2));
 
 }
 
@@ -67,6 +67,6 @@ unsigned int MathUtils::randomGen()
     rnd = rand()*(RAND_MAX + 1) + rnd;
 #endif  
 
-   return rnd;
+    return rnd;
 }
 }

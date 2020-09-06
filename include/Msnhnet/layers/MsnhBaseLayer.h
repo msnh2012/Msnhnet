@@ -4,6 +4,11 @@
 #include "Msnhnet/net/MsnhNetwork.h"
 #include "Msnhnet/core/MsnhSimd.h"
 #include "Msnhnet/utils/MsnhExport.h"
+#include "Msnhnet/utils/MsnhTimeUtil.h"
+
+#ifdef USE_GPU
+#include "Msnhnet/config/MsnhnetCuda.h"
+#endif
 
 namespace Msnhnet
 {
@@ -14,50 +19,37 @@ public:
     BaseLayer();
     virtual ~BaseLayer();
 
-   static bool     supportAvx;
+    static bool     supportAvx;
     static bool     supportFma;
     static bool     isPreviewMode;
+    static bool     onlyUseCuda;
+    static bool     useFp16;
 
-   LayerType       type;                       
+#ifdef USE_GPU
+    static cudaEvent_t     _start;
+    static cudaEvent_t     _stop;
+#endif
 
-   ActivationType  activation;                 
+    static void setPreviewMode(const bool &isPreviewMode);
 
-   std::vector<float> actParams;
+    static void setForceUseCuda(const bool &forceUseCuda);
 
-   int             num             =  0;       
+    static void setUseFp16(const bool &useFp16);
 
-   size_t          workSpaceSize   =  0;
+    virtual void forward(NetworkState &netState);
 
-   int             height          =  0;
-    int             width           =  0;
-    int             channel         =  0;
-
-   int             outHeight       =  0;
-    int             outWidth        =  0;
-    int             outChannel      =  0;
-
-   int             inputNum        =  0;
-    int             outputNum       =  0;
-
-   size_t          numWeights      =  0;       
-
-   int             batch           =  0;
-    float          *output          =  nullptr; 
-
-   float           bFlops          =  0;
-
-   std::string     layerName       =  "BaseLayer";
-    std::string     layerDetail     =  "";
-
-   float           forwardTime     =  0;
-
-   static void setPreviewMode(const bool &isPreviewMode);
-
-   virtual void forward(NetworkState &netState);
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+    float *getGpuOutput() const;
+    void recordCudaStart();
+    void recordCudaStop();
+#endif
     virtual void loadAllWeigths(std::vector<float> &weights);
 
-   static void initSimd();
-    inline void releaseArr(void * value)
+    static void initSimd();
+
+    template<typename T>
+    inline void releaseArr(T *& value)
     {
         if(value!=nullptr)
         {
@@ -65,6 +57,91 @@ public:
             value = nullptr;
         }
     }
+
+    LayerType type() const;
+
+    ActivationType activation() const;
+
+    int getOutHeight() const;
+
+    int getOutWidth() const;
+
+    int getOutChannel() const;
+
+    int getOutputNum() const;
+
+    void setOutHeight(int getOutHeight);
+
+    void setOutWidth(int getOutWidth);
+
+    void setOutChannel(int getOutChannel);
+
+    float *getOutput() const;
+
+    int getInputNum() const;
+
+    size_t getWorkSpaceSize() const;
+
+    void setWorkSpaceSize(const size_t &getWorkSpaceSize);
+
+    size_t getNumWeights() const;
+
+    std::string getLayerDetail() const;
+
+    int getHeight() const;
+
+    int getWidth() const;
+
+    int getChannel() const;
+
+    float getForwardTime() const;
+
+    std::string getLayerName() const;
+
+    int getBatch() const;
+
+    ActivationType getActivation() const;
+
+    size_t getInputSpaceSize() const;
+
+protected:
+    LayerType          _type;                       
+
+    ActivationType     _activation;                 
+
+    std::vector<float> _actParams;
+
+    int             _num             =  0;       
+
+    size_t          _workSpaceSize   =  0;
+    size_t          _inputSpaceSize  =  0;
+
+    int             _height          =  0;
+    int             _width           =  0;
+    int             _channel         =  0;
+
+    int             _outHeight       =  0;
+    int             _outWidth        =  0;
+    int             _outChannel      =  0;
+
+    int             _inputNum        =  0;
+    int             _outputNum       =  0;
+
+    size_t          _numWeights      =  0;       
+
+    int             _batch           =  0;
+    float          *_output          =  nullptr; 
+
+    float           _bFlops          =  0;
+
+#ifdef USE_GPU
+    float          *_gpuOutput       =  nullptr;
+#endif
+
+    std::string     _layerName       =  "BaseLayer";
+    std::string     _layerDetail     =  "";
+
+    float           _forwardTime     =  0;
 };
 }
 

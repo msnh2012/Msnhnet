@@ -10,8 +10,14 @@
 #include "Msnhnet/layers/MsnhCropLayer.h"
 #include "Msnhnet/layers/MsnhDeConvolutionalLayer.h"
 #include "Msnhnet/layers/MsnhLocalAvgPoolLayer.h"
+#include "Msnhnet/layers/MsnhGlobalAvgPoolLayer.h"
 #include "Msnhnet/layers/MsnhMaxPoolLayer.h"
 #include "Msnhnet/layers/MsnhRouteLayer.h"
+#include "Msnhnet/layers/MsnhVariableOpLayer.h"
+#include "Msnhnet/layers/MsnhEmptyLayer.h"
+#include "Msnhnet/layers/MsnhViewLayer.h"
+#include "Msnhnet/layers/MsnhPermuteLayer.h"
+#include "Msnhnet/layers/MsnhReductionLayer.h"
 #include "Msnhnet/layers/MsnhSoftMaxLayer.h"
 #include "Msnhnet/layers/MsnhUpSampleLayer.h"
 #include "Msnhnet/layers/MsnhResBlockLayer.h"
@@ -23,6 +29,10 @@
 #include "Msnhnet/layers/MsnhPaddingLayer.h"
 #include "Msnhnet/io/MsnhIO.h"
 #include "Msnhnet/utils/MsnhExport.h"
+
+#ifdef USE_NNPACK
+#include <nnpack.h>
+#endif
 
 namespace Msnhnet
 {
@@ -44,17 +54,49 @@ public:
     void buildNetFromMsnhNet(const std::string &path);
     void loadWeightsFromMsnhBin(const std::string &path);
     void setPreviewMode(const bool &mode);
+    void setForceUseCuda(const bool &onlyUseCuda);
+    void setUseFp16(const bool &useFp16);
     std::vector<float> runClassify(std::vector<float> img);
     std::vector<std::vector<Yolov3Box>> runYolov3(std::vector<float> img);
+#ifdef USE_GPU
+    std::vector<float> runClassifyGPU(std::vector<float> img);
+    std::vector<std::vector<Yolov3Box>> runYolov3GPU(std::vector<float> img);
+#endif
 
-   void  clearLayers();
+    Point2I getInputSize();
+
+    int getInputChannel();
+
+    void  clearLayers();
+
     float getInferenceTime();
+
     std::string getLayerDetail();
+
     std::string getTimeDetail();
 
-   Parser          *parser;
-    Network         *net;
-    NetworkState    *netState;
+    float getGpuInferenceTime() const;
+
+    Network *getNet() const;
+
+    int getLastLayerOutWidth() const;
+
+    int getLastLayerOutHeight() const;
+
+    int getLastLayerOutChannel() const;
+
+    size_t getLastLayerOutNum() const;
+
+private:
+
+    Parser          *_parser;
+    Network         *_net;
+    NetworkState    *_netState;
+    float           _gpuInferenceTime       = 0.f;
+    int             _lastLayerOutWidth      = 0;
+    int             _lastLayerOutHeight     = 0;
+    int             _lastLayerOutChannel    = 0;
+    size_t          _lastLayerOutNum       = 0;
 };
 }
 #endif 

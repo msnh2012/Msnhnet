@@ -186,3 +186,4 @@ yolov3out:
   confThresh: 0.2
   nmsThresh: 0.2
   useSoftNms: 0
+  yoloType: yolov3Normal

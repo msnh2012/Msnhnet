@@ -4,6 +4,8 @@ project(Msnhnet
     LANGUAGES CXX C
     VERSION 1.0)
 
+set(CMAKE_CXX_STANDARD 11)
+
 message(STATUS "OS is ${CMAKE_SYSTEM}")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -13,7 +15,11 @@ option(OMP_MAX_THREAD       "Omp will use max threads"  ON )
 option(ENABLE_OPEN_BLAS     "Use open blas"             OFF)
 option(BUILD_SHARED_LIBS    "Build shared lib"          ON )
 option(BUILD_EXAMPLES       "Build examples"            ON )
-option(BUILD_VIEWER         "Build MsnhnetViewer"       ON )
+option(BUILD_VIEWER         "Build MsnhnetViewer"       OFF)
+option(BUILD_USE_GPU        "Use Gpu"                   OFF)
+if(BUILD_USE_GPU MATCHES ON)
+    option(BUILD_USE_CUDNN      "Use cuDnn"                 OFF)
+endif()
 
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
@@ -71,6 +77,8 @@ set(SRCS
     src/io/MsnhParser.cpp
     src/layers/MsnhActivationLayer.cpp
     src/layers/MsnhActivations.cpp
+    src/layers/MsnhActivationsAvx.cpp
+    src/layers/MsnhActivationsNeon.cpp
     src/layers/MsnhAddBlockLayer.cpp
     src/layers/MsnhBaseLayer.cpp
     src/layers/MsnhBatchNormLayer.cpp
@@ -81,8 +89,12 @@ set(SRCS
     src/layers/MsnhDeConvolutionalLayer.cpp
     src/layers/MsnhEmptyLayer.cpp
     src/layers/MsnhLocalAvgPoolLayer.cpp
+    src/layers/MsnhGlobalAvgPoolLayer.cpp
     src/layers/MsnhMaxPoolLayer.cpp
     src/layers/MsnhPaddingLayer.cpp
+    src/layers/MsnhPermuteLayer.cpp
+    src/layers/MsnhViewLayer.cpp
+    src/layers/MsnhReductionLayer.cpp
     src/layers/MsnhRes2BlockLayer.cpp
     src/layers/MsnhResBlockLayer.cpp
     src/layers/MsnhRouteLayer.cpp
@@ -90,16 +102,68 @@ set(SRCS
     src/layers/MsnhUpSampleLayer.cpp
     src/layers/MsnhYolov3Layer.cpp
     src/layers/MsnhYolov3OutLayer.cpp
+    src/layers/MsnhVariableOpLayer.cpp 
     src/net/MsnhNetBuilder.cpp
     src/net/MsnhNetwork.cpp
     src/utils/MsnhExString.cpp
     src/utils/MsnhExVector.cpp
     src/utils/MsnhMathUtils.cpp
     src/utils/MsnhOpencvUtil.cpp
+    src/utils/MsnhTimeUtil.cpp
+    src/c_api/MsnhnetLib.cpp
+    src/layers/arm/MsnhConvolution3x3s1.cpp 
+    src/layers/arm/MsnhConvolution3x3s2.cpp 
+    src/layers/arm/MsnhBatchNorm.cpp 
     )
 
+# config GPU
+if(BUILD_USE_GPU MATCHES ON)
+    add_definitions(-DUSE_GPU)#===============
+    
+    enable_language(CUDA) 
+
+    set(USE_GPU_MACRO "#define USE_GPU\n")
+
+    set(CXX_CUDA_SRCS 
+        src/config/MsnhnetCuda.cpp
+    )
+
+    set(CUDA_SRCS
+        src/config/cuda/MsnhnetCuda.cu
+        src/core/cuda/MsnhBlasGPU.cu
+        src/core/cuda/MsnhGemmGPU.cu
+        src/layers/cuda/MsnhActivationsGPU.cu
+        src/layers/cuda/MsnhConvolutionalLayerGPU.cu
+        src/layers/cuda/MsnhMaxPoolLayerGPU.cu
+        src/layers/cuda/MsnhLocalAvgPoolLayerGPU.cu
+        src/layers/cuda/MsnhGlobalAvgPoolLayerGPU.cu
+        src/layers/cuda/MsnhPaddingLayerGPU.cu
+        src/layers/cuda/MsnhPermuteLayerGPU.cu
+        src/layers/cuda/MsnhYolov3LayerGPU.cu
+        src/layers/cuda/MsnhYolov3OutLayerGPU.cu
+        )
+    set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+    find_package(cuBlas REQUIRED)
+    
+    if(BUILD_USE_CUDNN MATCHES ON)
+        add_definitions(-DUSE_CUDNN)#===============
+        find_package(cuDnn REQUIRED)
+        set(USE_CUDNN_MACRO "#define USE_CUDNN\n")
+    else()
+        set(USE_CUDNN_MACRO )
+    endif()
+
+else()
+    set(USE_GPU_MACRO )
+    set(USE_CUDNN_MACRO )
+    set(CUDA_SRCS )
+    set(CXX_CUDA_SRCS )
+endif()
+
+set(CUDA_INC_DIR    )
+
 # X86 config
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)|(x86)|(X86)|(amd64)|(AMD64)")
     add_definitions(-DUSE_X86)#===============
     set(USE_X86_MACRO "#define USE_X86\n")
     message(STATUS "Use ${CMAKE_SYSTEM_PROCESSOR} arch")
@@ -109,29 +173,56 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
         set(CMAKE_DEBUG_POSTFIX "_d")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX")
     else()
-        SET(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -msse4.1 -mssse3 -msse3 -msse2 -msse -mavx -mavx2")
+	set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -march=native -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse -mavx -mavx2")
+	set(CUDA_INC_DIR   /usr/local/cuda/include)	
     endif()
+
 else()
     set(USE_X86_MACRO "")
 endif()
 
+message(${CMAKE_SYSTEM_PROCESSOR})
 
+set(USE_NNPACK_MACRO "")
 # ARM config
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(aarch32)|(armv7l)")
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(armv7l)")
     add_definitions(-DUSE_ARM) #===============
     set(USE_ARM_MACRO "#define USE_ARM\n")
+    set(CUDA_INC_DIR   /usr/local/cuda/include)
 
     message(STATUS "Use arm arch")
 
-   option(ENABLE_NEON "Use neon" ON)
+    option(ENABLE_NEON "Use neon" OFF)
+    
     if(ENABLE_NEON MATCHES ON)
         add_definitions(-DUSE_NEON)
         set(USE_NEON_MACRO "#define USE_NEON\n")
-        set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -mfpu=neon")
+
+        if (CMAKE_SYSTEM_PROCESSOR MATCHES "(armv7l)") # aarch64 neon is default
+            set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -mfpu=neon-vfpv4")
+        endif()
         message(STATUS "Use neon")
     else()
         set(USE_NEON_MACRO "")
+    endif()
+
+    option(ENABLE_NNPACK        "Build with NNAPCK"         ON )
+
+    if(ENABLE_NNPACK MATCHES ON)
+        add_definitions(-DUSE_NNPACK)
+        set(USE_NNPACK_MACRO "#define USE_NNPACK\n")
+        set(NNPACK_LIBS
+                -L$ENV{NNPACK_LIB_DIR}
+		        -lclog 
+                -lnnpack
+                -lpthreadpool
+		        -lcpuinfo
+               )
+        message(STATUS "Use NNPACK")
+        message(STATUS "NNPACK lib ${NNPACK_LIBS}")
+        message(STATUS "NNPACK inc $ENV{NNPACK_INC_DIR}")
     endif()
 else()
     set(USE_ARM_MACRO "")
@@ -149,16 +240,16 @@ message(STATUS "yaml include dir ${YAML_CPP_INCLUDE_DIR}")
 message(STATUS "yaml libs ${YAML_CPP_LIBRARIES}")
 
 if(BUILD_SHARED_LIBS MATCHES ON)
-    add_library(${PROJECT_NAME} SHARED ${SRCS})   #generate libs
+    add_library(${PROJECT_NAME} SHARED ${SRCS} ${CUDA_SRCS})     #generate libs
     set(USE_SHARED_MSNHNET_MACRO "#define USE_SHARED_MSNHNET\n") #===============
     message("shared--------------------")
 else()
-    add_library(${PROJECT_NAME} STATIC ${SRCS})   #generate libs
+    add_library(${PROJECT_NAME} STATIC ${SRCS} ${CUDA_SRCS})     #generate libs
     set(USE_SHARED_MSNHNET_MACRO "")
     message("static--------------------")
 endif()
 
-#add_library(${PROJECT_NAME}::Msnhnet ALIAS Msnhnet)
+#add_library(${PROJECT_NAME}::Msnhnet ALIAS Msnhnet) 
 
 if(BUILD_SHARED_LIBS MATCHES ON)
     # add definitions for target
@@ -174,21 +265,40 @@ endif()
 target_include_directories(${PROJECT_NAME}
     PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    ${CUDA_INC_DIR}
     )
 
 #source
 target_sources(${PROJECT_NAME}
     PRIVATE
     ${SRCS}
+    ${CXX_CUDA_SRCS}
     )
 
 #openblas
 if(ENABLE_OPEN_BLAS MATCHES ON)
-    target_link_libraries(${PROJECT_NAME} ${OpenBLAS_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenBLAS_LIBRARIES})
+endif()
+
+#NNPack
+if(ENABLE_NNPACK)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${NNPACK_LIBS})
+    target_include_directories(${PROJECT_NAME}
+           PUBLIC
+           $ENV{NNPACK_INC_DIR}
+           )
 endif()
 
 #link 3rdparty libs
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp)
+if(BUILD_USE_GPU MATCHES ON)
+    if(BUILD_USE_CUDNN MATCHES ON)
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp PRIVATE ${CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+    else()
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp PRIVATE ${CUBLAS_LIBRARIES})
+    endif()
+else()
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp )
+endif()
 
 if(BUILD_EXAMPLES MATCHES ON)
     add_subdirectory(examples)
@@ -241,7 +351,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     )
 
 # Create cfg macro head file
-file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_SHARED_MSNHNET_MACRO}#endif")
+file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_NNPACK_MACRO}${USE_GPU_MACRO}${USE_CUDNN_MACRO}#endif")
 
 # Install macro head file
 install(FILES MsnhnetTmp/MsnhnetMacro.h

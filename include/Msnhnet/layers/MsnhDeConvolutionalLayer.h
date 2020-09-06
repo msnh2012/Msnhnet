@@ -12,22 +12,67 @@ namespace Msnhnet
 class MsnhNet_API DeConvolutionalLayer:public BaseLayer
 {
 public:
-    DeConvolutionalLayer(const int &batch, const int &height, const int &channel, const int &num,
-                         const int &kSize, const int &stride, const ActivationType &activation, const std::vector<float> &actParams);
-    float       *weights            =   nullptr;
-    float       *biases             =   nullptr;
-    float       *colImg             =   nullptr;
-    int         kSize               =   0;
-    int         stride              =   0;
-    int         strideX             =   0;
-    int         strideY             =   0;
-    int         padding             =   0;
-    int         dilation            =   0;
-    int         batchNorm           =   0;
-    virtual void forward(NetworkState &netState);
+    DeConvolutionalLayer(const int &batch, const int &height, const int &width, const int &channel, const int &num,
+                         const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY,const int &paddingX, const int &paddingY,
+                         const int &groups, const ActivationType &activation, const std::vector<float> &actParams,const int &useBias);
 
-   int deConvOutHeight();
+    virtual void forward(NetworkState &netState);
+    virtual void loadAllWeigths(std::vector<float> &weights);
+    void loadBias(float *const &bias, const int& len);
+    void loadWeights(float *const &weights, const int& len);
+
+    int deConvOutHeight();
     int deConvOutWidth();
+
+    float *getWeights() const;
+
+    float *getBiases() const;
+
+    float *getColImg() const;
+
+    int getKSizeX() const;
+
+    int getKSizeY() const;
+
+    int getStride() const;
+
+    int getStrideX() const;
+
+    int getStrideY() const;
+
+    int getPaddingX() const;
+
+    int getPaddingY() const;
+
+    int getUseBias() const;
+
+    int getNBiases() const;
+
+    int getNWeights() const;
+
+    int getGroups() const;
+
+private:
+    float       *_weights            =   nullptr;
+    float       *_biases             =   nullptr;
+    float       *_colImg             =   nullptr;
+
+    int         _kSizeX              =   0;
+    int         _kSizeY              =   0;
+
+    int         _stride              =   0;
+    int         _strideX             =   0;
+    int         _strideY             =   0;
+
+    int         _paddingX            =   0;
+    int         _paddingY            =   0;
+
+    int         _useBias             =   1;
+
+    int         _nBiases             =   0;
+    int         _nWeights            =   0;
+
+    int         _groups              =   1;
 };
 }
 #endif 

@@ -12,8 +12,11 @@ namespace Msnhnet
 class MsnhNet_API ActivationLayer:public BaseLayer
 {
 public:
-    ActivationLayer(const int &batch, const int &inputNum, const ActivationType &activation);
+    ActivationLayer(const int &batch, const int &width, const int &height, const int &channel, const int &inputNum, const ActivationType &activation);
     virtual void forward(NetworkState &netState);
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
 };
 }
 

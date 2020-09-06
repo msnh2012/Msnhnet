@@ -42,12 +42,14 @@ namespace MsnhViewer
         Mode highlight;
     };
 
+
     struct DataTypeTheme
     {
         QColor enable;
         QColor disable;
         QColor neutral;
     };
+
 
     class ThemeManager
     {
@@ -71,6 +73,7 @@ namespace MsnhViewer
         QHash<QString, DataTypeTheme> dataTypeThemes_;
     };
 }
+
 
 #endif
 

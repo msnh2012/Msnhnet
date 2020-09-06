@@ -6,30 +6,29 @@
 
 namespace MsnhViewer
 {
-
-   class MemberForm : public QGraphicsProxyWidget
+    /// \brief Handle the member form (draw the backround and own the dedicated QWidget)
+    class MemberForm : public QGraphicsProxyWidget
     {
         Q_OBJECT
 
-   public:
+    public:
         MemberForm(QGraphicsItem* parent, QVariant& data, QRectF const& boundingRect, QBrush const& brush);
 
-   signals:
+    signals:
         void dataUpdated(int);
         void dataUpdated(double);
         void dataUpdated(QString const&);
 
-   public slots:
+    public slots:
         void onDataUpdated(QVariant const& data);
 
-   protected:
+    protected:
         void paint(QPainter* painter, QStyleOptionGraphicsItem const*, QWidget*) override;
         QRectF boundingRect() const override { return boundingRect_; }
 
-   private:
-        QVariant& data_; 
-
-       QRectF boundingRect_;
+    private:
+        QVariant& data_; // reference on attribute's data
+        QRectF boundingRect_;
         QBrush brush_;
     };
 

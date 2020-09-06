@@ -16,13 +16,13 @@ public:
     static float sumArray(float *const &x, const int &xNum);
     static float meanArray(float *const &x, const int &xNum );
 
-   static float randUniform(float min, float max);
+    static float randUniform(float min, float max);
 
-   static float randNorm();
+    static float randNorm();
 
-   static unsigned int randomGen();
+    static unsigned int randomGen();
 
-   template<typename T>
+    template<typename T>
     static inline void swap(T &a, T &b)
     {
         T tmp;

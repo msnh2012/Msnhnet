@@ -13,37 +13,43 @@ public:
     Network(){}
     ~Network(){}
 
-   std::vector<BaseLayer*>   layers;
+    std::vector<BaseLayer*>   layers;
 
-   int             batch           =   0;       
+    int             batch           =   0;       
 
-   int             height          =   0;
+    int             height          =   0;
     int             width           =   0;
     int             channels        =   0;
     int             inputNum        =   0;
 
-   float          *input           =  nullptr; 
+    float          *input           =  nullptr; 
 
-   float          *output          =  nullptr; 
+    float          *output          =  nullptr; 
 
-   void forward(NetworkState &netState);
+    void forward(NetworkState &netState);
 };
 
 class MsnhNet_API NetworkState
 {
 public:
 
-   float           *truth          =  nullptr; 
+    float           *truth          =  nullptr; 
 
-   float           *input          =  nullptr; 
+    float           *input          =  nullptr; 
 
-   int             inputNum        =  0;
+    int             inputNum        =  0;
+    Network         *net            =  nullptr;
+    int             fixNan          =  0;
 
-   Network         *net            =  nullptr;
+    float           *workspace      =  nullptr; 
 
-   float           *workspace      =  nullptr; 
+#ifdef USE_GPU
+    float           *gpuWorkspace   =  nullptr; 
 
-   inline void releaseArr(float * value)
+    float           *gpuInputFp16   =  nullptr;
+#endif
+    template<typename T>
+    inline void releaseArr(T *& value)
     {
         if(value!=nullptr)
         {

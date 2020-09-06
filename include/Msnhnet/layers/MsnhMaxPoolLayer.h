@@ -3,6 +3,9 @@
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/layers/MsnhBaseLayer.h"
 #include "Msnhnet/utils/MsnhExport.h"
+#ifdef USE_GPU
+#include "Msnhnet/layers/cuda/MsnhMaxPoolLayerGPU.h"
+#endif
 
 namespace Msnhnet
 {
@@ -13,19 +16,11 @@ public:
                  const int &strideX, const int &strideY, const int &paddingX, const int &paddingY, const int &maxPoolDepth,
                  const int &outChannelsMp, const int &ceilMode, const int &antialiasing);
 
-   int         kSizeX              =   0;
-    int         kSizeY              =   0;
-    int         stride              =   0;
-    int         strideX             =   0;
-    int         strideY             =   0;
-    int         paddingX            =   0;
-    int         paddingY            =   0;
-    int         antialiasing        =   0;
-    int         maxPoolDepth        =   0;
-    int         outChannelsMp       =   0;
-    int         ceilMode            =   0;
+    virtual void forward(NetworkState &netState);
 
-   virtual void forward(NetworkState &netState);
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
 
 #ifdef USE_X86
     void forwardAvx(float *const &src, float *const &dst, const int &kSizeX, const int &kSizeY, const int &width,
@@ -33,8 +28,52 @@ public:
                     const int &paddingY, const int &stride, const int &batch);
 #endif
 
-   ~MaxPoolLayer();
+    ~MaxPoolLayer();
 
+    int getKSizeX() const;
+
+    int getKSizeY() const;
+
+    int getStride() const;
+
+    int getStrideX() const;
+
+    int getStrideY() const;
+
+    int getPaddingX() const;
+
+    int getPaddingY() const;
+
+    int getAntialiasing() const;
+
+    int getMaxPoolDepth() const;
+
+    int getOutChannelsMp() const;
+
+    int getCeilMode() const;
+
+protected:
+    int         _kSizeX              =   0;
+    int         _kSizeY              =   0;
+    int         _stride              =   0;
+    int         _strideX             =   0;
+    int         _strideY             =   0;
+    int         _paddingX            =   0;
+    int         _paddingY            =   0;
+    int         _antialiasing        =   0;
+    int         _maxPoolDepth        =   0;
+    int         _outChannelsMp       =   0;
+    int         _ceilMode            =   0;
+
+#ifdef USE_GPU
+#ifdef USE_CUDNN
+
+    cudnnPoolingDescriptor_t        _maxPoolDesc;
+
+    cudnnTensorDescriptor_t         _inputDesc;
+    cudnnTensorDescriptor_t         _outputDesc;
+#endif
+#endif
 };
 }
 

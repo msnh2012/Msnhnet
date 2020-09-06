@@ -17,22 +17,24 @@ namespace MsnhViewer
         setFlag(QGraphicsItem::ItemIsSelectable);
         setFlag(QGraphicsItem::ItemIsFocusable);
 
-       pen_.setStyle(Qt::SolidLine);
+        pen_.setStyle(Qt::SolidLine);
         pen_.setWidth(2);
 
-       selected_.setStyle(Qt::SolidLine);
+        selected_.setStyle(Qt::SolidLine);
         selected_.setColor(QColor(255, 180, 180, 255));
         selected_.setWidth(3);
     }
 
-   Link::~Link()
+
+    Link::~Link()
     {
         disconnect();
         Scene* pScene = static_cast<Scene*>(scene());
         pScene->removeLink(this);
     }
 
-   void Link::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
+
+    void Link::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
     {
         if (isSelected())
         {
@@ -43,27 +45,30 @@ namespace MsnhViewer
             setPen(pen_);
         }
 
-       if (to_ != nullptr)
+        if (to_ != nullptr)
         {
             updatePath();
         }
         QGraphicsPathItem::paint(painter, option, widget);
     }
 
-   void Link::connectFrom(Attribute* from)
+
+    void Link::connectFrom(Attribute* from)
     {
         from_ = from;
         from_->connect(this);
     }
 
-   void Link::connectTo(Attribute* to)
+
+    void Link::connectTo(Attribute* to)
     {
         to_ = to;
         to_->connect(this);
         updatePath();
     }
 
-   void Link::disconnect()
+
+    void Link::disconnect()
     {
         if (from_ != nullptr)
         {
@@ -71,14 +76,15 @@ namespace MsnhViewer
             from_ = nullptr;
         }
 
-       if (to_ != nullptr)
+        if (to_ != nullptr)
         {
             to_->disconnect(this);
             to_ = nullptr;
         }
     }
 
-   bool Link::isConnected()
+
+    bool Link::isConnected()
     {
         if ((from_ == nullptr) || (to_ == nullptr))
         {
@@ -87,55 +93,65 @@ namespace MsnhViewer
         return true;
     }
 
-   void Link::updatePath()
+
+    void Link::updatePath()
     {
         updatePath(to_->connectorPos());
     }
 
-   void Link::updatePath(QPointF const& end)
+
+    void Link::updatePath(QPointF const& end)
     {
         updatePath(from_->connectorPos(), end);
-        setZValue(-1); 
+        setZValue(-1); // force path to be under nodes
+    }
 
-   }
 
-   void Link::setColor(QColor const& color)
+    void Link::setColor(QColor const& color)
     {
         pen_.setColor(color);
     }
 
-   void Link::mousePressEvent(QGraphicsSceneMouseEvent* event)
+
+    void Link::mousePressEvent(QGraphicsSceneMouseEvent* event)
     {
         Scene* pScene = static_cast<Scene*>(scene());
 
-       setSelected(true);
+        setSelected(true);
 
-       to_->disconnect(this);
+        // disconnect from end.
+        to_->disconnect(this);
 
-       updatePath(event->scenePos());
+        // snap the path end to this point.
+        updatePath(event->scenePos());
 
-       for (auto& node : pScene->nodes())
+        // highlight available connections
+        for (auto& node : pScene->nodes())
         {
             node->highlight(from_);
         }
     }
 
-   void Link::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
-    {
 
-       updatePath(event->scenePos());
+    void Link::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
+    {
+        // snap the path end to this point.
+        updatePath(event->scenePos());
     }
 
-   void Link::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
+
+    void Link::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
     {
         Scene* pScene = static_cast<Scene*>(scene());
 
-       for (auto& node : pScene->nodes())
+        // Disable highlight
+        for (auto& node : pScene->nodes())
         {
             node->unhighlight();
         }
 
-       AttributeInput* input = qgraphicsitem_cast<AttributeInput*>(scene()->itemAt(event->scenePos(), QTransform()));
+        // try to connect to the destinaton.
+        AttributeInput* input = qgraphicsitem_cast<AttributeInput*>(scene()->itemAt(event->scenePos(), QTransform()));
         if (input != nullptr)
         {
             if (input->accept(from_))
@@ -145,54 +161,53 @@ namespace MsnhViewer
         }
         else
         {
-            connectTo(to_); 
-
-       }
+            connectTo(to_); // reset connection
+        }
     }
 
-   void Link::updatePath(QPointF const& start, QPointF const& end)
+
+    void Link::updatePath(QPointF const& start, QPointF const& end)
     {
         qreal dx = (end.x() - start.x()) * 0.5;
         qreal dy = (end.y() - start.y());
         QPointF c1{start.x() + dx, start.y() + dy * 0};
         QPointF c2{start.x() + dx, start.y() + dy * 1};
 
-       QPainterPath path;
+        QPainterPath path;
         path.moveTo(start);
         path.cubicTo(c1, c2, end);
 
-       setPath(path);
+        setPath(path);
     }
 
-   void Link::computeControlPoint(QPointF const& p0, QPointF const& p1, QPointF const& p2, double t,
+
+    void Link::computeControlPoint(QPointF const& p0, QPointF const& p1, QPointF const& p2, double t,
                                    QPointF& ctrl1, QPointF& ctrl2)
     {
         using namespace std;
 
-       double d01 = sqrt(pow(p1.x()-p0.x(), 2) + pow(p1.y() - p0.y(), 2));
+        double d01 = sqrt(pow(p1.x()-p0.x(), 2) + pow(p1.y() - p0.y(), 2));
         double d12 = sqrt(pow(p2.x()-p1.x(), 2) + pow(p2.y() - p1.y(), 2));
 
-       double fa = t * d01 / (d01 + d12);   
+        double fa = t * d01 / (d01 + d12);   // scaling factor for triangle Ta
+        double fb = t * d12 / (d01 + d12);   // ditto for Tb, simplifies to fb=t-fa
 
-       double fb = t * d12 / (d01 + d12);   
-
-       double p1x = p1.x() - fa * (p2.x() - p0.x()); 
-
-       double p1y = p1.y() - fa * (p2.y() - p0.y()); 
-
-       ctrl1.setX(p1x);
+        double p1x = p1.x() - fa * (p2.x() - p0.x()); // x2-x0 is the width of triangle T
+        double p1y = p1.y() - fa * (p2.y() - p0.y()); // y2-y0 is the height of T
+        ctrl1.setX(p1x);
         ctrl1.setY(p1y);
 
-       double p2x = p1.x() + fb * (p2.x() - p0.x());
+        double p2x = p1.x() + fb * (p2.x() - p0.x());
         double p2y = p1.y() + fb * (p2.y() - p0.y());
         ctrl2.setX(p2x);
         ctrl2.setY(p2y);
     }
 
-   void Link::drawSplines(QVector<QPointF> const& waypoints, double t)
-    {
 
-       QVector<QPointF> controlPoints;
+    void Link::drawSplines(QVector<QPointF> const& waypoints, double t)
+    {
+        // Compute control points
+        QVector<QPointF> controlPoints;
         for (int i = 0; i < waypoints.size() - 2; i += 1)
         {
             QPointF c1, c2;
@@ -203,17 +218,20 @@ namespace MsnhViewer
         auto nextWaypoint = waypoints.cbegin();
         auto ctrl = controlPoints.cbegin();
 
-       QPainterPath path;
+        //  Prepare path -> first spline is a quadratic bezier curve
+        QPainterPath path;
         path.moveTo(*(nextWaypoint++));
         path.quadTo(*(ctrl++), *(nextWaypoint++));
 
-       for (int i = 2; i < waypoints.size() - 1; i += 1)
+        // draw others
+        for (int i = 2; i < waypoints.size() - 1; i += 1)
         {
             path.cubicTo(*ctrl, *(ctrl+1), *(nextWaypoint++));
             ctrl += 2;
         }
 
-       path.quadTo(*ctrl, *nextWaypoint);
+        // finalize: last one is a quadratic bezier (like the first one)
+        path.quadTo(*ctrl, *nextWaypoint);
         setPath(path);
     }
 }

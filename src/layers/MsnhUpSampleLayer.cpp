@@ -1,104 +1,157 @@
 ﻿#include "Msnhnet/layers/MsnhUpSampleLayer.h"
 namespace Msnhnet
 {
-UpSampleLayer::UpSampleLayer(const int &batch, const int &width, const int &height, const int &channel, const int &stride, const float &scale)
+UpSampleLayer::UpSampleLayer(const int &batch, const int &width, const int &height, const int &channel, const int &strideX, const int &strideY,
+                             const float &scaleX, const float &scaleY, UpSampleParams::UpsampleType upsampleType, const int &alignCorners)
 {
-    this->type          =   LayerType::UPSAMPLE;
-    this->layerName     =   "UpSample        ";
+    this->_type          =   LayerType::UPSAMPLE;
+    this->_layerName     =   "UpSample        ";
 
-   this->batch         =   batch;
-    this->width         =   width;
-    this->height        =   height;
-    this->channel       =   channel;
+    this->_batch         =   batch;
+    this->_width         =   width;
+    this->_height        =   height;
+    this->_channel       =   channel;
 
-   this->outWidth      =   width*stride;
-    this->outHeight     =   height*stride;
-    this->outChannel    =   channel;
+    this->_upsampleType  =   upsampleType;
 
-   this->scale         =   scale;
-
-   int mStride         =   stride;
-
-   if(stride < 0)
+    if(upsampleType == UpSampleParams::NEAREST)
     {
-        mStride         =   -stride;
-        this->reverse   =   1;
-        this->outWidth  =   width/mStride;
-        this->outHeight =   height/mStride;
+        this->_outWidth  =   width*strideX;
+        this->_outHeight =   height*strideY;
     }
-    this->stride        =   mStride;
-    this->outputNum     =   this->outWidth * this->outHeight * this->outChannel;
-    this->inputNum      =   this->width * this->height  * this->channel;
-
-   if(!BaseLayer::isPreviewMode)
+    else if(upsampleType == UpSampleParams::BILINEAR)
     {
-        this->output        =   new float[static_cast<size_t>(this->outputNum * this->batch)]();
+        this->_outWidth  =   static_cast<int>(width*scaleX);
+        this->_outHeight =   static_cast<int>(height*scaleY);
     }
 
-   char msg[100];
-    if(this->reverse)
+    this->_outChannel    =   channel;
+
+    this->_scaleX        =   scaleX;
+    this->_scaleY        =   scaleY;
+
+    this->_strideX       =   strideX;
+    this->_strideY       =   strideY;
+
+    this->_outputNum     =   this->_outWidth * this->_outHeight * this->_outChannel;
+    this->_inputNum      =   this->_width * this->_height  * this->_channel;
+
+    this->_alignCorners  = alignCorners;
+
+    if(!BaseLayer::isPreviewMode)
     {
-#ifdef WIN32
-        sprintf_s(msg, "downsample              %2dx  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->stride, this->width, this->height, this->channel,
-                  this->outHeight, this->outHeight, this->outChannel);
-#else
-        sprintf(msg, "downsample              %2dx  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->stride, this->width, this->height, this->channel,
-                this->outHeight, this->outHeight, this->outChannel);
-#endif
-    }
-    else
-    {
-#ifdef WIN32
-        sprintf_s(msg, "upsample                %2dx  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->stride, this->width, this->height, this->channel,
-                  this->outHeight, this->outHeight, this->outChannel);
-#else
-        sprintf(msg, "upsample                %2dx  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->stride, this->width, this->height, this->channel,
-                this->outHeight, this->outHeight, this->outChannel);
+        this->_output        =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+#ifdef USE_GPU
+        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
 #endif
     }
 
-   this->layerDetail   = msg;
+    char msg[100];
+    if(upsampleType == UpSampleParams::NEAREST)
+    {
+#ifdef WIN32
+        sprintf_s(msg, "Upsample nearest      %2dx%2d  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->_strideX, this->_strideY, this->_width, this->_height, this->_channel,
+                  this->_outHeight, this->_outHeight, this->_outChannel);
+#else
+        sprintf(msg, "upsample              %2dx%2d  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->_strideX, this->_strideY, this->_width, this->_height, this->_channel,
+                this->_outHeight, this->_outHeight, this->_outChannel);
+#endif
+    }
+    else if(upsampleType == UpSampleParams::BILINEAR)
+    {
+#ifdef WIN32
+        sprintf_s(msg, "Upsample bili %4fx%4f  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->_scaleX, this->_scaleY, this->_width, this->_height, this->_channel,
+                  this->_outHeight, this->_outHeight, this->_outChannel);
+#else
+        sprintf(msg, "upsample bili %4fx%4f  %4d x%4d x%4d -> %4d x%4d x%4d\n", this->_scaleX, this->_scaleY, this->_width, this->_height, this->_channel,
+                this->_outHeight, this->_outHeight, this->_outChannel);
+#endif
+    }
+
+    this->_layerDetail   = msg;
 }
 
 void UpSampleLayer::forward(NetworkState &netState)
 {
+    auto st = TimeUtil::startRecord();
 
-   auto st = std::chrono::system_clock::now();
-
-   if(this->reverse)
+    if(this->_upsampleType == UpSampleParams::NEAREST)
     {
-        Blas::cpuUpSample(this->output, this->outWidth, this->outHeight, this->channel, this->batch, this->stride, 0, this->scale, netState.input);
+        Blas::cpuUpSample(netState.input, this->_width, this->_height, this->_channel, this->_batch, this->_strideX, this->_strideY, this->_scaleX, this->_output);
     }
     else
     {
-        Blas::cpuUpSample(netState.input, this->width, this->height, this->channel, this->batch, this->stride, 1, this->scale, this->output);
+        Blas::cpuBilinearResize(netState.input, this->_width, this->_height, this->_channel, this->_batch, this->_outWidth, this->_outHeight, this->_alignCorners, this->_output);
     }
 
-   auto so = std::chrono::system_clock::now();
-    this->forwardTime =   1.f * (std::chrono::duration_cast<std::chrono::microseconds>(so - st)).count()* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+    this->_forwardTime =   TimeUtil::getElapsedTime(st);
 
 }
 
+#ifdef USE_GPU
+void UpSampleLayer::forwardGPU(NetworkState &netState)
+{
+    this->recordCudaStart();
+
+    BlasGPU::gpuFill(this->_outputNum, 0, this->_gpuOutput, 1);
+
+    if(this->_upsampleType == UpSampleParams::NEAREST)
+    {
+        BlasGPU::gpuUpSample(netState.input, this->_width, this->_height, this->_channel, this->_batch, this->_strideX, this->_strideY, this->_scaleX, this->_gpuOutput);
+    }
+    else
+    {
+        BlasGPU::gpuBilinearResize(netState.input, this->_width, this->_height, this->_channel, this->_batch, this->_outWidth, this->_outHeight, this->_alignCorners, this->_gpuOutput);
+    }
+
+    this->recordCudaStop();
+}
+#endif
+
 void UpSampleLayer::resize(const int &width, const int &height)
 {
-    this->width         =   width;
-    this->height        =   height;
-    this->outWidth      =   width*this->stride;
-    this->outHeight     =   height*this->stride;
+    this->_width         =   width;
+    this->_height        =   height;
+    this->_outWidth      =   width*this->_strideX;
+    this->_outHeight     =   height*this->_strideY;
 
-   if(this->reverse)
+    this->_outputNum     =   this->_outWidth * this->_outHeight * this->_outChannel;
+
+    if(this->_output == nullptr)
     {
-        this->outWidth  =   width/this->stride;
-        this->outHeight =   height/this->stride;
+        throw Exception(1,"output can't be null", __FILE__, __LINE__, __FUNCTION__);
     }
 
-   this->outputNum     =   this->outWidth * this->outHeight * this->outChannel;
+    this->_output    = static_cast<float *>(realloc(this->_output, static_cast<size_t>(this->_outputNum * this->_batch) *sizeof(float)));
+}
 
-   if(this->output == nullptr)
-    {
-        throw Exception(1,"output can't be null", __FILE__, __LINE__);
-    }
+int UpSampleLayer::getStrideX() const
+{
+    return _strideX;
+}
 
-   this->output    = static_cast<float *>(realloc(this->output, static_cast<size_t>(this->outputNum * this->batch) *sizeof(float)));
+int UpSampleLayer::getStrideY() const
+{
+    return _strideY;
+}
+
+float UpSampleLayer::getScaleX() const
+{
+    return _scaleX;
+}
+
+float UpSampleLayer::getScaleY() const
+{
+    return _scaleY;
+}
+
+int UpSampleLayer::getAlignCorners() const
+{
+    return _alignCorners;
+}
+
+UpSampleParams::UpsampleType UpSampleLayer::getUpsampleType() const
+{
+    return _upsampleType;
 }
 }

@@ -16,26 +16,35 @@ public:
         });
         ColorTabel::instance().addColor("Inputs",QColor(0xce4a50));
 
-       NodeCreator::instance().addItem("AddOutputs",
+        NodeCreator::instance().addItem("AddOutputs",
         {
             {"input", "string", AttributeInfo::Type::input},
         });
         ColorTabel::instance().addColor("AddOutputs",QColor(0xB5B83E));
 
-       NodeCreator::instance().addItem("ConcatOutputs",
+        NodeCreator::instance().addItem("ConcatOutputs",
         {
             {"input", "string", AttributeInfo::Type::input},
         });
         ColorTabel::instance().addColor("ConcatOutputs",QColor(0xCF7531));
 
-       NodeCreator::instance().addItem("Empty",
+
+        NodeCreator::instance().addItem("Empty",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("Empty",QColor(0xB85646));
 
-       NodeCreator::instance().addItem("AddBlock",
+        NodeCreator::instance().addItem("Activate",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"act", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("Activate",QColor(0xcc2121));
+
+        NodeCreator::instance().addItem("AddBlock",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"act", "string", AttributeInfo::Type::member},
@@ -43,7 +52,7 @@ public:
         });
         ColorTabel::instance().addColor("AddBlock",QColor(0x377375));
 
-       NodeCreator::instance().addItem("BatchNorm",
+        NodeCreator::instance().addItem("BatchNorm",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"act", "string", AttributeInfo::Type::member},
@@ -51,7 +60,7 @@ public:
         });
         ColorTabel::instance().addColor("BatchNorm",QColor(0x5B9FFF));
 
-       NodeCreator::instance().addItem("ConcatBlock",
+        NodeCreator::instance().addItem("ConcatBlock",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"act", "string", AttributeInfo::Type::member},
@@ -59,7 +68,7 @@ public:
         });
         ColorTabel::instance().addColor("ConcatBlock",QColor(0x954f75));
 
-       NodeCreator::instance().addItem("Connected",
+        NodeCreator::instance().addItem("Connected",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"act", "string", AttributeInfo::Type::member},
@@ -67,7 +76,7 @@ public:
         });
         ColorTabel::instance().addColor("Connected",QColor(0x009394));
 
-       NodeCreator::instance().addItem("Conv",
+        NodeCreator::instance().addItem("Conv",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"filters", "string", AttributeInfo::Type::member},
@@ -81,7 +90,20 @@ public:
         });
         ColorTabel::instance().addColor("Conv",QColor(0x49D3D6));
 
-       NodeCreator::instance().addItem("ConvBN",
+        NodeCreator::instance().addItem("DeConv",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"filters", "string", AttributeInfo::Type::member},
+            {"kernel", "string", AttributeInfo::Type::member},
+            {"stride", "string", AttributeInfo::Type::member},
+            {"pad", "string", AttributeInfo::Type::member},
+            {"act", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("DeConv",QColor(0x27F2BD));
+
+
+        NodeCreator::instance().addItem("ConvBN",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"filters", "string", AttributeInfo::Type::member},
@@ -95,7 +117,7 @@ public:
         });
         ColorTabel::instance().addColor("ConvBN",QColor(0xF14BBB));
 
-       NodeCreator::instance().addItem("ConvDW",
+        NodeCreator::instance().addItem("ConvDW",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"filters", "string", AttributeInfo::Type::member},
@@ -109,25 +131,14 @@ public:
         });
         ColorTabel::instance().addColor("ConvDW",QColor(0xFF5186));
 
-       NodeCreator::instance().addItem("Crop",
+        NodeCreator::instance().addItem("Crop",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("Crop",QColor(0xA83A90));
 
-       NodeCreator::instance().addItem("DeConv",
-        {
-            {"input", "string", AttributeInfo::Type::input},
-            {"filters", "string", AttributeInfo::Type::member},
-            {"kernel", "string", AttributeInfo::Type::member},
-            {"stride", "string", AttributeInfo::Type::member},
-            {"act", "string", AttributeInfo::Type::member},
-            {"output", "string", AttributeInfo::Type::output},
-        });
-        ColorTabel::instance().addColor("DeConv",QColor(0x27F2BD));
-
-       NodeCreator::instance().addItem("LocalAvgPool",
+        NodeCreator::instance().addItem("LocalAvgPool",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"filters", "string", AttributeInfo::Type::member},
@@ -138,7 +149,14 @@ public:
         });
         ColorTabel::instance().addColor("LocalAvgPool",QColor(0xFFDB97));
 
-       NodeCreator::instance().addItem("MaxPool",
+        NodeCreator::instance().addItem("GlobalAvgPool",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("GlobalAvgPool",QColor(0xFFDB97));
+
+        NodeCreator::instance().addItem("MaxPool",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"filters", "string", AttributeInfo::Type::member},
@@ -149,7 +167,8 @@ public:
         });
         ColorTabel::instance().addColor("MaxPool",QColor(0x3353CA));
 
-       NodeCreator::instance().addItem("Padding",
+
+        NodeCreator::instance().addItem("Padding",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"pad", "string", AttributeInfo::Type::member},
@@ -157,7 +176,43 @@ public:
         });
         ColorTabel::instance().addColor("Padding",QColor(0xFFAA5A));
 
-       NodeCreator::instance().addItem("Res2Block",
+        NodeCreator::instance().addItem("Permute",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"dim0", "string", AttributeInfo::Type::member},
+            {"dim1", "string", AttributeInfo::Type::member},
+            {"dim2", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("Permute",QColor(0xaf2178));
+
+        NodeCreator::instance().addItem("View",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("View",QColor(0x1f4aa3));
+
+        NodeCreator::instance().addItem("Reduction",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"type", "string", AttributeInfo::Type::member},
+            {"axis", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("Reduction",QColor(0xe0710f));
+
+        NodeCreator::instance().addItem("VarOp",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"type", "string", AttributeInfo::Type::member},
+            {"layer", "string", AttributeInfo::Type::member},
+            {"const", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("VarOp",QColor(0xff4e1e));
+
+        NodeCreator::instance().addItem("Res2Block",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"act", "string", AttributeInfo::Type::member},
@@ -165,7 +220,7 @@ public:
         });
         ColorTabel::instance().addColor("Res2Block",QColor(0x6DACFF));
 
-       NodeCreator::instance().addItem("ResBlock",
+        NodeCreator::instance().addItem("ResBlock",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"act", "string", AttributeInfo::Type::member},
@@ -173,32 +228,37 @@ public:
         });
         ColorTabel::instance().addColor("ResBlock",QColor(0xFF5B74));
 
-       NodeCreator::instance().addItem("Route",
+        NodeCreator::instance().addItem("Route",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"group", "string", AttributeInfo::Type::member},
+            {"type", "string", AttributeInfo::Type::member},
+            {"act", "string", AttributeInfo::Type::member},
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("Route",QColor(0xBB87FF));
 
-       NodeCreator::instance().addItem("SoftMax",
+        NodeCreator::instance().addItem("SoftMax",
         {
             {"input", "string", AttributeInfo::Type::input},
-            {"group", "string", AttributeInfo::Type::member},
+            {"groups", "string", AttributeInfo::Type::member},
+            {"temperature", "string", AttributeInfo::Type::member},
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("SoftMax",QColor(0x60FFDF));
 
-       NodeCreator::instance().addItem("UpSample",
+        NodeCreator::instance().addItem("UpSample",
         {
             {"input", "string", AttributeInfo::Type::input},
-            {"scale", "string", AttributeInfo::Type::member},
+            {"type", "string", AttributeInfo::Type::member},
             {"stride", "string", AttributeInfo::Type::member},
+            {"scale", "string", AttributeInfo::Type::member},
+            {"algin", "string", AttributeInfo::Type::member},
             {"output", "string", AttributeInfo::Type::output},
         });
         ColorTabel::instance().addColor("UpSample",QColor(0x886BFF));
 
-       NodeCreator::instance().addItem("Yolov3",
+        NodeCreator::instance().addItem("Yolov3",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"classes", "string", AttributeInfo::Type::member},
@@ -206,7 +266,7 @@ public:
         });
         ColorTabel::instance().addColor("Yolov3",QColor(0xFF5000));
 
-       NodeCreator::instance().addItem("Yolov3Out",
+        NodeCreator::instance().addItem("Yolov3Out",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"conf", "string", AttributeInfo::Type::member},
@@ -216,6 +276,7 @@ public:
     }
 };
 
-}
-#endif 
 
+
+}
+#endif // MSNHVIEWERNODECFG_H

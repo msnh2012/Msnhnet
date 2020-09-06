@@ -13,7 +13,7 @@ class MsnhNet_API IO
 {
 public:
 
-   template<typename T>
+    template<typename T>
     inline static void printVector(std::vector<T>& v,bool needASCII = false)
     {
         if(std::is_same<T,char>::value||
@@ -40,13 +40,13 @@ public:
            std::is_same<T,double_t>::value)
         {
 
-       }
+        }
         else
         {
-            throw Exception(1, "Type not support .", __FILE__,__LINE__);
+            throw Exception(1, "Type not support .", __FILE__,__LINE__, __FUNCTION__);
         }
 
-       for (typename std::vector<T>::iterator it = v.begin(); it != v.end(); it++)
+        for (typename std::vector<T>::iterator it = v.begin(); it != v.end(); it++)
         {
             if(needASCII)
                 std::cout << static_cast<int>(*it) << std::endl;
@@ -55,7 +55,7 @@ public:
         }
     }
 
-   template<typename T>
+    template<typename T>
     static void saveVector(std::vector<T>& v,const char* path,const char* format)
     {
         if(std::is_same<T,char>::value||
@@ -82,15 +82,15 @@ public:
            std::is_same<T,double_t>::value)
         {
 
-       }
+        }
         else
         {
-            throw Exception(1, "Type not support .", __FILE__,__LINE__);
+            throw Exception(1, "Type not support .", __FILE__,__LINE__, __FUNCTION__);
         }
         std::ofstream outfile(path,std::ios::trunc);
         if(!outfile)
         {
-            throw Exception(1, "File open err.", __FILE__,__LINE__);
+            throw Exception(1, "File open err.", __FILE__,__LINE__, __FUNCTION__);
         }
         for (typename std::vector<T>::iterator it = v.begin(); it != v.end(); it++)
         {
@@ -107,12 +107,12 @@ public:
                 outfile<<*it<<format;
             }
 
-       }
+        }
         outfile.flush();
         outfile.close();
     }
 
-   template<typename T>
+    template<typename T>
     static void readVector(std::vector<T>& v,const char* path,const char* format)
     {
         if(std::is_same<T,char>::value||
@@ -139,15 +139,15 @@ public:
            std::is_same<T,double_t>::value)
         {
 
-       }
+        }
         else
         {
-            throw Exception(1, "Type not support .", __FILE__,__LINE__);
+            throw Exception(1, "Type not support .", __FILE__,__LINE__, __FUNCTION__);
         }
         std::ifstream inFile(path,std::ios::in);
         if(!inFile)
         {
-            throw Exception(1, "File open err.", __FILE__,__LINE__);
+            throw Exception(1, "File open err.", __FILE__,__LINE__, __FUNCTION__);
         }
         std::ostringstream tmpStr;
         tmpStr << inFile.rdbuf();
@@ -156,11 +156,11 @@ public:
         std::vector<std::string> datas;
         ExString::split(datas,str,format);
 
-       for (auto it = datas.begin(); it != datas.end(); it++)
+        for (auto it = datas.begin(); it != datas.end(); it++)
         {
             std::istringstream iss(*it);
 
-           if(std::is_same<T,char>::value||std::is_same<T,int8_t>::value)
+            if(std::is_same<T,char>::value||std::is_same<T,int8_t>::value)
             {
                 int num;
                 iss>>num;
@@ -181,12 +181,12 @@ public:
         }
     }
 
-   static void readVectorStr(std::vector<std::string>& v,const char* path,const char* format)
+    static void readVectorStr(std::vector<std::string>& v,const char* path,const char* format)
     {
         std::ifstream inFile(path,std::ios::in);
         if(!inFile)
         {
-            throw Exception(1, "File open err.", __FILE__,__LINE__);
+            throw Exception(1, "File open err.", __FILE__,__LINE__, __FUNCTION__);
         }
         std::ostringstream tmpStr;
         tmpStr << inFile.rdbuf();

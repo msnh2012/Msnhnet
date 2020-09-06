@@ -29,14 +29,18 @@ class MsnhNet_API AddBlockLayer:public BaseLayer
 public:
     AddBlockLayer(const int &batch, NetBuildParams &params, std::vector<std::vector<BaseParams*>> &branchParams, ActivationType &activation, const std::vector<float> &actParams);
 
-   std::vector<std::vector<BaseLayer *>> branchLayers;
+    std::vector<std::vector<BaseLayer *>> branchLayers;
     float       *activationInput    =   nullptr;
 
-   void loadAllWeigths(std::vector<float> &weights);
+    void loadAllWeigths(std::vector<float> &weights);
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
 
-   ~AddBlockLayer();
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
+
+    ~AddBlockLayer();
 };
 }
 

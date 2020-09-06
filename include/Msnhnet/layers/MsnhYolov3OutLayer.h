@@ -8,38 +8,82 @@
 #include "Msnhnet/utils/MsnhExVector.h"
 #include "Msnhnet/utils/MsnhExport.h"
 
+#ifdef USE_GPU
+#include "Msnhnet/layers/cuda/MsnhYolov3OutLayerGPU.h"
+#include "Msnhnet/layers/cuda/MsnhYolov3LayerGPU.h"
+#endif
+
 namespace Msnhnet
 {
 class MsnhNet_API Yolov3OutLayer:public BaseLayer
 {
 public:
     Yolov3OutLayer(const int &batch, const int &orgWidth, const int &orgHeight, std::vector<int> &yolov3Indexes, std::vector<Yolov3Info> &yolov3LayersInfo,
-                   const float &confThresh, const float &nmsThresh, const int &useSoftNms);
+                   const float &confThresh, const float &nmsThresh, const int &useSoftNms, const YoloType &yoloType);
     ~Yolov3OutLayer();
-    float   confThresh  = 0.6f;
-    float   nmsThresh   = 0.4f;
-    int     useSoftNms  = 0;
-    int     pixels      = 0;
 
-   int     orgHeight   =   0;
-    int     orgWidth    =   0;
-
-   std::vector<int> yolov3Indexes;
-    std::vector<Yolov3Info> yolov3LayersInfo;
-
-   int     yolov3AllInputNum   =   0;      
-
-   float   *allInput           =   nullptr;
-    float   *shuffleInput       =   nullptr;
-
-   std::vector<bool> batchHasBox;
+    std::vector<bool> batchHasBox;
     std::vector<std::vector<Yolov3Box>> finalOut;
 
-   virtual void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
 
-   static Yolov3Box bboxResize2org(Yolov3Box &box, const Point2I &currentShape , const Point2I &orgShape);
+#ifdef USE_GPU
+    virtual void forwardGPU(NetworkState &netState);
+#endif
 
-   static std::vector<Yolov3Box> nms(const std::vector<Yolov3Box> &bboxes, const float& nmsThresh, const bool &useSoftNms=false, const float &sigma =0.3f);
+    static Yolov3Box bboxResize2org(Yolov3Box &box, const Point2I &currentShape , const Point2I &orgShape);
+
+    static std::vector<Yolov3Box> nms(const std::vector<Yolov3Box> &bboxes, const float& _nmsThresh, const bool &useSoftNms=false, const float &sigma =0.3f);
+
+    float getConfThresh() const;
+
+    float getNmsThresh() const;
+
+    int getUseSoftNms() const;
+
+    int getPixels() const;
+
+    int getOrgHeight() const;
+
+    int getOrgWidth() const;
+
+    YoloType getYoloType() const;
+
+    std::vector<int> getYolov3Indexes() const;
+
+    std::vector<Yolov3Info> getYolov3LayersInfo() const;
+
+    int getYolov3AllInputNum() const;
+
+    float *getAllInput() const;
+
+    float *getShuffleInput() const;
+
+protected:
+    float   _confThresh  = 0.6f;
+    float   _nmsThresh   = 0.4f;
+    int     _useSoftNms  = 0;
+    int     _pixels      = 0;
+
+    int     _orgHeight   =   0;
+    int     _orgWidth    =   0;
+    float em = 0.f;
+
+    YoloType _yoloType   =   YoloType::YoloV3_NORMAL;
+
+    std::vector<int>        _yolov3Indexes;
+    std::vector<Yolov3Info> _yolov3LayersInfo;
+
+    int     _yolov3AllInputNum   =   0;      
+
+    float   *_allInput           =   nullptr;
+    float   *_shuffleInput       =   nullptr;
+
+#ifdef USE_GPU
+    float   *_allInputGpu        =   nullptr;
+    float   *_shuffleInputGpu    =   nullptr;
+#endif
+
 };
 }
 

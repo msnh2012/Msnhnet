@@ -346,6 +346,6 @@ yolov3:
 # yolov3out
 yolov3out:
   layers: 33,42,51
-  confThresh: 0.6
-  nmsThresh: 0.3
+  confThresh: 0.5
+  nmsThresh: 0.6
   useSoftNms: 0

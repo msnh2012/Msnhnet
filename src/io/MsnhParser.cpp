@@ -17,19 +17,27 @@ void Parser::clearParams()
 {
     BaseParams::index = 0;
 
-   for (size_t i = 0; i < params.size(); ++i)
+    for (size_t i = 0; i < params.size(); ++i)
     {
         if(params[i]!=nullptr)
         {
 
-           if(params[i]->type == LayerType::CONFIG)
+            if(params[i]->type == LayerType::CONFIG)
             {
                 delete reinterpret_cast<NetConfigParams*>(params[i]);
 
-           }
+            }
             else if(params[i]->type == LayerType::CONVOLUTIONAL)
             {
                 delete reinterpret_cast<ConvParams*>(params[i]);
+            }
+            else if(params[i]->type == LayerType::ACTIVE)
+            {
+                delete reinterpret_cast<ActivationParams*>(params[i]);
+            }
+            else if(params[i]->type == LayerType::SOFTMAX)
+            {
+                delete reinterpret_cast<SoftMaxParams*>(params[i]);
             }
             else if(params[i]->type == LayerType::EMPTY)
             {
@@ -75,6 +83,22 @@ void Parser::clearParams()
             {
                 delete reinterpret_cast<RouteParams*>(params[i]);
             }
+            else if(params[i]->type == LayerType::VIEW)
+            {
+                delete reinterpret_cast<ViewParams*>(params[i]);
+            }
+            else if(params[i]->type == LayerType::PERMUTE)
+            {
+                delete reinterpret_cast<PermuteParams*>(params[i]);
+            }
+            else if(params[i]->type == LayerType::REDUCTION)
+            {
+                delete reinterpret_cast<ReductionParams*>(params[i]);
+            }
+            else if(params[i]->type == LayerType::VARIABLE_OP)
+            {
+                delete reinterpret_cast<VariableOpParams*>(params[i]);
+            }
             else if(params[i]->type == LayerType::UPSAMPLE)
             {
                 delete reinterpret_cast<UpSampleParams*>(params[i]);
@@ -90,7 +114,7 @@ void Parser::clearParams()
             params[i] = nullptr;
         }
 
-       if(i == (params.size()-1))
+        if(i == (params.size()-1))
         {
             params.clear();
         }
@@ -101,19 +125,19 @@ void Parser::readCfg(const std::string &path)
 {
     clearParams();
 
-   try
+    try
     {
         YAML::Node root = YAML::LoadFile(path);
 
-       int index = 0;
+        int index = 0;
 
-       for (YAML::const_iterator it = root.begin(); it != root.end(); ++it)
+        for (YAML::const_iterator it = root.begin(); it != root.end(); ++it)
         {
             index++;
 
-           std::string node = it->first.as<std::string>();
+            std::string node = it->first.as<std::string>();
 
-           if(index == 1)
+            if(index == 1)
             {
                 if(node == "config")
                 {
@@ -121,22 +145,22 @@ void Parser::readCfg(const std::string &path)
                     {
                         NetConfigParams *netConfigParams = new NetConfigParams(false); 
 
-                       parseConfigParams(netConfigParams, it);
+                        parseConfigParams(netConfigParams, it);
                         params.push_back(netConfigParams);
                         continue;
                     }
                     else
                     {
-                        throw Exception(1,"[config] content error", __FILE__, __LINE__);
+                        throw Exception(1,"[config] content error", __FILE__, __LINE__, __FUNCTION__);
                     }
                 }
                 else
                 {
-                    throw Exception(1,"first node must be [config]", __FILE__, __LINE__);
+                    throw Exception(1,"first node must be [config]", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
 
-           if(node == "maxpool")
+            if(node == "maxpool")
             {
                 if(it->second.Type() == YAML::NodeType::Map)
                 {
@@ -146,7 +170,20 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[maxpool] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[maxpool] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "act")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    ActivationParams *activationParams = new ActivationParams(true);
+                    parseActivationParams(activationParams, it);
+                    params.push_back(activationParams);
+                }
+                else
+                {
+                    throw Exception(1,"[act] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "padding")
@@ -159,7 +196,46 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[padding] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[padding] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "reduction")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    ReductionParams *reductionParams = new ReductionParams(true);
+                    parseReductionParams(reductionParams, it);
+                    params.push_back(reductionParams);
+                }
+                else
+                {
+                    throw Exception(1,"[reduction] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "permute")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    PermuteParams *permuteParams = new PermuteParams(true);
+                    parsePermuteParams(permuteParams, it);
+                    params.push_back(permuteParams);
+                }
+                else
+                {
+                    throw Exception(1,"[permute] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "view")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    ViewParams *viewParams = new ViewParams(true);
+                    parseViewParams(viewParams, it);
+                    params.push_back(viewParams);
+                }
+                else
+                {
+                    throw Exception(1,"[view] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "localavgpool")
@@ -172,8 +248,13 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[maxpool] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[localavgpool] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
+            }
+            else if(node == "globalavgpool")
+            {
+                GlobalAvgPoolParams *globalAvgPoolParams = new GlobalAvgPoolParams(true);
+                params.push_back(globalAvgPoolParams);
             }
             else if(node == "conv")
             {
@@ -185,7 +266,20 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[conv] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[conv] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "deconv")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    DeConvParams *deconvParams = new DeConvParams(true);
+                    parseDeConvParams(deconvParams, it);
+                    params.push_back(deconvParams);
+                }
+                else
+                {
+                    throw Exception(1,"[deconv] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "connect")
@@ -198,7 +292,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[connect] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[connect] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "batchnorm")
@@ -211,7 +305,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[batchnorm] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[batchnorm] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "resblock")
@@ -220,32 +314,32 @@ void Parser::readCfg(const std::string &path)
                 {
                     int size = 1;
 
-                   ActivationType act = ActivationType::NONE;
+                    ActivationType act = ActivationType::NONE;
                     std::vector<float> tmpActParams;
 
-                   for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+                    for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                     {
                         std::string key     =   it2->first.as<std::string>();
 
-                       if(key == "size")
+                        if(key == "size")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
-                           if(!ExString::strToInt(value, size))
+                            if(!ExString::strToInt(value, size))
                             {
-                                throw Exception(1,"[resblock] size can't convert to int", __FILE__, __LINE__);
+                                throw Exception(1,"[resblock] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                             }
                         }
 
-                       if(key == "activation")
+                        if(key == "activation")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
-                           std::vector<std::string> splits;
+                            std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
                             act = Activations::getActivation(splits[0]);
 
-                           if(splits.size()>1)
+                            if(splits.size()>1)
                             {
                                 for (size_t i = 1; i < splits.size(); ++i)
                                 {
@@ -257,10 +351,10 @@ void Parser::readCfg(const std::string &path)
                         }
                     }
 
-                   for (int i = 0; i < size; ++i)
+                    for (int i = 0; i < size; ++i)
                     {
 
-                       ResBlockParams *resBlockParams = new ResBlockParams(true);
+                        ResBlockParams *resBlockParams = new ResBlockParams(true);
                         parseResBlockParams(resBlockParams, it);
                         resBlockParams->activation = act;
                         params.push_back(resBlockParams);
@@ -268,7 +362,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[resblock] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[resblock] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "res2block")
@@ -277,32 +371,32 @@ void Parser::readCfg(const std::string &path)
                 {
                     int size = 1;
 
-                   ActivationType act = ActivationType::NONE;
+                    ActivationType act = ActivationType::NONE;
                     std::vector<float> tmpActParams;
 
-                   for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+                    for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                     {
                         std::string key     =   it2->first.as<std::string>();
 
-                       if(key == "size")
+                        if(key == "size")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
-                           if(!ExString::strToInt(value, size))
+                            if(!ExString::strToInt(value, size))
                             {
-                                throw Exception(1,"[res2block] size can't convert to int", __FILE__, __LINE__);
+                                throw Exception(1,"[res2block] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                             }
                         }
 
-                       if(key == "activation")
+                        if(key == "activation")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
-                           std::vector<std::string> splits;
+                            std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
                             act = Activations::getActivation(splits[0]);
 
-                           if(splits.size()>1)
+                            if(splits.size()>1)
                             {
                                 for (size_t i = 1; i < splits.size(); ++i)
                                 {
@@ -314,7 +408,7 @@ void Parser::readCfg(const std::string &path)
                         }
                     }
 
-                   for (int i = 0; i < size; ++i)
+                    for (int i = 0; i < size; ++i)
                     {
                         Res2BlockParams *res2BlockParams  = new Res2BlockParams(true);
                         parseRes2BlockParams(res2BlockParams, it);
@@ -325,7 +419,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[res2block] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[res2block] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "addblock")
@@ -334,32 +428,32 @@ void Parser::readCfg(const std::string &path)
                 {
                     int size = 1;
 
-                   ActivationType act = ActivationType::NONE;
+                    ActivationType act = ActivationType::NONE;
                     std::vector<float> tmpActParams;
 
-                   for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+                    for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                     {
                         std::string key     =   it2->first.as<std::string>();
 
-                       if(key == "size")
+                        if(key == "size")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
-                           if(!ExString::strToInt(value, size))
+                            if(!ExString::strToInt(value, size))
                             {
-                                throw Exception(1,"[addblock] size can't convert to int", __FILE__, __LINE__);
+                                throw Exception(1,"[addblock] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                             }
                         }
 
-                       if(key == "activation")
+                        if(key == "activation")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
-                           std::vector<std::string> splits;
+                            std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
                             act = Activations::getActivation(splits[0]);
 
-                           if(splits.size()>1)
+                            if(splits.size()>1)
                             {
                                 for (size_t i = 1; i < splits.size(); ++i)
                                 {
@@ -371,7 +465,7 @@ void Parser::readCfg(const std::string &path)
                         }
                     }
 
-                   for (int i = 0; i < size; ++i)
+                    for (int i = 0; i < size; ++i)
                     {
                         AddBlockParams *addBlockParams  = new AddBlockParams(true);
                         parseAddBlockParams(addBlockParams, it);
@@ -387,32 +481,32 @@ void Parser::readCfg(const std::string &path)
                 {
                     int size = 1;
 
-                   ActivationType act = ActivationType::NONE;
+                    ActivationType act = ActivationType::NONE;
                     std::vector<float> tmpActParams;
 
-                   for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+                    for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                     {
                         std::string key     =   it2->first.as<std::string>();
 
-                       if(key == "size")
+                        if(key == "size")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
-                           if(!ExString::strToInt(value, size))
+                            if(!ExString::strToInt(value, size))
                             {
-                                throw Exception(1,"[concatblock] size can't convert to int", __FILE__, __LINE__);
+                                throw Exception(1,"[concatblock] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                             }
                         }
 
-                       if(key == "activation")
+                        if(key == "activation")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
-                           std::vector<std::string> splits;
+                            std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
                             act = Activations::getActivation(splits[0]);
 
-                           if(splits.size()>1)
+                            if(splits.size()>1)
                             {
                                 for (size_t i = 1; i < splits.size(); ++i)
                                 {
@@ -424,7 +518,7 @@ void Parser::readCfg(const std::string &path)
                         }
                     }
 
-                   for (int i = 0; i < size; ++i)
+                    for (int i = 0; i < size; ++i)
                     {
                         ConcatBlockParams *concatBlockParams  = new ConcatBlockParams(true);
                         parseConcatBlockParams(concatBlockParams, it);
@@ -435,7 +529,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[addblock] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[addblock] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "route")
@@ -448,7 +542,33 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[route] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[route] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "varop")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    VariableOpParams *variableOpParams = new VariableOpParams(true);
+                    parseVariableOpParams(variableOpParams, it);
+                    params.push_back(variableOpParams);
+                }
+                else
+                {
+                    throw Exception(1,"[varop] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "softmax")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    SoftMaxParams *softMaxParams = new SoftMaxParams(true);
+                    parseSoftMaxParams(softMaxParams, it);
+                    params.push_back(softMaxParams);
+                }
+                else
+                {
+                    throw Exception(1,"[softmax] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "upsample")
@@ -461,7 +581,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[upsample] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[upsample] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "yolov3")
@@ -476,7 +596,7 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[yolov3] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[yolov3] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "yolov3out")
@@ -491,18 +611,18 @@ void Parser::readCfg(const std::string &path)
                 }
                 else
                 {
-                    throw Exception(1,"[yolov3] content error", __FILE__, __LINE__);
+                    throw Exception(1,"[yolov3out] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else
             {
-                throw Exception(1,"LayerType [" + node + "] is not supported", __FILE__, __LINE__);
+                throw Exception(1,"LayerType [" + node + "] is not supported", __FILE__, __LINE__, __FUNCTION__);
             }
         }
     }
     catch(YAML::Exception ex)
     {
-        throw Exception(1,ex.what(), __FILE__, __LINE__);
+        throw Exception(1,ex.what(), __FILE__, __LINE__, __FUNCTION__);
     }
     return;
 }
@@ -512,33 +632,33 @@ void Parser::readMsnhBin(const std::string &path)
     std::ifstream readFile;
     readFile.open(path,std::ios::in|std::ios::binary);
 
-   if(!readFile.is_open())
+    if(!readFile.is_open())
     {
-        throw Exception(0,std::string(path) + " open filed!", __FILE__, __LINE__);
+        throw Exception(0,std::string(path) + " open filed!", __FILE__, __LINE__, __FUNCTION__);
     }
 
-   readFile.seekg(0, std::ios::end);
+    readFile.seekg(0, std::ios::end);
     auto fsize = readFile.tellg();
     readFile.seekg(0, std::ios::beg);
 
-   if (fsize < 1)
+    if (fsize < 1)
     {
-        throw Exception(0,std::string(path) + " read filed!", __FILE__, __LINE__);
+        throw Exception(0,std::string(path) + " read filed!", __FILE__, __LINE__, __FUNCTION__);
     }
 
-   if (fsize % 4 != 0)
+    if (fsize % 4 != 0)
     {
-        throw Exception(0,std::string(path) + " file error!", __FILE__, __LINE__);
+        throw Exception(0,std::string(path) + " file error!", __FILE__, __LINE__, __FUNCTION__);
     }
 
-   char *data = new char[static_cast<size_t>(fsize)]();
+    char *data = new char[static_cast<size_t>(fsize)]();
     readFile.read(data, fsize);
 
-   Float32 float32;
+    Float32 float32;
 
-   msnhF32Weights.clear();
+    msnhF32Weights.clear();
 
-   for (int i = 0;  i < fsize; i+=4)
+    for (int i = 0;  i < fsize; i+=4)
     {
         float32.bytes[0] = static_cast<uint8_t>(data[i + 0]);
         float32.bytes[1] = static_cast<uint8_t>(data[i + 1]);
@@ -547,7 +667,7 @@ void Parser::readMsnhBin(const std::string &path)
         msnhF32Weights.push_back(float32.val);
     }
 
-   delete[] data;
+    delete[] data;
     data = nullptr;
 }
 
@@ -558,37 +678,55 @@ void Parser::parseConfigParams(NetConfigParams *netConfigParams, YAML::const_ite
         std::string key         =   it->first.as<std::string>();
         std::string value       =   it->second.as<std::string>();
 
-       if(key == "batch")
+        if(key == "batch")
         {
             if(!ExString::strToInt(value, netConfigParams->batch))
             {
-                throw Exception(1,"[config] width can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[config] width can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "width")
         {
             if(!ExString::strToInt(value, netConfigParams->width))
             {
-                throw Exception(1,"[config] width can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[config] width can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "height")
         {
             if(!ExString::strToInt(value, netConfigParams->height))
             {
-                throw Exception(1,"[config] height can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[config] height can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "channels")
         {
             if(!ExString::strToInt(value, netConfigParams->channels))
             {
-                throw Exception(1,"[config] channels can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[config] channels can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [config]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [config]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+}
+
+void Parser::parseActivationParams(ActivationParams *activationParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key         =   it->first.as<std::string>();
+        std::string value       =   it->second.as<std::string>();
+
+        if(key == "activation")
+        {
+            activationParams->activation = Activations::getActivation(value);
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [act]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -598,133 +736,133 @@ void Parser::parseMaxPoolParams(MaxPoolParams *maxPoolParams, YAML::const_iterat
     for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
 
-       std::string key     =   it->first.as<std::string>();
+        std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "kSize")
+        if(key == "kSize")
         {
             if(!ExString::strToInt(value, maxPoolParams->kSize))
             {
-                throw Exception(1,"[maxpool] kSize can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeX")
         {
             if(!ExString::strToInt(value, maxPoolParams->kSizeX))
             {
-                throw Exception(1,"[maxpool] kSizeX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] kSizeX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeY")
         {
             if(!ExString::strToInt(value, maxPoolParams->kSizeY))
             {
-                throw Exception(1,"[maxpool] kSizeY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] kSizeY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "stride")
         {
             if(!ExString::strToInt(value, maxPoolParams->stride))
             {
-                throw Exception(1,"[maxpool] stride can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] stride can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideX")
         {
             if(!ExString::strToInt(value, maxPoolParams->strideX))
             {
-                throw Exception(1,"[maxpool] strideX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] strideX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideY")
         {
             if(!ExString::strToInt(value, maxPoolParams->strideY))
             {
-                throw Exception(1,"[maxpool] strideY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] strideY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "maxPoolDepth")
         {
             if(!ExString::strToInt(value, maxPoolParams->maxPoolDepth))
             {
-                throw Exception(1,"[maxpool] maxPoolDepth can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] maxPoolDepth can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "outChannels")
         {
             if(!ExString::strToInt(value, maxPoolParams->outChannels))
             {
-                throw Exception(1,"[maxpool] outChannels can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] outChannels can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "padding")
         {
             if(!ExString::strToInt(value, maxPoolParams->padding))
             {
-                throw Exception(1,"[maxpool] padding can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] padding can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingX")
         {
             if(!ExString::strToInt(value, maxPoolParams->paddingX))
             {
-                throw Exception(1,"[maxpool] paddingX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] paddingX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingY")
         {
             if(!ExString::strToInt(value, maxPoolParams->paddingY))
             {
-                throw Exception(1,"[maxpool] paddingY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] paddingY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "ceilMode")
         {
             if(!ExString::strToInt(value, maxPoolParams->ceilMode))
             {
-                throw Exception(1,"[maxpool] ceilMode can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[maxpool] ceilMode can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [maxpool]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [maxpool]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
-   if(maxPoolParams->strideX < 0 || maxPoolParams->strideY < 0)
+    if(maxPoolParams->strideX < 0 || maxPoolParams->strideY < 0)
     {
         if(maxPoolParams->strideX < 0 )
         {
             maxPoolParams->strideX = maxPoolParams->stride;
         }
 
-       if(maxPoolParams->strideY < 0 )
+        if(maxPoolParams->strideY < 0 )
         {
             maxPoolParams->strideY = maxPoolParams->stride;
         }
     }
 
-   if(maxPoolParams->kSizeX < 0 || maxPoolParams->kSizeY < 0)
+    if(maxPoolParams->kSizeX < 0 || maxPoolParams->kSizeY < 0)
     {
         if(maxPoolParams->kSizeX < 0 )
         {
             maxPoolParams->kSizeX = maxPoolParams->kSize;
         }
 
-       if(maxPoolParams->kSizeY < 0 )
+        if(maxPoolParams->kSizeY < 0 )
         {
             maxPoolParams->kSizeY = maxPoolParams->kSize;
         }
     }
 
-   if(maxPoolParams->paddingX < 0 || maxPoolParams->paddingY < 0)
+    if(maxPoolParams->paddingX < 0 || maxPoolParams->paddingY < 0)
     {
         if(maxPoolParams->paddingX < 0 )
         {
             maxPoolParams->paddingX = maxPoolParams->padding;
         }
 
-       if(maxPoolParams->paddingY < 0 )
+        if(maxPoolParams->paddingY < 0 )
         {
             maxPoolParams->paddingY = maxPoolParams->padding;
         }
@@ -738,120 +876,126 @@ void Parser::parseLocalAvgPoolParams(LocalAvgPoolParams *localAvgPoolParams, YAM
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "kSize")
+        if(key == "kSize")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->kSize))
             {
-                throw Exception(1,"[localavgpool] kSize can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeX")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->kSizeX))
             {
-                throw Exception(1,"[localavgpool] kSizeX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] kSizeX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeY")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->kSizeY))
             {
-                throw Exception(1,"[localavgpool] kSizeY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] kSizeY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "stride")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->stride))
             {
-                throw Exception(1,"[localavgpool] stride can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] stride can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideX")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->strideX))
             {
-                throw Exception(1,"[localavgpool] strideX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] strideX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideY")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->strideY))
             {
-                throw Exception(1,"[localavgpool] strideY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] strideY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "padding")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->padding))
             {
-                throw Exception(1,"[localavgpool] padding can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] padding can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingX")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->paddingX))
             {
-                throw Exception(1,"[localavgpool] paddingX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] paddingX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingY")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->paddingY))
             {
-                throw Exception(1,"[localavgpool] paddingY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] paddingY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "ceilMode")
         {
             if(!ExString::strToInt(value, localAvgPoolParams->ceilMode))
             {
-                throw Exception(1,"[localavgpool] ceilMode can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[localavgpool] ceilMode can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [localavgpool]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [localavgpool]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
-   if(localAvgPoolParams->strideX < 1 || localAvgPoolParams->strideY < 1)
+    if(localAvgPoolParams->strideX < 1 || localAvgPoolParams->strideY < 1)
     {
         if(localAvgPoolParams->strideX < 1 )
         {
             localAvgPoolParams->strideX = localAvgPoolParams->stride;
         }
 
-       if(localAvgPoolParams->strideY < 1 )
+        if(localAvgPoolParams->strideY < 1 )
         {
             localAvgPoolParams->strideY = localAvgPoolParams->stride;
         }
     }
 
-   if(localAvgPoolParams->paddingX < 1 || localAvgPoolParams->paddingY < 1)
+    if(localAvgPoolParams->paddingX < 1 || localAvgPoolParams->paddingY < 1)
     {
         if(localAvgPoolParams->paddingX < 1 )
         {
             localAvgPoolParams->paddingX = localAvgPoolParams->padding;
         }
 
-       if(localAvgPoolParams->paddingY < 1 )
+        if(localAvgPoolParams->paddingY < 1 )
         {
             localAvgPoolParams->paddingY = localAvgPoolParams->padding;
         }
     }
 
-   if(localAvgPoolParams->kSizeX < 1 || localAvgPoolParams->kSizeY < 1)
+    if(localAvgPoolParams->kSizeX < 1 || localAvgPoolParams->kSizeY < 1)
     {
         if(localAvgPoolParams->kSizeX < 1 )
         {
             localAvgPoolParams->kSizeX = localAvgPoolParams->kSize;
         }
 
-       if(localAvgPoolParams->kSizeY < 1 )
+        if(localAvgPoolParams->kSizeY < 1 )
         {
             localAvgPoolParams->kSizeY = localAvgPoolParams->kSize;
         }
     }
+}
+
+void Parser::parseGlobalAvgPoolParams(GlobalAvgPoolParams *globalAvgPoolParams, YAML::const_iterator &iter)
+{
+    (void)iter;
+    (void)globalAvgPoolParams;
 }
 
 void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
@@ -861,123 +1005,123 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "batchNorm")
+        if(key == "batchNorm")
         {
             if(!ExString::strToInt(value, convParams->batchNorm))
             {
-                throw Exception(1,"[conv] batchNorm can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] batchNorm can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "filters")
         {
             if(!ExString::strToInt(value, convParams->filters))
             {
-                throw Exception(1,"[conv] filters can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] filters can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "groups")
         {
             if(!ExString::strToInt(value, convParams->groups))
             {
-                throw Exception(1,"[conv] groups can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] groups can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSize")
         {
             if(!ExString::strToInt(value, convParams->kSize))
             {
-                throw Exception(1,"[conv] kSize can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeX")
         {
             if(!ExString::strToInt(value, convParams->kSizeX))
             {
-                throw Exception(1,"[conv] kSizeX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] kSizeX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "kSizeY")
         {
             if(!ExString::strToInt(value, convParams->kSizeY))
             {
-                throw Exception(1,"[conv] kSizeY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] kSizeY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "stride")
         {
             if(!ExString::strToInt(value, convParams->stride))
             {
-                throw Exception(1,"[conv] stride can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] stride can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideX")
         {
             if(!ExString::strToInt(value, convParams->strideX))
             {
-                throw Exception(1,"[conv] strideX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] strideX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "strideY")
         {
             if(!ExString::strToInt(value, convParams->strideY))
             {
-                throw Exception(1,"[conv] strideY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] strideY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "dilation")
         {
             if(!ExString::strToInt(value, convParams->dilation))
             {
-                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "dilationX")
         {
             if(!ExString::strToInt(value, convParams->dilationX))
             {
-                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "dilationY")
         {
             if(!ExString::strToInt(value, convParams->dilationY))
             {
-                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] dilation can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "antialiasing")
         {
             if(!ExString::strToInt(value, convParams->antialiasing))
             {
-                throw Exception(1,"[conv] antialiasing can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] antialiasing can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "padding")
         {
             if(!ExString::strToInt(value, convParams->padding))
             {
-                throw Exception(1,"[conv] padding can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] padding can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingX")
         {
             if(!ExString::strToInt(value, convParams->paddingX))
             {
-                throw Exception(1,"[conv] paddingX can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] paddingX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingY")
         {
             if(!ExString::strToInt(value, convParams->paddingY))
             {
-                throw Exception(1,"[conv] paddingY can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] paddingY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "useBias")
         {
             if(!ExString::strToInt(value, convParams->useBias))
             {
-                throw Exception(1,"[conv] useBias can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[conv] useBias can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "activation")
@@ -986,7 +1130,7 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
             ExString::split(splits, value, ",");
             convParams->activation = Activations::getActivation(splits[0]);
 
-           if(splits.size()>1)
+            if(splits.size()>1)
             {
                 for (size_t i = 1; i < splits.size(); ++i)
                 {
@@ -998,63 +1142,63 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
         }
         else
         {
-            throw Exception(1, key + " is not supported in [conv]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [conv]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
-   if(convParams->strideX < 0 || convParams->strideY < 0)
+    if(convParams->strideX < 0 || convParams->strideY < 0)
     {
         if(convParams->strideX < 0 )
         {
             convParams->strideX = convParams->stride;
         }
 
-       if(convParams->strideY < 0 )
+        if(convParams->strideY < 0 )
         {
             convParams->strideY = convParams->stride;
         }
     }
 
-   if(convParams->kSizeX < 0 || convParams->kSizeY < 0)
+    if(convParams->kSizeX < 0 || convParams->kSizeY < 0)
     {
         if(convParams->kSizeX < 0 )
         {
             convParams->kSizeX = convParams->kSize;
         }
 
-       if(convParams->kSizeY < 0 )
+        if(convParams->kSizeY < 0 )
         {
             convParams->kSizeY = convParams->kSize;
         }
     }
 
-   if(convParams->paddingX < 0 || convParams->paddingY < 0)
+    if(convParams->paddingX < 0 || convParams->paddingY < 0)
     {
         if(convParams->paddingX < 0 )
         {
             convParams->paddingX = convParams->padding;
         }
 
-       if(convParams->paddingY < 0 )
+        if(convParams->paddingY < 0 )
         {
             convParams->paddingY = convParams->padding;
         }
     }
 
-   if(convParams->dilationX < 0 || convParams->dilationY < 0)
+    if(convParams->dilationX < 0 || convParams->dilationY < 0)
     {
         if(convParams->dilationX < 0 )
         {
             convParams->dilationX = convParams->dilation;
         }
 
-       if(convParams->dilationY < 0 )
+        if(convParams->dilationY < 0 )
         {
             convParams->dilationY = convParams->dilation;
         }
     }
 
-   if(convParams->kSizeX == 1)
+    if(convParams->kSizeX == 1)
     {
         if(convParams->dilationX > 1)
         {
@@ -1062,11 +1206,165 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
         }
     }
 
-   if(convParams->kSizeY == 1)
+    if(convParams->kSizeY == 1)
     {
         if(convParams->dilationY > 1)
         {
             convParams->dilationY = 1;
+        }
+    }
+
+}
+
+void Parser::parseDeConvParams(DeConvParams *deconvParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "filters")
+        {
+            if(!ExString::strToInt(value, deconvParams->filters))
+            {
+                throw Exception(1,"[deconv] filters can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "kSize")
+        {
+            if(!ExString::strToInt(value, deconvParams->kSize))
+            {
+                throw Exception(1,"[deconv] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "kSizeX")
+        {
+            if(!ExString::strToInt(value, deconvParams->kSizeX))
+            {
+                throw Exception(1,"[deconv] kSizeX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "kSizeY")
+        {
+            if(!ExString::strToInt(value, deconvParams->kSizeY))
+            {
+                throw Exception(1,"[deconv] kSizeY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "stride")
+        {
+            if(!ExString::strToInt(value, deconvParams->stride))
+            {
+                throw Exception(1,"[deconv] stride can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "strideX")
+        {
+            if(!ExString::strToInt(value, deconvParams->strideX))
+            {
+                throw Exception(1,"[deconv] strideX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "strideY")
+        {
+            if(!ExString::strToInt(value, deconvParams->strideY))
+            {
+                throw Exception(1,"[deconv] strideY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "padding")
+        {
+            if(!ExString::strToInt(value, deconvParams->padding))
+            {
+                throw Exception(1,"[deconv] padding can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "paddingX")
+        {
+            if(!ExString::strToInt(value, deconvParams->paddingX))
+            {
+                throw Exception(1,"[deconv] paddingX can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "paddingY")
+        {
+            if(!ExString::strToInt(value, deconvParams->paddingY))
+            {
+                throw Exception(1,"[deconv] paddingY can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "useBias")
+        {
+            if(!ExString::strToInt(value, deconvParams->useBias))
+            {
+                throw Exception(1,"[deconv] useBias can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "groups")
+        {
+            if(!ExString::strToInt(value, deconvParams->groups))
+            {
+                throw Exception(1,"[deconv] groups can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "activation")
+        {
+            std::vector<std::string> splits;
+            ExString::split(splits, value, ",");
+            deconvParams->activation = Activations::getActivation(splits[0]);
+
+            if(splits.size()>1)
+            {
+                for (size_t i = 1; i < splits.size(); ++i)
+                {
+                    float tmp = 0.f;
+                    ExString::strToFloat(splits[i], tmp);
+                    deconvParams->actParams.push_back(tmp);
+                }
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [deconv]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+
+    if(deconvParams->strideX < 0 || deconvParams->strideY < 0)
+    {
+        if(deconvParams->strideX < 0 )
+        {
+            deconvParams->strideX = deconvParams->stride;
+        }
+
+        if(deconvParams->strideY < 0 )
+        {
+            deconvParams->strideY = deconvParams->stride;
+        }
+    }
+
+    if(deconvParams->kSizeX < 0 || deconvParams->kSizeY < 0)
+    {
+        if(deconvParams->kSizeX < 0 )
+        {
+            deconvParams->kSizeX = deconvParams->kSize;
+        }
+
+        if(deconvParams->kSizeY < 0 )
+        {
+            deconvParams->kSizeY = deconvParams->kSize;
+        }
+    }
+
+    if(deconvParams->paddingX < 0 || deconvParams->paddingY < 0)
+    {
+        if(deconvParams->paddingX < 0 )
+        {
+            deconvParams->paddingX = deconvParams->padding;
+        }
+
+        if(deconvParams->paddingY < 0 )
+        {
+            deconvParams->paddingY = deconvParams->padding;
         }
     }
 
@@ -1079,18 +1377,25 @@ void Parser::parseConnectParams(ConnectParams *connectParams, YAML::const_iterat
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "output")
+        if(key == "output")
         {
             if(!ExString::strToInt(value, connectParams->output))
             {
-                throw Exception(1,"[connect] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[connect] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "batchNorm")
         {
             if(!ExString::strToInt(value, connectParams->batchNorm))
             {
-                throw Exception(1,"[connect] batchNorm can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[connect] batchNorm can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "useBias")
+        {
+            if(!ExString::strToInt(value, connectParams->useBias))
+            {
+                throw Exception(1,"[connect] useBias can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "activation")
@@ -1099,7 +1404,7 @@ void Parser::parseConnectParams(ConnectParams *connectParams, YAML::const_iterat
             ExString::split(splits, value, ",");
             connectParams->activation = Activations::getActivation(splits[0]);
 
-           if(splits.size()>1)
+            if(splits.size()>1)
             {
                 for (size_t i = 1; i < splits.size(); ++i)
                 {
@@ -1111,7 +1416,7 @@ void Parser::parseConnectParams(ConnectParams *connectParams, YAML::const_iterat
         }
         else
         {
-            throw Exception(1, key + " is not supported in [connect]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [connect]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1123,13 +1428,13 @@ void Parser::parseBatchNormParams(BatchNormParams *batchNormParams, YAML::const_
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "activation")
+        if(key == "activation")
         {
             std::vector<std::string> splits;
             ExString::split(splits, value, ",");
             batchNormParams->activation = Activations::getActivation(splits[0]);
 
-           if(splits.size()>1)
+            if(splits.size()>1)
             {
                 for (size_t i = 1; i < splits.size(); ++i)
                 {
@@ -1141,15 +1446,85 @@ void Parser::parseBatchNormParams(BatchNormParams *batchNormParams, YAML::const_
         }
         else
         {
-            throw Exception(1, key + " is not supported in [batchnorm]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [batchnorm]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
 
-void Parser::parseEmptyNormParams(EmptyParams *emptyParams, YAML::const_iterator &iter)
+void Parser::parseEmptyParams(EmptyParams *emptyParams, YAML::const_iterator &iter)
 {
     (void)iter;
     (void)emptyParams;
+}
+
+void Parser::parseViewParams(ViewParams *viewParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "dim0")
+        {
+            if(!ExString::strToInt(value, viewParams->dim0))
+            {
+                throw Exception(1,"[view] dim0 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "dim1")
+        {
+            if(!ExString::strToInt(value, viewParams->dim1))
+            {
+                throw Exception(1,"[view] dim1 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "dim2")
+        {
+            if(!ExString::strToInt(value, viewParams->dim2))
+            {
+                throw Exception(1,"[view] dim2 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [view]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+}
+
+void Parser::parsePermuteParams(PermuteParams *permuteParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "dim0")
+        {
+            if(!ExString::strToInt(value, permuteParams->dim0))
+            {
+                throw Exception(1,"[permute] dim0 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "dim1")
+        {
+            if(!ExString::strToInt(value, permuteParams->dim1))
+            {
+                throw Exception(1,"[permute] dim1 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "dim2")
+        {
+            if(!ExString::strToInt(value, permuteParams->dim2))
+            {
+                throw Exception(1,"[permute] dim2 can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [permute]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
 }
 
 void Parser::parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterator &iter)
@@ -1159,44 +1534,76 @@ void Parser::parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterat
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "top")
+        if(key == "top")
         {
             if(!ExString::strToInt(value, paddingParams->top))
             {
-                throw Exception(1,"[padding] top can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[padding] top can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "down")
         {
             if(!ExString::strToInt(value, paddingParams->down))
             {
-                throw Exception(1,"[padding] down can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[padding] down can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "left")
         {
             if(!ExString::strToInt(value, paddingParams->left))
             {
-                throw Exception(1,"[padding] left can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[padding] left can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "right")
         {
             if(!ExString::strToInt(value, paddingParams->right))
             {
-                throw Exception(1,"[padding] right can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[padding] right can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "paddingVal")
         {
             if(!ExString::strToFloat(value, paddingParams->paddingVal))
             {
-                throw Exception(1,"[padding] paddingVal can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[padding] paddingVal can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [padding]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [padding]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+}
+
+void Parser::parseReductionParams(ReductionParams *reductionParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "axis")
+        {
+            if(!ExString::strToInt(value, reductionParams->axis))
+            {
+                throw Exception(1,"[reduction] top can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+
+            int tmpAxis = reductionParams->axis;
+
+            if(tmpAxis != 0 && tmpAxis != 1 && tmpAxis !=2 && tmpAxis != -1)
+            {
+                throw Exception(1,"[reduction] axis must be 0/1/2 : "+ std::to_string(tmpAxis) + " is error"  , __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "type")
+        {
+            reductionParams->reduceType = ReductionParams::getReduceTypeFromStr(value);
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [padding]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1204,16 +1611,16 @@ void Parser::parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterat
 void Parser::parseResBlockParams(ResBlockParams *resBlockParams, YAML::const_iterator &iter)
 {
 
-   for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
         std::string key     =   it->first.as<std::string>();
 
-       if(iter->second.Type() == YAML::NodeType::Map)
+        if(iter->second.Type() == YAML::NodeType::Map)
         {
             if(key == "size" || key == "activation")
             {
 
-           }
+            }
             else if(key == "maxpool")
             {
                 MaxPoolParams *maxPoolParams = new MaxPoolParams(false);
@@ -1252,7 +1659,7 @@ void Parser::parseResBlockParams(ResBlockParams *resBlockParams, YAML::const_ite
             }
             else
             {
-                throw Exception(1, key +  " is not supported by [resblock]", __FILE__, __LINE__);
+                throw Exception(1, key +  " is not supported by [resblock]", __FILE__, __LINE__, __FUNCTION__);
             }
         }
     }
@@ -1264,7 +1671,7 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
     {
         std::string key     =   it->first.as<std::string>();
 
-       if(iter->second.Type() == YAML::NodeType::Map)
+        if(iter->second.Type() == YAML::NodeType::Map)
         {
             if(key == "base")
             {
@@ -1272,7 +1679,7 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
                 {
                     std::string key2     =   it2->first.as<std::string>();
 
-                   if(key2 == "maxpool")
+                    if(key2 == "maxpool")
                     {
                         MaxPoolParams *maxPoolParams = new MaxPoolParams(false);
                         parseMaxPoolParams(maxPoolParams, it2);
@@ -1310,7 +1717,7 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
                     }
                     else
                     {
-                        throw Exception(1, key2 +  " is not supported by [res2block]", __FILE__, __LINE__);
+                        throw Exception(1, key2 +  " is not supported by [res2block]", __FILE__, __LINE__, __FUNCTION__);
                     }
                 }
             }
@@ -1320,7 +1727,7 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
                 {
                     std::string key2     =   it2->first.as<std::string>();
 
-                   if(key2 == "maxpool")
+                    if(key2 == "maxpool")
                     {
                         MaxPoolParams *maxPoolParams = new MaxPoolParams(false);
                         parseMaxPoolParams(maxPoolParams, it2);
@@ -1358,7 +1765,7 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
                     }
                     else
                     {
-                        throw Exception(1, key2 +  " is not supported by [res2block]", __FILE__, __LINE__);
+                        throw Exception(1, key2 +  " is not supported by [res2block]", __FILE__, __LINE__, __FUNCTION__);
                     }
                 }
             }
@@ -1369,22 +1776,22 @@ void Parser::parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_
 void Parser::parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::const_iterator &iter)
 {
 
-   for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
         std::string key     =   it->first.as<std::string>();
 
-       if(iter->second.Type() == YAML::NodeType::Map)
+        if(iter->second.Type() == YAML::NodeType::Map)
         {
 
-           std::vector<BaseParams*> tmpParams;
+            std::vector<BaseParams*> tmpParams;
 
-           if(key == "branch")
+            if(key == "branch")
             {
                 for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                 {
                     std::string key2     =   it2->first.as<std::string>();
 
-                   if(key2 == "maxpool")
+                    if(key2 == "maxpool")
                     {
                         MaxPoolParams *maxPoolParams = new MaxPoolParams(false);
                         parseMaxPoolParams(maxPoolParams, it2);
@@ -1417,7 +1824,7 @@ void Parser::parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::
                     else if(key2 == "empty")
                     {
                         EmptyParams *emptyParams = new EmptyParams(false);
-                        parseEmptyNormParams(emptyParams, it2);
+                        parseEmptyParams(emptyParams, it2);
                         tmpParams.push_back(emptyParams);
                     }
                     else if(key2 == "concatblock")
@@ -1440,12 +1847,12 @@ void Parser::parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::
                     }
                     else
                     {
-                        throw Exception(1, key2 +  " is not supported by [concatblock]", __FILE__, __LINE__);
+                        throw Exception(1, key2 +  " is not supported by [concatblock]", __FILE__, __LINE__, __FUNCTION__);
                     }
                 }
             }
 
-           concatBlockParams->branchParams.push_back(tmpParams);
+            concatBlockParams->branchParams.push_back(tmpParams);
         }
     }
 }
@@ -1453,22 +1860,22 @@ void Parser::parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::
 void Parser::parseAddBlockParams(AddBlockParams *addBlockParams, YAML::const_iterator &iter)
 {
 
-   for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
         std::string key     =   it->first.as<std::string>();
 
-       if(iter->second.Type() == YAML::NodeType::Map)
+        if(iter->second.Type() == YAML::NodeType::Map)
         {
 
-           std::vector<BaseParams*> tmpParams;
+            std::vector<BaseParams*> tmpParams;
 
-           if(key == "branch")
+            if(key == "branch")
             {
                 for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
                 {
                     std::string key2     =   it2->first.as<std::string>();
 
-                   if(key2 == "maxpool")
+                    if(key2 == "maxpool")
                     {
                         MaxPoolParams *maxPoolParams = new MaxPoolParams(false);
                         parseMaxPoolParams(maxPoolParams, it2);
@@ -1501,7 +1908,7 @@ void Parser::parseAddBlockParams(AddBlockParams *addBlockParams, YAML::const_ite
                     else if(key2 == "empty")
                     {
                         EmptyParams *emptyParams = new EmptyParams(false);
-                        parseEmptyNormParams(emptyParams, it2);
+                        parseEmptyParams(emptyParams, it2);
                         tmpParams.push_back(emptyParams);
                     }
                     else if(key2 == "concatblock")
@@ -1524,14 +1931,14 @@ void Parser::parseAddBlockParams(AddBlockParams *addBlockParams, YAML::const_ite
                     }
                     else
                     {
-                        throw Exception(1, key2 +  " is not supported by [addblock]", __FILE__, __LINE__);
+                        throw Exception(1, key2 +  " is not supported by [addblock]", __FILE__, __LINE__, __FUNCTION__);
                     }
                 }
 
-               addBlockParams->branchParams.push_back(tmpParams);
+                addBlockParams->branchParams.push_back(tmpParams);
             }
 
-       }
+        }
     }
 }
 
@@ -1542,45 +1949,323 @@ void Parser::parseRouteParams(RouteParams *routeParams, YAML::const_iterator &it
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "layers")
+        if(key == "layers")
         {
             std::vector<std::string> layerIndexes;
             ExString::split(layerIndexes, value, ",");
 
-           for (size_t i = 0; i < layerIndexes.size(); ++i)
+            for (size_t i = 0; i < layerIndexes.size(); ++i)
             {
                 int index   =  0;
 
-               if(!ExString::strToInt(layerIndexes[i], index))
+                if(!ExString::strToInt(layerIndexes[i], index))
                 {
-                    throw Exception(1,"[route] kSize can't convert to int", __FILE__, __LINE__);
+                    throw Exception(1,"[route] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                 }
 
-               if(index < 0)
+                if(index < 0)
                 {
                     index   = index + routeParams->index - 1;
                 }
 
-               routeParams->layerIndexes.push_back(index);
+                routeParams->layerIndexes.push_back(index);
             }
         }
         else if(key == "groups")
         {
             if(!ExString::strToInt(value, routeParams->groups))
             {
-                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "groupsId")
         {
             if(!ExString::strToInt(value, routeParams->groupsId))
             {
-                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "addModel")
+        {
+            if(!ExString::strToInt(value, routeParams->addModel))
+            {
+                throw Exception(1,"[route] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "activation")
+        {
+            std::vector<std::string> splits;
+            ExString::split(splits, value, ",");
+            routeParams->activation = Activations::getActivation(splits[0]);
+
+            if(splits.size()>1)
+            {
+                for (size_t i = 1; i < splits.size(); ++i)
+                {
+                    float tmp = 0.f;
+                    ExString::strToFloat(splits[i], tmp);
+                    routeParams->actParams.push_back(tmp);
+                }
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [route]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [route]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+}
+
+string VariableOpParams::getStrFromVarOpType(const VariableOpParams::VarOpType &varOpType)
+{
+    switch (varOpType)
+    {
+    case VAR_OP_ADD:
+        return "add";
+    case VAR_OP_SUB:
+        return "sub";
+    case VAR_OP_SUB_INV:
+        return "subInv";
+    case VAR_OP_MUL:
+        return "mul";
+    case VAR_OP_DIV:
+        return "div";
+    case VAR_OP_DIV_INV:
+        return "divInv";
+    case VAR_OP_ADD_CONST:
+        return "addConst";
+    case VAR_OP_SUB_CONST:
+        return "subConst";
+    case VAR_OP_SUB_CONST_INV:
+        return "subConstInv";
+    case VAR_OP_MUL_CONST:
+        return "mulConst";
+    case VAR_OP_DIV_CONST:
+        return "divConst";
+    case VAR_OP_DIV_CONST_INV:
+        return "divConstInv";
+    case VAR_OP_ABS:
+        return "abs";
+    case VAR_OP_ACOS:
+        return "acos";
+    case VAR_OP_ASIN:
+        return "asin";
+    case VAR_OP_ATAN:
+        return "atan";
+    case VAR_OP_COS:
+        return "cos";
+    case VAR_OP_COSH:
+        return "cosh";
+    case VAR_OP_SIN:
+        return "sin";
+    case VAR_OP_SINH:
+        return "sinh";
+    case VAR_OP_TAN:
+        return "tan";
+    case VAR_OP_TANH:
+        return "tanh";
+    case VAR_OP_EXP:
+        return "exp";
+    case VAR_OP_POW:
+        return "pow";
+    case VAR_OP_LOG:
+        return "log";
+    case VAR_OP_LOG10:
+        return "log10";
+    case VAR_OP_SQRT:
+        return "sqrt";
+    default:
+        throw Exception(1, "[varop] var op no supported : " + std::to_string(varOpType), __FILE__, __LINE__, __FUNCTION__);
+        break;
+    }
+}
+
+VariableOpParams::VarOpType VariableOpParams::getVarOpTypeFromStr(const string &varOpStr)
+{
+    if(varOpStr == "add")
+    {
+        return VAR_OP_ADD;
+    }
+    else if(varOpStr == "sub")
+    {
+        return VAR_OP_SUB;
+    }
+    else if(varOpStr == "subInv")
+    {
+        return VAR_OP_SUB_INV;
+    }
+    else if(varOpStr == "mul")
+    {
+        return VAR_OP_MUL;
+    }
+    else if(varOpStr == "div")
+    {
+        return VAR_OP_DIV;
+    }
+    else if(varOpStr == "divInv")
+    {
+        return VAR_OP_DIV_INV;
+    }
+    else if(varOpStr == "addConst")
+    {
+        return VAR_OP_ADD_CONST;
+    }
+    else if(varOpStr == "subConst")
+    {
+        return VAR_OP_SUB_CONST;
+    }
+    else if(varOpStr == "subConstInv")
+    {
+        return VAR_OP_SUB_CONST_INV;
+    }
+    else if(varOpStr == "mulConst")
+    {
+        return VAR_OP_MUL_CONST;
+    }
+    else if(varOpStr == "divConst")
+    {
+        return VAR_OP_DIV_CONST;
+    }
+    else if(varOpStr == "divConstInv")
+    {
+        return VAR_OP_DIV_CONST_INV;
+    }
+    else if(varOpStr == "abs")
+    {
+        return VAR_OP_ABS;
+    }
+    else if(varOpStr == "acos")
+    {
+        return VAR_OP_ACOS;
+    }
+    else if(varOpStr == "asin")
+    {
+        return VAR_OP_ASIN;
+    }
+    else if(varOpStr == "atan")
+    {
+        return VAR_OP_ATAN;
+    }
+    else if(varOpStr == "cos")
+    {
+        return VAR_OP_COS;
+    }
+    else if(varOpStr == "cosh")
+    {
+        return VAR_OP_COSH;
+    }
+    else if(varOpStr == "sin")
+    {
+        return VAR_OP_SIN;
+    }
+    else if(varOpStr == "sinh")
+    {
+        return VAR_OP_SINH;
+    }
+    else if(varOpStr == "tan")
+    {
+        return VAR_OP_TAN;
+    }
+    else if(varOpStr == "tanh")
+    {
+        return VAR_OP_TANH;
+    }
+    else if(varOpStr == "exp")
+    {
+        return VAR_OP_EXP;
+    }
+    else if(varOpStr == "pow")
+    {
+        return VAR_OP_POW;
+    }
+    else if(varOpStr == "log")
+    {
+        return VAR_OP_LOG;
+    }
+    else if(varOpStr == "log10")
+    {
+        return VAR_OP_LOG10;
+    }
+    else if(varOpStr == "sqrt")
+    {
+        return VAR_OP_SQRT;
+    }
+    else
+    {
+        throw Exception(1, "[varop] var op no supported : " + varOpStr, __FILE__, __LINE__, __FUNCTION__);
+    }
+}
+
+void Parser::parseVariableOpParams(VariableOpParams *variableOpParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "layers")
+        {
+            std::vector<std::string> layerIndexes;
+            ExString::split(layerIndexes, value, ",");
+
+            for (size_t i = 0; i < layerIndexes.size(); ++i)
+            {
+                int index   =  0;
+
+                if(!ExString::strToInt(layerIndexes[i], index))
+                {
+                    throw Exception(1,"[varop] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                }
+
+                if(index < 0)
+                {
+                    index   = index + variableOpParams->index - 1;
+                }
+
+                variableOpParams->layerIndexes.push_back(index);
+            }
+        }
+        else if(key == "type")
+        {
+            variableOpParams->varOpType = variableOpParams->getVarOpTypeFromStr(value);
+        }
+        else if(key == "constVal")
+        {
+            if(!ExString::strToFloat(value, variableOpParams->constVal))
+            {
+                throw Exception(1,"[varop] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [varop]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+}
+
+void Parser::parseSoftMaxParams(SoftMaxParams *softmaxParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "groups")
+        {
+            if(!ExString::strToInt(value, softmaxParams->groups))
+            {
+                throw Exception(1,"[softmax] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "temperature")
+        {
+            if(!ExString::strToFloat(value, softmaxParams->temperature))
+            {
+                throw Exception(1,"[softmax] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [softmax]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1592,23 +2277,74 @@ void Parser::parseUpSampleParams(UpSampleParams *upSampleParams, YAML::const_ite
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "stride")
+        if(key == "stride")
         {
             if(!ExString::strToInt(value, upSampleParams->stride))
             {
-                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "strideX")
+        {
+            if(!ExString::strToInt(value, upSampleParams->strideX))
+            {
+                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "strideY")
+        {
+            if(!ExString::strToInt(value, upSampleParams->strideY))
+            {
+                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "scale")
         {
             if(!ExString::strToFloat(value, upSampleParams->scale))
             {
-                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[unsample] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "type")
+        {
+            upSampleParams->upsampleType = UpSampleParams::getUnsampleTypeFromStr(value);
+        }
+        else if(key == "scaleX")
+        {
+            if(!ExString::strToFloat(value, upSampleParams->scaleX))
+            {
+                throw Exception(1,"[unsample] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "scaleY")
+        {
+            if(!ExString::strToFloat(value, upSampleParams->scaleY))
+            {
+                throw Exception(1,"[unsample] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "alignCorners")
+        {
+            if(!ExString::strToInt(value, upSampleParams->alignCorners))
+            {
+                throw Exception(1,"[unsample] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [unsample]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [unsample]", __FILE__, __LINE__, __FUNCTION__);
+        }
+
+        if(upSampleParams->strideX == -1 || upSampleParams->strideY == -1)
+        {
+            upSampleParams->strideX = upSampleParams->stride;
+            upSampleParams->strideY = upSampleParams->stride;
+        }
+
+        if(upSampleParams->scaleX < 0 || upSampleParams->scaleY < 0)
+        {
+            upSampleParams->scaleX = upSampleParams->scale;
+            upSampleParams->scaleY = upSampleParams->scale;
         }
     }
 }
@@ -1620,40 +2356,40 @@ void Parser::parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator 
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "anchors")
+        if(key == "anchors")
         {
             std::vector<std::string> tmpAnchors;
 
-           ExString::split(tmpAnchors, value, ",");
+            ExString::split(tmpAnchors, value, ",");
 
-           if(tmpAnchors.size()!=6)
+            if(tmpAnchors.size()!=6)
             {
-                throw Exception(1,"[yolov3] anchor num should be 6", __FILE__, __LINE__);
+                throw Exception(1,"[yolov3] anchor num should be 6", __FILE__, __LINE__, __FUNCTION__);
             }
 
-           for (size_t i = 0; i < tmpAnchors.size(); ++i)
+            for (size_t i = 0; i < tmpAnchors.size(); ++i)
             {
                 float tmp = 0;
                 ExString::trim(tmpAnchors[i]);
                 if(!ExString::strToFloat(tmpAnchors[i],tmp))
                 {
-                    throw Exception(1,"[yolov3] anchors can't convert to float", __FILE__, __LINE__);
+                    throw Exception(1,"[yolov3] anchors can't convert to float", __FILE__, __LINE__, __FUNCTION__);
                 }
 
-               yolov3Params->anchors.push_back(tmp);
+                yolov3Params->anchors.push_back(tmp);
             }
 
-       }
+        }
         else if(key == "classNum")
         {
             if(!ExString::strToInt(value, yolov3Params->classNum))
             {
-                throw Exception(1,"[yolov3] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[yolov3] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
         {
-            throw Exception(1, key + " is not supported in [unsample]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [unsample]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1665,52 +2401,56 @@ void Parser::parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_
         std::string key     =   it->first.as<std::string>();
         std::string value   =   it->second.as<std::string>();
 
-       if(key == "layers")
+        if(key == "layers")
         {
             std::vector<std::string> layerIndexes;
             ExString::split(layerIndexes, value, ",");
 
-           for (size_t i = 0; i < layerIndexes.size(); ++i)
+            for (size_t i = 0; i < layerIndexes.size(); ++i)
             {
                 int index   =  0;
 
-               if(!ExString::strToInt(layerIndexes[i], index))
+                if(!ExString::strToInt(layerIndexes[i], index))
                 {
-                    throw Exception(1,"[yolov3out] kSize can't convert to int", __FILE__, __LINE__);
+                    throw Exception(1,"[yolov3out] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                 }
 
-               if(index < 0)
+                if(index < 0)
                 {
                     index   = index + yolov3OutParams->index - 1;
                 }
 
-               yolov3OutParams->layerIndexes.push_back(index);
+                yolov3OutParams->layerIndexes.push_back(index);
             }
         }
         else if(key == "confThresh")
         {
             if(!ExString::strToFloat(value, yolov3OutParams->confThresh))
             {
-                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[yolov3out] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "nmsThresh")
         {
             if(!ExString::strToFloat(value, yolov3OutParams->nmsThresh))
             {
-                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[yolov3out] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "useSoftNms")
         {
             if(!ExString::strToInt(value, yolov3OutParams->useSoftNms))
             {
-                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__);
+                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
+        }
+        else if(key == "yoloType")
+        {
+            yolov3OutParams->getYoloTypeFromStr(value);
         }
         else
         {
-            throw Exception(1, key + " is not supported in [yolov3out]", __FILE__, __LINE__);
+            throw Exception(1, key + " is not supported in [yolov3out]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -1724,7 +2464,7 @@ ConcatBlockParams::~ConcatBlockParams()
             if(branchParams[i][j]!=nullptr)
             {
 
-               if(branchParams[i][j]->type == LayerType::CONFIG)
+                if(branchParams[i][j]->type == LayerType::CONFIG)
                 {
                     delete reinterpret_cast<NetConfigParams*>(branchParams[i][j]);
                 }
@@ -1765,11 +2505,11 @@ ConcatBlockParams::~ConcatBlockParams()
                     delete reinterpret_cast<PaddingParams*>(branchParams[i][j]);
                 }
 
-               branchParams[i][j] = nullptr;
+                branchParams[i][j] = nullptr;
             }
         }
 
-       if(i == (branchParams.size()-1))
+        if(i == (branchParams.size()-1))
         {
             branchParams.clear();
         }
@@ -1785,7 +2525,7 @@ AddBlockParams::~AddBlockParams()
             if(branchParams[i][j]!=nullptr)
             {
 
-               if(branchParams[i][j]->type == LayerType::CONFIG)
+                if(branchParams[i][j]->type == LayerType::CONFIG)
                 {
                     delete reinterpret_cast<NetConfigParams*>(branchParams[i][j]);
                 }
@@ -1826,11 +2566,11 @@ AddBlockParams::~AddBlockParams()
                     delete reinterpret_cast<PaddingParams*>(branchParams[i][j]);
                 }
 
-               branchParams[i][j] = nullptr;
+                branchParams[i][j] = nullptr;
             }
         }
 
-       if(i == (branchParams.size()-1))
+        if(i == (branchParams.size()-1))
         {
             branchParams.clear();
         }
@@ -1844,7 +2584,7 @@ Res2BlockParams::~Res2BlockParams()
         if(baseParams[i]!=nullptr)
         {
 
-           if(baseParams[i]->type == LayerType::CONFIG)
+            if(baseParams[i]->type == LayerType::CONFIG)
             {
                 delete reinterpret_cast<NetConfigParams*>(baseParams[i]);
             }
@@ -1873,21 +2613,21 @@ Res2BlockParams::~Res2BlockParams()
                 delete reinterpret_cast<PaddingParams*>(baseParams[i]);
             }
 
-           baseParams[i] = nullptr;
+            baseParams[i] = nullptr;
         }
 
-       if(i == (baseParams.size()-1))
+        if(i == (baseParams.size()-1))
         {
             baseParams.clear();
         }
     }
 
-   for (size_t i = 0; i < branchParams.size(); ++i)
+    for (size_t i = 0; i < branchParams.size(); ++i)
     {
         if(branchParams[i]!=nullptr)
         {
 
-           if(branchParams[i]->type == LayerType::CONFIG)
+            if(branchParams[i]->type == LayerType::CONFIG)
             {
                 delete reinterpret_cast<NetConfigParams*>(branchParams[i]);
             }
@@ -1912,10 +2652,10 @@ Res2BlockParams::~Res2BlockParams()
                 delete reinterpret_cast<BatchNormParams*>(branchParams[i]);
             }
 
-           branchParams[i] = nullptr;
+            branchParams[i] = nullptr;
         }
 
-       if(i == (branchParams.size()-1))
+        if(i == (branchParams.size()-1))
         {
             branchParams.clear();
         }
@@ -1929,7 +2669,7 @@ ResBlockParams::~ResBlockParams()
         if(baseParams[i]!=nullptr)
         {
 
-           if(baseParams[i]->type == LayerType::CONFIG)
+            if(baseParams[i]->type == LayerType::CONFIG)
             {
                 delete reinterpret_cast<NetConfigParams*>(baseParams[i]);
             }
@@ -1958,13 +2698,73 @@ ResBlockParams::~ResBlockParams()
                 delete reinterpret_cast<PaddingParams*>(baseParams[i]);
             }
 
-           baseParams[i] = nullptr;
+            baseParams[i] = nullptr;
         }
 
-       if(i == (baseParams.size()-1))
+        if(i == (baseParams.size()-1))
         {
             baseParams.clear();
         }
     }
 }
+
+string ReductionParams::getStrFromReduceType(ReductionType type)
+{
+    switch (type)
+    {
+    case ReductionType::REDUCTION_SUM:
+        return "sum";
+    case ReductionType::REDUCTION_MEAN:
+        return "mean";
+    default:
+        throw Exception(1,"[reduction] type is not supported", __FILE__, __LINE__, __FUNCTION__);
+    }
+}
+
+ReductionType ReductionParams::getReduceTypeFromStr(string typeStr)
+{
+    if(typeStr == "sum")
+    {
+        return  ReductionType::REDUCTION_SUM;
+    }
+    else if(typeStr == "mean")
+    {
+        return  ReductionType::REDUCTION_MEAN;
+    }
+    else
+    {
+        throw Exception(1,"[reduction] " + typeStr + " is not supported", __FILE__, __LINE__, __FUNCTION__);
+    }
+}
+
+UpSampleParams::UpsampleType UpSampleParams::getUnsampleTypeFromStr(const string &str)
+{
+    if(str == "nearest")
+    {
+        return UpsampleType::NEAREST;
+    }
+    else if(str == "bilinear")
+    {
+        return UpsampleType::BILINEAR;
+    }
+    else
+    {
+        throw Exception(1,"[upsample] " + str + " is not supported", __FILE__, __LINE__, __FUNCTION__);
+    }
+}
+
+string UpSampleParams::getStrFromUnsampleType(const UpSampleParams::UpsampleType &type)
+{
+    switch (type)
+    {
+    case UpsampleType::NEAREST:
+        return "nearest";
+    case UpsampleType::BILINEAR:
+        return "bilinear";
+    default:
+        throw Exception(1,"[upsample] type is not supported", __FILE__, __LINE__, __FUNCTION__);
+
+    }
+}
+
 }

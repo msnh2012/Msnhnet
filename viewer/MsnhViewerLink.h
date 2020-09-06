@@ -12,37 +12,38 @@ namespace MsnhViewer
         Link();
         ~Link();
 
-       void connectFrom(Attribute* from);
+        void connectFrom(Attribute* from);
         void connectTo(Attribute* to);
         void disconnect();
         bool isConnected();
 
-       void updatePath();
+        void updatePath();
         void updatePath(QPointF const& end);
 
-       void setColor(QColor const& color);
+        void setColor(QColor const& color);
 
-       Attribute const* from() const { return from_; }
+        Attribute const* from() const { return from_; }
         Attribute const* to() const   { return to_;   }
 
-   private:
+    private:
 
-       void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+        void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
-       void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+        void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
         void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
         void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
 
-       void updatePath(QPointF const& start, QPointF const& end);
+        void updatePath(QPointF const& start, QPointF const& end);
 
-       void computeControlPoint(QPointF const& p0, QPointF const& p1, QPointF const& p2, double t,
+        // Compute bezier control point to 'glue' properly two bezier curves
+        void computeControlPoint(QPointF const& p0, QPointF const& p1, QPointF const& p2, double t,
                                  QPointF& ctrl1, QPointF& ctrl2);
         void drawSplines(QVector<QPointF> const& waypoints, double t);
 
-       QPen pen_;
+        QPen pen_;
         QPen selected_;
 
-       Attribute* from_{nullptr};
+        Attribute* from_{nullptr};
         Attribute* to_{nullptr};
     };
 }
