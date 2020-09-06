@@ -55,7 +55,6 @@ namespace Msnhnet
                 k0 += 1;
             }
         }
-
     }
     void ConvolutionLayerSgemm::convolutionIm2colSgemm(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel, float *const kernel_im2col_pack,
                             const int &kernelW, const int &kernelH, float* &dest, const int &outWidth, const int &outHeight, const int &outChannel, 
@@ -76,7 +75,7 @@ namespace Msnhnet
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
         for(int cc = 0; cc < inChannel; cc++){
-            const float *src0 = src + cc * kernelH * kernelW * inChannel;
+            const float *src0 = src + cc * inHeight * inWidth;
             int dst_idx = Stride * cc;
             for(int i = 0; i < kernelH; i++){
                 for(int j = 0; j < kernelW; j++){
@@ -92,6 +91,14 @@ namespace Msnhnet
                 }
             }
         }
+
+        // printf("Im2Col: \n");
+        // for(int i=0; i<outWidth * outHeight * kernelH * kernelW * inChannel; i++){
+        //     printf("%f ", src_im2col[i]);
+        //     if(i>0&&i%(kernelH * kernelW * inChannel)==0){
+        //         printf("\n");
+        //     }
+        // }
 
         // pack 8x8
         // preapare
@@ -117,7 +124,9 @@ namespace Msnhnet
 #endif
         for(int i = 0; i < colCount; i++){
             int newi = i << 3;
-            const float *src0 = src_im2col + newi;
+            const float *src0 = src_im2col;
+
+            src0 += newi;
 
             float *packptr = src_im2col_pack + i * packHeight * packWidth;
 
@@ -161,7 +170,8 @@ namespace Msnhnet
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
         for(int i = remainColCount; i < outSize; i++){
-            const float *src0 = src_im2col + i;
+            const float *src0 = src_im2col;
+            src0 += i;
             float *packptr = src_im2col_pack + (i / 8 + i % 8) * packHeight * packWidth;
 
             for(int j = 0; j < inChannel * kernelSize; j++){
@@ -172,6 +182,13 @@ namespace Msnhnet
 
             }
         }
+        // printf("Pack: \n");
+        // for(int i = 0; i < packHeight * packWidth * packChannel; i++){
+        //     printf("%f ", src_im2col_pack[i]);
+        //     if(i>0&&i%(packHeight * packWidth)==0){
+        //         printf("\n");
+        //     }
+        // }
 
 //pack end
 
@@ -333,11 +350,12 @@ namespace Msnhnet
                 float sum1 = 0;
                 float sum2 = 0;
                 float sum3 = 0;
+                // K = kernelSize * inChannel * 4
                 for(int j = 0; j < K; j++){
                     sum0 += ptrA[0] * ptrB[0];
-                    sum1 += ptrA[1] * ptrB[1];
-                    sum2 += ptrA[2] * ptrB[2];
-                    sum3 += ptrA[3] * ptrB[3];
+                    sum1 += ptrA[1] * ptrB[0];
+                    sum2 += ptrA[2] * ptrB[0];
+                    sum3 += ptrA[3] * ptrB[0];
 
                     ptrA += 4;
                     ptrB += 1;
@@ -362,7 +380,7 @@ namespace Msnhnet
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-        for(int cc = remainColCount; cc < outChannel; cc++){
+        for(int cc = ccRemainOutChannel; cc < outChannel; cc++){
             int c = cc;
             float *destptr0 = dest + c * outSize;
             int i = 0;
@@ -447,7 +465,6 @@ namespace Msnhnet
 
         delete [] src_im2col;
         delete [] src_im2col_pack;
-
     }
 }
 
