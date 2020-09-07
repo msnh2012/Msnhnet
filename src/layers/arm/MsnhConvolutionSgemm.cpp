@@ -230,8 +230,159 @@ namespace Msnhnet
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
-                asm volatile(
 
+                asm volatile(
+                    "veor       q1, q0, q0          \n"
+                    "vdup.f32   q8,    q1           \n"
+                    "vdup.f32   q9,    q1           \n"
+                    "vdup.f32   q10,   q1           \n"
+                    "vdup.f32   q11,   q1           \n"
+                    "vdup.f32   q12,   q1           \n"
+                    "vdup.f32   q13,   q1           \n"
+                    "vdup.f32   q14,   q1           \n"
+                    "vdup.f32   q15,   q1           \n"
+                    
+                    // r4 = K >> 2
+                    "lsr         r4, %12, #2        \n"
+                    // 如果nn等于0，使用beq进行循环跳转，即跳转到循环1 
+                    "cmp         r4, #0             \n"
+                    "beq         loop2f             \n"
+                    // for(; nn != 0; nn--) && nn = K >> 2
+                    "loop1:                         \n" 
+                    // kernel q0-q3
+                    "pld        [%5, #512]          \n"
+                    "vldm       %5!, {d0-d7}        \n" 
+                    // input  q4-q7
+                    "pld        [%4, #512]          \n"
+                    "vldm       %4!, {d8-d15}       \n"
+
+                    //calc
+                    // sum0[n] += ptrA[0] * ptrB[n];
+                    "vmla.f32   q8, q4, d0[0]       \n"
+                    // sum1[n] += ptrA[1] * ptrB[n];
+                    "vmla.f32   q9, q5, d0[0]       \n"
+                    // sum0[n] += ptrA[0] * ptrB[n + 8];
+                    "vmla.f32   q10, q4, d0[1]      \n"
+                    // sum1[n] += ptrA[1] * ptrB[n + 8];
+                    "vmla.f32   q11, q5, d0[1]      \n"
+                    // sum0[n] += ptrA[0] * ptrB[n + 16];
+                    "vmla.f32   q12, q4, d1[0]      \n" 
+                    // sum1[n] += ptrA[1] * ptrB[n + 16];
+                    "vmla.f32   q13, q5, d1[0]      \n"
+                    // sum0[n] += ptrA[0] * ptrB[n + 24];
+                    "vmla.f32   q14, q4, d1[1]      \n" 
+                    // sum1[n] += ptrA[1] * ptrB[n + 24];
+                    "vmla.f32   q15, q5, d1[1]      \n"
+
+                    // sum2[n] += ptrA[2] * ptrB[n];
+                    "vmla.f32   q8, q6, d2[0]       \n" 
+                    // sum3[n] += ptrA[3] * ptrB[n];
+                    "vmla.f32   q9, q7, d2[0]       \n"
+                    // sum2[n] += ptrA[2] * ptrB[n + 8];
+                    "vmla.f32   q10, q6, d2[1]      \n" 
+                    // sum3[n] += ptrA[3] * ptrB[n + 8];
+                    "vmla.f32   q11, q7, d2[1]      \n"
+                    // sum2[n] += ptrA[2] * ptrB[n + 16];
+                    "vmla.f32   q12, q6, d3[0]      \n" 
+                    // sum3[n] += ptrA[3] * ptrB[n + 16];
+                    "vmla.f32   q13, q7, d3[0]      \n"
+                    // sum2[n] += ptrA[2] * ptrB[n + 24];
+                    "vmla.f32   q14, q6, d3[1]      \n" 
+                    // sum3[n] += ptrA[3] * ptrB[n + 24];
+                    "vmla.f32   q15, q7, d3[1]      \n"
+
+                    // ptrA += 4x4
+                    "pld        [%4, #512]          \n"
+                    "vldm       %4!, {d8-d15}       \n"
+
+                    // sum0[n] += ptrA[0] * ptrB[n + 32];
+                    "vmla.f32   q8, q4, d4[0]       \n" 
+                    // sum1[n] += ptrA[1] * ptrB[n + 32];
+                    "vmla.f32   q9, q5, d4[0]       \n"
+                    // sum0[n] += ptrA[0] * ptrB[n + 40];
+                    "vmla.f32   q10, q4, d4[1]      \n" 
+                    // sum1[n] += ptrA[1] * ptrB[n + 40];
+                    "vmla.f32   q11, q5, d4[1]      \n"
+                    // sum0[n] += ptrA[0] * ptrB[n + 48];
+                    "vmla.f32   q12, q4, d5[0]      \n" 
+                    // sum1[n] += ptrA[1] * ptrB[n + 48];
+                    "vmla.f32   q13, q5, d5[0]      \n"
+                    // sum0[n] += ptrA[0] * ptrB[n + 56];
+                    "vmla.f32   q14, q4, d5[1]      \n" 
+                    // sum1[n] += ptrA[1] * ptrB[n + 56];
+                    "vmla.f32   q15, q5, d5[1]      \n"
+
+                    // sum2[n] += ptrA[2] * ptrB[n + 32];
+                    "vmla.f32   q8, q6, d6[0]       \n" 
+                    // sum3[n] += ptrA[3] * ptrB[n + 32];
+                    "vmla.f32   q9, q7, d6[0]       \n"
+                    // sum2[n] += ptrA[2] * ptrB[n + 40];
+                    "vmla.f32   q10, q6, d6[1]      \n" 
+                    // sum3[n] += ptrA[3] * ptrB[n + 40];
+                    "vmla.f32   q11, q7, d6[1]      \n"
+                    // sum2[n] += ptrA[2] * ptrB[n + 48];
+                    "vmla.f32   q12, q6, d7[0]      \n"
+                    // sum3[n] += ptrA[3] * ptrB[n + 48];
+                    "vmla.f32   q13, q7, d7[0]      \n"
+                    // sum2[n] += ptrA[2] * ptrB[n + 56];
+                    "vmla.f32   q14, q6, d7[1]      \n" 
+                    // sum3[n] += ptrA[3] * ptrB[n + 56];
+                    "vmla.f32   q15, q7, d7[1]      \n"
+
+                    "subs        r4, r4, #1         \n"
+                    // 第一个for循环的结束，nn>0
+                    "bne         loop1b             \n" 
+
+                    // 开始写第二个for循环
+                    "loop2:                         \n"
+                    // K = kernelSize * inChannel * 4
+                    // K >> 2 == inChannel>>2 = inChannel & 3
+                    // 计算完之后进行第三个for循环进行最后的赋值
+                    "and         r4, %12, #3        \n"
+                    "cmp         r4, #0             \n"
+                    "beq         loop3f             \n"
+
+                    "loop2:                         \n" 
+
+                    "pld        [%5, #128]          \n"
+                    "vld1.f32   {d0-d1}, [%5]!      \n"
+                    "pld        [%4, #256]          \n"
+                    "vld1.f32   {d8-d11}, [%4]!     \n"
+
+                    "vmla.f32   q8, q4, d0[0]       \n" 
+                    "vmla.f32   q9, q5, d0[0]       \n"
+                    "vmla.f32   q10, q4, d0[1]      \n" 
+                    "vmla.f32   q11, q5, d0[1]      \n"
+                    "vmla.f32   q12, q4, d1[0]      \n" 
+                    "vmla.f32   q13, q5, d1[0]      \n"
+                    "vmla.f32   q14, q4, d1[1]      \n" 
+                    "vmla.f32   q15, q5, d1[1]      \n"
+
+                    "subs        r4, r4, #1         \n"
+                    "bne         loop2b             \n"
+
+                    // 完成赋值
+                    "loop3:                         \n" 
+                    "vst1.f32    {d16-d19}, [%0]    \n"
+                    "vst1.f32    {d20-d23}, [%1]    \n"
+                    "vst1.f32    {d24-d27}, [%2]    \n"
+                    "vst1.f32    {d28-d31}, [%3]    \n"
+
+
+                    : "=r"(destptr0), // %0
+                    "=r"(destptr1), // %1
+                    "=r"(destptr2), // %2
+                    "=r"(destptr3), // %3
+                    "=r"(ptrB),      // %4
+                    "=r"(ptrA)       // %5
+                    : "0"(destptr0),
+                    "1"(destptr1),
+                    "2"(destptr2),
+                    "3"(destptr3),
+                    "4"(ptrB),
+                    "5"(ptrA),
+                    "r"(K),      // %12
+                    : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
                 );
 #endif
 
