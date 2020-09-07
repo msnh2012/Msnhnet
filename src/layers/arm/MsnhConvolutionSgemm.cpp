@@ -246,9 +246,9 @@ namespace Msnhnet
                     "lsr         r4, %12, #2        \n"
                     // 如果nn等于0，使用beq进行循环跳转，即跳转到循环1 
                     "cmp         r4, #0             \n"
-                    "beq         1f                 \n"
+                    "beq         loop2f             \n"
                     // for(; nn != 0; nn--) && nn = K >> 2
-                    "0:                             \n" 
+                    "loop1:                         \n" 
                     // kernel q0-q3
                     "pld        [%5, #512]          \n"
                     "vldm       %5!, {d0-d7}        \n" 
@@ -331,18 +331,18 @@ namespace Msnhnet
 
                     "subs        r4, r4, #1         \n"
                     // 第一个for循环的结束，nn>0
-                    "bne         0b                 \n" 
+                    "bne         loop1b             \n" 
 
                     // 开始写第二个for循环
-                    "1:                             \n"
+                    "loop2:                         \n"
                     // K = kernelSize * inChannel * 4
                     // K >> 2 == inChannel>>2 = inChannel & 3
                     // 计算完之后进行第三个for循环进行最后的赋值
                     "and         r4, %12, #3        \n"
                     "cmp         r4, #0             \n"
-                    "beq         2f                 \n"
+                    "beq         loop3f             \n"
 
-                    "0:                             \n" 
+                    "loop2:                         \n" 
 
                     "pld        [%5, #128]          \n"
                     "vld1.f32   {d0-d1}, [%5]!      \n"
@@ -359,10 +359,10 @@ namespace Msnhnet
                     "vmla.f32   q15, q5, d1[1]      \n"
 
                     "subs        r4, r4, #1         \n"
-                    "bne         0b                 \n"
+                    "bne         loop2b             \n"
 
                     // 完成赋值
-                    "2:                             \n" 
+                    "loop3:                         \n" 
                     "vst1.f32    {d16-d19}, [%0]    \n"
                     "vst1.f32    {d20-d23}, [%1]    \n"
                     "vst1.f32    {d24-d27}, [%2]    \n"
