@@ -41,6 +41,7 @@ Alpha version, maybe have some bugs. Only official op is supported, customized o
 -  sqrt
 -  pow
 -  sum
+-  pad
 -  +|-|x|/|+=|-=|x=|/=|
 
 ## API

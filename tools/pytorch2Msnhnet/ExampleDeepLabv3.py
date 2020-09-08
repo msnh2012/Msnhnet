@@ -20,8 +20,6 @@ deeplabv3.eval()
 
 input=torch.ones([1,3,224,224])
 
-input.view()
-
 ''' 
 # trans msnhnet file only  
 transNet(deeplabv3, input, "deeplabv3.msnhnet")
