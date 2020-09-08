@@ -139,11 +139,11 @@ namespace Msnhnet
                     "pld        [%0, #256]          \n"
                     "vld1.f32   {d0-d3}, [%0]       \n"
                     "vst1.f32   {d0-d3}, [%1]       \n"
-                    : "=r"(img0),  // %0
-                    "=r"(tmpptr) // %1
-                    : "0"(img0),
-                    "1"(tmpptr)
-                    : "memory", "q0", "q1");
+                    : "=r"(src0),  // %0
+                    "=r"(packptr) // %1
+                    : "0"(src0),
+                    "1"(packptr)
+                    : "memory", "q0", "q1"
                 );
 #endif
 
@@ -232,23 +232,23 @@ namespace Msnhnet
 #else
 
                 asm volatile(
-                    "veor       q1, q0, q0          \n"
-                    "vdup.f32   q8,    q1           \n"
-                    "vdup.f32   q9,    q1           \n"
-                    "vdup.f32   q10,   q1           \n"
-                    "vdup.f32   q11,   q1           \n"
-                    "vdup.f32   q12,   q1           \n"
-                    "vdup.f32   q13,   q1           \n"
-                    "vdup.f32   q14,   q1           \n"
-                    "vdup.f32   q15,   q1           \n"
+                    "veor       q1, q0, q0           \n"
+                    "vdup.f32   q8,    d2[0]         \n"
+                    "vdup.f32   q9,    d2[0]         \n"
+                    "vdup.f32   q10,   d2[0]         \n"
+                    "vdup.f32   q11,   d2[0]         \n"
+                    "vdup.f32   q12,   d2[0]         \n"
+                    "vdup.f32   q13,   d2[0]         \n"
+                    "vdup.f32   q14,   d2[0]         \n"
+                    "vdup.f32   q15,   d2[0]         \n"
                     
                     // r4 = K >> 2
                     "lsr         r4, %12, #2        \n"
                     // 如果nn等于0，使用beq进行循环跳转，即跳转到循环1 
                     "cmp         r4, #0             \n"
-                    "beq         loop2f             \n"
+                    "beq         loop1              \n"
                     // for(; nn != 0; nn--) && nn = K >> 2
-                    "loop1:                         \n" 
+                    "loop0:                         \n" 
                     // kernel q0-q3
                     "pld        [%5, #512]          \n"
                     "vldm       %5!, {d0-d7}        \n" 
@@ -331,27 +331,36 @@ namespace Msnhnet
 
                     "subs        r4, r4, #1         \n"
                     // 第一个for循环的结束，nn>0
-                    "bne         loop1b             \n" 
+                    "bne         loop0             \n" 
 
                     // 开始写第二个for循环
-                    "loop2:                         \n"
+                    "loop1:                         \n"
                     // K = kernelSize * inChannel * 4
                     // K >> 2 == inChannel>>2 = inChannel & 3
                     // 计算完之后进行第三个for循环进行最后的赋值
                     "and         r4, %12, #3        \n"
                     "cmp         r4, #0             \n"
-                    "beq         loop3f             \n"
+                    "beq         loop3              \n"
 
                     "loop2:                         \n" 
-
+                    // kernel q0 && ptrA += 4
+                    // q0 = [d0, d1] = [ptrA[0], ptrA[1], ptrA[2], ptrA[3]]
                     "pld        [%5, #128]          \n"
                     "vld1.f32   {d0-d1}, [%5]!      \n"
+                    // input q4, q5 && ptrB += 8
+                    // q4, q5 = [d8, d9, d10, d11] = [ptrB[0], ..., ptrB[7]]
                     "pld        [%4, #256]          \n"
                     "vld1.f32   {d8-d11}, [%4]!     \n"
 
+                    // for(int n = 0; n < 8; n++){
+                    //    sum0[n] += ptrA[0] * ptrB[n];
+                    //    sum1[n] += ptrA[1] * ptrB[n];
+                    //    sum2[n] += ptrA[2] * ptrB[n];
+                    //    sum3[n] += ptrA[3] * ptrB[n];
+                    // }
                     "vmla.f32   q8, q4, d0[0]       \n" 
                     "vmla.f32   q9, q5, d0[0]       \n"
-                    "vmla.f32   q10, q4, d0[1]      \n" 
+                    "vmla.f32   q10, q4, d0[1]      \n"
                     "vmla.f32   q11, q5, d0[1]      \n"
                     "vmla.f32   q12, q4, d1[0]      \n" 
                     "vmla.f32   q13, q5, d1[0]      \n"
@@ -359,7 +368,7 @@ namespace Msnhnet
                     "vmla.f32   q15, q5, d1[1]      \n"
 
                     "subs        r4, r4, #1         \n"
-                    "bne         loop2b             \n"
+                    "bne         loop2             \n"
 
                     // 完成赋值
                     "loop3:                         \n" 
@@ -381,8 +390,8 @@ namespace Msnhnet
                     "3"(destptr3),
                     "4"(ptrB),
                     "5"(ptrA),
-                    "r"(K),      // %12
-                    : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
+                    "r"(K)      // %12
+                    : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
                 );
 #endif
 
@@ -478,7 +487,7 @@ namespace Msnhnet
 
             }
 
-            // N = outChannel
+            // N = outHeight*outWidth
             // 拖尾部分，在列方向上只能逐个计算
             for(; i < N; i++){
                 const float *ptrB = src_im2col_pack + (i / 8 + i % 8) *  packHeight * packWidth;
@@ -493,7 +502,84 @@ namespace Msnhnet
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
-                asm volatile();
+                asm volatile(
+                    
+                    "veor       q12, q12, q12       \n"
+
+                    // r4 = K >> 2
+                    "lsr         r4, %12, #2        \n" 
+                    "cmp         r4, #0             \n"
+                    "beq         loop6              \n"
+
+                    // veor 异或，寄存器值初始化为0
+                    // q8, q9, q10, q11 = sum0, sum1, sum2, sum3
+                    
+                    "veor       q8, q8, q8          \n"
+                    "veor       q9, q9, q9          \n"
+                    "veor       q10, q10, q10       \n"
+                    "veor       q11, q11, q11       \n"
+
+                    "loop5:                          \n"
+                    // kernel: [q0,q1,q2,q3]
+                    "pld        [%5, #512]          \n"
+                    "vldm       %5!, {d0-d7}        \n" 
+
+                    // input: [q4, q5]
+                    "pld        [%4, #128]          \n"
+                    "vld1.f32   {d8-d9}, [%4]!      \n" 
+
+                    // 
+                    "vmla.f32   q8, q0, d8[0]       \n" 
+                    "vmla.f32   q9, q1, d8[1]       \n"
+                    "vmla.f32   q10, q2, d9[0]      \n"
+                    "vmla.f32   q11, q3, d9[1]      \n" 
+
+                    "subs        r4, r4, #1         \n"
+                    "bne         loop5              \n"
+
+                    "vadd.f32   q8, q8, q9          \n"
+                    "vadd.f32   q10, q10, q11       \n"
+                    "vadd.f32   q8, q8, q10         \n"
+                    "vadd.f32   q12, q12, q8        \n"
+
+                    "loop6:                         \n"
+                    // r4 = remain = inChannel&3
+                    "and         r4, %12, #3        \n" 
+                    "cmp         r4, #0             \n"
+                    "beq         loop8             \n"
+
+                    "loop7:                         \n" 
+                    "pld        [%5, #128]          \n"
+                    "vld1.f32   {d0-d1}, [%5]!      \n"
+                    "pld        [%4, #32]           \n"
+                    "vld1.f32   {d8[],d9[]}, [%4]!  \n"
+
+                    "subs       r4, r4, #1          \n"
+
+                    "vmla.f32   q12, q0, q4         \n"
+                    "bne         loop7             \n"
+
+                    "loop8:                         \n" 
+                    "vst1.f32    {d24[0]}, [%0]     \n"
+                    "vst1.f32    {d24[1]}, [%1]     \n"
+                    "vst1.f32    {d25[0]}, [%2]     \n"
+                    "vst1.f32    {d25[1]}, [%3]     \n"
+
+                    : "=r"(destptr0), // %0
+                    "=r"(destptr1), // %1
+                    "=r"(destptr2), // %2
+                    "=r"(destptr3), // %3
+                    "=r"(ptrB),      // %4
+                    "=r"(ptrA)       // %5
+                    : "0"(destptr0),
+                    "1"(destptr1),
+                    "2"(destptr2),
+                    "3"(destptr3),
+                    "4"(ptrB),
+                    "5"(ptrA),
+                    "r"(K)      // %12
+                    : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12"
+                );
 #endif
 
 #else 
@@ -543,7 +629,7 @@ namespace Msnhnet
                 const float *ptrA = kernel_im2col_pack + (c / 4 + c % 4) * kernelPackHeight * kernelPackWidth;
 #endif
 
-#if USE_NEON
+#if 0
 
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
