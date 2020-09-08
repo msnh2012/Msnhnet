@@ -20,6 +20,8 @@ public:
 
     virtual void forward(NetworkState &netState);
 
+    virtual void mallocMemory();
+
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);
 #endif
@@ -101,6 +103,8 @@ protected:
     int         _padding             =   0;
     int         _dilation            =   0;
     int         _batchNorm           =   0;
+
+    int         _totalBatch          =   0;
 };
 }
 

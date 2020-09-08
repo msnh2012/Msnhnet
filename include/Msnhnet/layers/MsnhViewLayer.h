@@ -1,4 +1,4 @@
-#ifndef MSNHNETVIEW_H
+﻿#ifndef MSNHNETVIEW_H
 #define MSNHNETVIEW_H
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/layers/MsnhBaseLayer.h"
@@ -13,6 +13,7 @@ public:
     ViewLayer(const int &batch, const int &width, const int &height, const int &channel, const int &outWidth, const int &outHeight, const int &outChannel);
     ~ViewLayer();
 
+    virtual  void mallocMemory();
     virtual  void forward(NetworkState &netState);
 
 #ifdef USE_GPU

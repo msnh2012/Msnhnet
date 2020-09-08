@@ -104,24 +104,6 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                     this->_inputNum = layer->getInputNum();
                 }
             }
-            else if(branchParams[i][j]->type == LayerType::ADD_BLOCK)
-            {
-                AddBlockParams *addBlockParams          =   reinterpret_cast<AddBlockParams*>(branchParams[i][j]);
-                layer                                   =   new AddBlockLayer(1, params, addBlockParams->branchParams, addBlockParams->activation, addBlockParams->actParams);
-                if(i == 0 && j == 0)
-                {
-                    this->_inputNum = layer->getInputNum();
-                }
-            }
-            else if(branchParams[i][j]->type == LayerType::CONCAT_BLOCK)
-            {
-                ConcatBlockParams *concatBlockParams    =   reinterpret_cast<ConcatBlockParams*>(branchParams[i][j]);
-                layer                                   =   new ConcatBlockLayer(1, params, concatBlockParams->branchParams, concatBlockParams->activation, concatBlockParams->actParams);
-                if(i == 0 && j == 0)
-                {
-                    this->_inputNum = layer->getInputNum();
-                }
-            }
             else
             {
                 throw Exception(1, "layer type is not supported by [AddBlockLayer]", __FILE__, __LINE__, __FUNCTION__);
@@ -137,11 +119,39 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
                 this->_workSpaceSize = layer->getWorkSpaceSize();
             }
 
+            if(layer->getMaxOutputNum() >this->_maxOutputNum)
+            {
+                this->_maxOutputNum  = layer->getMaxOutputNum();
+            }
+
             this->_numWeights    =   this->_numWeights + layer->getNumWeights();
             this->_layerDetail   =   this->_layerDetail.append(layer->getLayerDetail());
 
             tmpLayers.push_back(layer);
+
+            if(layer->getMemReUse()==0)
+            {
+                layer->mallocMemory();
+            }
+
+            if(j == (branchParams[i].size()-1))
+            {
+                layer->mallocMemory();
+            }
+
+            layer->setIsBranchLayer(true);
+
+            if(j == 0)
+            {
+                layer->setBranchFirst(true);
+            }
+
+            if(j==(branchParams[i].size()-1))
+            {
+                layer->setBranchLast(true);
+            }
         }
+
         this->_layerDetail.append("\n");
 
         branchLayers.push_back(tmpLayers);
@@ -163,14 +173,6 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
     this->_outWidth          =   branchBuildParams.width;
     this->_outChannel        =   branchBuildParams.channels;
     this->_outputNum         =   branchBuildParams.inputNums;
-
-    if(!BaseLayer::isPreviewMode)
-    {
-        this->_output            =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
-#ifdef USE_GPU
-        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-#endif
-    }
 
     this->_layerDetail.append("========================================================================\n");
 }
@@ -204,11 +206,48 @@ void AddBlockLayer::loadAllWeigths(std::vector<float> &weights)
     }
 }
 
+void AddBlockLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            if(!BaseLayer::onlyUseGpu)
+
+            {
+                this->_output            =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
+            }
+#ifdef USE_GPU
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuOutput         =   Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+            }
+#endif
+            this->_memoryMalloced    =   true;
+        }
+    }
+    this->_memReUse           =   0;
+}
+
 void AddBlockLayer::forward(NetworkState &netState)
 {
 
     /* TODO: batch */
-    std::vector<float> inputX{netState.input, netState.input + netState.inputNum};
+
+    float *layerInput   = nullptr;
+    float *layerOutput  = nullptr;
+
+    if(netState.net->layers[this->_layerIndex-1]->getMemReUse() == 1)
+    {
+        layerInput      = netState.getInput();
+    }
+    else
+    {
+        layerInput      = netState.input;
+    }
+
+    std::vector<float> inputX{layerInput, layerInput + netState.inputNum};
 
     for (size_t i = 0; i < branchLayers.size(); ++i)
     {
@@ -219,10 +258,29 @@ void AddBlockLayer::forward(NetworkState &netState)
         {
             branchLayers[i][j]->forward(netState);
 
-            netState.input     =   branchLayers[i][j]->getOutput();
+            if(branchLayers[i][j]->getMemReUse()==0)
+
+            {
+                netState.input     =   branchLayers[i][j]->getOutput();
+            }
+
             netState.inputNum  =   branchLayers[i][j]->getOutputNum();
         }
 
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerOutput     = netState.getOutput(); 
+
+        netState.shuffleInOut();
+
+    }
+    else
+
+    {
+        layerOutput     = this->_output;
     }
 
     for (size_t i = 1; i < branchLayers.size(); ++i)
@@ -232,22 +290,22 @@ void AddBlockLayer::forward(NetworkState &netState)
                 1, branchLayers[i][branchLayers[i].size()-1]->getOutput(), 1);
 
     }
-    Blas::cpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1][branchLayers[branchLayers.size()-1].size()-1]->getOutput(), 1, this->getOutput(), 1);
+    Blas::cpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1][branchLayers[branchLayers.size()-1].size()-1]->getOutput(), 1, layerOutput, 1);
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
-        Activations::activateArrayNormCh(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                         this->_outWidth*this->_outHeight, this->_output);
+        Activations::activateArrayNormCh(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, layerOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_output,0);
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_output,1);
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {
@@ -257,11 +315,11 @@ void AddBlockLayer::forward(NetworkState &netState)
     {
         if(_actParams.size() > 0)
         {
-            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
         }
     }
 
@@ -281,7 +339,19 @@ void AddBlockLayer::forwardGPU(NetworkState &netState)
 {
     /* TODO: batch */
 
-    float * inputX      = Cuda::makeCudaArray(netState.input,netState.inputNum,cudaMemcpyKind::cudaMemcpyDeviceToDevice);
+    float *layerGpuInput   = nullptr;
+    float *layerGpuOutput  = nullptr;
+
+    if(netState.net->layers[this->_layerIndex-1]->getMemReUse() == 1)
+    {
+        layerGpuInput      = netState.getGpuInput();
+    }
+    else
+    {
+        layerGpuInput      = netState.input;
+    }
+
+    float * inputX      = Cuda::makeCudaArray(layerGpuInput,netState.inputNum,cudaMemcpyKind::cudaMemcpyDeviceToDevice);
     int     inputXNum   = netState.inputNum;
 
     for (size_t i = 0; i < branchLayers.size(); ++i)
@@ -293,10 +363,28 @@ void AddBlockLayer::forwardGPU(NetworkState &netState)
         {
             branchLayers[i][j]->forwardGPU(netState);
 
-            netState.input     =   branchLayers[i][j]->getGpuOutput();
+            if(branchLayers[i][j]->getMemReUse()==0)
+
+            {
+                netState.input     =   branchLayers[i][j]->getGpuOutput();
+            }
             netState.inputNum  =   branchLayers[i][j]->getOutputNum();
         }
 
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerGpuOutput     = netState.getGpuOutput(); 
+
+        netState.shuffleGpuInOut();
+
+    }
+    else
+
+    {
+        layerGpuOutput     = this->_gpuOutput;
     }
 
     for (size_t i = 1; i < branchLayers.size(); ++i)
@@ -306,22 +394,22 @@ void AddBlockLayer::forwardGPU(NetworkState &netState)
                 1, branchLayers[i][branchLayers[i].size()-1]->getGpuOutput(), 1);
 
     }
-    BlasGPU::gpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1][branchLayers[branchLayers.size()-1].size()-1]->getGpuOutput(), 1, this->getGpuOutput(), 1);
+    BlasGPU::gpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1][branchLayers[branchLayers.size()-1].size()-1]->getGpuOutput(), 1, layerGpuOutput, 1);
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
-        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                            this->_outWidth*this->_outHeight, this->_gpuOutput);
+        ActivationsGPU::gpuActivateArrayNormCh(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                               this->_outWidth*this->_outHeight, layerGpuOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                      this->_outWidth*this->_outHeight, layerGpuOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                      this->_outWidth*this->_outHeight, layerGpuOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {
@@ -332,11 +420,11 @@ void AddBlockLayer::forwardGPU(NetworkState &netState)
 
         if(_actParams.size() > 0)
         {
-            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+            ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
         }
         else
         {
-            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+            ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation);
         }
     }
 

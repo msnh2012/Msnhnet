@@ -41,6 +41,7 @@ public:
     static cublasHandle_t getBlasHandle();
     static void deleteBlasHandle();
     static float *makeCudaArray(float *const &x, const size_t &n, const cudaMemcpyKind &copyType=cudaMemcpyHostToDevice);
+    static float *mallocCudaArray(const size_t &n);
 
     static __half *makeFp16ArrayFromFp32(float * const &x, const size_t &n);
 

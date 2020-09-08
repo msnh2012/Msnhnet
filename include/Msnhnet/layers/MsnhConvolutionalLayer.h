@@ -46,6 +46,7 @@ public:
     void cpuBinarize(float *const &x, const int &xNum, float *const &binary);
     void swapBinary();
 
+    virtual void mallocMemory();
     void forward(NetworkState &netState);
 #ifdef USE_GPU
     void forwardGPU(NetworkState &netState);

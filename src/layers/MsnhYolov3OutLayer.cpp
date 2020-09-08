@@ -57,6 +57,7 @@ Yolov3OutLayer::Yolov3OutLayer(const int &batch, const int &orgWidth, const int 
         this->_shuffleInputGpu      =   Cuda::makeCudaArray(this->_shuffleInput, this->_yolov3AllInputNum * this->_batch);
 #endif
     }
+    this->_memReUse = 0;
 }
 
 Yolov3OutLayer::~Yolov3OutLayer()

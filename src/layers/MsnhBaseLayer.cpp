@@ -7,6 +7,8 @@ bool BaseLayer::supportAvx      = false;
 bool BaseLayer::supportFma      = false;
 bool BaseLayer::isPreviewMode   = false;
 bool BaseLayer::onlyUseCuda     = false;
+bool BaseLayer::onlyUseCpu      = false;
+bool BaseLayer::onlyUseGpu      = false;
 
 bool BaseLayer::useFp16         = false;
 
@@ -174,6 +176,41 @@ size_t BaseLayer::getInputSpaceSize() const
     return _inputSpaceSize;
 }
 
+uint8_t BaseLayer::getMemReUse() const
+{
+    return _memReUse;
+}
+
+int BaseLayer::getLayerIndex() const
+{
+    return _layerIndex;
+}
+
+void BaseLayer::setLayerIndex(int layerIndex)
+{
+    _layerIndex = layerIndex;
+}
+
+size_t BaseLayer::getMaxOutputNum() const
+{
+    return _maxOutputNum;
+}
+
+void BaseLayer::setIsBranchLayer(bool isBranchLayer)
+{
+    _isBranchLayer = isBranchLayer;
+}
+
+void BaseLayer::setBranchFirst(bool branchFirst)
+{
+    _isFirstBranch = branchFirst;
+}
+
+void BaseLayer::setBranchLast(bool branchLast)
+{
+    _isLastBranch = branchLast;
+}
+
 BaseLayer::BaseLayer()
 {
 
@@ -193,6 +230,7 @@ void BaseLayer::setPreviewMode(const bool &previewMode)
     BaseLayer::isPreviewMode = previewMode;
 }
 
+#ifdef USE_GPU
 void BaseLayer::setForceUseCuda(const bool &forceUseCuda)
 {
     BaseLayer::onlyUseCuda = forceUseCuda;
@@ -201,6 +239,22 @@ void BaseLayer::setForceUseCuda(const bool &forceUseCuda)
 void BaseLayer::setUseFp16(const bool &useFp16)
 {
     BaseLayer::useFp16 = useFp16;
+}
+
+void BaseLayer::setOnlyGpu(const bool &onlyGpu)
+{
+    BaseLayer::onlyUseGpu = onlyGpu;
+}
+
+void BaseLayer::setOnlyCpu(const bool &onlyCpu)
+{
+    BaseLayer::onlyUseCpu = onlyCpu;
+}
+#endif
+
+void BaseLayer::mallocMemory()
+{
+
 }
 
 void BaseLayer::forward(NetworkState &netState)
@@ -214,6 +268,16 @@ void BaseLayer::loadAllWeigths(std::vector<float> &weights)
 }
 
 #ifdef USE_GPU
+std::vector<float> BaseLayer::getVecFromCuda(float * const data, const int &num)
+{
+    float* out = new float[num]();
+    Cuda::pullCudaArray(data, out,num);
+    std::vector<float> datVec{out,out+num};
+    delete[] out;
+    out = nullptr;
+    return datVec;
+}
+
 void BaseLayer::forwardGPU(NetworkState &netState)
 {
     (void)netState;
@@ -235,7 +299,7 @@ void BaseLayer::recordCudaStop()
     /* Not good */
 
     this->_forwardTime = 0.f;
-/*
+    /*
    cudaThreadSynchronize();
    cudaEventRecord(_stop, 0);
    cudaEventSynchronize(_stop);

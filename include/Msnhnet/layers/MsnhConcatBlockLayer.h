@@ -31,6 +31,8 @@ public:
     std::vector<std::vector<BaseLayer *>> branchLayers;
     float       *activationInput    =   nullptr;
 
+    void mallocMemory();
+
     void loadAllWeigths(std::vector<float> &weights);
 
     virtual void forward(NetworkState &netState);

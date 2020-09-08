@@ -17,7 +17,8 @@ int main(int argc, char** argv)
     try
     {
         Msnhnet::NetBuilder  msnhNet;
-        msnhNet.setUseFp16(true); // FP16 must be set before build net
+        Msnhnet::NetBuilder::setOnlyGpu(true);
+        Msnhnet::NetBuilder::setUseFp16(true); // FP16 must be set before build net
         msnhNet.buildNetFromMsnhNet(msnhnetPath);
         std::cout<<msnhNet.getLayerDetail();
         msnhNet.loadWeightsFromMsnhBin(msnhbinPath);

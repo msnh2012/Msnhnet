@@ -11,8 +11,10 @@ int buildMsnhnet(char **msg, const char *msnhnet, const char *msnhbin, int useFp
 {
     try
     {
+#ifdef USE_GPU
         net->setUseFp16((useFp16>0));
         net->setForceUseCuda((useCudaOnly>0));
+#endif
         net->buildNetFromMsnhNet(msnhnet);
         net->loadWeightsFromMsnhBin(msnhbin);
     }

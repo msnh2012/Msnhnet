@@ -135,6 +135,7 @@ void MainWindow::on_actionOpen_triggered()
             QString dilation    = QString("%1*%2").arg(layer->getDilationX()).arg(layer->getDilationY());
             QString group       = QString("%1/%2").arg(layer->getGroupIndex()).arg(layer->getGroups());
             QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input     );
@@ -145,7 +146,8 @@ void MainWindow::on_actionOpen_triggered()
             node->attributes()[5]->setData(dilation  );
             node->attributes()[6]->setData(group     );
             node->attributes()[7]->setData(activation);
-            node->attributes()[8]->setData(output    );
+            node->attributes()[8]->setData(inplace   );
+            node->attributes()[9]->setData(output    );
         }
 
         if(layerName == "DeConv")
@@ -157,6 +159,7 @@ void MainWindow::on_actionOpen_triggered()
             QString stride      = QString("%1*%2").arg(layer->getStrideX()).arg(layer->getStrideY());
             QString padding     = QString("%1*%2").arg(layer->getPaddingX()).arg(layer->getPaddingY());
             QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input     );
@@ -165,7 +168,8 @@ void MainWindow::on_actionOpen_triggered()
             node->attributes()[3]->setData(stride    );
             node->attributes()[4]->setData(padding   );
             node->attributes()[5]->setData(activation);
-            node->attributes()[6]->setData(output    );
+            node->attributes()[6]->setData(inplace   );
+            node->attributes()[7]->setData(output    );
         }
 
         if(layerName == "Connected")
@@ -173,11 +177,13 @@ void MainWindow::on_actionOpen_triggered()
             Msnhnet::ConnectedLayer *layer = reinterpret_cast<Msnhnet::ConnectedLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input     );
             node->attributes()[1]->setData(activation);
-            node->attributes()[2]->setData(output    );
+            node->attributes()[2]->setData(inplace   );
+            node->attributes()[3]->setData(output    );
         }
 
         if(layerName == "MaxPool")
@@ -188,6 +194,7 @@ void MainWindow::on_actionOpen_triggered()
             QString kernel      = QString("%1*%2").arg(layer->getKSizeX()).arg(layer->getKSizeY());
             QString stride      = QString("%1*%2").arg(layer->getStrideX()).arg(layer->getStrideY());
             QString padding     = QString("%1*%2").arg(layer->getPaddingX()).arg(layer->getPaddingY());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input  );
@@ -195,17 +202,20 @@ void MainWindow::on_actionOpen_triggered()
             node->attributes()[2]->setData(kernel );
             node->attributes()[3]->setData(stride );
             node->attributes()[4]->setData(padding);
-            node->attributes()[5]->setData(output );
+            node->attributes()[5]->setData(inplace);
+            node->attributes()[6]->setData(output );
         }
 
         if(layerName == "GlobalAvgPool")
         {
             Msnhnet::GlobalAvgPoolLayer *layer = reinterpret_cast<Msnhnet::GlobalAvgPoolLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input  );
-            node->attributes()[1]->setData(output );
+            node->attributes()[1]->setData(inplace);
+            node->attributes()[2]->setData(output );
         }
 
         if(layerName == "LocalAvgPool")
@@ -216,6 +226,7 @@ void MainWindow::on_actionOpen_triggered()
             QString kernel      = QString("%1*%2").arg(layer->getKSizeX()).arg(layer->getKSizeY());
             QString stride      = QString("%1*%2").arg(layer->getStrideX()).arg(layer->getStrideY());
             QString padding     = QString("%1*%2").arg(layer->getPaddingX()).arg(layer->getPaddingY());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input  );
@@ -223,17 +234,20 @@ void MainWindow::on_actionOpen_triggered()
             node->attributes()[2]->setData(kernel );
             node->attributes()[3]->setData(stride );
             node->attributes()[4]->setData(padding);
-            node->attributes()[5]->setData(output );
+            node->attributes()[5]->setData(inplace);
+            node->attributes()[6]->setData(output );
         }
 
         if(layerName == "Empty")
         {
             Msnhnet::EmptyLayer *layer = reinterpret_cast<Msnhnet::EmptyLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-            node->attributes()[0]->setData(input );
-            node->attributes()[1]->setData(output);
+            node->attributes()[0]->setData(input  );
+            node->attributes()[1]->setData(inplace);
+            node->attributes()[2]->setData(output );
         }
 
         if(layerName == "Activate")
@@ -241,11 +255,13 @@ void MainWindow::on_actionOpen_triggered()
             Msnhnet::ActivationLayer *layer = reinterpret_cast<Msnhnet::ActivationLayer *>(builder.getNet()->layers[i]);
             QString input           = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString act             = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+            QString inplace         = QString("%1").arg(layer->getMemReUse());
             QString output          = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-            node->attributes()[0]->setData(input );
-            node->attributes()[1]->setData(act   );
-            node->attributes()[2]->setData(output);
+            node->attributes()[0]->setData(input  );
+            node->attributes()[1]->setData(act    );
+            node->attributes()[2]->setData(inplace);
+            node->attributes()[3]->setData(output );
         }
 
         if(layerName == "BatchNorm")
@@ -253,11 +269,13 @@ void MainWindow::on_actionOpen_triggered()
             Msnhnet::BatchNormLayer *layer = reinterpret_cast<Msnhnet::BatchNormLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input     );
             node->attributes()[1]->setData(activation);
-            node->attributes()[2]->setData(output    );
+            node->attributes()[2]->setData(inplace   );
+            node->attributes()[3]->setData(output    );
         }
 
 
@@ -266,11 +284,13 @@ void MainWindow::on_actionOpen_triggered()
             Msnhnet::AddBlockLayer *layer = reinterpret_cast<Msnhnet::AddBlockLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input     );
             node->attributes()[1]->setData(activation);
-            node->attributes()[2]->setData(output    );
+            node->attributes()[2]->setData(inplace   );
+            node->attributes()[3]->setData(output    );
         }
 
         if(layerName == "ConcatBlock")
@@ -278,11 +298,13 @@ void MainWindow::on_actionOpen_triggered()
             Msnhnet::ConcatBlockLayer *layer = reinterpret_cast<Msnhnet::ConcatBlockLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input     );
             node->attributes()[1]->setData(activation);
-            node->attributes()[2]->setData(output    );
+            node->attributes()[2]->setData(inplace   );
+            node->attributes()[3]->setData(output    );
         }
 
         if(layerName == "Res2Block")
@@ -290,11 +312,13 @@ void MainWindow::on_actionOpen_triggered()
             Msnhnet::Res2BlockLayer *layer = reinterpret_cast<Msnhnet::Res2BlockLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input     );
             node->attributes()[1]->setData(activation);
-            node->attributes()[2]->setData(output    );
+            node->attributes()[2]->setData(inplace   );
+            node->attributes()[3]->setData(output    );
         }
 
         if(layerName == "ResBlock")
@@ -302,21 +326,25 @@ void MainWindow::on_actionOpen_triggered()
             Msnhnet::ResBlockLayer *layer = reinterpret_cast<Msnhnet::ResBlockLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input     );
             node->attributes()[1]->setData(activation);
-            node->attributes()[2]->setData(output    );
+            node->attributes()[2]->setData(inplace   );
+            node->attributes()[3]->setData(output    );
         }
 
         if(layerName == "Crop")
         {
             Msnhnet::CropLayer *layer = reinterpret_cast<Msnhnet::CropLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-            node->attributes()[0]->setData(input );
-            node->attributes()[1]->setData(output);
+            node->attributes()[0]->setData(input  );
+            node->attributes()[1]->setData(inplace);
+            node->attributes()[2]->setData(output );
         }
 
         if(layerName == "Padding")
@@ -324,11 +352,13 @@ void MainWindow::on_actionOpen_triggered()
             Msnhnet::PaddingLayer *layer = reinterpret_cast<Msnhnet::PaddingLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString padding     = QString("%1/%2/%3/%4").arg(layer->getTop()).arg(layer->getDown()).arg(layer->getLeft()).arg(layer->getRight());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-            node->attributes()[0]->setData(input);
+            node->attributes()[0]->setData(input  );
             node->attributes()[1]->setData(padding);
-            node->attributes()[2]->setData(output);
+            node->attributes()[2]->setData(inplace);
+            node->attributes()[3]->setData(output );
         }
 
         if(layerName == "Reduction")
@@ -337,12 +367,14 @@ void MainWindow::on_actionOpen_triggered()
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString type        = (layer->getReductionType()==ReductionType::REDUCTION_SUM)?"sum":"mean";
             QString axis        = QString::number(layer->getAxis());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-            node->attributes()[0]->setData(input);
-            node->attributes()[1]->setData(type);
-            node->attributes()[2]->setData(axis);
-            node->attributes()[3]->setData(output);
+            node->attributes()[0]->setData(input  );
+            node->attributes()[1]->setData(type   );
+            node->attributes()[2]->setData(axis   );
+            node->attributes()[3]->setData(inplace);
+            node->attributes()[4]->setData(output );
         }
 
         if(layerName == "Permute")
@@ -352,23 +384,27 @@ void MainWindow::on_actionOpen_triggered()
             QString dim0        = QString::number(layer->getDim0());
             QString dim1        = QString::number(layer->getDim1());
             QString dim2        = QString::number(layer->getDim2());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-            node->attributes()[0]->setData(input);
-            node->attributes()[1]->setData(dim0);
-            node->attributes()[2]->setData(dim1);
-            node->attributes()[3]->setData(dim2);
-            node->attributes()[4]->setData(output);
+            node->attributes()[0]->setData(input  );
+            node->attributes()[1]->setData(dim0   );
+            node->attributes()[2]->setData(dim1   );
+            node->attributes()[3]->setData(dim2   );
+            node->attributes()[4]->setData(inplace);
+            node->attributes()[5]->setData(output );
         }
 
         if(layerName == "View")
         {
             Msnhnet::ViewLayer *layer = reinterpret_cast<Msnhnet::ViewLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-            node->attributes()[0]->setData(input);
-            node->attributes()[1]->setData(output);
+            node->attributes()[0]->setData(input  );
+            node->attributes()[1]->setData(inplace);
+            node->attributes()[2]->setData(output );
         }
 
 
@@ -379,13 +415,15 @@ void MainWindow::on_actionOpen_triggered()
             QString index       = (layer->getInputLayerIndexes().size()==1)?QString::number(layer->getInputLayerIndexes()[0]+1):"-----";
             QString layerType   = QString::fromStdString(Msnhnet::VariableOpParams::getStrFromVarOpType(layer->getVarOpType()));
             QString constVal    = QString::number(layer->getConstVal());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-            node->attributes()[0]->setData(input);
+            node->attributes()[0]->setData(input    );
             node->attributes()[1]->setData(layerType);
-            node->attributes()[2]->setData(index);
-            node->attributes()[3]->setData(constVal);
-            node->attributes()[4]->setData(output);
+            node->attributes()[2]->setData(index    );
+            node->attributes()[3]->setData(constVal );
+            node->attributes()[4]->setData(inplace  );
+            node->attributes()[5]->setData(output   );
         }
 
         if(layerName == "Route")
@@ -395,13 +433,15 @@ void MainWindow::on_actionOpen_triggered()
             QString group       = QString("%1/%2").arg(layer->getGroupIndex()).arg(layer->getGroups());
             QString type        = (layer->getAddModel() == 1)?"ADD":"Connect";
             QString act         = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-            node->attributes()[0]->setData(input);
-            node->attributes()[1]->setData(group);
-            node->attributes()[2]->setData(type);
-            node->attributes()[3]->setData(act);
-            node->attributes()[4]->setData(output);
+            node->attributes()[0]->setData(input  );
+            node->attributes()[1]->setData(group  );
+            node->attributes()[2]->setData(type   );
+            node->attributes()[3]->setData(act    );
+            node->attributes()[4]->setData(inplace);
+            node->attributes()[5]->setData(output );
         }
 
         if(layerName == "SoftMax")
@@ -410,12 +450,14 @@ void MainWindow::on_actionOpen_triggered()
             QString input       = QString("%1").arg(layer->getInputNum());
             QString groups      = QString("%1").arg(layer->getGroups());
             QString temperature = QString("%1").arg(layer->getTemperature());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1").arg(layer->getOutputNum());
 
-            node->attributes()[0]->setData(input);
-            node->attributes()[1]->setData(groups);
+            node->attributes()[0]->setData(input      );
+            node->attributes()[1]->setData(groups     );
             node->attributes()[2]->setData(temperature);
-            node->attributes()[3]->setData(output);
+            node->attributes()[3]->setData(inplace    );
+            node->attributes()[4]->setData(output     );
         }
 
         if(layerName == "UpSample")
@@ -426,14 +468,16 @@ void MainWindow::on_actionOpen_triggered()
             QString scale       = QString("%1*%2").arg(int(layer->getScaleX()*1000)/1000.0f).arg(int(layer->getScaleY()*1000)/1000.0f);
             QString stride      = QString("%1*%2").arg(layer->getStrideX()).arg(layer->getStrideY());
             QString alignCorner = QString("%1").arg(layer->getAlignCorners());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-            node->attributes()[0]->setData(input);
-            node->attributes()[1]->setData(type);
-            node->attributes()[2]->setData(stride);
-            node->attributes()[3]->setData(scale);
+            node->attributes()[0]->setData(input      );
+            node->attributes()[1]->setData(type       );
+            node->attributes()[2]->setData(stride     );
+            node->attributes()[3]->setData(scale      );
             node->attributes()[4]->setData(alignCorner);
-            node->attributes()[5]->setData(output);
+            node->attributes()[5]->setData(inplace    );
+            node->attributes()[6]->setData(output     );
         }
 
         if(layerName == "Yolov3")
@@ -441,11 +485,13 @@ void MainWindow::on_actionOpen_triggered()
             Msnhnet::Yolov3Layer *layer = reinterpret_cast<Msnhnet::Yolov3Layer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString classes     = QString("%1").arg(layer->getClassNum());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input);
             node->attributes()[1]->setData(classes);
-            node->attributes()[2]->setData(output);
+            node->attributes()[2]->setData(inplace);
+            node->attributes()[3]->setData(output);
         }
 
         if(layerName == "Yolov3Out")
@@ -454,10 +500,12 @@ void MainWindow::on_actionOpen_triggered()
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString conf        = QString("%1").arg(layer->getConfThresh());
             QString nms         = QString("%1").arg(layer->getNmsThresh());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
 
             node->attributes()[0]->setData(input);
             node->attributes()[1]->setData(conf);
             node->attributes()[2]->setData(nms);
+            node->attributes()[3]->setData(inplace);
         }
 
         if(node == nullptr)
@@ -970,6 +1018,7 @@ void MainWindow::createNode(Node *node, const QString &layerName, Msnhnet::BaseL
         QString dilation    = QString("%1*%2").arg(layer->getDilationX()).arg(layer->getDilationY());
         QString group       = QString("%1/%2").arg(layer->getGroupIndex()).arg(layer->getGroups());
         QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+        QString inplace     = QString("%1").arg(layer->getMemReUse());
         QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
         node->attributes()[0]->setData(input     );
@@ -980,7 +1029,8 @@ void MainWindow::createNode(Node *node, const QString &layerName, Msnhnet::BaseL
         node->attributes()[5]->setData(dilation  );
         node->attributes()[6]->setData(group     );
         node->attributes()[7]->setData(activation);
-        node->attributes()[8]->setData(output    );
+        node->attributes()[8]->setData(inplace   );
+        node->attributes()[9]->setData(output    );
     }
 
     if(layerName == "Connected")
@@ -988,11 +1038,13 @@ void MainWindow::createNode(Node *node, const QString &layerName, Msnhnet::BaseL
         Msnhnet::ConnectedLayer *layer = reinterpret_cast<Msnhnet::ConnectedLayer *>(inLayer);
         QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
         QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+        QString inplace     = QString("%1").arg(layer->getMemReUse());
         QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
         node->attributes()[0]->setData(input     );
         node->attributes()[1]->setData(activation);
-        node->attributes()[2]->setData(output    );
+        node->attributes()[2]->setData(inplace   );
+        node->attributes()[3]->setData(output    );
     }
 
     if(layerName == "MaxPool")
@@ -1003,6 +1055,7 @@ void MainWindow::createNode(Node *node, const QString &layerName, Msnhnet::BaseL
         QString kernel      = QString("%1*%2").arg(layer->getKSizeX()).arg(layer->getKSizeY());
         QString stride      = QString("%1*%2").arg(layer->getStrideX()).arg(layer->getStrideY());
         QString padding     = QString("%1*%2").arg(layer->getPaddingX()).arg(layer->getPaddingY());
+        QString inplace     = QString("%1").arg(layer->getMemReUse());
         QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
         node->attributes()[0]->setData(input  );
@@ -1010,7 +1063,8 @@ void MainWindow::createNode(Node *node, const QString &layerName, Msnhnet::BaseL
         node->attributes()[2]->setData(kernel );
         node->attributes()[3]->setData(stride );
         node->attributes()[4]->setData(padding);
-        node->attributes()[5]->setData(output );
+        node->attributes()[5]->setData(inplace);
+        node->attributes()[6]->setData(output );
     }
 
     if(layerName == "LocalAvgPool")
@@ -1021,6 +1075,7 @@ void MainWindow::createNode(Node *node, const QString &layerName, Msnhnet::BaseL
         QString kernel      = QString("%1*%2").arg(layer->getKSizeX()).arg(layer->getKSizeY());
         QString stride      = QString("%1*%2").arg(layer->getStrideX()).arg(layer->getStrideY());
         QString padding     = QString("%1*%2").arg(layer->getPaddingX()).arg(layer->getPaddingY());
+        QString inplace     = QString("%1").arg(layer->getMemReUse());
         QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
         node->attributes()[0]->setData(input  );
@@ -1028,27 +1083,32 @@ void MainWindow::createNode(Node *node, const QString &layerName, Msnhnet::BaseL
         node->attributes()[2]->setData(kernel );
         node->attributes()[3]->setData(stride );
         node->attributes()[4]->setData(padding);
-        node->attributes()[5]->setData(output );
+        node->attributes()[5]->setData(inplace);
+        node->attributes()[6]->setData(output );
     }
 
     if(layerName == "GlobalAvgPool")
     {
         Msnhnet::GlobalAvgPoolLayer *layer = reinterpret_cast<Msnhnet::GlobalAvgPoolLayer *>(inLayer);
         QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+        QString inplace     = QString("%1").arg(layer->getMemReUse());
         QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
         node->attributes()[0]->setData(input  );
-        node->attributes()[1]->setData(output );
+        node->attributes()[1]->setData(inplace);
+        node->attributes()[2]->setData(output );
     }
 
     if(layerName == "Empty")
     {
         Msnhnet::EmptyLayer *layer = reinterpret_cast<Msnhnet::EmptyLayer *>(inLayer);
         QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+        QString inplace     = QString("%1").arg(layer->getMemReUse());
         QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-        node->attributes()[0]->setData(input );
-        node->attributes()[1]->setData(output);
+        node->attributes()[0]->setData(input  );
+        node->attributes()[1]->setData(inplace);
+        node->attributes()[2]->setData(output );
     }
 
     if(layerName == "BatchNorm")
@@ -1056,11 +1116,13 @@ void MainWindow::createNode(Node *node, const QString &layerName, Msnhnet::BaseL
         Msnhnet::BatchNormLayer *layer = reinterpret_cast<Msnhnet::BatchNormLayer *>(inLayer);
         QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
         QString activation  = QString::fromStdString(Msnhnet::Activations::getActivationStr(layer->getActivation()));
+        QString inplace     = QString("%1").arg(layer->getMemReUse());
         QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
         node->attributes()[0]->setData(input     );
         node->attributes()[1]->setData(activation);
-        node->attributes()[2]->setData(output    );
+        node->attributes()[2]->setData(inplace   );
+        node->attributes()[3]->setData(output    );
     }
 
     if(layerName == "Padding")
@@ -1068,11 +1130,13 @@ void MainWindow::createNode(Node *node, const QString &layerName, Msnhnet::BaseL
         Msnhnet::PaddingLayer *layer = reinterpret_cast<Msnhnet::PaddingLayer *>(inLayer);
         QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
         QString padding     = QString("%1/%2/%3/%4").arg(layer->getTop()).arg(layer->getDown()).arg(layer->getLeft()).arg(layer->getRight());
+        QString inplace     = QString("%1").arg(layer->getMemReUse());
         QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
-        node->attributes()[0]->setData(input);
+        node->attributes()[0]->setData(input  );
         node->attributes()[1]->setData(padding);
-        node->attributes()[2]->setData(output);
+        node->attributes()[2]->setData(inplace);
+        node->attributes()[3]->setData(output );
     }
 }
 

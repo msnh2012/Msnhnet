@@ -51,11 +51,19 @@ class MsnhNet_API NetBuilder
 public:
     NetBuilder();
     ~NetBuilder();
+
+    static void setPreviewMode(const bool &mode);
+
+#ifdef USE_GPU
+    static void setOnlyGpu(const bool &onlyGpu);
+    static void setOnlyCpu(const bool &onlyCpu);
+    static void setUseFp16(const bool &useFp16);
+    static void setForceUseCuda(const bool &onlyUseCuda);
+#endif
+
     void buildNetFromMsnhNet(const std::string &path);
     void loadWeightsFromMsnhBin(const std::string &path);
-    void setPreviewMode(const bool &mode);
-    void setForceUseCuda(const bool &onlyUseCuda);
-    void setUseFp16(const bool &useFp16);
+
     std::vector<float> runClassify(std::vector<float> img);
     std::vector<std::vector<Yolov3Box>> runYolov3(std::vector<float> img);
 #ifdef USE_GPU
@@ -87,6 +95,8 @@ public:
 
     size_t getLastLayerOutNum() const;
 
+    void setSaveLayerOutput(bool saveLayerOutput);
+
 private:
 
     Parser          *_parser;
@@ -96,7 +106,8 @@ private:
     int             _lastLayerOutWidth      = 0;
     int             _lastLayerOutHeight     = 0;
     int             _lastLayerOutChannel    = 0;
-    size_t          _lastLayerOutNum       = 0;
+    size_t          _lastLayerOutNum        = 0;
+    bool            _saveLayerOutput        = false;
 };
 }
 #endif 

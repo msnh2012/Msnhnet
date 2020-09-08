@@ -97,14 +97,6 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
 
     this->_inputNum          = height * width * channel; 
 
-    if(!BaseLayer::isPreviewMode)
-    {
-        this->_output         = new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
-#ifdef USE_GPU
-        this->_gpuOutput      = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-#endif
-    }
-
 #ifdef USE_GPU
 #ifdef USE_CUDNN
 
@@ -124,6 +116,8 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
 #endif
 
     this->_bFlops            = (this->_kSizeX*this->_kSizeY* this->_channel*this->_outHeight*this->_outWidth)/ 1000000000.f;
+
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
 
     char msg[100];
 
@@ -217,6 +211,73 @@ void LocalAvgPoolLayer::forward(NetworkState &netState)
 
     auto st = TimeUtil::startRecord();
 
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerOutput     = this->_output; 
+
+        }
+        else 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+        else
+
+        {
+            layerOutput     = this->_output;
+        }
+    }
+
     int widthOffset  =     -(this->_paddingX + 1) / 2;
     int heightOffset =     -(this->_paddingY + 1) / 2;
 
@@ -264,12 +325,12 @@ void LocalAvgPoolLayer::forward(NetworkState &netState)
                             if(valid)
                             {
                                 counter++;
-                                avg += netState.input[index];
+                                avg += layerInput[index];
                             }
                         }
                     }
 
-                    this->_output[outIndex] = avg / counter;  
+                    layerOutput[outIndex] = avg / counter;  
 
                 }
 
@@ -281,19 +342,111 @@ void LocalAvgPoolLayer::forward(NetworkState &netState)
 
 }
 
+void LocalAvgPoolLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            if(!BaseLayer::onlyUseGpu) 
+
+            {
+                this->_output         = new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+            }
+#ifdef USE_GPU
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuOutput      = Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+            }
+#endif
+            this->_memoryMalloced  =  true;
+        }
+    }
+    this->_memReUse         =  0;
+}
+
 #ifdef USE_GPU
 void LocalAvgPoolLayer::forwardGPU(NetworkState &netState)
 {
     this->recordCudaStart();
+
+    float* layerGpuInput   = netState.getGpuInput();
+    float* layerGpuOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerGpuInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerGpuInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerGpuInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerGpuOutput     = this->_gpuOutput; 
+
+        }
+        else 
+
+        {
+            layerGpuOutput     = netState.getGpuOutput(); 
+
+            netState.shuffleGpuInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerGpuOutput     = netState.getGpuOutput(); 
+
+            netState.shuffleGpuInOut();
+
+        }
+        else
+
+        {
+            layerGpuOutput     = this->_gpuOutput;
+        }
+    }
+
 #ifdef USE_CUDNN
     if(!onlyUseCuda)
     {
         float a = 1.f;
         float b = 0;
         CUDNN_CHECK(cudnnPoolingForward(Cuda::getCudnnHandle(), this->_localAvgPoolDesc, &a,
-                                        this->_inputDesc, netState.input,
+                                        this->_inputDesc, layerGpuInput,
                                         &b,
-                                        this->_outputDesc, this->_gpuOutput));
+                                        this->_outputDesc, layerGpuOutput));
     }
     else
     {
@@ -303,8 +456,8 @@ void LocalAvgPoolLayer::forwardGPU(NetworkState &netState)
                                                this->_kSizeX, this->_kSizeY,
                                                this->_paddingX, this->_paddingY,
                                                this->_batch,
-                                               netState.input,
-                                               this->_gpuOutput
+                                               layerGpuInput,
+                                               layerGpuOutput
                                                );
     }
 #else
@@ -314,8 +467,8 @@ void LocalAvgPoolLayer::forwardGPU(NetworkState &netState)
                                            this->_kSizeX, this->_kSizeY,
                                            this->_paddingX, this->_paddingY,
                                            this->_batch,
-                                           netState.input,
-                                           this->_gpuOutput
+                                           layerGpuInput,
+                                           layerGpuOutput
                                            );
 #endif
     this->recordCudaStop();
