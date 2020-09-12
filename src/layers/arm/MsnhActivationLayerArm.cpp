@@ -144,7 +144,7 @@ void ActivationLayerArm::leakyActivate(float * &src, const int &inWidth, const i
 
         #if USE_NEON
                 int nn = in_size >> 2;
-                int remain = in_size - nn << 2;
+                int remain = in_size - (nn << 2);
         #else
                 int remain = in_size;
         #endif
@@ -161,16 +161,16 @@ void ActivationLayerArm::leakyActivate(float * &src, const int &inWidth, const i
                     
                     "0:                             \n"
                     "pld        [%1, #128]          \n"
-                    "vld1.f32   {d0-d1}, [%1 :128]  \n"
+                    "vld1.f32   {d0-d1}, [%1]       \n"
 
                     // r[i] = a[i] <= b[i] ? 1: 0
-                    "vcl e.f32   q3, q0, q1          \n"
+                    "vcle.f32   q3, q0, q1          \n"
                     // 
                     "vmul.f32   q4, q0, q2          \n"
                     // _p = vbslq_f32(_lemask, _ps, _p);
                     "vbit.32    q0, q4, q3          \n"
 
-                    "vst1.f32   {d0-d1}, [%1 :128]! \n"
+                    "vst1.f32   {d0-d1}, [%1]! \n"
 
                     "subs       %0, #1              \n"
                     "bne        0b                  \n"
