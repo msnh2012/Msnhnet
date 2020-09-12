@@ -60,8 +60,8 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 - fcns[(pytorch-FCN-easiest-demo)](https://github.com/bat67/pytorch-FCN-easiest-demo)
 - unet[(bbuf keras)](https://github.com/BBuf/Keras-Semantic-Segmentation)
 - deeplabv3(**torchvision**)
-- yolov5s[(U版yolov5, for params)](https://github.com/msnh2012/Yolov5ForMsnhnet)
-- yolov5m[(U版yolov5,for params)](https://github.com/msnh2012/Yolov5ForMsnhnet)</br>
+- yolov5s🔥[(U版yolov5, for params)](https://github.com/msnh2012/Yolov5ForMsnhnet)
+- yolov5m🔥[(U版yolov5,for params)](https://github.com/msnh2012/Yolov5ForMsnhnet)</br>
 ==============================================================
 - mobilenetv2_yolov3_lite (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
 - mobilenetv2_yolov3_nano (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
