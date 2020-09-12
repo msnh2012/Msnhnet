@@ -6,13 +6,22 @@ class Msnhnet:
         self.inAddr = ""
         self.net = ""
         self.index = 0
-        self.name_index_dict = OrderedDict()
+        self.names = []
+        self.indexes = []
+
+    def setNameAndIdx(self, name, ids):
+        self.names.append(name)
+        self.indexes.append(ids)
+
+    def getIndexFromName(self,name):
+        ids = self.indexes[self.names.index(name)]
+        return ids
 
     def getLastVal(self):
-        return self.name_index_dict[self.getLastKey()]
+        return self.indexes[-1]
 
     def getLastKey(self):
-        return next(reversed(self.name_index_dict))
+        return self.names[-1]
 
     def checkInput(self, inAddr,fun):
 
@@ -21,7 +30,7 @@ class Msnhnet:
 
         if str(inAddr._cdata) != self.getLastKey():
             try:
-                ID = self.name_index_dict[str(inAddr._cdata)]
+                ID = self.getIndexFromName(str(inAddr._cdata))
                 self.buildRoute(str(inAddr._cdata),str(ID),False)
             except:
                  raise NotImplementedError("last op is not supported " + fun + str(inAddr._cdata))
@@ -37,7 +46,7 @@ class Msnhnet:
 
  
     def buildConv2d(self, name, filters, kSizeX, kSizeY, paddingX, paddingY, strideX, strideY, dilationX, dilationY, groups, useBias):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "conv:\n"
@@ -54,7 +63,7 @@ class Msnhnet:
         self.net = self.net + "  useBias: " + str(int(useBias)) + "\n"
 
     def buildActivation(self, name, activation, params=None):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "act:\n"
@@ -90,31 +99,36 @@ class Msnhnet:
         if activation == "linear":
             self.net = self.net + "  activation: none\n"
             return
-        
+        if activation == "hardswish":
+            self.net = self.net + "  activation: hardswish\n"
+            return
+
         raise NotImplementedError("unknown actiavtion : "+activation)
         
 
     def buildSoftmax(self, name):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "softmax:\n"
         self.net = self.net + "  groups: 1\n"
     
-    def buildBatchNorm(self, name):
-        self.name_index_dict[name]=self.index
+    def buildBatchNorm(self, name, eps=0.00001):
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
-        self.net = self.net + "batchnorm:\n  activation: none\n"
+        self.net = self.net + "batchnorm:\n"
+        self.net = self.net + "  activation: none\n"
+        self.net = self.net + "  eps: "+str(float(eps))+"\n"
 
     def buildGlobalAvgPooling(self, name):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "globalavgpool:\n  "
         
     def buildPooling(self, name, type, kSizeX, kSizeY, strideX, strideY, paddingX, paddingY, ceilMode):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         if type == "MAX" :
@@ -131,7 +145,7 @@ class Msnhnet:
         self.net = self.net + "  ceilMode: " + str(int(ceilMode)) + "\n"
 
     def buildConnect(self, name, output, useBias):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "connect:\n"
@@ -139,7 +153,7 @@ class Msnhnet:
         self.net = self.net + "  useBias: " + str(int(useBias)) + "\n"
 
     def buildUpsample2D(self, name, strideX, strideY, scaleX, scaleY, type, alignCorners):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "upsample:\n"
@@ -151,7 +165,7 @@ class Msnhnet:
         self.net = self.net + "  alignCorners: " + str(int(alignCorners)) + "\n"
     
     def buildRoute(self, name, layers, addModel):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "route:\n"
@@ -159,7 +173,7 @@ class Msnhnet:
         self.net = self.net + "  addModel: " + str(int(addModel)) + "\n"
 
     def buildPadding(self, name, top, down, left, right):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "padding:\n"
@@ -170,7 +184,7 @@ class Msnhnet:
         self.net = self.net + "  paddingVal: 0\n"
     
     def buildVariableOp(self, name, layers, type, constVal=0):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "varop:\n"
@@ -180,7 +194,7 @@ class Msnhnet:
         self.net = self.net + "  constVal: "   + str(float(constVal)) + "\n"
         
     def buildPermute(self, name, dim0, dim1, dim2):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "permute:\n"
@@ -189,7 +203,7 @@ class Msnhnet:
         self.net = self.net + "  dim2: " + str(int(dim2-1)) + "\n"
 
     def buildReduction(self, name, type, axis):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "reduction:\n"
@@ -197,10 +211,42 @@ class Msnhnet:
         self.net = self.net + "  axis: " + str(int(axis-1)) + "\n"
 
     def buildView(self, name, dim0, dim1, dim2):
-        self.name_index_dict[name]=self.index
+        self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "view:\n"
         self.net = self.net + "  dim0: " + str(int(dim0)) + "\n"
         self.net = self.net + "  dim1: " + str(int(dim1)) + "\n"
         self.net = self.net + "  dim2: " + str(int(dim2)) + "\n"
+
+    def buildSlice(self, name, start0, step0, start1, step1, start2, step2):
+        self.setNameAndIdx(name,self.index)
+        self.net = self.net + "#" + str(self.index) +  "\n"
+        self.index = self.index + 1
+        self.net = self.net + "slice:\n"
+        self.net = self.net + "  start0: " + str(int(start0)) + "\n"
+        self.net = self.net + "  step0: " + str(int(step0)) + "\n"
+        self.net = self.net + "  start1: " + str(int(start1)) + "\n"
+        self.net = self.net + "  step1: " + str(int(step1)) + "\n"
+        self.net = self.net + "  start2: " + str(int(start2)) + "\n"
+        self.net = self.net + "  step2: " + str(int(step2)) + "\n"
+
+    def buildYolo(self,name, anchors, classNum, yoloType="yolov3"):
+        self.setNameAndIdx(name,self.index)
+        self.net = self.net + "#" + str(self.index) +  "\n"
+        self.index = self.index + 1
+        self.net = self.net + "yolo:\n"
+        self.net = self.net + "  anchors: " + anchors + "\n"
+        self.net = self.net + "  classNum: " + str(int(classNum)) + "\n"   
+        self.net = self.net + "  yoloType: " + yoloType +"\n"  
+
+    def buildYoloOut(self,name, yoloLayers ,yoloType="yolov3"):
+        self.setNameAndIdx(name,self.index)
+        self.net = self.net + "#" + str(self.index) +  "\n"
+        self.index = self.index + 1
+        self.net = self.net + "yoloout:\n"
+        self.net = self.net + "  layers: " + yoloLayers + "\n" 
+        self.net = self.net + "  confThresh: 0.5\n"
+        self.net = self.net + "  nmsThresh: 0.5\n"     
+        self.net = self.net + "  useSoftNms: 0\n"  
+        self.net = self.net + "  yoloType: " + yoloType +"\n"  

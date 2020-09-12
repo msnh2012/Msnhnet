@@ -47,11 +47,6 @@ Alpha version, maybe have some bugs. Only official op is supported, customized o
 ## API
 - translate pytorch to msnhnet and msnhbin.
     ```def trans(net, inputVar, msnhnet_path, msnhbin_path)```
-- translate pytorch to msnhbin only.
-    ```def transBin(net, msnhbin_path)```
-- translate pytorch to msnhnet only.
-    ```def transNet(net, inputVar, msnhnet_path)```
-
 ## Example:
 ```
 import torch

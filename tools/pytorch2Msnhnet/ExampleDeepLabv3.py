@@ -15,6 +15,7 @@ del ccc["aux_classifier.1.num_batches_tracked"]
 del ccc["aux_classifier.4.weight"]
 del ccc["aux_classifier.4.bias"]
 deeplabv3.load_state_dict(ccc)
+deeplabv3.requires_grad_(False)
 deeplabv3.eval()
 
 

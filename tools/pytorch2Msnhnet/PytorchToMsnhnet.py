@@ -12,6 +12,7 @@ from struct import pack
 msnhnet = Msnhnet()
 ccc = []
 index   = 0
+m_weights = []
 
 class Hook(object):
     hookInited = False
@@ -31,15 +32,22 @@ def log(*args):
 
 
 def _conv2d(raw,inData, weight, bias=None, stride=1, padding=0, dilation=1, groups=1):
-    log( "conv2d-i" , inData._cdata)
+    
     x=raw(inData,weight,bias,stride,padding,dilation,groups)
-    ccc.append(x)
-    log( "conv2d-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "conv2d-i" , inData._cdata)
+        ccc.append(x)
+        log( "conv2d-o" , x._cdata)
+
         useBias = True
         if bias is None:
             useBias = False
+        
+        m_weights.extend(weight.numpy().flatten().tolist())
+
+        if useBias :
+            m_weights.extend(bias.numpy().flatten().tolist())
 
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildConv2d(str(x._cdata), x.size()[1], weight.size()[2], weight.size()[3], 
@@ -48,12 +56,15 @@ def _conv2d(raw,inData, weight, bias=None, stride=1, padding=0, dilation=1, grou
 
 def _max_pool2d(raw,inData, kernel_size, stride=None, padding=0, dilation=1,
                ceil_mode=False, return_indices=False):
-    log( "max2d-i" , inData._cdata)
+    
     x = raw(inData, kernel_size, stride, padding, dilation,ceil_mode, return_indices)
-    ccc.append(x)
-    log( "max2d-o" , x._cdata)
+
 
     if Hook.hookInited :
+        log( "max2d-i" , inData._cdata)
+        ccc.append(x)
+        log( "max2d-o" , x._cdata)
+
         ceilMode = ceil_mode
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildPooling(str(x._cdata), "MAX", kernel_size, kernel_size, stride, stride, 
@@ -61,12 +72,14 @@ def _max_pool2d(raw,inData, kernel_size, stride=None, padding=0, dilation=1,
     return x
 
 def _avg_pool2d(raw,inData, kernel_size, stride = None, padding = 0, ceil_mode = False, count_include_pad = True):
-    log( "avg2d-i" , inData._cdata)
+    
     x = raw(inData, kernel_size, stride, padding, ceil_mode, count_include_pad)
-    ccc.append(x)
-    log( "avg2d-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "avg2d-i" , inData._cdata)
+        ccc.append(x)
+        log( "avg2d-o" , x._cdata)
+
         ceilMode = ceil_mode
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildPooling(str(x._cdata), "AVE", kernel_size, kernel_size, stride, stride, 
@@ -74,12 +87,14 @@ def _avg_pool2d(raw,inData, kernel_size, stride = None, padding = 0, ceil_mode =
     return x
 
 def _adaptive_avg_pool2d(raw, inData, output_size):
-    log( "adaptAvg2d-i" , inData._cdata)
+    
     x = raw(inData, output_size)
-    ccc.append(x)
-    log( "adaptAvg2d-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "adaptAvg2d-i" , inData._cdata)
+        ccc.append(x)
+        log( "adaptAvg2d-o" , x._cdata)
+        
         if isinstance(output_size, int):
             out_dim = output_size
         else:
@@ -94,44 +109,56 @@ def _adaptive_avg_pool2d(raw, inData, output_size):
     return x
 
 def _linear(raw,inData, weight, bias=None):
-    log( "fc-i" , inData._cdata)
     x=raw(inData,weight,bias)
-    ccc.append(x)
-    log( "fc-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "fc-i" , inData._cdata)
+        ccc.append(x)
+        log( "fc-o" , x._cdata)
+
         useBias = True
         if bias is None:
             useBias = False
+        
+        m_weights.extend(weight.numpy().flatten().tolist())
+
+        if useBias :
+            m_weights.extend(bias.numpy().flatten().tolist())
+        
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildConnect(str(x._cdata), x.size()[1], useBias)
     return x
 
 def _flatten(raw,*args):
-    log( "flatten-i" , args[0]._cdata)
     x=raw(*args)
-    ccc.append(x)
-    log( "flatten-o" , x._cdata)
 
     if Hook.hookInited :
-        key = msnhnet.getLastKey()
-        val = msnhnet.name_index_dict[key]
-        msnhnet.name_index_dict.pop(key)
-        msnhnet.name_index_dict[str(x._cdata)] = val
+        log( "flatten-i" , args[0]._cdata)
+        ccc.append(x)
+        log( "flatten-o" , x._cdata)
+
+        # name  indexes
+        # aaaaa   10
+        #   |     ||
+        # bbbbb   10
+        msnhnet.names.pop()
+        msnhnet.names.append(str(x._cdata)) #update last name, index 
     return x
 
 def _cat(raw,inputs, dim=0):
     k = 0
     layers = ""
     for input in inputs:
-        log( "cat"+str(k)+"-i" , input._cdata)
-        if Hook.hookInited :    
-            layers = layers + str(msnhnet.name_index_dict[str(input._cdata)]) + ","
+        if Hook.hookInited :  
+            log( "cat"+str(k)+"-i" , input._cdata)  
+            layers = layers + str(msnhnet.getIndexFromName(str(input._cdata))) + ","
+    
     x=raw(inputs, dim)
-    ccc.append(x)
-    log( "cat-o" , x._cdata)
 
-    if Hook.hookInited :    
+    if Hook.hookInited :   
+        ccc.append(x)
+        log( "cat-o" , x._cdata) 
+
         layers = layers[:-1]
         if dim != 1:
             raise NotImplementedError("cat only supported with dim 1")
@@ -139,39 +166,49 @@ def _cat(raw,inputs, dim=0):
     return x
 
 def _dropout(raw,*args):
-    log( "dropout-i" , args[0]._cdata)
     x=raw(*args)
-    ccc.append(x)
-    log( "dropout-o" , x._cdata)
 
     if Hook.hookInited :  
-        key = msnhnet.getLastKey()
-        val = msnhnet.name_index_dict[key]
-        msnhnet.name_index_dict.pop(key)
-        msnhnet.name_index_dict[str(x._cdata)] = val
+        log( "dropout-i" , args[0]._cdata)
+        ccc.append(x)
+        log( "dropout-o" , x._cdata)
+
+        # name  indexes
+        # aaaaa   10
+        #   |     ||
+        # bbbbb   10
+        msnhnet.names.pop()
+        msnhnet.names.append(str(x._cdata)) #update last name, index 
     return x
 
 def _batch_norm(raw,inData, running_mean, running_var, weight=None, bias=None,
-               training=False, momentum=0.1, eps=1e-5):
-    log( "bn-i" , inData._cdata)
+               training=False, momentum=0.1, eps=1e-5):  
     x = raw(inData, running_mean, running_var, weight, bias, training, momentum, eps)
-    ccc.append(x)
-    log( "bn-o" , x._cdata)
 
     if Hook.hookInited : 
+        log( "bn-i" , inData._cdata)
+        ccc.append(x)
+        log( "bn-o" , x._cdata)
+
+        m_weights.extend(weight.numpy().flatten().tolist())
+        m_weights.extend(bias.numpy().flatten().tolist())
+        m_weights.extend(running_mean.numpy().flatten().tolist())
+        m_weights.extend(running_var.numpy().flatten().tolist())
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
-        msnhnet.buildBatchNorm(str(x._cdata))
+        msnhnet.buildBatchNorm(str(x._cdata),eps)
     return x
 
 def _interpolate(raw, inData,size=None, scale_factor=None, mode='nearest', align_corners=None):
     # for nearest _interpolate
-    
-    log( "upsample-i" , inData._cdata)
+
     x = raw(inData,size , scale_factor ,mode, align_corners)
-    ccc.append(x)
-    log( "upsample-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "upsample-i" , inData._cdata)
+        ccc.append(x)
+        log( "upsample-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         
         if mode == "nearest" or align_corners == None:
@@ -223,12 +260,13 @@ def _interpolate(raw, inData,size=None, scale_factor=None, mode='nearest', align
     return x
 
 def _softmax(raw, inData, dim=None, _stacklevel=3):
-    log( "softmax-i" , inData._cdata)
     x=raw(inData, dim=dim)
-    ccc.append(x)
-    log( "softmax-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "softmax-i" , inData._cdata)
+        ccc.append(x)
+        log( "softmax-o" , x._cdata)
+
         if dim is not None:
             raise NotImplementedError("Soft max not supported yet")
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
@@ -237,109 +275,129 @@ def _softmax(raw, inData, dim=None, _stacklevel=3):
 
 # =====  Activation ======
 def _elu(raw, inData, inplace=False):
-    log( "elu-i" , inData._cdata)
     x = raw(inData,False)
-    ccc.append(x)
-    log( "elu-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "elu-i" , inData._cdata)
+        ccc.append(x)
+        log( "elu-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildActivation(str(x._cdata),"elu")
     return x
 
 def _selu(raw, inData, inplace=False):
-    log( "selu-i" , inData._cdata)
     x = raw(inData,False)
-    ccc.append(x)
-    log( "selu-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "selu-i" , inData._cdata)
+        ccc.append(x)
+        log( "selu-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildActivation(str(x._cdata),"selu")
     return x
 
 def _relu(raw, inData, inplace=False):
-    log( "relu-i" , inData._cdata)
     x = raw(inData,False)
-    ccc.append(x)
-    log( "relu-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "relu-i" , inData._cdata)
+        ccc.append(x)
+        log( "relu-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildActivation(str(x._cdata),"relu")
     return x
 
 def _relu6(raw, inData, inplace=False):
-    log( "relu6-i" , inData._cdata)
     x = raw(inData,False)
-    ccc.append(x)
-    log( "relu6-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "relu6-i" , inData._cdata)
+        ccc.append(x)
+        log( "relu6-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildActivation(str(x._cdata),"relu6")
     return x
 
 def _leaky_relu(raw, inData, negative_slope=0.01, inplace=False):
-    log( "leaky-i" , inData._cdata)
     x = raw(inData, negative_slope,inplace)
-    ccc.append(x)
-    log( "leaky-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "leaky-i" , inData._cdata)
+        ccc.append(x)
+        log( "leaky-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildActivation(str(x._cdata),"leaky",negative_slope)
     return x
 
 def _tanh(raw, inData):
-    log( "tanh-i" , inData._cdata)
     x = raw(inData)  
-    ccc.append(x)
-    log( "tanh-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "tanh-i" , inData._cdata)
+        ccc.append(x)
+        log( "tanh-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildActivation(str(x._cdata),"tanh")
     return x
 
 def _sigmoid(raw, inData):
-    log( "sigmoid-i" , inData._cdata)
     x = raw(inData)
-    ccc.append(x)
-    log( "sigmoid-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "sigmoid-i" , inData._cdata)
+        ccc.append(x)
+        log( "sigmoid-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildActivation(str(x._cdata),"sigmoid")
     return x
 
 def _softplus(raw, inData, thresh):
-    log( "softplus-i" , inData._cdata)
     x = raw(inData,thresh)
-    ccc.append(x)
-    log( "softplus-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "softplus-i" , inData._cdata)
+        ccc.append(x)
+        log( "softplus-o" , x._cdata)
+        
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildActivation(str(x._cdata),"softplus", thresh)
     return x
 
+def _hardswish(raw, inData):
+    x = raw(inData)
+    if Hook.hookInited :
+        log( "hardswish-i" , inData._cdata)
+        ccc.append(x)
+        log( "hardswish-o" , x._cdata)
+
+        msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+        msnhnet.buildActivation(str(x._cdata),"hardswish")
+    return x
+
 # =====  Variable op ======
 def _add(inData, *args):
-    log( "add-i1" , inData._cdata)
-    log( "add-i2" , args[0]._cdata)
     x = raw__add__(inData, *args)
-    ccc.append(x)
-    log( "add-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "add-i1" , inData._cdata)
+        log( "add-i2" , args[0]._cdata)
+        ccc.append(x)
+        log( "add-o" , x._cdata)
+    
         try:
-            layer1 = msnhnet.name_index_dict[str(inData._cdata)]
+            layer1 = msnhnet.getIndexFromName(str(inData._cdata))
         except:
             raise NotImplementedError(inData._cdata," not contain [add]")
 
         try:
-            layer2 = msnhnet.name_index_dict[str(args[0]._cdata)]
+            layer2 = msnhnet.getIndexFromName(str(args[0]._cdata))
         except:
             raise NotImplementedError(args[0]._cdata," not contain [add]")
 
@@ -354,21 +412,21 @@ def _add(inData, *args):
     return x
 
 def _iadd(inData, *args):
-    log( "iadd-i1" , inData._cdata)
-    log( "iadd-i2" , args[0]._cdata)
-    y = raw__iadd__(inData, *args)
-    x = y.clone()
-    ccc.append(x)
-    log( "iadd-o" , x._cdata)
+    x = raw__iadd__(inData, *args)
 
     if Hook.hookInited :
+        log( "iadd-i1" , inData._cdata)
+        log( "iadd-i2" , args[0]._cdata)
+        ccc.append(x)
+        log( "iadd-o" , x._cdata)
+
         try:
-            layer1 = msnhnet.name_index_dict[str(inData._cdata)]
+            layer1 = msnhnet.getIndexFromName(str(inData._cdata))
         except:
             raise NotImplementedError(inData._cdata," not contain [add]")
 
         try:
-            layer2 = msnhnet.name_index_dict[str(args[0]._cdata)]
+            layer2 = msnhnet.getIndexFromName(str(args[0]._cdata))
         except:
             raise NotImplementedError(args[0]._cdata," not contain [add]")
 
@@ -383,20 +441,21 @@ def _iadd(inData, *args):
     return x
 
 def _sub(inData, *args):
-    log( "sub-i1" , inData._cdata)
-    log( "sub-i2" , args[0]._cdata)
     x = raw__sub__(inData, *args)
-    ccc.append(x)
-    log( "sub-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "sub-i1" , inData._cdata)
+        log( "sub-i2" , args[0]._cdata)
+        ccc.append(x)
+        log( "sub-o" , x._cdata)
+
         try:
-            layer1 = msnhnet.name_index_dict[str(inData._cdata)]
+            layer1 = msnhnet.getIndexFromName(str(inData._cdata))
         except:
             raise NotImplementedError(inData._cdata," not contain [sub]")
 
         try:
-            layer2 = msnhnet.name_index_dict[str(args[0]._cdata)]
+            layer2 = msnhnet.getIndexFromName(str(args[0]._cdata))
         except:
             raise NotImplementedError(args[0]._cdata," not contain [sub]")
         
@@ -413,21 +472,21 @@ def _sub(inData, *args):
     return x
 
 def _isub(inData, *args):
-    log( "isub-i1" , inData._cdata)
-    log( "isub-i2" , args[0]._cdata)
-    y = raw__isub__(inData, *args)
-    x = y.clone()
-    ccc.append(x)
-    log( "isub-o" , x._cdata)
+    x = raw__isub__(inData, *args)
 
     if Hook.hookInited :
+        log( "isub-i1" , inData._cdata)
+        log( "isub-i2" , args[0]._cdata)
+        ccc.append(x)
+        log( "isub-o" , x._cdata)
+    
         try:
-            layer1 = msnhnet.name_index_dict[str(inData._cdata)]
+            layer1 = msnhnet.getIndexFromName(str(inData._cdata))
         except:
             raise NotImplementedError(inData._cdata," not contain [sub]")
 
         try:
-            layer2 = msnhnet.name_index_dict[str(args[0]._cdata)]
+            layer2 = msnhnet.getIndexFromName(str(args[0]._cdata))
         except:
             raise NotImplementedError(args[0]._cdata," not contain [sub]")
         
@@ -444,20 +503,21 @@ def _isub(inData, *args):
     return x
 
 def _mul(inData, *args):
-    log( "mul-i1" , inData._cdata)
-    log( "mul-i2" , args[0]._cdata)
     x = raw__mul__(inData, *args)
-    ccc.append(x)
-    log( "mul-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "mul-i1" , inData._cdata)
+        log( "mul-i2" , args[0]._cdata)
+        ccc.append(x)
+        log( "mul-o" , x._cdata)
+
         try:
-            layer1 = msnhnet.name_index_dict[str(inData._cdata)]
+            layer1 = msnhnet.getIndexFromName(str(inData._cdata))
         except:
             raise NotImplementedError(inData._cdata," not contain [mul]")
 
         try:
-            layer2 = msnhnet.name_index_dict[str(args[0]._cdata)]
+            layer2 = msnhnet.getIndexFromName(str(args[0]._cdata))
         except:
             raise NotImplementedError(args[0]._cdata," not contain [mul]")
 
@@ -472,21 +532,21 @@ def _mul(inData, *args):
     return x
 
 def _imul(inData, *args):
-    log( "imul-i1" , inData._cdata)
-    log( "imul-i2" , args[0]._cdata)
-    y = raw__imul__(inData, *args)
-    x = y.clone()
-    ccc.append(x)
-    log( "imul-o" , x._cdata)
+    x = raw__imul__(inData, *args)
 
     if Hook.hookInited :
+        log( "imul-i1" , inData._cdata)
+        log( "imul-i2" , args[0]._cdata)
+        ccc.append(x)
+        log( "imul-o" , x._cdata)
+    
         try:
-            layer1 = msnhnet.name_index_dict[str(inData._cdata)]
+            layer1 = msnhnet.getIndexFromName(str(inData._cdata))
         except:
             raise NotImplementedError(inData._cdata," not contain [mul]")
 
         try:
-            layer2 = msnhnet.name_index_dict[str(args[0]._cdata)]
+            layer2 = msnhnet.getIndexFromName(str(args[0]._cdata))
         except:
             raise NotImplementedError(args[0]._cdata," not contain [mul]")
 
@@ -501,12 +561,13 @@ def _imul(inData, *args):
     return x
 
 def _permute(inData, *args):
-    log( "permute-i" , inData._cdata)
     x = raw__permute__(inData, *args)
-    ccc.append(x)
-    log( "permute-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "permute-i" , inData._cdata)
+        ccc.append(x)
+        log( "permute-o" , x._cdata)
+
         dim  = args[0]
         dim0 = args[1]
         dim1 = args[2]
@@ -518,12 +579,13 @@ def _permute(inData, *args):
     return x   
     
 def _mean(inData, *args,**kwargs):
-    log( "mean-i" , inData._cdata)
     x=raw_mean(inData, *args,**kwargs)
-    ccc.append(x)
-    log( "mean-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "mean-i" , inData._cdata)
+        ccc.append(x)
+        log( "mean-o" , x._cdata)
+
         if len(args)==1:
             dim=args[0]
         elif 'dim' in kwargs:
@@ -538,12 +600,13 @@ def _mean(inData, *args,**kwargs):
     return x   
 
 def _sum(inData, *args):
-    log( "sum-i" , inData._cdata)
     x = raw__sum__(inData, *args)
-    ccc.append(x)
-    log( "sum-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "sum-i" , inData._cdata)
+        ccc.append(x)
+        log( "sum-o" , x._cdata)
+        
         if len(args)==1:
             dim=args[0]
         else:
@@ -552,20 +615,21 @@ def _sum(inData, *args):
     return x
 
 def _div(raw,inputs, inputs2):
-    log( "div-i1" , inputs._cdata)
-    log( "div-i2" , inputs2._cdata)
     x=raw(inputs, inputs2)
-    ccc.append(x)
-    log( "div-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "div-i1" , inputs._cdata)
+        log( "div-i2" , inputs2._cdata)
+        ccc.append(x)
+        log( "div-o" , x._cdata)
+    
         try:
-            layer1 = msnhnet.name_index_dict[str(inData._cdata)]
+            layer1 = msnhnet.getIndexFromName(str(inData._cdata))
         except:
             raise NotImplementedError(inData._cdata," not contain [div]")
 
         try:
-            layer2 = msnhnet.name_index_dict[str(args[0]._cdata)]
+            layer2 = msnhnet.getIndexFromName(str(args[0]._cdata))
         except:
             raise NotImplementedError(args[0]._cdata," not contain [div]")
 
@@ -582,181 +646,199 @@ def _div(raw,inputs, inputs2):
     return x   
 
 def _pow(inData, *args):
-    log( "pow-i" , inData._cdata)
     x = raw__pow__(inData, *args)
-    constVal = args[0]
-    ccc.append(x)
-    log( "pow-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "pow-i" , inData._cdata)
+        constVal = args[0]
+        ccc.append(x)
+        log( "pow-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","pow",constVal)
     return x
 
 def _sqrt(inData, *args):
-    log( "sqrt-i" , inData._cdata)
     x = raw__sqrt__(inData, *args)
-    ccc.append(x)
-    log( "sqrt-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "sqrt-i" , inData._cdata)
+        ccc.append(x)
+        log( "sqrt-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","sqrt")
     return x
 
 def _abs(raw, inData, *args):
-    log( "abs-i" , inData._cdata)
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "abs-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "abs-i" , inData._cdata)
+        ccc.append(x)
+        log( "abs-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","abs")
     return x
 
 def _acos(raw, inData, *args):
-    log( "acos-i" , inData._cdata)
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "acos-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "acos-i" , inData._cdata)
+        ccc.append(x)
+        log( "acos-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","acos")
     return x
 
 def _asin(raw, inData, *args):
-    log( "asin-i" , inData._cdata)
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "asin-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "asin-i" , inData._cdata)
+        ccc.append(x)
+        log( "asin-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","asin")
     return x
 
 def _atan(raw, inData, *args):
-    log( "atan-i" , inData._cdata)
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "atan-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "atan-i" , inData._cdata)
+        ccc.append(x)
+        log( "atan-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","atan")
     return x
 
 def _cos(raw, inData, *args):
-    log( "cos-i" , inData._cdata)
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "cos-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "cos-i" , inData._cdata)
+        ccc.append(x)
+        log( "cos-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","cos")
     return x
 
 def _cosh(raw, inData, *args):
-    log( "cosh-i" , inData._cdata)
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "cosh-o" , x._cdata)
-    
+
     if Hook.hookInited :
+        log( "cosh-i" , inData._cdata)
+        ccc.append(x)
+        log( "cosh-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","cosh")
     return x
 
 def _sin(raw, inData, *args):
-    log( "sin-i" , inData._cdata)
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "sin-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "sin-i" , inData._cdata)
+        ccc.append(x)
+        log( "sin-o" , x._cdata)
+        
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","sin")
     return x
 
 def _sinh(raw, inData, *args):
-    log( "sinh-i" , inData._cdata)
     x = raw__sinh__(inData, *args)
-    ccc.append(x)
-    log( "sinh-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "sinh-i" , inData._cdata)
+        ccc.append(x)
+        log( "sinh-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","sinh")
     return x
 
 def _tan(raw, inData, *args):
-    log( "tan-i" , inData._cdata)
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "tan-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "tan-i" , inData._cdata)
+        ccc.append(x)
+        log( "tan-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","tan")
     return x
 
 def _exp(raw, inData, *args):
-    log( "exp-i" , inData._cdata)
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "exp-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "exp-i" , inData._cdata)
+        ccc.append(x)
+        log( "exp-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","exp")
     return x
 
-def _log(raw, inData, *args):
-    log( "log-i" , inData._cdata)
+def _log(raw, inData, *args):  
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "log-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "log-i" , inData._cdata)
+        ccc.append(x)
+        log( "log-o" , x._cdata)
+        
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","log")
     return x
 
 def _log10(raw, inData, *args):
-    log( "log10-i" , inData._cdata)
     x = raw(inData, *args)
-    ccc.append(x)
-    log( "log10-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "log10-i" , inData._cdata)
+        ccc.append(x)
+        log( "log10-o" , x._cdata)
+
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildVariableOp(str(x._cdata),"","log10")
     return x
 
 def _contiguous(inData, *args):
-    log( "contiguous-i" , inData._cdata)
     x = raw__contiguous__(inData, *args)
-    ccc.append(x)
-    log( "contiguous-o" , x._cdata)
 
     if Hook.hookInited :
-        key = msnhnet.getLastKey()
-        val = msnhnet.name_index_dict[key]
-        msnhnet.name_index_dict.pop(key)
-        msnhnet.name_index_dict[str(x._cdata)] = val
+        log( "contiguous-i" , inData._cdata)
+        ccc.append(x)
+        log( "contiguous-o" , x._cdata)
+
+        # name  indexes
+        # aaaaa   10
+        #   |     ||
+        # bbbbb   10
+        msnhnet.names.pop()
+        msnhnet.names.append(str(x._cdata)) #update last name, index 
     return x
 
 def _view(inData, *args):
-    log( "view-i" , inData._cdata)
     x=raw_view(inData, *args)
-    ccc.append(x)
-    log( "view-o" , x._cdata)
-    dataSize = inData.shape[1]*inData.shape[2]*inData.shape[3]
 
     if Hook.hookInited :
+        log( "view-i" , inData._cdata)
+        ccc.append(x)
+        log( "view-o" , x._cdata)
+
+        dataSize = inData.shape[1]*inData.shape[2]*inData.shape[3]
         if inData.shape[0] != 1:
             raise NotImplementedError("params error")
 
@@ -856,13 +938,14 @@ def _view(inData, *args):
     return x  
     
 def _reshape(inData, *args):
-    log( "reshape-i" , inData._cdata)
     x=raw_reshape(inData, *args)
-    ccc.append(x)
-    log( "reshape-0" , x._cdata)
-    dataSize = inData.shape[1]*inData.shape[2]*inData.shape[3]
 
     if Hook.hookInited :
+        log( "reshape-i" , inData._cdata)
+        ccc.append(x)
+        log( "reshape-0" , x._cdata)
+        dataSize = inData.shape[1]*inData.shape[2]*inData.shape[3]
+
         if inData.shape[0] != 1:
             raise NotImplementedError("params error")
 
@@ -963,12 +1046,13 @@ def _reshape(inData, *args):
 
 
 def _pad(raw,inData,pad,mode="constant",value=0):
-    log( "pad-i" , inData._cdata)
     x=raw(inData,pad,mode,value)
-    ccc.append(x)
-    log( "pad-o" , x._cdata)
 
     if Hook.hookInited :
+        log( "pad-i" , inData._cdata)
+        ccc.append(x)
+        log( "pad-o" , x._cdata)
+        
         if len(pad) != 4:
             raise NotImplementedError("padding dim must be 4")
         paddingL = pad[0]
@@ -982,16 +1066,17 @@ def _pad(raw,inData,pad,mode="constant",value=0):
 ''' TODO '''
 def _unsqueeze(inData, *args):
     x = raw__unsqueeze__(inData, *args)
-    ccc.append(x)
+    
     if Hook.hookInited :
+        ccc.append(x)
         raise NotImplementedError("unsqueeze not supported yet")
     return x
 
 def _expand_as(inData, *args):
     x = raw__expand_as__(inData, *args)
-    ccc.append(x)
-
+    
     if Hook.hookInited :
+        ccc.append(x)
         raise NotImplementedError("expand_as not supported yet")
     return x
 
@@ -1029,6 +1114,7 @@ F.tanh          =   Hook(F.tanh,_tanh)
 F.softmax       =   Hook(F.softmax,_softmax)
 F.sigmoid       =   Hook(F.sigmoid,_sigmoid)
 F.softplus      =   Hook(F.softplus,_softplus)
+F.hardswish     =   Hook(F.hardswish,_hardswish)
 
 # =====  Variable op ======
 for t in [torch.Tensor]:
@@ -1073,39 +1159,7 @@ def trans(net, inputVar, msnhnet_path, msnhbin_path):
     with open(msnhnet_path,"w") as f1:
         f1.write(msnhnet.net)
 
-    val = []
-    dd = 0
-    for name in net.state_dict():
-            if "num_batches_tracked" not in name:
-                    c = net.state_dict()[name].data.flatten().numpy().tolist()
-                    dd = dd + len(c)
-                    print(name, ":", len(c))
-                    val.extend(c)
-
     with open(msnhbin_path,"wb") as f:
-        for i in val :
+        for i in m_weights :
             f.write(pack('f',i))
-    Hook.hookInited = False
-
-def transBin(net, msnhbin_path):
-    val = []
-    dd = 0
-    for name in net.state_dict():
-            if "num_batches_tracked" not in name:
-                    c = net.state_dict()[name].data.flatten().numpy().tolist()
-                    dd = dd + len(c)
-                    print(name, ":", len(c))
-                    val.extend(c)
-
-    with open(msnhbin_path,"wb") as f:
-        for i in val :
-            f.write(pack('f',i))
-
-def transNet(net, inputVar, msnhnet_path):
-    Hook.hookInited = True
-    msnhnet.buildConfig(str(id(inputVar)), inputVar.size())
-    net.forward(inputVar)
-
-    with open(msnhnet_path,"w") as f1:
-        f1.write(msnhnet.net)    
     Hook.hookInited = False
