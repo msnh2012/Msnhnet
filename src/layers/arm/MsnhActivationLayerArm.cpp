@@ -1,3 +1,4 @@
+#ifdef USE_ARM
 #include "MsnhNet/layers/arm/MsnhActivationLayerArm.h"
 #include "iostrem"
 
@@ -271,3 +272,4 @@ void ActivationLayerArm::ActivationLayer(float * &src, const int &inWidth, const
 }
 
 }
+#endif
