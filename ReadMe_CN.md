@@ -1,4 +1,4 @@
-# Msnhnet
+# Msnhnet(Yolov5已支持!!请下载最新的models)
 [English](ReadMe.md)| 中文 |[CSDN](https://blog.csdn.net/MSNH2012/article/details/107216704)</br>
 ###  一款轻量的用于推理pytorch模型的框架,该框架受darknet启发.
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -60,6 +60,8 @@
 - fcns[(pytorch-FCN-easiest-demo)](https://github.com/bat67/pytorch-FCN-easiest-demo)
 - unet[(bbuf keras)](https://github.com/BBuf/Keras-Semantic-Segmentation)
 - deeplabv3(**torchvision**)</br>
+- yolov5s[(U版yolov5,用于导出参数)](https://github.com/msnh2012/Yolov5ForMsnhnet)
+- yolov5m[(U版yolov5,用于导出参数)](https://github.com/msnh2012/Yolov5ForMsnhnet)
 ==============================================================
 - mobilenetv2_yolov3_lite (cudnn分组卷积对Gtx10系列的Pascal显卡支持不好，请使用GPU模式)
 - mobilenetv2_yolov3_nano (cudnn分组卷积对Gtx10系列的Pascal显卡支持不好，请使用GPU模式)
