@@ -97,6 +97,20 @@ public:
         });
         ColorTabel::instance().addColor("Conv",QColor(0x49D3D6));
 
+        NodeCreator::instance().addItem("Slice",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"start0", "string", AttributeInfo::Type::member},
+            {"step0", "string", AttributeInfo::Type::member},
+            {"start1", "string", AttributeInfo::Type::member},
+            {"step1", "string", AttributeInfo::Type::member},
+            {"start2", "string", AttributeInfo::Type::member},
+            {"step2", "string", AttributeInfo::Type::member},
+            {"inplace", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("Slice",QColor(0xd75093));
+
         NodeCreator::instance().addItem("DeConv",
         {
             {"input", "string", AttributeInfo::Type::input},
@@ -282,23 +296,26 @@ public:
         });
         ColorTabel::instance().addColor("UpSample",QColor(0x886BFF));
 
-        NodeCreator::instance().addItem("Yolov3",
+        NodeCreator::instance().addItem("Yolo",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"classes", "string", AttributeInfo::Type::member},
             {"inplace", "string", AttributeInfo::Type::member},
+            {"yolo", "string", AttributeInfo::Type::member},
             {"output", "string", AttributeInfo::Type::output},
         });
-        ColorTabel::instance().addColor("Yolov3",QColor(0xFF5000));
+        ColorTabel::instance().addColor("Yolo",QColor(0xFF5000));
 
-        NodeCreator::instance().addItem("Yolov3Out",
+        NodeCreator::instance().addItem("YoloOut",
         {
             {"input", "string", AttributeInfo::Type::input},
             {"conf", "string", AttributeInfo::Type::member},
+            {"nms", "string", AttributeInfo::Type::member},
             {"inplace", "string", AttributeInfo::Type::member},
-            {"nms", "string", AttributeInfo::Type::member}
+            {"yolo", "string", AttributeInfo::Type::member}
+
         });
-        ColorTabel::instance().addColor("Yolov3Out",QColor(0x7A85FF));
+        ColorTabel::instance().addColor("YoloOut",QColor(0x7A85FF));
     }
 };
 

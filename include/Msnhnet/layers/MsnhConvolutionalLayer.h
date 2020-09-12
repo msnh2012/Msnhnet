@@ -28,7 +28,7 @@ public:
 
     ConvolutionalLayer(const int &batch, const int &steps, const int &height, const int &width, const int &channel, const int &num, const int &groups,
                       const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY, const int &dilationX, const int &dilationY, const int &paddingX, const int &paddingY, ActivationType _activation, const std::vector<float> &actParams,
-                      const int &batchNorm,  const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex,
+                      const int &batchNorm, const float &bnEps,  const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex,
                       const int &antialiasing, ConvolutionalLayer *const &shareLayer, const int &assistedExcitation, const int &deform);
     ~ConvolutionalLayer();
 
@@ -193,6 +193,7 @@ protected:
     int         _nScales             =   0;
     int         _nRollMean           =   0;
     int         _nRollVariance       =   0;
+    float       _bnEps               =   0.00001f;
 
     int         _nBiases             =   0;
     int         _nWeights            =   0;

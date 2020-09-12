@@ -1,0 +1,14 @@
+config:
+  batch: 1
+  width: 28
+  height: 28
+  channels: 1
+
+maxpool:
+  kSize: 2
+  stride: 1
+
+maxpool:
+  kSize: 2
+  stride: 1
+

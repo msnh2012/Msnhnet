@@ -269,7 +269,9 @@ void Gemm::cpuIm2colWithAvx(float * const &input, const int &channelNum, const i
 
         if(heightCol == height && widthCol == width && stride == 1 && padding == 1)
         {
+#ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
             for (int ch = 0; ch < chCols; ++ch)
             {
                 int h       = 0;
@@ -396,8 +398,9 @@ void Gemm::cpuIm2colBinWithAvx(float * const &input, const int &channelNum, cons
                                                      static_cast<int>(0x80000000), static_cast<int>(0x80000000), static_cast<int>(0x80000000), static_cast<int>(0x80000000));
             __m256  floatZero256  = _mm256_set1_ps(0.00);
             int newLdb            = bitAlign;
-
+#ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
             for (int ch = 0; ch < chCols; ++ch)
             {
                 int h       = 0;
@@ -592,7 +595,9 @@ void Gemm::cpuGemm(const int &TA, const int &TB, const int &M, const int &N, con
     }
     else
     {
+#ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
         for (int m = 0; m < M; ++m)
         {
             if(TA!=1 && TB!=1)
@@ -1350,7 +1355,9 @@ void Gemm::transpose32Optimized(uint32_t * const &A, const int &num)
 void Gemm::transposeBinary(uint32_t * const &A, uint32_t * const &B, const int &n, const int &m, const int &lda, const int &ldb, const int &blockSize)
 {
     (void)blockSize;
+#ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
     for (int i = 0; i < n; i+=32)
     {
         int j;
@@ -1417,7 +1424,9 @@ void Gemm::gemmNNBinMeanTrans(int M, int N, int K, float ALPHA_UNUSED, unsigned 
 {
 
     (void) ALPHA_UNUSED;
+#ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
     for (int i = 0; i < (M/2)*2; i += 2)
     {
 

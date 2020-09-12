@@ -4,7 +4,7 @@ config:
   height: 224
   channels: 3
 
-# conv1
+# conv1  0
 conv:
   batchNorm: 0
   filters: 32
@@ -16,7 +16,7 @@ conv:
 batchnorm:
   activation: leaky,0.01
 
-# conv2
+# conv2 1
 conv:
   batchNorm: 0
   filters: 64
@@ -28,7 +28,7 @@ conv:
 batchnorm:
   activation: leaky,0.01
 
-# residual_block1
+# residual_block1 2
 resblock:
   size: 1
   conv:
@@ -57,7 +57,7 @@ resblock:
   
   activation: none
 
-# conv3
+# conv3 3
 conv:
   batchNorm: 0
   filters: 128
@@ -69,7 +69,7 @@ conv:
 batchnorm:
   activation: leaky,0.01
 
-# residual_block2
+# residual_block2 4
 resblock:
   size: 2
   conv:
@@ -98,7 +98,7 @@ resblock:
   
   activation: none
 
-# conv4
+# conv4 5
 conv:
   batchNorm: 0
   filters: 256
@@ -110,7 +110,7 @@ conv:
 batchnorm:
   activation: leaky,0.01
 
-# residual_block3
+# residual_block3 6
 resblock:
   size: 8
   conv:
@@ -139,7 +139,7 @@ resblock:
   
   activation: none
 
-# conv5
+# conv5 7
 conv:
   batchNorm: 0
   filters: 512
@@ -151,7 +151,7 @@ conv:
 batchnorm:
   activation: leaky,0.01
 
-# residual_block4
+# residual_block4 8
 resblock:
   size: 8
   conv:
@@ -180,7 +180,7 @@ resblock:
   
   activation: none
 
-# conv5
+# conv5 9
 conv:
   batchNorm: 0
   filters: 1024
@@ -192,7 +192,7 @@ conv:
 batchnorm:
   activation: leaky,0.01
 
-# residual_block5
+# residual_block5 10
 resblock:
   size: 4
   conv:
@@ -222,7 +222,7 @@ resblock:
   activation: none
 
 
-# output
+# output 11
 
 localavgpool:
   kSize: 7

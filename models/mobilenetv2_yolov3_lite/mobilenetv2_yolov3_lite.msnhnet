@@ -929,7 +929,7 @@ conv:
   useBias: 1
   activation: none
 #70
-yolov3:
+yolo:
   anchors:  115, 74, 119,199, 243,238
   classNum: 80
 #71
@@ -1040,13 +1040,13 @@ conv:
   useBias: 1
   activation: none
 #80
-yolov3:
+yolo:
   anchors: 12, 18,  37, 49,  52,132
   classNum: 80
 #81
-yolov3out:
+yoloout:
   layers: 70,80
   confThresh: 0.5
   nmsThresh: 0.5
   useSoftNms: 0
-  yoloType: yolov3Normal
+  yoloType: yolov3

@@ -91,6 +91,10 @@ void Parser::clearParams()
             {
                 delete reinterpret_cast<PermuteParams*>(params[i]);
             }
+            else if(params[i]->type == LayerType::SLICE)
+            {
+                delete reinterpret_cast<SliceParams*>(params[i]);
+            }
             else if(params[i]->type == LayerType::REDUCTION)
             {
                 delete reinterpret_cast<ReductionParams*>(params[i]);
@@ -103,13 +107,13 @@ void Parser::clearParams()
             {
                 delete reinterpret_cast<UpSampleParams*>(params[i]);
             }
-            else if(params[i]->type == LayerType::YOLOV3)
+            else if(params[i]->type == LayerType::YOLO)
             {
-                delete reinterpret_cast<Yolov3Params*>(params[i]);
+                delete reinterpret_cast<YoloParams*>(params[i]);
             }
-            else if(params[i]->type == LayerType::YOLOV3_OUT)
+            else if(params[i]->type == LayerType::YOLO_OUT)
             {
-                delete reinterpret_cast<Yolov3OutParams*>(params[i]);
+                delete reinterpret_cast<YoloOutParams*>(params[i]);
             }
             params[i] = nullptr;
         }
@@ -130,7 +134,6 @@ void Parser::readCfg(const std::string &path)
         YAML::Node root = YAML::LoadFile(path);
 
         int index = 0;
-
         for (YAML::const_iterator it = root.begin(); it != root.end(); ++it)
         {
             index++;
@@ -219,6 +222,19 @@ void Parser::readCfg(const std::string &path)
                     PermuteParams *permuteParams = new PermuteParams(true);
                     parsePermuteParams(permuteParams, it);
                     params.push_back(permuteParams);
+                }
+                else
+                {
+                    throw Exception(1,"[permute] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "slice")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    SliceParams *sliceParams = new SliceParams(true);
+                    parseSliceParams(sliceParams, it);
+                    params.push_back(sliceParams);
                 }
                 else
                 {
@@ -584,34 +600,34 @@ void Parser::readCfg(const std::string &path)
                     throw Exception(1,"[upsample] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
-            else if(node == "yolov3")
+            else if(node == "yolo")
             {
                 if(it->second.Type() == YAML::NodeType::Map)
                 {
-                    Yolov3Params *yolov3Params  = new Yolov3Params(true);
-                    parseYolov3Params(yolov3Params, it);
-                    yolov3Params->orgHeight     =  (reinterpret_cast<NetConfigParams*>(params[0]))->height;
-                    yolov3Params->orgWidth      =  (reinterpret_cast<NetConfigParams*>(params[0]))->width;
-                    params.push_back(yolov3Params);
+                    YoloParams *yoloParams  = new YoloParams(true);
+                    parseYoloParams(yoloParams, it);
+                    yoloParams->orgHeight     =  (reinterpret_cast<NetConfigParams*>(params[0]))->height;
+                    yoloParams->orgWidth      =  (reinterpret_cast<NetConfigParams*>(params[0]))->width;
+                    params.push_back(yoloParams);
                 }
                 else
                 {
-                    throw Exception(1,"[yolov3] content error", __FILE__, __LINE__, __FUNCTION__);
+                    throw Exception(1,"[yolo] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
-            else if(node == "yolov3out")
+            else if(node == "yoloout")
             {
                 if(it->second.Type() == YAML::NodeType::Map)
                 {
-                    Yolov3OutParams *yolov3OutParams = new Yolov3OutParams(true);
-                    parseYolov3OutParams(yolov3OutParams, it);
-                    yolov3OutParams->orgHeight       =  (reinterpret_cast<NetConfigParams*>(params[0]))->height;
-                    yolov3OutParams->orgWidth        =  (reinterpret_cast<NetConfigParams*>(params[0]))->width;
-                    params.push_back(yolov3OutParams);
+                    YoloOutParams *yoloOutParams = new YoloOutParams(true);
+                    parseYoloOutParams(yoloOutParams, it);
+                    yoloOutParams->orgHeight       =  (reinterpret_cast<NetConfigParams*>(params[0]))->height;
+                    yoloOutParams->orgWidth        =  (reinterpret_cast<NetConfigParams*>(params[0]))->width;
+                    params.push_back(yoloOutParams);
                 }
                 else
                 {
-                    throw Exception(1,"[yolov3out] content error", __FILE__, __LINE__, __FUNCTION__);
+                    throw Exception(1,"[yoloout] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else
@@ -722,7 +738,19 @@ void Parser::parseActivationParams(ActivationParams *activationParams, YAML::con
 
         if(key == "activation")
         {
-            activationParams->activation = Activations::getActivation(value);
+            std::vector<std::string> splits;
+            ExString::split(splits, value, ",");
+            activationParams->activation = Activations::getActivation(splits[0]);
+
+            if(splits.size()>1)
+            {
+                for (size_t i = 1; i < splits.size(); ++i)
+                {
+                    float tmp = 0.f;
+                    ExString::strToFloat(splits[i], tmp);
+                    activationParams->actParams.push_back(tmp);
+                }
+            }
         }
         else
         {
@@ -1124,6 +1152,13 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
                 throw Exception(1,"[conv] useBias can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
+        else if(key == "eps")
+        {
+            if(!ExString::strToFloat(value, convParams->bnEps))
+            {
+                throw Exception(1,"[conv] eps can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
         else if(key == "activation")
         {
             std::vector<std::string> splits;
@@ -1398,6 +1433,13 @@ void Parser::parseConnectParams(ConnectParams *connectParams, YAML::const_iterat
                 throw Exception(1,"[connect] useBias can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
+        else if(key == "bnEps")
+        {
+            if(!ExString::strToFloat(value, connectParams->bnEps))
+            {
+                throw Exception(1,"[connect] bnEps can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
         else if(key == "activation")
         {
             std::vector<std::string> splits;
@@ -1442,6 +1484,13 @@ void Parser::parseBatchNormParams(BatchNormParams *batchNormParams, YAML::const_
                     ExString::strToFloat(splits[i], tmp);
                     batchNormParams->actParams.push_back(tmp);
                 }
+            }
+        }
+        else if(key == "eps")
+        {
+            if(!ExString::strToFloat(value, batchNormParams->eps))
+            {
+                throw Exception(1,"[bn] eps can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else
@@ -1523,6 +1572,62 @@ void Parser::parsePermuteParams(PermuteParams *permuteParams, YAML::const_iterat
         else
         {
             throw Exception(1, key + " is not supported in [permute]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+}
+
+void Parser::parseSliceParams(SliceParams *sliceParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "start0")
+        {
+            if(!ExString::strToInt(value, sliceParams->start0))
+            {
+                throw Exception(1,"[slice] c start can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "step0")
+        {
+            if(!ExString::strToInt(value, sliceParams->step0))
+            {
+                throw Exception(1,"[slice] c step can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "start1")
+        {
+            if(!ExString::strToInt(value, sliceParams->start1))
+            {
+                throw Exception(1,"[slice] h start can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "step1")
+        {
+            if(!ExString::strToInt(value, sliceParams->step1))
+            {
+                throw Exception(1,"[slice] h step can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "start2")
+        {
+            if(!ExString::strToInt(value, sliceParams->start2))
+            {
+                throw Exception(1,"[slice] w start can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "step2")
+        {
+            if(!ExString::strToInt(value, sliceParams->step2))
+            {
+                throw Exception(1,"[slice] w step can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [slice]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
@@ -2349,7 +2454,7 @@ void Parser::parseUpSampleParams(UpSampleParams *upSampleParams, YAML::const_ite
     }
 }
 
-void Parser::parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator &iter)
+void Parser::parseYoloParams(YoloParams *yoloParams, YAML::const_iterator &iter)
 {
     for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
@@ -2364,7 +2469,7 @@ void Parser::parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator 
 
             if(tmpAnchors.size()!=6)
             {
-                throw Exception(1,"[yolov3] anchor num should be 6", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[yolo] anchor num should be 6", __FILE__, __LINE__, __FUNCTION__);
             }
 
             for (size_t i = 0; i < tmpAnchors.size(); ++i)
@@ -2373,28 +2478,32 @@ void Parser::parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator 
                 ExString::trim(tmpAnchors[i]);
                 if(!ExString::strToFloat(tmpAnchors[i],tmp))
                 {
-                    throw Exception(1,"[yolov3] anchors can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+                    throw Exception(1,"[yolo] anchors can't convert to float", __FILE__, __LINE__, __FUNCTION__);
                 }
 
-                yolov3Params->anchors.push_back(tmp);
+                yoloParams->anchors.push_back(tmp);
             }
 
         }
         else if(key == "classNum")
         {
-            if(!ExString::strToInt(value, yolov3Params->classNum))
+            if(!ExString::strToInt(value, yoloParams->classNum))
             {
-                throw Exception(1,"[yolov3] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[yolo] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
+        }
+        else if(key == "yoloType")
+        {
+            yoloParams->yoloType = getYoloTypeFromStr(value);
         }
         else
         {
-            throw Exception(1, key + " is not supported in [unsample]", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1, key + " is not supported in [yolo]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }
 
-void Parser::parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_iterator &iter)
+void Parser::parseYoloOutParams(YoloOutParams *yoloOutParams, YAML::const_iterator &iter)
 {
     for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
     {
@@ -2412,45 +2521,45 @@ void Parser::parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_
 
                 if(!ExString::strToInt(layerIndexes[i], index))
                 {
-                    throw Exception(1,"[yolov3out] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                    throw Exception(1,"[yoloout] kSize can't convert to int", __FILE__, __LINE__, __FUNCTION__);
                 }
 
                 if(index < 0)
                 {
-                    index   = index + yolov3OutParams->index - 1;
+                    index   = index + yoloOutParams->index - 1;
                 }
 
-                yolov3OutParams->layerIndexes.push_back(index);
+                yoloOutParams->layerIndexes.push_back(index);
             }
         }
         else if(key == "confThresh")
         {
-            if(!ExString::strToFloat(value, yolov3OutParams->confThresh))
+            if(!ExString::strToFloat(value, yoloOutParams->confThresh))
             {
-                throw Exception(1,"[yolov3out] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[yoloout] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "nmsThresh")
         {
-            if(!ExString::strToFloat(value, yolov3OutParams->nmsThresh))
+            if(!ExString::strToFloat(value, yoloOutParams->nmsThresh))
             {
-                throw Exception(1,"[yolov3out] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[yoloout] output can't convert to float", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "useSoftNms")
         {
-            if(!ExString::strToInt(value, yolov3OutParams->useSoftNms))
+            if(!ExString::strToInt(value, yoloOutParams->useSoftNms))
             {
-                throw Exception(1,"[yolov3out] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[yoloout] output can't convert to int", __FILE__, __LINE__, __FUNCTION__);
             }
         }
         else if(key == "yoloType")
         {
-            yolov3OutParams->getYoloTypeFromStr(value);
+            yoloOutParams->yoloType = getYoloTypeFromStr(value);
         }
         else
         {
-            throw Exception(1, key + " is not supported in [yolov3out]", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1, key + " is not supported in [yoloout]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }

@@ -5,6 +5,7 @@ ActivationType Activations::getActivation(const std::string &msg)
 {
     if (msg=="logistic") return LOGISTIC;
     if (msg=="swish") return SWISH;
+    if (msg=="hardswish") return HARD_SWISH;
     if (msg=="mish") return MISH;
     if (msg=="normalize_channels") return NORM_CHAN;
     if (msg=="normalize_channels_softmax") return NORM_CHAN_SOFTMAX;
@@ -32,6 +33,7 @@ string Activations::getActivationStr(const ActivationType &type)
     if (type==LOGISTIC) return "logistic";
     if (type==SWISH) return "swish";
     if (type==MISH) return "mish";
+    if (type==HARD_SWISH) return "hardswish";
     if (type==NORM_CHAN) return "nc";
     if (type==NORM_CHAN_SOFTMAX) return "ncs";
     if (type==NORM_CHAN_SOFTMAX_MAXVAL) return "ncsm";
@@ -90,6 +92,8 @@ float Activations::activate(const float &x, const ActivationType &actType, const
         return mishActivate(x);
     case SWISH:
         return swishActivate(x);
+    case HARD_SWISH:
+        return hardSwishActivate(x);
     case NONE:
         return x;
     default:

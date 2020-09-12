@@ -320,16 +320,16 @@ int runYoloFile(char **msg, const char *imagePath, BBoxContainer *bboxContainer,
 
         std::vector<float> img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imagePath,cv::Size(sizeX,sizeY));
 
-        std::vector<std::vector<Msnhnet::Yolov3Box>> result;
+        std::vector<std::vector<Msnhnet::YoloBox>> result;
 
 #ifdef USE_GPU
         if(runGPU>0)
         {
-            result =  net->runYolov3GPU(img);
+            result =  net->runYoloGPU(img);
         }
         else
         {
-            result = net->runYolov3(img);
+            result = net->runYolo(img);
         }
 #else
         if(runGPU>0)
@@ -338,7 +338,7 @@ int runYoloFile(char **msg, const char *imagePath, BBoxContainer *bboxContainer,
         }
         else
         {
-            result = net->runYolov3(img);
+            result = net->runYolo(img);
         }
 #endif
 
@@ -399,16 +399,16 @@ int runYoloList(char **msg, unsigned char *imageData, const int width, const int
 
         std::vector<float> img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(inMat,cv::Size(sizeX,sizeY));
 
-        std::vector<std::vector<Msnhnet::Yolov3Box>> result;
+        std::vector<std::vector<Msnhnet::YoloBox>> result;
 
 #ifdef USE_GPU
         if(runGPU>0)
         {
-            result =  net->runYolov3GPU(img);
+            result =  net->runYoloGPU(img);
         }
         else
         {
-            result = net->runYolov3(img);
+            result = net->runYolo(img);
         }
 #else
         if(runGPU>0)
@@ -417,7 +417,7 @@ int runYoloList(char **msg, unsigned char *imageData, const int width, const int
         }
         else
         {
-            result = net->runYolov3(img);
+            result = net->runYolo(img);
         }
 #endif
 

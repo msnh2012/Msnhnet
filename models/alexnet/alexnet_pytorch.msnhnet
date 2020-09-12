@@ -1,0 +1,139 @@
+config:
+  batch: 1
+  channels: 3
+  height: 227
+  width: 227
+#0
+conv:
+  filters: 64
+  kSizeX: 11
+  kSizeY: 11
+  paddingX: 2
+  paddingY: 2
+  strideX: 4
+  strideY: 4
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#1
+act:
+  activation: relu
+#2
+maxpool:
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 0
+  paddingY: 0
+  strideX: 2
+  strideY: 2
+  ceilMode: 0
+#3
+conv:
+  filters: 192
+  kSizeX: 5
+  kSizeY: 5
+  paddingX: 2
+  paddingY: 2
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#4
+act:
+  activation: relu
+#5
+maxpool:
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 0
+  paddingY: 0
+  strideX: 2
+  strideY: 2
+  ceilMode: 0
+#6
+conv:
+  filters: 384
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#7
+act:
+  activation: relu
+#8
+conv:
+  filters: 256
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#9
+act:
+  activation: relu
+#10
+conv:
+  filters: 256
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#11
+act:
+  activation: relu
+#12
+maxpool:
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 0
+  paddingY: 0
+  strideX: 2
+  strideY: 2
+  ceilMode: 0
+#13
+localavgpool:
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  ceilMode: 0
+#14
+connect:
+  output: 4096
+  useBias: 1
+#15
+act:
+  activation: relu
+#16
+connect:
+  output: 4096
+  useBias: 1
+#17
+act:
+  activation: relu
+#18
+connect:
+  output: 1000
+  useBias: 1

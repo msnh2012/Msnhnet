@@ -25,8 +25,8 @@ int main(int argc, char** argv)
         Msnhnet::Point2I inSize = msnhNet.getInputSize();
         std::vector<float> img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imgPath, cv::Size(inSize.x,inSize.y));
         cv::Mat org = cv::imread(imgPath);
-        std::vector<std::vector<Msnhnet::Yolov3Box>> result = msnhNet.runYolov3(img);
-        Msnhnet::OpencvUtil::drawYolov3Box(org,labels,result,inSize);
+        std::vector<std::vector<Msnhnet::YoloBox>> result = msnhNet.runYolo(img);
+        Msnhnet::OpencvUtil::drawYoloBox(org,labels,result,inSize);
         std::cout<<msnhNet.getTimeDetail()<<std::endl<<std::flush;
         cv::imshow("test",org);
         cv::waitKey();

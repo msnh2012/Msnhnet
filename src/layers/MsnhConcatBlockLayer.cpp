@@ -37,7 +37,8 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
                 ConvParams* convParams      =   reinterpret_cast<ConvParams*>(branchParams[i][j]);
                 layer                       =   new ConvolutionalLayer(branchBuildParams.batch, 1, branchBuildParams.height, branchBuildParams.width, branchBuildParams.channels,
                                                                        convParams->filters,convParams->groups,convParams->kSizeX, convParams->kSizeY,convParams->strideX, convParams->strideY,
-                                                                       convParams->dilationX,convParams->dilationY,convParams->paddingX, convParams->paddingY, convParams->activation, convParams->actParams, convParams->batchNorm, convParams->useBias,
+                                                                       convParams->dilationX,convParams->dilationY,convParams->paddingX, convParams->paddingY, convParams->activation, convParams->actParams,
+                                                                       convParams->batchNorm, convParams->bnEps, convParams->useBias,
                                                                        0,0,0,0,convParams->antialiasing, nullptr, 0,0);
                 if(i == 0 && j == 0)
                 {
@@ -58,7 +59,7 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
             {
                 ConnectParams *connectParams=   reinterpret_cast<ConnectParams*>(branchParams[i][j]);
                 layer                       =   new ConnectedLayer(branchBuildParams.batch, 1, branchBuildParams.inputNums, connectParams->output, connectParams->activation, connectParams->actParams,
-                                                                   connectParams->batchNorm, connectParams->useBias);
+                                                                   connectParams->batchNorm, connectParams->bnEps, connectParams->useBias);
                 if(i == 0 && j == 0)
                 {
                     this->_inputNum = layer->getInputNum();
@@ -89,7 +90,7 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
             else if(branchParams[i][j]->type == LayerType::BATCHNORM)
             {
                 BatchNormParams *batchNormParams=   reinterpret_cast<BatchNormParams*>(branchParams[i][j]);
-                layer                           =   new BatchNormLayer(branchBuildParams.batch, branchBuildParams.width, branchBuildParams.height, branchBuildParams.channels, batchNormParams->activation, batchNormParams->actParams);
+                layer                           =   new BatchNormLayer(branchBuildParams.batch, branchBuildParams.width, branchBuildParams.height, branchBuildParams.channels, batchNormParams->activation, batchNormParams->eps, batchNormParams->actParams);
 
                 if(i == 0 && j == 0)
                 {

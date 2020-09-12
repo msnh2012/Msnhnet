@@ -111,13 +111,13 @@ void MainWindow::on_actionOpen_triggered()
 
         }
 
-        if(layerName == "Yolov3" && finalHeight==-1)
+        if(layerName == "Yolo" && finalHeight==-1)
         {
             height = height + 400;
             finalHeight = height;
         }
 
-        if(layerName == "Yolov3Out")
+        if(layerName == "YoloOut")
         {
             height = finalHeight;
         }
@@ -426,6 +426,30 @@ void MainWindow::on_actionOpen_triggered()
             node->attributes()[5]->setData(output   );
         }
 
+        if(layerName == "Slice")
+        {
+            Msnhnet::SliceLayer *layer = reinterpret_cast<Msnhnet::SliceLayer *>(builder.getNet()->layers[i]);
+            QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+            QString start0      = QString("%1").arg(layer->getStart0());
+            QString step0       = QString("%1").arg(layer->getStep0());
+            QString start1      = QString("%1").arg(layer->getStart1());
+            QString step1       = QString("%1").arg(layer->getStep1());
+            QString start2      = QString("%1").arg(layer->getStart2());
+            QString step2       = QString("%1").arg(layer->getStep2());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
+            QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
+
+            node->attributes()[0]->setData(input    );
+            node->attributes()[1]->setData(start0   );
+            node->attributes()[2]->setData(step0    );
+            node->attributes()[3]->setData(start1   );
+            node->attributes()[4]->setData(step1    );
+            node->attributes()[5]->setData(start2   );
+            node->attributes()[6]->setData(step2    );
+            node->attributes()[7]->setData(inplace  );
+            node->attributes()[8]->setData(output   );
+        }
+
         if(layerName == "Route")
         {
             Msnhnet::RouteLayer *layer = reinterpret_cast<Msnhnet::RouteLayer *>(builder.getNet()->layers[i]);
@@ -480,32 +504,36 @@ void MainWindow::on_actionOpen_triggered()
             node->attributes()[6]->setData(output     );
         }
 
-        if(layerName == "Yolov3")
+        if(layerName == "Yolo")
         {
-            Msnhnet::Yolov3Layer *layer = reinterpret_cast<Msnhnet::Yolov3Layer *>(builder.getNet()->layers[i]);
+            Msnhnet::YoloLayer *layer = reinterpret_cast<Msnhnet::YoloLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString classes     = QString("%1").arg(layer->getClassNum());
             QString inplace     = QString("%1").arg(layer->getMemReUse());
+            QString yoloType    = QString::fromStdString(Msnhnet::getStrFromYoloType(layer->getYoloType()));
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input);
             node->attributes()[1]->setData(classes);
             node->attributes()[2]->setData(inplace);
-            node->attributes()[3]->setData(output);
+            node->attributes()[3]->setData(yoloType);
+            node->attributes()[4]->setData(output);
         }
 
-        if(layerName == "Yolov3Out")
+        if(layerName == "YoloOut")
         {
-            Msnhnet::Yolov3OutLayer *layer = reinterpret_cast<Msnhnet::Yolov3OutLayer *>(builder.getNet()->layers[i]);
+            Msnhnet::YoloOutLayer *layer = reinterpret_cast<Msnhnet::YoloOutLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
             QString conf        = QString("%1").arg(layer->getConfThresh());
             QString nms         = QString("%1").arg(layer->getNmsThresh());
             QString inplace     = QString("%1").arg(layer->getMemReUse());
+            QString yoloType    = QString::fromStdString(Msnhnet::getStrFromYoloType(layer->getYoloType()));
 
             node->attributes()[0]->setData(input);
             node->attributes()[1]->setData(conf);
             node->attributes()[2]->setData(nms);
             node->attributes()[3]->setData(inplace);
+            node->attributes()[4]->setData(yoloType);
         }
 
         if(node == nullptr)
@@ -539,10 +567,10 @@ void MainWindow::on_actionOpen_triggered()
                     scene->connectNode(QString::number(indexes[j]+1),"output",QString::number(i+1),"input");
                 }
             }
-            else if(layerName == "Yolov3Out")
+            else if(layerName == "YoloOut")
             {
-                Msnhnet::Yolov3OutLayer *layer  = reinterpret_cast<Msnhnet::Yolov3OutLayer *>(builder.getNet()->layers[i]);
-                std::vector<int>    indexes = layer->getYolov3Indexes();
+                Msnhnet::YoloOutLayer *layer  = reinterpret_cast<Msnhnet::YoloOutLayer *>(builder.getNet()->layers[i]);
+                std::vector<int>    indexes = layer->getYoloIndexes();
 
                 for (int j = 0; j < indexes.size(); ++j)
                 {

@@ -2,7 +2,7 @@
 
 namespace Msnhnet
 {
-ActivationLayer::ActivationLayer(const int &batch, const int &width, const int &height, const int &channel, const int &inputNum, const ActivationType &activation)
+ActivationLayer::ActivationLayer(const int &batch, const int &width, const int &height, const int &channel, const int &inputNum, const ActivationType &activation, const std::vector<float> &actParams)
 {
     this->_layerName     = "Activate        ";
     this->_type          = LayerType::ACTIVE;
@@ -14,6 +14,7 @@ ActivationLayer::ActivationLayer(const int &batch, const int &width, const int &
     this->_height        = height;
     this->_width         = width;
     this->_channel       = channel;
+    this->_actParams     = actParams;
 
     this->_outHeight     = this->_height;
     this->_outWidth      = this->_width;
@@ -87,22 +88,47 @@ void ActivationLayer::forward(NetworkState &netState)
 
     {
 
-        Activations::activateArray(layerInput,
-                                   _outputNum*_batch,
-                                   _activation,
-                                   this->supportAvx
-                                   );
+        if(this->_actParams.size()>0)
+        {
+            Activations::activateArray(layerInput,
+                                       _outputNum*_batch,
+                                       _activation,
+                                       this->supportAvx,
+                                       this->_actParams[0]
+                    );
+        }
+        else
+        {
+            Activations::activateArray(layerInput,
+                                       _outputNum*_batch,
+                                       _activation,
+                                       this->supportAvx
+                                       );
+        }
 
     }
     else    
 
     {
-        Activations::activateArray(this->_output, 
+        if(this->_actParams.size()>0)
+        {
+            Activations::activateArray(this->_output, 
 
-                                   _outputNum*_batch,
-                                   _activation,
-                                   this->supportAvx
-                                   );
+                                       _outputNum*_batch,
+                                       _activation,
+                                       this->supportAvx,
+                                       this->_actParams[0]
+                                       );
+        }
+        else
+        {
+            Activations::activateArray(this->_output, 
+
+                                       _outputNum*_batch,
+                                       _activation,
+                                       this->supportAvx
+                                       );
+        }
     }
 
     this->_forwardTime = TimeUtil::getElapsedTime(st);
@@ -192,9 +218,9 @@ void ActivationLayer::forwardGPU(NetworkState &netState)
     {
 
         ActivationsGPU::gpuActivateArray(layerGpuInput,
-                                           _outputNum*_batch,
-                                           _activation
-                                           );
+                                         _outputNum*_batch,
+                                         _activation
+                                         );
 
     }
     else    
@@ -202,9 +228,9 @@ void ActivationLayer::forwardGPU(NetworkState &netState)
     {
         ActivationsGPU::gpuActivateArray(this->_gpuOutput, 
 
-                                       _outputNum*_batch,
-                                       _activation
-                                       );
+                                         _outputNum*_batch,
+                                         _activation
+                                         );
     }
 
     this->recordCudaStop();

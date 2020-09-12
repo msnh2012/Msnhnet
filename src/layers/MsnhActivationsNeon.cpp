@@ -57,6 +57,9 @@ void ActivationsNeon::activateNeon4(float * const &x, const ActivationType &actT
     case SWISH:
         swishActivateSize4(x);
         break;
+    case HARD_SWISH:
+        hardSwishActivateSize4(x);
+        break;
     }
 }
 }

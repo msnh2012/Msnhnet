@@ -38,10 +38,10 @@ int main(int argc, char** argv)
 
 			auto st = Msnhnet::TimeUtil::startRecord();
             std::vector<float> img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(mat, cv::Size(inSize.x,inSize.y));
-            std::vector<std::vector<Msnhnet::Yolov3Box>> result = msnhNet.runYolov3GPU(img);
+            std::vector<std::vector<Msnhnet::YoloBox>> result = msnhNet.runYoloGPU(img);
             std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl;
 
-            Msnhnet::OpencvUtil::drawYolov3Box(org,labels,result,inSize);
+            Msnhnet::OpencvUtil::drawYoloBox(org,labels,result,inSize);
             cv::imshow("test",org);
             if(cv::waitKey(20) == 27)
             {

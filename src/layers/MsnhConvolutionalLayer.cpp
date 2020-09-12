@@ -5,7 +5,7 @@ namespace Msnhnet
 {
 ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const int &height, const int &width, const int &channel, const int &num,
                                        const int &groups, const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY, const int &dilationX, const int &dilationY,
-                                       const int &paddingX, const int &paddingY, ActivationType activation, const std::vector<float> &actParams, const int &batchNorm, const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex, const int &antialiasing,
+                                       const int &paddingX, const int &paddingY, ActivationType activation, const std::vector<float> &actParams, const int &batchNorm, const float &bnEps, const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex, const int &antialiasing,
                                        ConvolutionalLayer * const &shareLayer, const int &assistedExcitation, const int &deform)
 {
     (void) deform;
@@ -64,6 +64,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     this->_nWeights          = (this->_channel / groups) * num * kSizeX * kSizeY; 
 
     this->_useBias           = useBias;
+    this->_bnEps             = bnEps;
 
     if(this->_useBias)
     {
@@ -636,6 +637,7 @@ TempARRCH64:
                     }
 
                     Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
+                    int a = 0;
 #ifdef USE_ARM
                 }
 #endif
@@ -662,7 +664,8 @@ TempARRCH64:
                                          this->_scales,
                                          this->_rollMean,
                                          this->_rollVariance,
-                                         this->_biases
+                                         this->_biases,
+                                         this->_bnEps
                                          );
 #else
 #ifdef USE_OMP
@@ -670,7 +673,7 @@ TempARRCH64:
 #endif
             for (int c = 0; c < this->_outChannel; ++c)
             {
-                float sqrtVal   = sqrt(this->_rollVariance[c] + 0.00001f);
+                float sqrtVal   = sqrt(this->_rollVariance[c] + this->_bnEps);
                 float scaleSqrt = this->_scales[c]/sqrtVal;
                 float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
                 for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
@@ -689,7 +692,7 @@ TempARRCH64:
 #endif
             for (int c = 0; c < this->_outChannel; ++c)
             {
-                float sqrtVal   = sqrt(this->_rollVariance[c] + 0.00001f);
+                float sqrtVal   = sqrt(this->_rollVariance[c] + this->_bnEps);
                 float scaleSqrt = this->_scales[c]/sqrtVal;
                 float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
                 if(this->supportAvx)
@@ -994,7 +997,7 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
     {
 
         ConvolutionalLayerGPU::convBn(this->_batch, this->_outChannel, this->_outHeight, this->_outWidth, this->_gpuScales,
-                                      this->_gpuRollMean, this->_gpuRollVariance, this->_gpuBiases, layerGpuOutput
+                                      this->_gpuRollMean, this->_gpuRollVariance, this->_gpuBiases, this->_bnEps, layerGpuOutput
                                       );
     }
     else

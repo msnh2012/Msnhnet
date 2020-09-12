@@ -14,7 +14,7 @@ class MsnhNet_API ConnectedLayer : public BaseLayer
 {
 public:
     ConnectedLayer(const int &batch, const int &steps, const int &inputNum, const int &outputNum,
-                   const ActivationType &activation, const std::vector<float> &actParams, const int &batchNorm, const int &useBias);
+                   const ActivationType &activation, const std::vector<float> &actParams, const int &batchNorm, const float &bnEps, const int &useBias);
 
     ~ConnectedLayer();
 
@@ -105,6 +105,7 @@ protected:
     int         _batchNorm           =   0;
 
     int         _totalBatch          =   0;
+    float       _bnEps               =   0.00001f;
 };
 }
 

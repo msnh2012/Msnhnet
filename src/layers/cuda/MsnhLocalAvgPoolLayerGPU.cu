@@ -28,8 +28,8 @@ __global__ void localAvgPoolNormalKernel(const int n,
 
         int b = index;
 
-        int widthOffset     =   -(paddingX + 1)/2;
-        int heightOffset    =   -(paddingY + 1)/2;
+        int widthOffset     =   -paddingX;
+        int heightOffset    =   -paddingY;
 
         int outIndex        =   j + outWidth*(i + outHeight*(k + channel*b));
 

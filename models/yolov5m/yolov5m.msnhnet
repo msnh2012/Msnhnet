@@ -1,0 +1,2098 @@
+config:
+  batch: 1
+  channels: 3
+  height: 320
+  width: 320
+#0
+act:
+  activation: none
+#1
+slice:
+  start0: 0
+  step0: 1
+  start1: 0
+  step1: 2
+  start2: 0
+  step2: 2
+#2
+route:
+  layers: -2
+  addModel: 0
+#3
+slice:
+  start0: 0
+  step0: 1
+  start1: 1
+  step1: 2
+  start2: 0
+  step2: 2
+#4
+route:
+  layers: -4
+  addModel: 0
+#5
+slice:
+  start0: 0
+  step0: 1
+  start1: 0
+  step1: 2
+  start2: 1
+  step2: 2
+#6
+route:
+  layers: -6
+  addModel: 0
+#7
+slice:
+  start0: 0
+  step0: 1
+  start1: 1
+  step1: 2
+  start2: 1
+  step2: 2
+#8
+route:
+  layers: -7,-5,-3,-1
+  addModel: 0
+#9
+conv:
+  filters: 48
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#10
+batchnorm:
+  activation: none
+  eps: 0.001
+#11
+act:
+  activation: hardswish
+#12
+conv:
+  filters: 96
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 2
+  strideY: 2
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#13
+batchnorm:
+  activation: none
+  eps: 0.001
+#14
+act:
+  activation: hardswish
+#15
+conv:
+  filters: 48
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#16
+batchnorm:
+  activation: none
+  eps: 0.001
+#17
+act:
+  activation: hardswish
+#18
+conv:
+  filters: 48
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#19
+batchnorm:
+  activation: none
+  eps: 0.001
+#20
+act:
+  activation: hardswish
+#21
+conv:
+  filters: 48
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#22
+batchnorm:
+  activation: none
+  eps: 0.001
+#23
+act:
+  activation: hardswish
+#24
+varop:
+  layers: 17
+  type: add
+  constVal: 0.0
+#25
+conv:
+  filters: 48
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#26
+batchnorm:
+  activation: none
+  eps: 0.001
+#27
+act:
+  activation: hardswish
+#28
+conv:
+  filters: 48
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#29
+batchnorm:
+  activation: none
+  eps: 0.001
+#30
+act:
+  activation: hardswish
+#31
+varop:
+  layers: 24
+  type: add
+  constVal: 0.0
+#32
+conv:
+  filters: 48
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#33
+route:
+  layers: 14
+  addModel: 0
+#34
+conv:
+  filters: 48
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#35
+route:
+  layers: 32,34
+  addModel: 0
+#36
+batchnorm:
+  activation: none
+  eps: 0.001
+#37
+act:
+  activation: leaky,0.1
+#38
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#39
+batchnorm:
+  activation: none
+  eps: 0.001
+#40
+act:
+  activation: hardswish
+#41
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 2
+  strideY: 2
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#42
+batchnorm:
+  activation: none
+  eps: 0.001
+#43
+act:
+  activation: hardswish
+#44
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#45
+batchnorm:
+  activation: none
+  eps: 0.001
+#46
+act:
+  activation: hardswish
+#47
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#48
+batchnorm:
+  activation: none
+  eps: 0.001
+#49
+act:
+  activation: hardswish
+#50
+conv:
+  filters: 96
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#51
+batchnorm:
+  activation: none
+  eps: 0.001
+#52
+act:
+  activation: hardswish
+#53
+varop:
+  layers: 46
+  type: add
+  constVal: 0.0
+#54
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#55
+batchnorm:
+  activation: none
+  eps: 0.001
+#56
+act:
+  activation: hardswish
+#57
+conv:
+  filters: 96
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#58
+batchnorm:
+  activation: none
+  eps: 0.001
+#59
+act:
+  activation: hardswish
+#60
+varop:
+  layers: 53
+  type: add
+  constVal: 0.0
+#61
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#62
+batchnorm:
+  activation: none
+  eps: 0.001
+#63
+act:
+  activation: hardswish
+#64
+conv:
+  filters: 96
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#65
+batchnorm:
+  activation: none
+  eps: 0.001
+#66
+act:
+  activation: hardswish
+#67
+varop:
+  layers: 60
+  type: add
+  constVal: 0.0
+#68
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#69
+batchnorm:
+  activation: none
+  eps: 0.001
+#70
+act:
+  activation: hardswish
+#71
+conv:
+  filters: 96
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#72
+batchnorm:
+  activation: none
+  eps: 0.001
+#73
+act:
+  activation: hardswish
+#74
+varop:
+  layers: 67
+  type: add
+  constVal: 0.0
+#75
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#76
+batchnorm:
+  activation: none
+  eps: 0.001
+#77
+act:
+  activation: hardswish
+#78
+conv:
+  filters: 96
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#79
+batchnorm:
+  activation: none
+  eps: 0.001
+#80
+act:
+  activation: hardswish
+#81
+varop:
+  layers: 74
+  type: add
+  constVal: 0.0
+#82
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#83
+batchnorm:
+  activation: none
+  eps: 0.001
+#84
+act:
+  activation: hardswish
+#85
+conv:
+  filters: 96
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#86
+batchnorm:
+  activation: none
+  eps: 0.001
+#87
+act:
+  activation: hardswish
+#88
+varop:
+  layers: 81
+  type: add
+  constVal: 0.0
+#89
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#90
+route:
+  layers: 43
+  addModel: 0
+#91
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#92
+route:
+  layers: 89,91
+  addModel: 0
+#93
+batchnorm:
+  activation: none
+  eps: 0.001
+#94
+act:
+  activation: leaky,0.1
+#95
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#96
+batchnorm:
+  activation: none
+  eps: 0.001
+#97
+act:
+  activation: hardswish
+#98
+conv:
+  filters: 384
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 2
+  strideY: 2
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#99
+batchnorm:
+  activation: none
+  eps: 0.001
+#100
+act:
+  activation: hardswish
+#101
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#102
+batchnorm:
+  activation: none
+  eps: 0.001
+#103
+act:
+  activation: hardswish
+#104
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#105
+batchnorm:
+  activation: none
+  eps: 0.001
+#106
+act:
+  activation: hardswish
+#107
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#108
+batchnorm:
+  activation: none
+  eps: 0.001
+#109
+act:
+  activation: hardswish
+#110
+varop:
+  layers: 103
+  type: add
+  constVal: 0.0
+#111
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#112
+batchnorm:
+  activation: none
+  eps: 0.001
+#113
+act:
+  activation: hardswish
+#114
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#115
+batchnorm:
+  activation: none
+  eps: 0.001
+#116
+act:
+  activation: hardswish
+#117
+varop:
+  layers: 110
+  type: add
+  constVal: 0.0
+#118
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#119
+batchnorm:
+  activation: none
+  eps: 0.001
+#120
+act:
+  activation: hardswish
+#121
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#122
+batchnorm:
+  activation: none
+  eps: 0.001
+#123
+act:
+  activation: hardswish
+#124
+varop:
+  layers: 117
+  type: add
+  constVal: 0.0
+#125
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#126
+batchnorm:
+  activation: none
+  eps: 0.001
+#127
+act:
+  activation: hardswish
+#128
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#129
+batchnorm:
+  activation: none
+  eps: 0.001
+#130
+act:
+  activation: hardswish
+#131
+varop:
+  layers: 124
+  type: add
+  constVal: 0.0
+#132
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#133
+batchnorm:
+  activation: none
+  eps: 0.001
+#134
+act:
+  activation: hardswish
+#135
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#136
+batchnorm:
+  activation: none
+  eps: 0.001
+#137
+act:
+  activation: hardswish
+#138
+varop:
+  layers: 131
+  type: add
+  constVal: 0.0
+#139
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#140
+batchnorm:
+  activation: none
+  eps: 0.001
+#141
+act:
+  activation: hardswish
+#142
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#143
+batchnorm:
+  activation: none
+  eps: 0.001
+#144
+act:
+  activation: hardswish
+#145
+varop:
+  layers: 138
+  type: add
+  constVal: 0.0
+#146
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#147
+route:
+  layers: 100
+  addModel: 0
+#148
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#149
+route:
+  layers: 146,148
+  addModel: 0
+#150
+batchnorm:
+  activation: none
+  eps: 0.001
+#151
+act:
+  activation: leaky,0.1
+#152
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#153
+batchnorm:
+  activation: none
+  eps: 0.001
+#154
+act:
+  activation: hardswish
+#155
+conv:
+  filters: 768
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 2
+  strideY: 2
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#156
+batchnorm:
+  activation: none
+  eps: 0.001
+#157
+act:
+  activation: hardswish
+#158
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#159
+batchnorm:
+  activation: none
+  eps: 0.001
+#160
+act:
+  activation: hardswish
+#161
+maxpool:
+  kSizeX: 5
+  kSizeY: 5
+  paddingX: 2
+  paddingY: 2
+  strideX: 1
+  strideY: 1
+  ceilMode: 0
+#162
+route:
+  layers: 160
+  addModel: 0
+#163
+maxpool:
+  kSizeX: 9
+  kSizeY: 9
+  paddingX: 4
+  paddingY: 4
+  strideX: 1
+  strideY: 1
+  ceilMode: 0
+#164
+route:
+  layers: 160
+  addModel: 0
+#165
+maxpool:
+  kSizeX: 13
+  kSizeY: 13
+  paddingX: 6
+  paddingY: 6
+  strideX: 1
+  strideY: 1
+  ceilMode: 0
+#166
+route:
+  layers: 160,161,163,165
+  addModel: 0
+#167
+conv:
+  filters: 768
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#168
+batchnorm:
+  activation: none
+  eps: 0.001
+#169
+act:
+  activation: hardswish
+#170
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#171
+batchnorm:
+  activation: none
+  eps: 0.001
+#172
+act:
+  activation: hardswish
+#173
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#174
+batchnorm:
+  activation: none
+  eps: 0.001
+#175
+act:
+  activation: hardswish
+#176
+conv:
+  filters: 384
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#177
+batchnorm:
+  activation: none
+  eps: 0.001
+#178
+act:
+  activation: hardswish
+#179
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#180
+batchnorm:
+  activation: none
+  eps: 0.001
+#181
+act:
+  activation: hardswish
+#182
+conv:
+  filters: 384
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#183
+batchnorm:
+  activation: none
+  eps: 0.001
+#184
+act:
+  activation: hardswish
+#185
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#186
+route:
+  layers: 169
+  addModel: 0
+#187
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#188
+route:
+  layers: 185,187
+  addModel: 0
+#189
+batchnorm:
+  activation: none
+  eps: 0.001
+#190
+act:
+  activation: leaky,0.1
+#191
+conv:
+  filters: 768
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#192
+batchnorm:
+  activation: none
+  eps: 0.001
+#193
+act:
+  activation: hardswish
+#194
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#195
+batchnorm:
+  activation: none
+  eps: 0.001
+#196
+act:
+  activation: hardswish
+#197
+upsample:
+  type: nearest
+  strideX: 2
+  strideY: 2
+  scaleX: 1.0
+  scaleY: 1.0
+  alignCorners: 0
+#198
+route:
+  layers: 197,154
+  addModel: 0
+#199
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#200
+batchnorm:
+  activation: none
+  eps: 0.001
+#201
+act:
+  activation: hardswish
+#202
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#203
+batchnorm:
+  activation: none
+  eps: 0.001
+#204
+act:
+  activation: hardswish
+#205
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#206
+batchnorm:
+  activation: none
+  eps: 0.001
+#207
+act:
+  activation: hardswish
+#208
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#209
+batchnorm:
+  activation: none
+  eps: 0.001
+#210
+act:
+  activation: hardswish
+#211
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#212
+batchnorm:
+  activation: none
+  eps: 0.001
+#213
+act:
+  activation: hardswish
+#214
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#215
+route:
+  layers: 198
+  addModel: 0
+#216
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#217
+route:
+  layers: 214,216
+  addModel: 0
+#218
+batchnorm:
+  activation: none
+  eps: 0.001
+#219
+act:
+  activation: leaky,0.1
+#220
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#221
+batchnorm:
+  activation: none
+  eps: 0.001
+#222
+act:
+  activation: hardswish
+#223
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#224
+batchnorm:
+  activation: none
+  eps: 0.001
+#225
+act:
+  activation: hardswish
+#226
+upsample:
+  type: nearest
+  strideX: 2
+  strideY: 2
+  scaleX: 1.0
+  scaleY: 1.0
+  alignCorners: 0
+#227
+route:
+  layers: 226,97
+  addModel: 0
+#228
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#229
+batchnorm:
+  activation: none
+  eps: 0.001
+#230
+act:
+  activation: hardswish
+#231
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#232
+batchnorm:
+  activation: none
+  eps: 0.001
+#233
+act:
+  activation: hardswish
+#234
+conv:
+  filters: 96
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#235
+batchnorm:
+  activation: none
+  eps: 0.001
+#236
+act:
+  activation: hardswish
+#237
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#238
+batchnorm:
+  activation: none
+  eps: 0.001
+#239
+act:
+  activation: hardswish
+#240
+conv:
+  filters: 96
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#241
+batchnorm:
+  activation: none
+  eps: 0.001
+#242
+act:
+  activation: hardswish
+#243
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#244
+route:
+  layers: 227
+  addModel: 0
+#245
+conv:
+  filters: 96
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#246
+route:
+  layers: 243,245
+  addModel: 0
+#247
+batchnorm:
+  activation: none
+  eps: 0.001
+#248
+act:
+  activation: leaky,0.1
+#249
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#250
+batchnorm:
+  activation: none
+  eps: 0.001
+#251
+act:
+  activation: hardswish
+#252
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 2
+  strideY: 2
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#253
+batchnorm:
+  activation: none
+  eps: 0.001
+#254
+act:
+  activation: hardswish
+#255
+route:
+  layers: 254,225
+  addModel: 0
+#256
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#257
+batchnorm:
+  activation: none
+  eps: 0.001
+#258
+act:
+  activation: hardswish
+#259
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#260
+batchnorm:
+  activation: none
+  eps: 0.001
+#261
+act:
+  activation: hardswish
+#262
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#263
+batchnorm:
+  activation: none
+  eps: 0.001
+#264
+act:
+  activation: hardswish
+#265
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#266
+batchnorm:
+  activation: none
+  eps: 0.001
+#267
+act:
+  activation: hardswish
+#268
+conv:
+  filters: 192
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#269
+batchnorm:
+  activation: none
+  eps: 0.001
+#270
+act:
+  activation: hardswish
+#271
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#272
+route:
+  layers: 255
+  addModel: 0
+#273
+conv:
+  filters: 192
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#274
+route:
+  layers: 271,273
+  addModel: 0
+#275
+batchnorm:
+  activation: none
+  eps: 0.001
+#276
+act:
+  activation: leaky,0.1
+#277
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#278
+batchnorm:
+  activation: none
+  eps: 0.001
+#279
+act:
+  activation: hardswish
+#280
+conv:
+  filters: 384
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 2
+  strideY: 2
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#281
+batchnorm:
+  activation: none
+  eps: 0.001
+#282
+act:
+  activation: hardswish
+#283
+route:
+  layers: 282,196
+  addModel: 0
+#284
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#285
+batchnorm:
+  activation: none
+  eps: 0.001
+#286
+act:
+  activation: hardswish
+#287
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#288
+batchnorm:
+  activation: none
+  eps: 0.001
+#289
+act:
+  activation: hardswish
+#290
+conv:
+  filters: 384
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#291
+batchnorm:
+  activation: none
+  eps: 0.001
+#292
+act:
+  activation: hardswish
+#293
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#294
+batchnorm:
+  activation: none
+  eps: 0.001
+#295
+act:
+  activation: hardswish
+#296
+conv:
+  filters: 384
+  kSizeX: 3
+  kSizeY: 3
+  paddingX: 1
+  paddingY: 1
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#297
+batchnorm:
+  activation: none
+  eps: 0.001
+#298
+act:
+  activation: hardswish
+#299
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#300
+route:
+  layers: 283
+  addModel: 0
+#301
+conv:
+  filters: 384
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#302
+route:
+  layers: 299,301
+  addModel: 0
+#303
+batchnorm:
+  activation: none
+  eps: 0.001
+#304
+act:
+  activation: leaky,0.1
+#305
+conv:
+  filters: 768
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 0
+#306
+batchnorm:
+  activation: none
+  eps: 0.001
+#307
+act:
+  activation: hardswish
+#308
+route:
+  layers: 251
+  addModel: 0
+#309
+conv:
+  filters: 255
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#310
+yolo:
+  anchors: 10.0,13.0,16.0,30.0,33.0,23.0
+  classNum: 80
+  yoloType: yolov5
+#311
+route:
+  layers: 279
+  addModel: 0
+#312
+conv:
+  filters: 255
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#313
+yolo:
+  anchors: 30.0,61.0,62.0,45.0,59.0,119.0
+  classNum: 80
+  yoloType: yolov5
+#314
+route:
+  layers: 307
+  addModel: 0
+#315
+conv:
+  filters: 255
+  kSizeX: 1
+  kSizeY: 1
+  paddingX: 0
+  paddingY: 0
+  strideX: 1
+  strideY: 1
+  dilationX: 1
+  dilationY: 1
+  groups: 1
+  useBias: 1
+#316
+yolo:
+  anchors: 116.0,90.0,156.0,198.0,373.0,326.0
+  classNum: 80
+  yoloType: yolov5
+#317
+yoloout:
+  layers: 310,313,316
+  confThresh: 0.5
+  nmsThresh: 0.5
+  useSoftNms: 0
+  yoloType: yolov5

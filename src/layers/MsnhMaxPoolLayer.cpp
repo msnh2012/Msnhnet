@@ -290,8 +290,8 @@ void MaxPoolLayer::forward(NetworkState &netState)
 #endif
     {
 
-        int widthOffset  =     -(this->_paddingX + 1)/2;
-        int heightOffset =     -(this->_paddingY + 1)/2;
+        int widthOffset  =     -this->_paddingX;
+        int heightOffset =     -this->_paddingY;
 
         int mHeight         =   this->_outHeight;
         int mWidth          =   this->_outWidth;
@@ -497,8 +497,8 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
                               const int &channel,const int &paddingX,const int &paddingY,const int &stride, const int &batch)
 {
 
-    int widthOffset  =     -(paddingX + 1)/2;
-    int heightOffset =     -(paddingY + 1)/2;
+    int widthOffset  =     -paddingX ;
+    int heightOffset =     -paddingY ;
 
     for(int b=0; b<batch; ++b)
     {

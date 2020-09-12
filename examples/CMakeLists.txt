@@ -14,6 +14,11 @@
     add_subdirectory(unet)
 
     add_subdirectory(fcns)
+    
+    add_subdirectory(yolov5s)
+
+    add_subdirectory(yolov5m)
+
 endif()
 
 if(BUILD_USE_GPU MATCHES ON)
@@ -30,6 +35,10 @@ if(BUILD_USE_GPU MATCHES ON)
     add_subdirectory(unet_gpu)
 
     add_subdirectory(deeplabv3_gpu)
+
+    add_subdirectory(yolov5s_gpu)
+
+    add_subdirectory(yolov5m_gpu)
     
     if(BUILD_USE_CUDNN MATCHES ON)
 

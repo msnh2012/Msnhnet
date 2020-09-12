@@ -57,10 +57,11 @@ SOURCES += \
     ../src/layers/MsnhVariableOpLayer.cpp\
     ../src/layers/MsnhRouteLayer.cpp \
     ../src/layers/MsnhVariableOpLayer.cpp \
+    ../src/layers/MsnhSliceLayer.cpp \
     ../src/layers/MsnhSoftMaxLayer.cpp \
     ../src/layers/MsnhUpSampleLayer.cpp \
-    ../src/layers/MsnhYolov3Layer.cpp \
-    ../src/layers/MsnhYolov3OutLayer.cpp \
+    ../src/layers/MsnhYoloLayer.cpp \
+    ../src/layers/MsnhYoloOutLayer.cpp \
     ../src/net/MsnhNetBuilder.cpp \
     ../src/net/MsnhNetwork.cpp \
     ../src/utils/MsnhExString.cpp \

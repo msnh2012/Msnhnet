@@ -2,7 +2,7 @@
 namespace Msnhnet
 {
 ConnectedLayer::ConnectedLayer(const int &batch, const int &steps, const int &inputNum,
-                               const int &outputNum, const ActivationType &activation, const std::vector<float> &actParams, const int &batchNorm, const int &useBias)
+                               const int &outputNum, const ActivationType &activation, const std::vector<float> &actParams, const int &batchNorm, const float &bnEps, const int &useBias)
 {
     this->_totalBatch    =   batch*steps;
     this->_type          =   LayerType::CONNECTED;
@@ -25,6 +25,7 @@ ConnectedLayer::ConnectedLayer(const int &batch, const int &steps, const int &in
     this->_kSize         =   1;
     this->_stride        =   1;
     this->_padding       =   0;
+    this->_bnEps         =   bnEps;
 
     this->_activation    =   activation;
     this->_actParams     =   actParams;
@@ -165,7 +166,7 @@ void ConnectedLayer::forward(NetworkState &netState)
     if(this->_batchNorm == 1)
     {
 
-        Blas::cpuNorm(layerOutput, this->_rollMean, this->_rollVariance, this->_batch, this->_outputNum, 1);
+        Blas::cpuNorm(layerOutput, this->_rollMean, this->_rollVariance, this->_batch, this->_outputNum, this->_bnEps, 1);
 
         ConvolutionalLayer::scaleBias(layerOutput, this->_scales, this->_batch, this->_outputNum, 1);
 
@@ -319,7 +320,7 @@ void ConnectedLayer::forwardGPU(NetworkState &netState)
     {
 
         ConvolutionalLayerGPU::convBn(this->_batch, this->_outChannel, this->_outHeight, this->_outWidth, this->_gpuScales,
-                                      this->_gpuRollMean, this->_gpuRollVariance, this->_gpuBiases, layerGpuOutput
+                                      this->_gpuRollMean, this->_gpuRollVariance, this->_gpuBiases, this->_bnEps, layerGpuOutput
                                       );
     }
     else

@@ -17,7 +17,7 @@ namespace Msnhnet
 class MsnhNet_API BatchNormLayer : public BaseLayer
 {
 public:
-    BatchNormLayer(const int &batch, const int &width, const int &height, const int &channel, const ActivationType &activation, const std::vector<float> &actParams);
+    BatchNormLayer(const int &batch, const int &width, const int &height, const int &channel, const ActivationType &activation, const float &eps, const std::vector<float> &actParams);
 
     virtual void forward(NetworkState &netState);
 
@@ -70,6 +70,7 @@ protected:
     int         _nScales             =   0;
     int         _nRollMean           =   0;
     int         _nRollVariance       =   0;
+    float       _eps                 =   0.00001f;
 };
 }
 

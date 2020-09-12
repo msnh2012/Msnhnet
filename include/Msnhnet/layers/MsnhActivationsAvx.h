@@ -20,6 +20,8 @@ public:
     const static __m256 c0_125f;
     const static __m256 c4f;
     const static __m256 cN4f;
+    const static __m256 c3f;
+    const static __m256 c0_16f;
 
     static inline void logisticActivateSize8(float *const &x)
     {
@@ -58,6 +60,25 @@ public:
         x[5]=(x[5]>0?x[5]:0)>6?6:(x[5]>0?x[5]:0);
         x[6]=(x[6]>0?x[6]:0)>6?6:(x[6]>0?x[6]:0);
         x[7]=(x[7]>0?x[7]:0)>6?6:(x[7]>0?x[7]:0);
+    }
+
+    static inline void hardSwishActivateSize8(float *const &x)
+    {
+        __m256 load     = _mm256_loadu_ps(x);
+        __m256 result   = _mm256_add_ps(load,c3f);
+        _mm256_storeu_ps(x,result);
+        x[0]=(x[0]>0?x[0]:0)>6?6:(x[0]>0?x[0]:0);
+        x[1]=(x[1]>0?x[1]:0)>6?6:(x[1]>0?x[1]:0);
+        x[2]=(x[2]>0?x[2]:0)>6?6:(x[2]>0?x[2]:0);
+        x[3]=(x[3]>0?x[3]:0)>6?6:(x[3]>0?x[3]:0);
+        x[4]=(x[4]>0?x[4]:0)>6?6:(x[4]>0?x[4]:0);
+        x[5]=(x[5]>0?x[5]:0)>6?6:(x[5]>0?x[5]:0);
+        x[6]=(x[6]>0?x[6]:0)>6?6:(x[6]>0?x[6]:0);
+        x[7]=(x[7]>0?x[7]:0)>6?6:(x[7]>0?x[7]:0);
+        __m256 load1    = _mm256_loadu_ps(x);
+        __m256 res      = _mm256_mul_ps(load,load1);
+        res             = _mm256_mul_ps(res,c0_16f);
+        _mm256_storeu_ps(x,res);
     }
 
     static inline void eluActivateSize8(float *const &x)

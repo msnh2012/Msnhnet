@@ -278,8 +278,8 @@ void LocalAvgPoolLayer::forward(NetworkState &netState)
         }
     }
 
-    int widthOffset  =     -(this->_paddingX + 1) / 2;
-    int heightOffset =     -(this->_paddingY + 1) / 2;
+    int widthOffset  =     -this->_paddingX;
+    int heightOffset =     -this->_paddingY;
 
     int mHeight         =   this->_outHeight;
     int mWidth          =   this->_outWidth;

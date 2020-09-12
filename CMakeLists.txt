@@ -100,9 +100,10 @@ set(SRCS
     src/layers/MsnhRouteLayer.cpp
     src/layers/MsnhSoftMaxLayer.cpp
     src/layers/MsnhUpSampleLayer.cpp
-    src/layers/MsnhYolov3Layer.cpp
-    src/layers/MsnhYolov3OutLayer.cpp
+    src/layers/MsnhYoloLayer.cpp
+    src/layers/MsnhYoloOutLayer.cpp
     src/layers/MsnhVariableOpLayer.cpp 
+    src/layers/MsnhSliceLayer.cpp 
     src/net/MsnhNetBuilder.cpp
     src/net/MsnhNetwork.cpp
     src/utils/MsnhExString.cpp
@@ -139,8 +140,9 @@ if(BUILD_USE_GPU MATCHES ON)
         src/layers/cuda/MsnhGlobalAvgPoolLayerGPU.cu
         src/layers/cuda/MsnhPaddingLayerGPU.cu
         src/layers/cuda/MsnhPermuteLayerGPU.cu
-        src/layers/cuda/MsnhYolov3LayerGPU.cu
-        src/layers/cuda/MsnhYolov3OutLayerGPU.cu
+        src/layers/cuda/MsnhYoloLayerGPU.cu
+        src/layers/cuda/MsnhYoloOutLayerGPU.cu
+        src/layers/cuda/MsnhSliceLayerGPU.cu
         )
     set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
     find_package(cuBlas REQUIRED)

@@ -33,7 +33,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
             layer                       =   new ConvolutionalLayer(params.batch, 1, params.height, params.width, params.channels, convParams->filters,convParams->groups,
                                                                    convParams->kSizeX, convParams->kSizeY, convParams->strideX, convParams->strideY, convParams->dilationX,
                                                                    convParams->dilationY,convParams->paddingX, convParams->paddingY,
-                                                                   convParams->activation, convParams->actParams, convParams->batchNorm, convParams->useBias,
+                                                                   convParams->activation, convParams->actParams, convParams->batchNorm, convParams->bnEps, convParams->useBias,
                                                                    0,0,0,0,convParams->antialiasing, nullptr, 0,0);
 
             if(i == 0)
@@ -45,7 +45,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         {
             ConnectParams *connectParams=   reinterpret_cast<ConnectParams*>(baseParams[i]);
             layer                       =   new ConnectedLayer(params.batch, 1, params.inputNums, connectParams->output, connectParams->activation,
-                                                               connectParams->actParams, connectParams->batchNorm, connectParams->useBias);
+                                                               connectParams->actParams, connectParams->batchNorm, connectParams->bnEps, connectParams->useBias);
             if(i == 0)
             {
                 this->_inputNum = layer->getInputNum();
@@ -76,7 +76,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         else if(baseParams[i]->type == LayerType::BATCHNORM)
         {
             BatchNormParams *batchNormParams=   reinterpret_cast<BatchNormParams*>(baseParams[i]);
-            layer                           =   new BatchNormLayer(params.batch, params.width, params.height, params.channels, batchNormParams->activation, batchNormParams->actParams);
+            layer                           =   new BatchNormLayer(params.batch, params.width, params.height, params.channels, batchNormParams->activation, batchNormParams->eps, batchNormParams->actParams);
             if(i == 0)
             {
                 this->_inputNum = layer->getInputNum();
@@ -153,7 +153,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
             layer                       =   new ConvolutionalLayer(branchBuildParams.batch, 1, branchBuildParams.height, branchBuildParams.width, branchBuildParams.channels,
                                                                    convParams->filters,convParams->groups,convParams->kSizeX, convParams->kSizeY, convParams->strideX, convParams->strideY,
                                                                    convParams->dilationX,convParams->dilationY,convParams->paddingX, convParams->paddingY, convParams->activation,
-                                                                   convParams->actParams, convParams->batchNorm, convParams->useBias,
+                                                                   convParams->actParams, convParams->batchNorm, convParams->bnEps, convParams->useBias,
                                                                    0,0,0,0,convParams->antialiasing, nullptr, 0,0);
 
         }
@@ -161,7 +161,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         {
             ConnectParams *connectParams=   reinterpret_cast<ConnectParams*>(branchParams[i]);
             layer                       =   new ConnectedLayer(branchBuildParams.batch, 1, branchBuildParams.inputNums, connectParams->output, connectParams->activation, connectParams->actParams,
-                                                               connectParams->batchNorm, connectParams->useBias);
+                                                               connectParams->batchNorm, connectParams->bnEps, connectParams->useBias);
         }
         else if(branchParams[i]->type == LayerType::MAXPOOL)
         {
@@ -180,7 +180,7 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         else if(branchParams[i]->type == LayerType::BATCHNORM)
         {
             BatchNormParams *batchNormParams=   reinterpret_cast<BatchNormParams*>(branchParams[i]);
-            layer                           =   new BatchNormLayer(branchBuildParams.batch, branchBuildParams.width, branchBuildParams.height, branchBuildParams.channels, batchNormParams->activation, batchNormParams->actParams);
+            layer                           =   new BatchNormLayer(branchBuildParams.batch, branchBuildParams.width, branchBuildParams.height, branchBuildParams.channels, batchNormParams->activation, batchNormParams->eps, batchNormParams->actParams);
         }
         else if(branchParams[i]->type == LayerType::PADDING)
         {

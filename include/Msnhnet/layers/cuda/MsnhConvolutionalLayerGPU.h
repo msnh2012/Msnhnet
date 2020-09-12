@@ -11,7 +11,7 @@ class MsnhNet_API ConvolutionalLayerGPU
 {
 public:
     static void convBn(const int &batch, const int &outChannel, const int &outHeight, const int &outWidth, float* const &gpuScales,
-                       float *const &gpuRollMean, float *const &gpuRollVariance, float *const &gpuBiases, float *const &gpuOutput);
+                       float *const &gpuRollMean, float *const &gpuRollVariance, float *const &gpuBiases, const float &bnEps, float *const &gpuOutput);
 };
 
 }

@@ -1,0 +1,252 @@
+config:
+  batch: 1
+  width: 416
+  height: 416
+  channels: 3
+
+# [0]
+padding:
+  top: 1
+  down: 1
+  left: 1
+  right: 1
+  paddingVal: 0
+
+# [1]
+conv:
+  batchNorm: 1
+  filters: 16
+  kSize: 3
+  stride: 1
+  activation: leaky
+
+# [2]
+maxpool:
+  kSize: 2
+  stride: 2
+
+# [3]
+padding:
+  top: 1
+  down: 1
+  left: 1
+  right: 1
+  paddingVal: 0
+
+# [4]
+conv:
+  batchNorm: 1
+  filters: 32
+  kSize: 3
+  stride: 1
+  activation: leaky
+
+# [5]
+maxpool:
+  kSize: 2
+  stride: 2
+
+# [6]
+padding:
+  top: 1
+  down: 1
+  left: 1
+  right: 1
+  paddingVal: 0
+
+#[7]
+conv:
+  batchNorm: 1
+  filters: 64
+  kSize: 3
+  stride: 1
+  activation: leaky
+
+# [8]
+maxpool:
+  kSize: 2
+  stride: 2
+
+# [9]
+padding:
+  top: 1
+  down: 1
+  left: 1
+  right: 1
+  paddingVal: 0
+
+# [10]
+conv:
+  batchNorm: 1
+  filters: 128
+  kSize: 3
+  stride: 1
+  activation: leaky
+
+# [11]
+maxpool:
+  kSize: 2
+  stride: 2
+
+# [12]
+padding:
+  top: 1
+  down: 1
+  left: 1
+  right: 1
+  paddingVal: 0
+
+# [13]
+conv:
+  batchNorm: 1
+  filters: 256
+  kSize: 3
+  stride: 1
+  activation: leaky
+
+# [14]
+maxpool:
+  kSize: 2
+  stride: 2
+
+# [15]
+padding:
+  top: 1
+  down: 1
+  left: 1
+  right: 1
+  paddingVal: 0
+
+# [16]
+conv:
+  batchNorm: 1
+  filters: 512
+  kSize: 3
+  stride: 1
+  activation: leaky
+
+# [17]
+padding:
+  top: 0
+  down: 1
+  left: 0
+  right: 1
+  paddingVal: 0
+
+# [18]
+maxpool:
+  kSize: 2
+  stride: 1
+  ceilMode: 1
+
+# [19]
+padding:
+  top: 1
+  down: 1
+  left: 1
+  right: 1
+  paddingVal: 0
+
+# [20]
+conv:
+  batchNorm: 1
+  filters: 1024
+  kSize: 3
+  stride: 1
+  activation: leaky
+
+#======================
+# [21]
+conv:
+  batchNorm: 1
+  filters: 256
+  kSize: 1
+  stride: 1
+  activation: leaky
+
+# [22]
+padding:
+  top: 1
+  down: 1
+  left: 1
+  right: 1
+  paddingVal: 0
+
+# [23]
+conv:
+  batchNorm: 1
+  filters: 512
+  kSize: 3
+  stride: 1
+  activation: leaky
+
+# [24]
+conv:
+  batchNorm: 0
+  filters: 255
+  kSize: 1
+  stride: 1
+  activation: none
+
+# [25]
+yolo:
+  anchors:  81,82,  135,169,  344,319
+  classNum: 80
+
+#-----------------------------------------
+# [26]
+route:
+  layers: -5
+
+# [27]
+conv:
+  batchNorm: 1
+  filters: 128
+  kSize: 1
+  stride: 1
+  activation: leaky
+
+# [28]
+upsample:
+  stride: 2
+
+# [29]
+route:
+  layers: -1,13
+
+# [30]
+padding:
+  top: 1
+  down: 1
+  left: 1
+  right: 1
+  paddingVal: 0
+
+# [31]
+conv:
+  batchNorm: 1
+  filters: 256
+  kSize: 3
+  stride: 1
+  activation: leaky
+
+# [32]
+conv:
+  batchNorm: 0
+  filters: 255
+  kSize: 1
+  stride: 1
+  activation: none
+
+# [33]
+yolo:
+  anchors:  10,14,  23,27,  37,58
+  classNum: 80
+
+# [34]
+yoloout:
+  layers: 25,33
+  confThresh: 0.2
+  nmsThresh: 0.2
+  useSoftNms: 0
+  yoloType: yolov3

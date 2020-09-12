@@ -5,7 +5,7 @@
 #include <yaml-cpp/yaml.h>
 #include "Msnhnet/utils/MsnhExString.h"
 #include "Msnhnet/layers/MsnhActivations.h"
-#include "Msnhnet/layers/MsnhYolov3Def.h"
+#include "Msnhnet/layers/MsnhYoloDef.h"
 #include "Msnhnet/utils/MsnhTypes.h"
 #include <string>
 #include <fstream>
@@ -73,6 +73,22 @@ public:
     int             dim2        =   2;
 };
 
+class MsnhNet_API SliceParams : public BaseParams
+{
+public:
+    SliceParams(bool incIndex) : BaseParams(incIndex)
+    {
+        this->type     = LayerType::SLICE;
+    }
+
+    int             start0      =   0;
+    int             step0       =   1;
+    int             start1      =   0;
+    int             step1       =   1;
+    int             start2      =   0;
+    int             step2       =   1;
+};
+
 class MsnhNet_API ReductionParams : public BaseParams
 {
 public:
@@ -96,6 +112,7 @@ public:
         this->type     = LayerType::ACTIVE;
     }
     ActivationType activation = ActivationType::NONE;
+    std::vector<float> actParams;
 };
 
 class MsnhNet_API ConvParams : public  BaseParams
@@ -129,6 +146,7 @@ public:
 
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
+    float           bnEps       =   0.00001f;
 };
 
 class MsnhNet_API DeConvParams : public  BaseParams
@@ -232,6 +250,7 @@ public:
 
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
+    float           bnEps       =   0.00001f;
 };
 
 class MsnhNet_API BatchNormParams : public BaseParams
@@ -243,6 +262,7 @@ public:
     }
     ActivationType  activation  =   ActivationType::NONE;
     std::vector<float> actParams;
+    float eps   =   0.00001f;
 };
 
 class MsnhNet_API ResBlockParams : public BaseParams
@@ -434,53 +454,35 @@ public:
     static std::string  getStrFromUnsampleType(const UpsampleType &type);
 };
 
-class MsnhNet_API Yolov3Params : public BaseParams
+class MsnhNet_API YoloParams : public BaseParams
 {
 public:
-    Yolov3Params(bool incIndex) : BaseParams(incIndex)
+    YoloParams(bool incIndex) : BaseParams(incIndex)
     {
-        this->type = LayerType::YOLOV3;
+        this->type = LayerType::YOLO;
     }
 
     int     orgWidth    =   0;
     int     orgHeight   =   0;
     int     classNum    =   1;
     std::vector<float> anchors;
+    YoloType yoloType   =   YoloType::YoloV3;
 };
 
-class MsnhNet_API Yolov3OutParams : public BaseParams
+class MsnhNet_API YoloOutParams : public BaseParams
 {
 public:
-    Yolov3OutParams(bool incIndex) : BaseParams(incIndex)
+    YoloOutParams(bool incIndex) : BaseParams(incIndex)
     {
-        this->type = LayerType::YOLOV3_OUT;
+        this->type = LayerType::YOLO_OUT;
     }
-    YoloType  yoloType  =   YoloType::YoloV3_NORMAL;
     int     orgWidth    =   0;
     int     orgHeight   =   0;
     float   confThresh  =   0;
     float   nmsThresh   =   0;
     int     useSoftNms  =   0;
     std::vector<int> layerIndexes;
-    inline void getYoloTypeFromStr(const std::string &str)
-    {
-        if(str == "yolov3Normal")
-        {
-            yoloType = YoloType::YoloV3_NORMAL;
-        }
-        else if(str == "yolov3Angle")
-        {
-            yoloType = YoloType::YoloV3_ANGLE;
-        }
-        else if(str == "yolov3Gaussian")
-        {
-            yoloType = YoloType::YoloV3_GAUSSIAN;
-        }
-        else if(str == "yolov4")
-        {
-            yoloType = YoloType::YoloV4;
-        }
-    }
+    YoloType  yoloType  =   YoloType::YoloV3;
 };
 
 class MsnhNet_API PaddingParams : public BaseParams
@@ -523,6 +525,7 @@ public:
     void parseEmptyParams(EmptyParams *emptyParams, YAML::const_iterator &iter);
     void parseViewParams(ViewParams *viewParams, YAML::const_iterator &iter);
     void parsePermuteParams(PermuteParams *permuteParams, YAML::const_iterator &iter);
+    void parseSliceParams(SliceParams *sliceParams, YAML::const_iterator &iter);
     void parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterator &iter);
     void parseReductionParams(ReductionParams *reductionParams, YAML::const_iterator &iter);
     void parseResBlockParams(ResBlockParams *resBlockParams, YAML::const_iterator &iter);
@@ -533,8 +536,8 @@ public:
     void parseVariableOpParams(VariableOpParams *variableOpParams, YAML::const_iterator &iter);
     void parseSoftMaxParams(SoftMaxParams *softmaxParams, YAML::const_iterator &iter);
     void parseUpSampleParams(UpSampleParams *upSampleParams, YAML::const_iterator &iter);
-    void parseYolov3Params(Yolov3Params *yolov3Params, YAML::const_iterator &iter);
-    void parseYolov3OutParams(Yolov3OutParams *yolov3OutParams, YAML::const_iterator &iter);
+    void parseYoloParams(YoloParams *yoloParams, YAML::const_iterator &iter);
+    void parseYoloOutParams(YoloOutParams *yoloOutParams, YAML::const_iterator &iter);
 
 };
 }

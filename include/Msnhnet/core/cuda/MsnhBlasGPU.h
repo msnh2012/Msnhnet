@@ -41,7 +41,7 @@ public:
                             const int &filters, const int &outSize, float *const &variance);
 
     static void gpuNorm(float *const &x, float *const &mean, float *const &variance,
-                        const int &batch, const int &filters, const int &outSize);
+                        const int &batch, const int &filters, const float &eps, const int &outSize);
 
     static void gpuSmoothL1(const int &n, float *const &pred, float *const &truth, float *const &delta, float *const &error);
 

@@ -17,6 +17,7 @@
 #include "Msnhnet/layers/MsnhEmptyLayer.h"
 #include "Msnhnet/layers/MsnhViewLayer.h"
 #include "Msnhnet/layers/MsnhPermuteLayer.h"
+#include "Msnhnet/layers/MsnhSliceLayer.h"
 #include "Msnhnet/layers/MsnhReductionLayer.h"
 #include "Msnhnet/layers/MsnhSoftMaxLayer.h"
 #include "Msnhnet/layers/MsnhUpSampleLayer.h"
@@ -24,8 +25,8 @@
 #include "Msnhnet/layers/MsnhRes2BlockLayer.h"
 #include "Msnhnet/layers/MsnhAddBlockLayer.h"
 #include "Msnhnet/layers/MsnhConcatBlockLayer.h"
-#include "Msnhnet/layers/MsnhYolov3Layer.h"
-#include "Msnhnet/layers/MsnhYolov3OutLayer.h"
+#include "Msnhnet/layers/MsnhYoloLayer.h"
+#include "Msnhnet/layers/MsnhYoloOutLayer.h"
 #include "Msnhnet/layers/MsnhPaddingLayer.h"
 #include "Msnhnet/io/MsnhIO.h"
 #include "Msnhnet/utils/MsnhExport.h"
@@ -65,10 +66,10 @@ public:
     void loadWeightsFromMsnhBin(const std::string &path);
 
     std::vector<float> runClassify(std::vector<float> img);
-    std::vector<std::vector<Yolov3Box>> runYolov3(std::vector<float> img);
+    std::vector<std::vector<YoloBox>> runYolo(std::vector<float> img);
 #ifdef USE_GPU
     std::vector<float> runClassifyGPU(std::vector<float> img);
-    std::vector<std::vector<Yolov3Box>> runYolov3GPU(std::vector<float> img);
+    std::vector<std::vector<YoloBox>> runYoloGPU(std::vector<float> img);
 #endif
 
     Point2I getInputSize();

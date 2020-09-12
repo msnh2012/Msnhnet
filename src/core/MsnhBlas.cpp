@@ -913,7 +913,7 @@ void Blas::cpuVariance(float *const &x, float *const &mean, const int &batch,
 }
 
 void Blas::cpuNorm(float *const &x, float *const &mean, float *const &variance,
-                   const int &batch, const int &filters, const int &outSize)
+                   const int &batch, const int &filters, const float &eps, const int &outSize)
 {
 
     for(int b=0; b<batch; ++b)
@@ -927,7 +927,7 @@ void Blas::cpuNorm(float *const &x, float *const &mean, float *const &variance,
             {
                 int index = b*filters*outSize + f*outSize + i;
 
-                x[index]  = (x[index] - mean[f])/(sqrt(variance[f] + 0.00001f));
+                x[index]  = (x[index] - mean[f])/(sqrt(variance[f] + eps));
             }
         }
     }

@@ -1,7 +1,7 @@
 ﻿#include "Msnhnet/layers/MsnhBatchNormLayer.h"
 namespace Msnhnet
 {
-BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &height, const int &channel, const ActivationType &activation, const std::vector<float> &actParams)
+BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &height, const int &channel, const ActivationType &activation, const float &eps, const std::vector<float> &actParams)
 {
     this->_type          =  LayerType::BATCHNORM;
     this->_layerName     =  "BatchNorm       ";
@@ -13,6 +13,7 @@ BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &he
     this->_outHeight     =  height;
     this->_outWidth      =  width;
     this->_outChannel    =  channel;
+    this->_eps           =  eps;
 
     this->_activation    =   activation;
     this->_actParams     =   actParams;
@@ -126,7 +127,8 @@ void BatchNormLayer::forward(NetworkState &netState)
                                      this->_scales,
                                      this->_rollMean,
                                      this->_rollVariance,
-                                     this->_biases
+                                     this->_biases,
+                                     this->_eps
                                      );
 #else
 #ifdef USE_OMP
@@ -134,7 +136,7 @@ void BatchNormLayer::forward(NetworkState &netState)
 #endif
         for (int c = 0; c < this->_outChannel; ++c)
         {
-            float sqrtVal   = sqrt(this->_rollVariance[c] + 0.00001f);
+            float sqrtVal   = sqrt(this->_rollVariance[c] + this->_eps);
             float scaleSqrt = this->_scales[c]/sqrtVal;
             float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
 
@@ -149,12 +151,10 @@ void BatchNormLayer::forward(NetworkState &netState)
 #endif
 
 #ifdef USE_X86
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
-#endif
+
         for (int c = 0; c < this->_outChannel; ++c)
         {
-            float sqrtVal   = sqrt(this->_rollVariance[c] + 0.00001f);
+            float sqrtVal   = sqrt(this->_rollVariance[c] + this->_eps);
             float scaleSqrt = this->_scales[c]/sqrtVal;
             float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
 
@@ -338,7 +338,7 @@ void BatchNormLayer::forwardGPU(NetworkState &netState)
     }
 
     BlasGPU::gpuSimpleCopy(this->_outputNum*this->_batch, layerGpuInput, layerGpuOutput);
-    BlasGPU::gpuNorm(layerGpuOutput, this->_gpuRollMean, this->_gpuRollVariance, this->_batch, this->_outChannel, this->_outHeight *this->_outWidth);
+    BlasGPU::gpuNorm(layerGpuOutput, this->_gpuRollMean, this->_gpuRollVariance, this->_batch, this->_outChannel, this->_eps, this->_outHeight *this->_outWidth);
     BlasGPU::gpuScaleBias(layerGpuOutput, this->_gpuScales, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
     BlasGPU::gpuAddBias(layerGpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
     if(this->_activation == ActivationType::NORM_CHAN)

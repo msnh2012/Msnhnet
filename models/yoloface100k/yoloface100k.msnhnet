@@ -1,8 +1,8 @@
 config:
   batch: 1
   channels: 3
-  width: 112
-  height: 112
+  width: 224
+  height: 224
 #0
 conv:
   batchNorm: 1
@@ -652,13 +652,13 @@ conv:
   useBias: 1
   activation: none
 #51
-yolov3:
+yolo:
   anchors: 21, 28,  34, 49,  61, 77
   classNum: 1
 #52
-yolov3out:
+yoloout:
   layers: 51
-  confThresh: 0.01
+  confThresh: 0.2
   nmsThresh: 0.2
   useSoftNms: 0
-  yoloType: yolov3Normal
+  yoloType: yolov3

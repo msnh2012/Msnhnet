@@ -30,7 +30,7 @@ ResBlockLayer::ResBlockLayer(const int &batch, NetBuildParams &params, std::vect
             layer                       =   new ConvolutionalLayer(params.batch, 1, params.height, params.width, params.channels, convParams->filters,convParams->groups,
                                                                    convParams->kSizeX, convParams->kSizeY, convParams->strideX, convParams->strideY, convParams->dilationX,
                                                                    convParams->dilationY,convParams->paddingX, convParams->paddingY,
-                                                                   convParams->activation, convParams->actParams, convParams->batchNorm, convParams->useBias,
+                                                                   convParams->activation, convParams->actParams, convParams->batchNorm, convParams->bnEps, convParams->useBias,
                                                                    0,0,0,0,convParams->antialiasing, nullptr, 0,0);
 
             if(i == 0)
@@ -42,7 +42,7 @@ ResBlockLayer::ResBlockLayer(const int &batch, NetBuildParams &params, std::vect
         {
             ConnectParams *connectParams=   reinterpret_cast<ConnectParams*>(baseParams[i]);
             layer                       =   new ConnectedLayer(params.batch, 1, params.inputNums, connectParams->output, connectParams->activation,
-                                                               connectParams->actParams, connectParams->batchNorm, connectParams->useBias);
+                                                               connectParams->actParams, connectParams->batchNorm, connectParams->bnEps, connectParams->useBias);
             if(i == 0)
             {
                 this->_inputNum = layer->getInputNum();
@@ -73,7 +73,7 @@ ResBlockLayer::ResBlockLayer(const int &batch, NetBuildParams &params, std::vect
         else if(baseParams[i]->type == LayerType::BATCHNORM)
         {
             BatchNormParams *batchNormParams=   reinterpret_cast<BatchNormParams*>(baseParams[i]);
-            layer                           =   new BatchNormLayer(params.batch, params.width, params.height, params.channels, batchNormParams->activation, batchNormParams->actParams);
+            layer                           =   new BatchNormLayer(params.batch, params.width, params.height, params.channels, batchNormParams->activation, batchNormParams->eps, batchNormParams->actParams);
             if(i == 0)
             {
                 this->_inputNum = layer->getInputNum();
