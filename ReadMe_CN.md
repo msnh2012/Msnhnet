@@ -59,9 +59,9 @@
 - yolov4[(u版yolov3)](https://github.com/ultralytics/yolov3)
 - fcns[(pytorch-FCN-easiest-demo)](https://github.com/bat67/pytorch-FCN-easiest-demo)
 - unet[(bbuf keras)](https://github.com/BBuf/Keras-Semantic-Segmentation)
-- deeplabv3(**torchvision**)</br>
+- deeplabv3(**torchvision**)
 - yolov5s[(U版yolov5,用于导出参数)](https://github.com/msnh2012/Yolov5ForMsnhnet)
-- yolov5m[(U版yolov5,用于导出参数)](https://github.com/msnh2012/Yolov5ForMsnhnet)
+- yolov5m[(U版yolov5,用于导出参数)](https://github.com/msnh2012/Yolov5ForMsnhnet)</br>
 ==============================================================
 - mobilenetv2_yolov3_lite (cudnn分组卷积对Gtx10系列的Pascal显卡支持不好，请使用GPU模式)
 - mobilenetv2_yolov3_nano (cudnn分组卷积对Gtx10系列的Pascal显卡支持不好，请使用GPU模式)
