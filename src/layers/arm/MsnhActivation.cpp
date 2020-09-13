@@ -1,5 +1,6 @@
+
 #ifdef USE_ARM
-#include "MsnhNet/layers/arm/MsnhActivation.h"
+#include "MsnhNet/layers/arm/MsnhActivationLayerArm.h"
 namespace Msnhnet
 {
 
@@ -228,43 +229,60 @@ void ActivationLayerArm::ActivationLayer(float * &src, const int &inWidth, const
 
     switch (actType){
         case LOGISTIC:
-            ActivationLayerArm::logisticActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::logisticActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case LOGGY:
-            ActivationLayerArm::loggyActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::loggyActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case RELU:
-            ActivationLayerArm::reluActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::reluActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case RELU6:
-            ActivationLayerArm::relu6Activate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::relu6Activate(src, inWidth, inHeight, inChannel); 
+            break;
         case ELU:
-            ActivationLayerArm::eluActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::eluActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case SELU:
-            ActivationLayerArm::seluActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::seluActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case RELIE:
             ActivationLayerArm::relieActivate(src, inWidth, inHeight, inChannel);
+            break;
         case RAMP:
-            ActivationLayerArm::rampActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::rampActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case LEAKY:
-            ActivationLayerArm::leakyActivate(src, inWidth, inHeight, inChannel, params);
+            ActivationLayerArm::leakyActivate(src, inWidth, inHeight, inChannel, params); 
+            break;
         case TANH:
-            ActivationLayerArm::tanhActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::tanhActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case PLSE:
-            ActivationLayerArm::plseActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::plseActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case STAIR:
-            ActivationLayerArm::stairActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::stairActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case HARDTAN:
-            ActivationLayerArm::hardtanActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::hardtanActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case LHTAN:
-            ActivationLayerArm::lhtanActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::lhtanActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case SOFT_PLUS:
-            ActivationLayerArm::softplusActivate(src, inWidth, inHeight, inChannel, params);
+            ActivationLayerArm::softplusActivate(src, inWidth, inHeight, inChannel, params); 
+            break;
         case MISH:
-            ActivationLayerArm::mishActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::mishActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case SWISH:
-            ActivationLayerArm::swishActivate(src, inWidth, inHeight, inChannel);
+            ActivationLayerArm::swishActivate(src, inWidth, inHeight, inChannel); 
+            break;
         case NONE:
-            return ;
+            break ;
         default:
-            return;
+            throw Exception(1, "Error: Activation Function!", __FILE__, __LINE__, __FUNCTION__);
     }
 
 }
