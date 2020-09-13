@@ -9,7 +9,7 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 
 | |windows|linux|mac|
 |:---:|:---:|:---:|:---:|
-|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
+|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-passing-brightgreen.svg)|
 |gpu|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Linux](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Mac](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
 
 **CPU checked**
@@ -83,6 +83,7 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
   |:---:|:---:|:---:|:---:|
   |without NNPack|6s|2.5s|1.2s|
   |with NNPack|2.5s|1.1s|0.6s|
+  |with neon asm|?|0.432s|?|
 
 **Yolo GPU Test**
 - Ubuntu16.04  GCC  Cuda10.1  GTX1080Ti
@@ -106,6 +107,12 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
   |net|yoloface100k|yoloface500k|mobilenetv2_yolov3_nano|mobilenetv2_yolov3_lite|
   |:---:|:---:|:---:|:---:|:---:|
   |time|7ms|20ms|20ms|30ms|
+
+**DeepLabv3 GPU Test**
+- Ubuntu18.04  GCC  Cuda10.1  GTX2080Ti
+  |net|deeplabv3_resnet101|deeplabv3_resnet50|
+  |:---:|:---:|:---:|
+  |time|22.51ms|16.46ms|
   
 **Requirements**
   * OpenCV4 https://github.com/opencv/opencv
@@ -195,8 +202,8 @@ sudo ldconfig
 ![](readme_imgs/ConcatBlock.png)</br>
 
 **How to convert your own pytorch network**
-[pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
-ps. ultralytics yolov3 is not supported. Another way:[Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
+- [pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
+- ps. ultralytics yolov3 is not supported. You can trans backbone first and then add some OPs manually. 
 
 **About Train**
 - Just use pytorch to train your model, and export as msnhbin.
