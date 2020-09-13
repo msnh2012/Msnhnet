@@ -17,6 +17,7 @@
 
 #ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolution3x3s1.h"
+#include "Msnhnet/layers/arm/MsnhConvolution3x3s2.h"
 #endif
 
 namespace Msnhnet

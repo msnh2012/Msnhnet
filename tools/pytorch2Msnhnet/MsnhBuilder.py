@@ -8,6 +8,9 @@ class Msnhnet:
         self.index = 0
         self.name_index_dict = OrderedDict()
 
+    def getLastVal(self):
+        return self.name_index_dict[self.getLastKey()]
+
     def getLastKey(self):
         return next(reversed(self.name_index_dict))
 
@@ -21,7 +24,7 @@ class Msnhnet:
                 ID = self.name_index_dict[str(inAddr._cdata)]
                 self.buildRoute(str(inAddr._cdata),str(ID),False)
             except:
-                raise NotImplementedError("last op is not supported " + fun + str(inAddr._cdata))
+                 raise NotImplementedError("last op is not supported " + fun + str(inAddr._cdata))
             
 
     def buildConfig(self, inAddr, shape):
@@ -135,14 +138,18 @@ class Msnhnet:
         self.net = self.net + "  output: " + str(int(output)) + "\n"
         self.net = self.net + "  useBias: " + str(int(useBias)) + "\n"
 
-    def buildUpsample2D(self, name, stride, scale):
+    def buildUpsample2D(self, name, strideX, strideY, scaleX, scaleY, type, alignCorners):
         self.name_index_dict[name]=self.index
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "upsample:\n"
-        self.net = self.net + "  stride: " + str(int(stride)) + "\n"
-        self.net = self.net + "  scale: " + str(float(scale)) + "\n"
-
+        self.net = self.net + "  type: " + type + "\n"
+        self.net = self.net + "  strideX: " + str(int(strideX)) + "\n"
+        self.net = self.net + "  strideY: " + str(int(strideY)) + "\n"
+        self.net = self.net + "  scaleX: " + str(float(scaleX)) + "\n"
+        self.net = self.net + "  scaleY: " + str(float(scaleY)) + "\n"
+        self.net = self.net + "  alignCorners: " + str(int(alignCorners)) + "\n"
+    
     def buildRoute(self, name, layers, addModel):
         self.name_index_dict[name]=self.index
         self.net = self.net + "#" + str(self.index) +  "\n"
@@ -162,10 +169,29 @@ class Msnhnet:
         self.net = self.net + "  right: " + str(int(right)) + "\n"
         self.net = self.net + "  paddingVal: 0\n"
     
-    def buildVariableOp(self, name, layers, mode):
+    def buildVariableOp(self, name, layers, type, constVal=0):
         self.name_index_dict[name]=self.index
         self.net = self.net + "#" + str(self.index) +  "\n"
         self.index = self.index + 1
         self.net = self.net + "varop:\n"
-        self.net = self.net + "  layers: " + layers + "\n"
-        self.net = self.net + "  mode: "   + mode + "\n"
+        if layers!= "" :
+            self.net = self.net + "  layers: " + layers + "\n"
+        self.net = self.net + "  type: "   + type + "\n"
+        self.net = self.net + "  constVal: "   + str(float(constVal)) + "\n"
+        
+    def buildPermute(self, name, dim0, dim1, dim2):
+        self.name_index_dict[name]=self.index
+        self.net = self.net + "#" + str(self.index) +  "\n"
+        self.index = self.index + 1
+        self.net = self.net + "permute:\n"
+        self.net = self.net + "  dim0: " + str(int(dim0-1)) + "\n"
+        self.net = self.net + "  dim1: " + str(int(dim1-1)) + "\n"
+        self.net = self.net + "  dim2: " + str(int(dim2-1)) + "\n"
+
+    def buildReduction(self, name, type, axis):
+        self.name_index_dict[name]=self.index
+        self.net = self.net + "#" + str(self.index) +  "\n"
+        self.index = self.index + 1
+        self.net = self.net + "reduction:\n"
+        self.net = self.net + "  type: " + type + "\n"
+        self.net = self.net + "  axis: " + str(int(axis-1)) + "\n"

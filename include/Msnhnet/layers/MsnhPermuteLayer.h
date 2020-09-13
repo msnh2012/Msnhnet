@@ -15,7 +15,7 @@ namespace Msnhnet
 class MsnhNet_API PermuteLayer : public BaseLayer
 {
 public:
-    PermuteLayer(const int &batch,  const int &height, const int &width, const int &channel, const int &getDim0, const int &dim1, const int &dim2);
+    PermuteLayer(const int &batch,  const int &height, const int &width, const int &channel, const int &dim0, const int &dim1, const int &dim2);
     ~PermuteLayer();
 
     virtual void forward(NetworkState &netState);

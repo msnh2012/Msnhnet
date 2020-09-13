@@ -6,6 +6,7 @@
 #include <QPlainTextEdit>
 #include <QFileDialog>
 #include <Msnhnet/net/MsnhNetBuilder.h>
+#include <Msnhnet/io/MsnhParser.h>
 #include <QSvgGenerator>
 #include <omp.h>
 #include <QTimer>

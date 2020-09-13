@@ -8,6 +8,10 @@
 #include <stdlib.h>
 #include "Msnhnet/utils/MsnhExport.h"
 
+#ifdef USE_ARM
+#include "Msnhnet/layers/arm/MsnhBatchNorm.h"
+#endif
+
 namespace Msnhnet
 {
 class MsnhNet_API BatchNormLayer : public BaseLayer

@@ -27,7 +27,7 @@ public:
     static int index;
 };
 
-class NetConfigParams : public BaseParams
+class MsnhNet_API NetConfigParams : public BaseParams
 {
 public:
     NetConfigParams(bool incIndex) : BaseParams(incIndex)
@@ -40,7 +40,7 @@ public:
     int             channels    =   0;
 };
 
-class EmptyParams : public BaseParams
+class MsnhNet_API EmptyParams : public BaseParams
 {
 public:
     EmptyParams(bool incIndex) : BaseParams(incIndex)
@@ -49,7 +49,7 @@ public:
     }
 };
 
-class PermuteParams : public BaseParams
+class MsnhNet_API PermuteParams : public BaseParams
 {
 public:
     PermuteParams(bool incIndex) : BaseParams(incIndex)
@@ -61,7 +61,22 @@ public:
     int             dim2        =   2;
 };
 
-class ActivationParams : public BaseParams
+class MsnhNet_API ReductionParams : public BaseParams
+{
+public:
+
+    ReductionParams(bool incIndex) : BaseParams(incIndex)
+    {
+        this->type     = LayerType::REDUCTION;
+    }
+    int             axis        =   -1;
+    ReductionType   reduceType  =   ReductionType::REDUCTION_SUM;
+
+    static std::string getStrFromReduceType(ReductionType type);
+    static ReductionType getReduceTypeFromStr(std::string typeStr);
+};
+
+class MsnhNet_API ActivationParams : public BaseParams
 {
 public:
     ActivationParams(bool incIndex) : BaseParams(incIndex)
@@ -71,7 +86,7 @@ public:
     ActivationType activation = ActivationType::NONE;
 };
 
-class ConvParams : public  BaseParams
+class MsnhNet_API ConvParams : public  BaseParams
 {
 public:
     ConvParams(bool incIndex) : BaseParams(incIndex)
@@ -104,7 +119,7 @@ public:
     std::vector<float> actParams;
 };
 
-class DeConvParams : public  BaseParams
+class MsnhNet_API DeConvParams : public  BaseParams
 {
 public:
     DeConvParams(bool incIndex) : BaseParams(incIndex)
@@ -134,7 +149,7 @@ public:
     std::vector<float> actParams;
 };
 
-class MaxPoolParams : public BaseParams
+class MsnhNet_API MaxPoolParams : public BaseParams
 {
 public:
     MaxPoolParams(bool incIndex) : BaseParams(incIndex)
@@ -160,7 +175,7 @@ public:
     int             global      =   0;
 };
 
-class LocalAvgPoolParams : public BaseParams
+class MsnhNet_API LocalAvgPoolParams : public BaseParams
 {
 public:
     LocalAvgPoolParams(bool incIndex) : BaseParams(incIndex)
@@ -183,7 +198,7 @@ public:
     int             global      =   0;
 };
 
-class GlobalAvgPoolParams : public BaseParams
+class MsnhNet_API GlobalAvgPoolParams : public BaseParams
 {
 public:
     GlobalAvgPoolParams(bool incIndex) : BaseParams(incIndex)
@@ -192,7 +207,7 @@ public:
     }
 };
 
-class ConnectParams : public BaseParams
+class MsnhNet_API ConnectParams : public BaseParams
 {
 public:
     ConnectParams(bool incIndex) : BaseParams(incIndex)
@@ -207,7 +222,7 @@ public:
     std::vector<float> actParams;
 };
 
-class BatchNormParams : public BaseParams
+class MsnhNet_API BatchNormParams : public BaseParams
 {
 public:
     BatchNormParams(bool incIndex) : BaseParams(incIndex)
@@ -279,7 +294,7 @@ public:
     ~AddBlockParams();
 };
 
-class RouteParams : public BaseParams
+class MsnhNet_API RouteParams : public BaseParams
 {
 public:
     RouteParams(bool incIndex) : BaseParams(incIndex)
@@ -294,7 +309,7 @@ public:
     std::vector<float> actParams;
 };
 
-class VariableOpParams : public BaseParams
+class MsnhNet_API VariableOpParams : public BaseParams
 {
 public:
     VariableOpParams(bool incIndex) : BaseParams(incIndex)
@@ -304,29 +319,72 @@ public:
 
     enum VarOpType
     {
+
         VAR_OP_ADD=0,
+
         VAR_OP_SUB,
+
         VAR_OP_SUB_INV,
+
         VAR_OP_MUL,
+
         VAR_OP_DIV,
+
         VAR_OP_DIV_INV,
+
         VAR_OP_ADD_CONST,
+
         VAR_OP_SUB_CONST,
+
         VAR_OP_SUB_CONST_INV,
+
         VAR_OP_MUL_CONST,
+
         VAR_OP_DIV_CONST,
-        VAR_OP_DIV_CONST_INV
+
+        VAR_OP_DIV_CONST_INV,
+
+        VAR_OP_ABS,
+
+        VAR_OP_ACOS,
+
+        VAR_OP_ASIN,
+
+        VAR_OP_ATAN,
+
+        VAR_OP_COS,
+
+        VAR_OP_COSH,
+
+        VAR_OP_SIN,
+
+        VAR_OP_SINH,
+
+        VAR_OP_TAN,
+
+        VAR_OP_TANH,
+
+        VAR_OP_EXP,
+
+        VAR_OP_POW,
+
+        VAR_OP_LOG,
+
+        VAR_OP_LOG10,
+
+        VAR_OP_SQRT,
+
     };
 
     std::vector<int> layerIndexes;
-    VarOpType varOpType;
-    float constVal = 0;
+    VarOpType varOpType     =   VAR_OP_ADD;
+    float constVal          =   0;
 
-    std::string getStrFromVarOpType(const VarOpType &varOpType);
-    VarOpType getVarOpTypeFromStr(const std::string &varOpStr);
+    static std::string getStrFromVarOpType(const VarOpType &varOpType);
+    static VarOpType   getVarOpTypeFromStr(const std::string &varOpStr);
 };
 
-class SoftMaxParams : public BaseParams
+class MsnhNet_API SoftMaxParams : public BaseParams
 {
 public:
     SoftMaxParams(bool incIndex) : BaseParams(incIndex)
@@ -338,18 +396,33 @@ public:
     float   temperature =   1;
 };
 
-class UpSampleParams : public BaseParams
+class MsnhNet_API UpSampleParams : public BaseParams
 {
 public:
     UpSampleParams(bool incIndex) : BaseParams(incIndex)
     {
         this->type = LayerType::UPSAMPLE;
     }
-    int     stride      =   2;
-    float   scale       =   1.f;
+    enum UpsampleType
+    {
+        NEAREST = 0,
+        BILINEAR,
+    };
+
+    int     strideX      =   -1;
+    int     strideY      =   -1;
+    int     stride       =   1;
+    int     alignCorners =   0;
+    float   scale        =   1.f;
+    float   scaleX       =   -1.f;
+    float   scaleY       =   -1.f;
+
+    UpsampleType upsampleType = NEAREST;
+    static UpsampleType getUnsampleTypeFromStr(const std::string &str);
+    static std::string  getStrFromUnsampleType(const UpsampleType &type);
 };
 
-class Yolov3Params : public BaseParams
+class MsnhNet_API Yolov3Params : public BaseParams
 {
 public:
     Yolov3Params(bool incIndex) : BaseParams(incIndex)
@@ -363,7 +436,7 @@ public:
     std::vector<float> anchors;
 };
 
-class Yolov3OutParams : public BaseParams
+class MsnhNet_API Yolov3OutParams : public BaseParams
 {
 public:
     Yolov3OutParams(bool incIndex) : BaseParams(incIndex)
@@ -377,7 +450,7 @@ public:
     float   nmsThresh   =   0;
     int     useSoftNms  =   0;
     std::vector<int> layerIndexes;
-    void getYoloTypeFromStr(const std::string &str)
+    inline void getYoloTypeFromStr(const std::string &str)
     {
         if(str == "yolov3Normal")
         {
@@ -398,7 +471,7 @@ public:
     }
 };
 
-class PaddingParams : public BaseParams
+class MsnhNet_API PaddingParams : public BaseParams
 {
 public:
     PaddingParams(bool incIndex) : BaseParams(incIndex)
@@ -438,6 +511,7 @@ public:
     void parseEmptyNormParams(EmptyParams *emptyParams, YAML::const_iterator &iter);
     void parsePermuteNormParams(PermuteParams *permuteParams, YAML::const_iterator &iter);
     void parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterator &iter);
+    void parseReductionParams(ReductionParams *reductionParams, YAML::const_iterator &iter);
     void parseResBlockParams(ResBlockParams *resBlockParams, YAML::const_iterator &iter);
     void parseRes2BlockParams(Res2BlockParams *res2BlockParams, YAML::const_iterator &iter);
     void parseConcatBlockParams(ConcatBlockParams *concatBlockParams, YAML::const_iterator &iter);

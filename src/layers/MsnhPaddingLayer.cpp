@@ -53,11 +53,11 @@ void PaddingLayer::forward(NetworkState &netState)
 
     for (int i = 0; i < this->_batch; ++i)
     {
-        for (int j = 0; j < this->_outChannel; ++j)
-        {
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
+        for (int j = 0; j < this->_outChannel; ++j)
+        {
             for (int m = 0; m < this->_outHeight; ++m)
             {
                 for (int n = 0; n < this->_outWidth; ++n)

@@ -82,7 +82,7 @@ PermuteLayer::PermuteLayer(const int &batch, const int &height, const int &width
     sprintf_s(msg, "Permute Layer                %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
               this->_outWidth, this->_outHeight, this->_outChannel, this->_bFlops);
 #else
-    sprintf(msg, "Empty Layer                  %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
+    sprintf(msg, "Permute Layer                %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
             this->_outWidth, this->_outHeight, this->_outChannel, this->_bFlops);
 #endif
     this->_layerDetail = msg;

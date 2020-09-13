@@ -274,93 +274,135 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
         else if(_parser->params[i]->type == LayerType::VARIABLE_OP)
         {
             VariableOpParams     *variableOpParams            =   reinterpret_cast<VariableOpParams*>(_parser->params[i]);
-            std::vector<int>     layersOutputNum;
-
-            int outChannel  =   0;
-            int outHeight   =   0;
-            int outWidth    =   0;
 
             if(variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_ADD ||
-               variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_SUB ||
-               variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_SUB_INV ||
-               variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_MUL ||
-               variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_DIV ||
-               variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_DIV_INV
-              )
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_SUB ||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_SUB_INV ||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_MUL ||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_DIV ||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_DIV_INV
+                    )
             {
-                if(variableOpParams->layerIndexes.size() !=2)
+                if(variableOpParams->layerIndexes.size() !=1 && variableOpParams->layerIndexes.size() != 2)
                 {
-                    throw Exception(1, "VarOp layer error, <add sub mul div> mode must be 2 layers  ", __FILE__, __LINE__, __FUNCTION__);
+                    throw Exception(1, "VarOp layer error, <add sub mul div> mode must have 1/2 extra layer(s)  ", __FILE__, __LINE__, __FUNCTION__);
                 }
 
-                size_t routeIndex       = static_cast<size_t>(variableOpParams->layerIndexes[0]);
-                size_t routeIndexNext   = static_cast<size_t>(variableOpParams->layerIndexes[1]);
-
-                int tmpHeight       =   _net->layers[routeIndex]->getOutHeight();
-                int tmpWidth        =   _net->layers[routeIndex]->getOutWidth();
-                int tmpCh           =   _net->layers[routeIndex]->getOutChannel();
-
-                int tmpHeightNext   =   _net->layers[routeIndexNext]->getOutHeight();
-                int tmpWidthNext    =   _net->layers[routeIndexNext]->getOutWidth();
-                int tmpChNext       =   _net->layers[routeIndexNext]->getOutChannel();
-
-                layersOutputNum.push_back(_net->layers[routeIndex]->getOutputNum());
-                layersOutputNum.push_back(_net->layers[routeIndexNext]->getOutputNum());
-
-                if(tmpHeight != tmpHeightNext || tmpWidth != tmpWidthNext || tmpCh != tmpChNext)
+                if(variableOpParams->layerIndexes.size() == 2)
                 {
-                    std::string indexes = std::to_string(variableOpParams->layerIndexes[0]) + ", " + std::to_string(variableOpParams->layerIndexes[1]);
-
-                    throw Exception(1, "[VarOp] layers height or width not equal. layer: "+ std::to_string(i-1) +
-                                    + "  aux: " + indexes +
-                                    "whc: "+
-                                    std::to_string(tmpWidth) +
-                                    ":" + std::to_string(tmpWidthNext) + " , " +
-                                    std::to_string(tmpHeight) +
-                                    ":" + std::to_string(tmpHeightNext) + " , " +
-                                    std::to_string(tmpCh) +
-                                    ":" + std::to_string(tmpChNext) + " "
-                                    , __FILE__, __LINE__, __FUNCTION__);
+                    for (int k = 0; k < 2; ++k)
+                    {
+                        if(variableOpParams->layerIndexes[k] == i-2)
+                        {
+                            throw Exception(1, "VarOp layer error, <add sub mul div> front layer should not contains in layers option", __FILE__, __LINE__, __FUNCTION__);
+                        }
+                    }
                 }
 
-                outWidth            =   tmpWidth;
-                outHeight           =   tmpHeight;
-                outChannel          =   tmpCh;
+                if(variableOpParams->layerIndexes.size() == 1)
+                {
+                    size_t routeIndex       = static_cast<size_t>(variableOpParams->layerIndexes[0]);
+
+                    int tmpHeight       =   _net->layers[routeIndex]->getOutHeight();
+                    int tmpWidth        =   _net->layers[routeIndex]->getOutWidth();
+                    int tmpCh           =   _net->layers[routeIndex]->getOutChannel();
+
+                    if(tmpHeight != params.height || tmpWidth != params.width || tmpCh != params.channels)
+                    {
+                        std::string indexes = std::to_string(variableOpParams->layerIndexes[0]);
+
+                        throw Exception(1, "[VarOp] layers height or width not equal. layer: "+ std::to_string(i-1) +
+                                        + "  aux: " + indexes +
+                                        "whc: "+
+                                        std::to_string(tmpWidth) +
+                                        ":" + std::to_string(params.width) + " , " +
+                                        std::to_string(tmpHeight) +
+                                        ":" + std::to_string(params.height) + " , " +
+                                        std::to_string(tmpCh) +
+                                        ":" + std::to_string(params.channels) + " "
+                                        , __FILE__, __LINE__, __FUNCTION__);
+                    }
+                }
+                else
+                {
+                    size_t routeIndex       = static_cast<size_t>(variableOpParams->layerIndexes[0]);
+                    size_t routeIndex1      = static_cast<size_t>(variableOpParams->layerIndexes[1]);
+
+                    int tmpHeight       =   _net->layers[routeIndex]->getOutHeight();
+                    int tmpWidth        =   _net->layers[routeIndex]->getOutWidth();
+                    int tmpCh           =   _net->layers[routeIndex]->getOutChannel();
+
+                    int tmpHeight1      =   _net->layers[routeIndex1]->getOutHeight();
+                    int tmpWidth1       =   _net->layers[routeIndex1]->getOutWidth();
+                    int tmpCh1          =   _net->layers[routeIndex1]->getOutChannel();
+
+                    if(tmpHeight != tmpHeight1 || tmpWidth != tmpWidth1|| tmpCh != tmpCh1)
+                    {
+                        std::string indexes = std::to_string(variableOpParams->layerIndexes[0]) + " : " + std::to_string(variableOpParams->layerIndexes[1]);
+
+                        throw Exception(1, "[VarOp] layers height or width not equal. layer: "+ std::to_string(i-1) +
+                                        + "  aux: " + indexes +
+                                        "whc: "+
+                                        std::to_string(tmpWidth) +
+                                        ":" + std::to_string(tmpWidth1) + " , " +
+                                        std::to_string(tmpHeight) +
+                                        ":" + std::to_string(tmpHeight1) + " , " +
+                                        std::to_string(tmpCh) +
+                                        ":" + std::to_string(tmpCh1) + " "
+                                        , __FILE__, __LINE__, __FUNCTION__);
+                    }
+                }
             }
             else if(variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_ADD_CONST ||
                     variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_SUB_CONST ||
                     variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_SUB_CONST_INV ||
                     variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_MUL_CONST ||
                     variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_DIV_CONST ||
-                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_DIV_CONST_INV
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_DIV_CONST_INV||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_ABS||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_ACOS||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_ASIN||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_ATAN||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_COS||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_COSH||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_SIN||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_SINH||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_TAN||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_TANH||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_EXP||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_POW||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_LOG||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_LOG10||
+                    variableOpParams->varOpType == VariableOpParams::VarOpType::VAR_OP_SQRT
                     )
             {
-                if(variableOpParams->layerIndexes.size() !=1)
+                if(variableOpParams->layerIndexes.size() !=0)
                 {
-                    throw Exception(1, "VarOp layer error, <add_cosnt sub_const mul_const div_const> mode must be 1 layer  ", __FILE__, __LINE__, __FUNCTION__);
+                    throw Exception(1, "VarOp layer error, should not add extra layer  ", __FILE__, __LINE__, __FUNCTION__);
                 }
-
-                size_t routeIndex       = static_cast<size_t>(variableOpParams->layerIndexes[0]);
-
-                outWidth            =   _net->layers[routeIndex]->getOutHeight();
-                outHeight           =   _net->layers[routeIndex]->getOutWidth();
-                outChannel          =   _net->layers[routeIndex]->getOutChannel();
             }
             else
             {
                 throw Exception(1, "VarOp layer error, a op is not supported  ", __FILE__, __LINE__, __FUNCTION__);
             }
 
-            layer                                   =   new VariableOpLayer(params.batch, variableOpParams->layerIndexes, layersOutputNum, variableOpParams->varOpType, variableOpParams->constVal);
-
-            layer->setOutChannel(outChannel);
-            layer->setOutWidth(outWidth);
-            layer->setOutHeight(outHeight);
+            layer                                   =   new VariableOpLayer(params.batch, params.width, params.height, params.channels, variableOpParams->layerIndexes, variableOpParams->varOpType, variableOpParams->constVal);
+        }
+        else if(_parser->params[i]->type == LayerType::PERMUTE)
+        {
+            PermuteParams *permuteParams            =   reinterpret_cast<PermuteParams*>(_parser->params[i]);
+            layer                                   =   new PermuteLayer(params.batch, params.height, params.width, params.channels, permuteParams->dim0, permuteParams->dim1, permuteParams->dim2);
+        }
+        else if(_parser->params[i]->type == LayerType::REDUCTION)
+        {
+            ReductionParams *reductionParams        =   reinterpret_cast<ReductionParams*>(_parser->params[i]);
+            layer                                   =   new ReductionLayer(params.batch, params.height, params.width, params.channels, reductionParams->axis, reductionParams->reduceType);
         }
         else if(_parser->params[i]->type == LayerType::UPSAMPLE)
         {
             UpSampleParams *upSampleParams          =   reinterpret_cast<UpSampleParams*>(_parser->params[i]);
-            layer                                   =   new UpSampleLayer(params.batch, params.width, params.height, params.channels, upSampleParams->stride, upSampleParams->scale);
+            layer                                   =   new UpSampleLayer(params.batch, params.width, params.height, params.channels, upSampleParams->strideX, upSampleParams->strideY,
+                                                                          upSampleParams->scaleX, upSampleParams->scaleY, upSampleParams->upsampleType, upSampleParams->alignCorners);
         }
         else if(_parser->params[i]->type == LayerType::SOFTMAX)
         {
@@ -420,11 +462,20 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
         _net->layers.push_back(layer);
     }
     _netState->workspace     =   new float[maxWorkSpace]();
+
 #ifdef USE_GPU
-    _netState->gpuWorkspace  =   Cuda::makeCudaArray(_netState->workspace,maxWorkSpace);
+    if(maxInputSpace != 0)
+    {
+        _netState->gpuWorkspace  =   Cuda::makeCudaArray(_netState->workspace,maxWorkSpace);
+    }
+    else
+    {
+        std::cout<<" Warning: workspace size equal 0 "<<std::endl;
+    }
+
     if(BaseLayer::useFp16)
     {
-       _netState->gpuInputFp16 = (float*)Cuda::makeFp16ArrayFromFp32(nullptr, maxInputSpace);
+        _netState->gpuInputFp16 = (float*)Cuda::makeFp16ArrayFromFp32(nullptr, maxInputSpace);
     }
 #endif
 
@@ -509,6 +560,14 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
 
         _netState->input     =   _net->layers[i]->getOutput();
         _netState->inputNum  =   _net->layers[i]->getOutputNum();
+
+        if(i == _net->layers.size()-1)
+        {
+            this->_lastLayerOutHeight  = _net->layers[i]->getOutHeight();
+            this->_lastLayerOutWidth   = _net->layers[i]->getOutWidth();
+            this->_lastLayerOutChannel = _net->layers[i]->getOutChannel();
+            this->_lastLayerOutNum     = _net->layers[i]->getOutputNum();
+        }
 
     }
 
@@ -596,11 +655,22 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
         _net->layers[i]->forwardGPU(*_netState);
         _netState->input     =   _net->layers[i]->getGpuOutput();
         _netState->inputNum  =   _net->layers[i]->getOutputNum();
+
+        if(i == _net->layers.size()-1)
+        {
+            this->_lastLayerOutHeight  = _net->layers[i]->getOutHeight();
+            this->_lastLayerOutWidth   = _net->layers[i]->getOutWidth();
+            this->_lastLayerOutChannel = _net->layers[i]->getOutChannel();
+            this->_lastLayerOutNum     = _net->layers[i]->getOutputNum();
+        }
     }
+
     float* out = new float[_netState->inputNum]();
     Cuda::pullCudaArray(_netState->input, out,_netState->inputNum);
     std::vector<float> pred(out, out + _netState->inputNum);
     delete[] out;
+    out = nullptr;
+
     _gpuInferenceTime = TimeUtil::getElapsedTime(st);
     return pred;
 }
@@ -770,7 +840,14 @@ void NetBuilder::clearLayers()
             {
                 delete reinterpret_cast<PaddingLayer*>(_net->layers[i]);
             }
-
+            else if(_net->layers[i]->type() == LayerType::PERMUTE)
+            {
+                delete reinterpret_cast<PermuteLayer*>(_net->layers[i]);
+            }
+            else if(_net->layers[i]->type() == LayerType::REDUCTION)
+            {
+                delete reinterpret_cast<ReductionLayer*>(_net->layers[i]);
+            }
             _net->layers[i] = nullptr;
         }
 
@@ -833,6 +910,26 @@ float NetBuilder::getGpuInferenceTime() const
 Network *NetBuilder::getNet() const
 {
     return _net;
+}
+
+int NetBuilder::getLastLayerOutWidth() const
+{
+    return _lastLayerOutWidth;
+}
+
+int NetBuilder::getLastLayerOutHeight() const
+{
+    return _lastLayerOutHeight;
+}
+
+int NetBuilder::getLastLayerOutChannel() const
+{
+    return _lastLayerOutChannel;
+}
+
+size_t NetBuilder::getLastLayerOutNum() const
+{
+    return _lastLayerOutNum;
 }
 
 }

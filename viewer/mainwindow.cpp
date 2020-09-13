@@ -101,6 +101,16 @@ void MainWindow::on_actionOpen_triggered()
             height = height + 400;
         }
 
+        if(layerName == "VarOp")
+        {
+            Msnhnet::VariableOpLayer *layer = reinterpret_cast<Msnhnet::VariableOpLayer *>(builder.getNet()->layers[i]);
+            if(layer->getInputLayerIndexes().size()==1)
+            {
+                height = height + 400;
+            }
+
+        }
+
         if(layerName == "Yolov3" && finalHeight==-1)
         {
             height = height + 400;
@@ -321,6 +331,52 @@ void MainWindow::on_actionOpen_triggered()
             node->attributes()[2]->setData(output);
         }
 
+        if(layerName == "Reduction")
+        {
+            Msnhnet::ReductionLayer *layer = reinterpret_cast<Msnhnet::ReductionLayer *>(builder.getNet()->layers[i]);
+            QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+            QString type        = (layer->getReductionType()==ReductionType::REDUCTION_SUM)?"sum":"mean";
+            QString axis        = QString::number(layer->getAxis());
+            QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
+
+            node->attributes()[0]->setData(input);
+            node->attributes()[1]->setData(type);
+            node->attributes()[2]->setData(axis);
+            node->attributes()[3]->setData(output);
+        }
+
+        if(layerName == "Permute")
+        {
+            Msnhnet::PermuteLayer *layer = reinterpret_cast<Msnhnet::PermuteLayer *>(builder.getNet()->layers[i]);
+            QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+            QString dim0        = QString::number(layer->getDim0());
+            QString dim1        = QString::number(layer->getDim1());
+            QString dim2        = QString::number(layer->getDim2());
+            QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
+
+            node->attributes()[0]->setData(input);
+            node->attributes()[1]->setData(dim0);
+            node->attributes()[2]->setData(dim1);
+            node->attributes()[3]->setData(dim2);
+            node->attributes()[4]->setData(output);
+        }
+
+        if(layerName == "VarOp")
+        {
+            Msnhnet::VariableOpLayer *layer = reinterpret_cast<Msnhnet::VariableOpLayer *>(builder.getNet()->layers[i]);
+            QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+            QString index       = (layer->getInputLayerIndexes().size()==1)?QString::number(layer->getInputLayerIndexes()[0]+1):"-----";
+            QString layerType   = QString::fromStdString(Msnhnet::VariableOpParams::getStrFromVarOpType(layer->getVarOpType()));
+            QString constVal    = QString::number(layer->getConstVal());
+            QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
+
+            node->attributes()[0]->setData(input);
+            node->attributes()[1]->setData(layerType);
+            node->attributes()[2]->setData(index);
+            node->attributes()[3]->setData(constVal);
+            node->attributes()[4]->setData(output);
+        }
+
         if(layerName == "Route")
         {
             Msnhnet::RouteLayer *layer = reinterpret_cast<Msnhnet::RouteLayer *>(builder.getNet()->layers[i]);
@@ -355,14 +411,18 @@ void MainWindow::on_actionOpen_triggered()
         {
             Msnhnet::UpSampleLayer *layer = reinterpret_cast<Msnhnet::UpSampleLayer *>(builder.getNet()->layers[i]);
             QString input       = QString("%1*%2*%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
-            QString scale       = QString("%1").arg(layer->getScale());
-            QString stride      = QString("%1*%2").arg(layer->getStride()).arg(layer->getStride());
+            QString type        = QString::fromStdString(Msnhnet::UpSampleParams::getStrFromUnsampleType(layer->getUpsampleType()));
+            QString scale       = QString("%1*%2").arg(int(layer->getScaleX()*1000)/1000.0f).arg(int(layer->getScaleY()*1000)/1000.0f);
+            QString stride      = QString("%1*%2").arg(layer->getStrideX()).arg(layer->getStrideY());
+            QString alignCorner = QString("%1").arg(layer->getAlignCorners());
             QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
 
             node->attributes()[0]->setData(input);
-            node->attributes()[1]->setData(scale);
+            node->attributes()[1]->setData(type);
             node->attributes()[2]->setData(stride);
-            node->attributes()[3]->setData(output);
+            node->attributes()[3]->setData(scale);
+            node->attributes()[4]->setData(alignCorner);
+            node->attributes()[5]->setData(output);
         }
 
         if(layerName == "Yolov3")
@@ -424,6 +484,17 @@ void MainWindow::on_actionOpen_triggered()
             {
                 Msnhnet::Yolov3OutLayer *layer  = reinterpret_cast<Msnhnet::Yolov3OutLayer *>(builder.getNet()->layers[i]);
                 std::vector<int>    indexes = layer->getYolov3Indexes();
+
+                for (int j = 0; j < indexes.size(); ++j)
+                {
+                    scene->connectNode(QString::number(indexes[j]+1),"output",QString::number(i+1),"input");
+                }
+            }
+            else if(layerName == "VarOp")
+            {
+                scene->connectNode(QString::number(i),"output",QString::number(i+1),"input");
+                Msnhnet::VariableOpLayer *layer  = reinterpret_cast<Msnhnet::VariableOpLayer *>(builder.getNet()->layers[i]);
+                std::vector<int>    indexes = layer->getInputLayerIndexes();
 
                 for (int j = 0; j < indexes.size(); ++j)
                 {

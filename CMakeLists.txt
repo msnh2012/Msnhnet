@@ -93,6 +93,7 @@ set(SRCS
     src/layers/MsnhMaxPoolLayer.cpp
     src/layers/MsnhPaddingLayer.cpp
     src/layers/MsnhPermuteLayer.cpp
+    src/layers/MsnhReductionLayer.cpp
     src/layers/MsnhRes2BlockLayer.cpp
     src/layers/MsnhResBlockLayer.cpp
     src/layers/MsnhRouteLayer.cpp
@@ -110,6 +111,8 @@ set(SRCS
     src/utils/MsnhTimeUtil.cpp
     src/c_api/MsnhnetLib.cpp
     src/layers/arm/MsnhConvolution3x3s1.cpp 
+    src/layers/arm/MsnhConvolution3x3s2.cpp 
+    src/layers/arm/MsnhBatchNorm.cpp 
     )
 
 # config GPU
@@ -169,6 +172,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)|(x86)|(X86)|(amd64)|(AMD64)")
         set(CMAKE_DEBUG_POSTFIX "_d")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX")
     else()
 	set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -march=native -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse -mavx -mavx2")
 	set(CUDA_INC_DIR   /usr/local/cuda/include)	
@@ -196,7 +200,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(armv7l)")
         set(USE_NEON_MACRO "#define USE_NEON\n")
 
         if (CMAKE_SYSTEM_PROCESSOR MATCHES "(armv7l)") # aarch64 neon is default
-            set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -mfpu=neon")
+            set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -mfpu=neon-vfpv4")
         endif()
         message(STATUS "Use neon")
     else()
@@ -210,10 +214,10 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(armv7l)")
         set(USE_NNPACK_MACRO "#define USE_NNPACK\n")
         set(NNPACK_LIBS
                 -L$ENV{NNPACK_LIB_DIR}
-		-lclog 
+		        -lclog 
                 -lnnpack
                 -lpthreadpool
-		-lcpuinfo
+		        -lcpuinfo
                )
         message(STATUS "Use NNPACK")
         message(STATUS "NNPACK lib ${NNPACK_LIBS}")

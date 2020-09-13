@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[10.57645]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  331   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check darknet53 ==============================
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[13.60138]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
 
 
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[6.26569 ]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  284   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check mobilenetv2 =============================
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[12.63113]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
 
 
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[11.10028]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check resnet34 =============================`
@@ -136,7 +136,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[12.08040]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check resnet50 =============================
@@ -156,7 +156,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[13.03649]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check resnet101 =============================
@@ -176,7 +176,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[9.273776]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
 
 
@@ -197,7 +197,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[11.60315]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check vgg16 ==================================
@@ -217,7 +217,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[12.12543]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
 
         // =============================== check vgg16_bn ================================
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
         }
         std::cout<<"max   : pytorch[9.22434 ]  msnhnet: " << Msnhnet::ExVector::max<float>(result)<<std::endl;
         std::cout<<"index : pytorch[  285   ]  msnhnet: " << bestIndex<<std::endl;
-        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"s"<<std::endl;
+        std::cout<<"time  : " << msnhNet.getInferenceTime()<<"ms"<<std::endl;
         // ==============================================================================
     }
     catch(Msnhnet::Exception &ex)

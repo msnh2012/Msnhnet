@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.msnhnet": "yaml",
+        "xlocale": "cpp",
+        "ostream": "cpp",
+        "xstring": "cpp"
+    }
+}
