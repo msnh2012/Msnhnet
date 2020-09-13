@@ -175,6 +175,78 @@ sudo make install
 vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
 sudo ldconfig
 ```
+
+- MacOS(MacOS Catalina) Without viewer
+
+PS: XCode should be pre-installed. 
+
+Please download cmake from official website with gui support and the source code of yaml and opencv.
+
+```
+# install cmake
+
+vim .bash_profile
+export CMAKE_ROOT=/Applications/CMake.app/Contents/bin/
+export PATH=$CMAKE_ROOT:$PATH
+source .bash_profile
+
+# install brew to install necessary libraries
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+
+brew install wget
+brew install openjpeg
+brew install hdf5
+brew install gflags
+brew install glog
+brew install eigen
+brew install libomp
+
+# build yaml-cpp
+git clone https://github.com/jbeder/yaml-cpp.git
+cd yaml-cpp
+mkdir build
+source .bash_profile
+cmake-gui
+Set the source code path: ./yaml-cpp
+Set the build binary path: ./yaml-cpp/build
+configure
+CMAKE_BUILD_TYPE = Release
+uncheck YAML_CPP_BUILD_TESTS
+configure (and continue to debug)
+generate
+cd ./yaml-cpp/build
+sudo make install -j8
+
+# build opencv
+# download opencv.zip from official website(Remember to download opencv-contrib together)
+cd opencv-4.4.0
+mkdir build
+source .bash_profile
+cmake-gui
+
+
+Set the source code path: ./opencv-4.4.0
+Set the build binary path: ./opencv-4.4.0/build
+configure (use default)
+search for OPENCV_ENABLE_NONFREE and enable it
+seach for OPENCV_EXTRA_MODULES_PATH to the path of opencv-contrib
+configure (and continue to debug)
+generate
+cd ./opencv-4.4.0/build/
+sudo make install -j8
+
+
+# build Msnhnet
+git clone https://github.com/msnh2012/Msnhnet.git
+mkdir build 
+
+cd Msnhnet/build
+cmake -DCMAKE_BUILD_TYPE=Release ..  
+make -j4
+sudo make install
+```
+
 **Test Msnhnet**
 - 1. Download pretrained model and extract. eg.D:/models. 
 - 2. Open terminal and cd "Msnhnet install bin". eg. D:/Msnhnet/bin
