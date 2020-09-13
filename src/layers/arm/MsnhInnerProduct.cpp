@@ -1,7 +1,8 @@
-#include <MsnhNet/layers/arm/MsnhInnerProduct.h>
-#include "Msnhnet/config/MsnhnetCfg.h"
+#ifdef USE_ARM
+#include "Msnhnet/layers/arm/MsnhInnerProduct.h"
 
-namespace Msnhnet{
+namespace Msnhnet
+{
     void InnerProductArm::InnerProduct(float *const &src,  const int &inChannel,  float *const &weight, float* &dest, const int& outChannel){
         const float *weightPtr = weight;
         int ccOutChannel = 0;
@@ -182,4 +183,4 @@ namespace Msnhnet{
 
     }
 }
-
+#endif
