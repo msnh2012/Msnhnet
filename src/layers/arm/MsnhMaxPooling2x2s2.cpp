@@ -1,4 +1,3 @@
-#include "Msnhnet/layers/arm/MsnhPadding.h"
 #include "Msnhnet/layers/arm/MsnhMaxPooling2x2s2.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include <iostream>
