@@ -1,4 +1,3 @@
-#include "Msnhnet/layers/arm/MsnhPadding.h"
 #include "Msnhnet/layers/arm/MsnhMaxPooling2x2s2.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include <iostream>
@@ -17,7 +16,7 @@ void MaxPooling2x2s2Arm::pooling(float *const &src, const int &inWidth, const in
         const int outWidth = inWidth >> 1;
         const int inSize = inHeight * inWidth;
         const int outSize = outHeight * outWidth;
-
+        const int tailStep = inWidth - 2 * outWidth + inWidth;
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
@@ -76,8 +75,8 @@ void MaxPooling2x2s2Arm::pooling(float *const &src, const int &inWidth, const in
                     destptr++;
                 }
 
-                r0 += 2 * (inWidth - outWidth);
-                r1 += 2 * (inWidth - outWidth);
+                r0 += tailStep;
+                r1 += tailStep;
             }
 
         }
