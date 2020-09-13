@@ -9,7 +9,7 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 
 | |windows|linux|mac|
 |:---:|:---:|:---:|:---:|
-|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
+|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-passing-brightgreen.svg)|
 |gpu|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Linux](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Mac](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
 
 **CPU checked**
