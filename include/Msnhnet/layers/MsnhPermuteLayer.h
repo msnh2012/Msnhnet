@@ -20,6 +20,8 @@ public:
 
     virtual void forward(NetworkState &netState);
 
+    virtual void mallocMemory();
+
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);
 #endif

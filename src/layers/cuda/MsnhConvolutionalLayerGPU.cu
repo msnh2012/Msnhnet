@@ -4,7 +4,7 @@ namespace Msnhnet
 {
 
 __global__ void convBnKernel(const int n, const int outChannel, const int outWxH, float *const gpuScales,
-                             float *const gpuRollMean, float *const gpuRollVariance, float *const gpuBiases, float *const gpuOutput)
+                             float *const gpuRollMean, float *const gpuRollVariance, float *const gpuBiases, const float bnEps, float *const gpuOutput)
 {
     int index   = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
 
@@ -18,18 +18,18 @@ __global__ void convBnKernel(const int n, const int outChannel, const int outWxH
 
         int id = b*outChannel*outWxH + c*outWxH + i;
 
-        gpuOutput[id]  = gpuScales[c]*(gpuOutput[id] - gpuRollMean[c])/sqrtf(gpuRollVariance[c] + 0.00001f) + gpuBiases[c];
+        gpuOutput[id]  = gpuScales[c]*(gpuOutput[id] - gpuRollMean[c])/sqrtf(gpuRollVariance[c] + bnEps) + gpuBiases[c];
     }
 }
 
 void ConvolutionalLayerGPU::convBn(const int &batch, const int &outChannel, const int &outHeight, const int &outWidth, float* const &gpuScales,
-                                     float *const &gpuRollMean, float *const &gpuRollVariance, float *const &gpuBiases, float *const &gpuOutput)
+                                     float *const &gpuRollMean, float *const &gpuRollVariance, float *const &gpuBiases, const float &bnEps, float *const &gpuOutput)
 {
     int num     = batch*outChannel*outWidth*outHeight;
     int outWxH  = outHeight*outWidth;
 
     convBnKernel<<<Cuda::getGrid(num), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(num, outChannel, outWxH, gpuScales,
-                                                                                      gpuRollMean, gpuRollVariance, gpuBiases, gpuOutput);
+                                                                                      gpuRollMean, gpuRollVariance, gpuBiases, bnEps, gpuOutput);
 
     CUDA_CHECK(cudaPeekAtLastError());
 }

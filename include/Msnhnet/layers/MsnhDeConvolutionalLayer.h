@@ -16,6 +16,7 @@ public:
                          const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY,const int &paddingX, const int &paddingY,
                          const int &groups, const ActivationType &activation, const std::vector<float> &actParams,const int &useBias);
 
+    virtual void mallocMemory();
     virtual void forward(NetworkState &netState);
     virtual void loadAllWeigths(std::vector<float> &weights);
     void loadBias(float *const &bias, const int& len);

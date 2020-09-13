@@ -22,6 +22,15 @@ __device__ float relu6ActivateKernel(const float x)
     return (x>0?x:0)>6?6:(x>0?x:0);
 }
 
+__device__ float hardSwishActivateKernel(const float x)
+{
+
+    float res = x + 3.f;
+    res = (res>0?res:0)>6?6:(res>0?res:0);
+    res = x*res*0.16666667f;
+    return res;
+}
+
 __device__ float eluActivateKernel(const float x)
 {
     return ((x >= 0)*x + (x < 0)*(expf(x)-1.f));
@@ -165,6 +174,8 @@ __device__ float activateKernel(const float x, const ActivationType actType, con
         return mishActivateKernel(x);
     case SWISH:
         return swishActivateKernel(x);
+    case HARD_SWISH:
+        return hardSwishActivateKernel(x);
     case NONE:
         return x;
     default:

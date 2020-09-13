@@ -372,7 +372,7 @@ void BlasGPU::gpuVariance(float *const &x, float *const &mean, const int &batch,
 }
 
 __global__ void normKernel(const int n, float *const x, float *const mean, float *const variance,
-                           const int batch, const int filters, const int outSize)
+                           const int batch, const int filters, const float eps, const int outSize)
 {
 
     int index = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
@@ -380,15 +380,15 @@ __global__ void normKernel(const int n, float *const x, float *const mean, float
     if(index < n)
     {
         int f = (index / outSize ) % filters;
-        x[index] = (x[index] - mean[f])/(sqrtf(variance[f] + 0.00001f));
+        x[index] = (x[index] - mean[f])/(sqrtf(variance[f] + eps));
     }
 }
 
 void BlasGPU::gpuNorm(float *const &x, float *const &mean, float *const &variance,
-                      const int &batch, const int &filters, const int &outSize)
+                      const int &batch, const int &filters, const float &eps, const int &outSize)
 {
     const int size  = batch*filters*outSize;
-    normKernel<<<Cuda::getGrid(size), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(size, x, mean, variance, batch, filters, outSize);
+    normKernel<<<Cuda::getGrid(size), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(size, x, mean, variance, batch, filters, eps, outSize);
     CUDA_CHECK(cudaPeekAtLastError());
 }
 

@@ -18,7 +18,7 @@ ReductionLayer::ReductionLayer(const int &batch, const int &height, const int &w
     if(this->_axis == -1)
     {
         this->_outWidth     = 1;
-        this->_outHeight     = 1;
+        this->_outHeight    = 1;
         this->_outChannel   = 1;
     }
     else if(this->_axis == 0)  
@@ -46,15 +46,9 @@ ReductionLayer::ReductionLayer(const int &batch, const int &height, const int &w
     this->_inputNum  =   width * height * channel;
     this->_outputNum =   this->_outWidth * this->_outHeight * this->_outChannel;
 
-    if(!BaseLayer::isPreviewMode)
-    {
-        this->_output       =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
-#ifdef USE_GPU
-        this->_gpuOutput    = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-#endif
-    }
-
     this->_layerDetail.append("Reduction Layer : " + ReductionParams::getStrFromReduceType(reductionType));
+
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
 
     char msg[100];
 
@@ -83,6 +77,40 @@ void ReductionLayer::forward(NetworkState &netState)
 {
     auto st = TimeUtil::startRecord();
 
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    if(this->_layerIndex == 0) 
+
+    {
+        layerInput      = netState.input;
+    }
+    else 
+
+    {
+        if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+        {
+            layerInput  = netState.input;
+        }
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerOutput     = netState.getOutput(); 
+
+        netState.shuffleInOut();
+
+    }
+    else
+
+    {
+        layerOutput     = this->_output;
+    }
+
+    Blas::cpuFill(this->_outputNum*this->_batch,0,layerOutput,1);
+
     if(this->_axis != -1)
     {
         for (int b = 0; b < this->_batch; ++b)
@@ -98,18 +126,18 @@ void ReductionLayer::forward(NetworkState &netState)
                     {
                         if(this->_axis == 0)
                         {
-                            #pragma omp atomic
-                            this->_output[b*this->_height*this->_width + h*this->_width + w] += netState.input[b*this->_channel*this->_height*this->_width + c*this->_height*this->_width + h*this->_width + w];
+#pragma omp atomic
+                            layerOutput[b*this->_height*this->_width + h*this->_width + w] += layerInput[b*this->_channel*this->_height*this->_width + c*this->_height*this->_width + h*this->_width + w];
                         }
                         if(this->_axis == 1)
                         {
-                            #pragma omp atomic
-                            this->_output[b*this->_channel*this->_width + c*this->_width + w] += netState.input[b*this->_channel*this->_height*this->_width + c*this->_height*this->_width + h*this->_width + w];
+#pragma omp atomic
+                            layerOutput[b*this->_channel*this->_width + c*this->_width + w] += layerInput[b*this->_channel*this->_height*this->_width + c*this->_height*this->_width + h*this->_width + w];
                         }
                         if(this->_axis == 2)
                         {
-                            #pragma omp atomic
-                            this->_output[b*this->_channel*this->_height + c*this->_height + h] += netState.input[b*this->_channel*this->_height*this->_width + c*this->_height*this->_width + h*this->_width + w];
+#pragma omp atomic
+                            layerOutput[b*this->_channel*this->_height + c*this->_height + h] += layerInput[b*this->_channel*this->_height*this->_width + c*this->_height*this->_width + h*this->_width + w];
                         }
                     }
                 }
@@ -126,7 +154,7 @@ void ReductionLayer::forward(NetworkState &netState)
 #endif
                 for (int i = 0; i < this->_batch * this->_outputNum; ++i)
                 {
-                    this->_output[i] /= this->_channel;
+                    layerOutput[i] /= this->_channel;
                 }
             }
 
@@ -137,7 +165,7 @@ void ReductionLayer::forward(NetworkState &netState)
 #endif
                 for (int i = 0; i < this->_batch * this->_outputNum; ++i)
                 {
-                    this->_output[i] /= this->_height;
+                    layerOutput[i] /= this->_height;
                 }
             }
 
@@ -148,7 +176,7 @@ void ReductionLayer::forward(NetworkState &netState)
 #endif
                 for (int i = 0; i < this->_batch * this->_outputNum; ++i)
                 {
-                    this->_output[i] /= this->_width;
+                    layerOutput[i] /= this->_width;
                 }
             }
         }
@@ -165,20 +193,44 @@ void ReductionLayer::forward(NetworkState &netState)
 #endif
             for (int k = 0; k < this->_width*this->_height*this->_channel; ++k)
             {
-                count += (netState.input[k]) ;
+                count += (layerInput[k]) ;
             }
             if(this->_reductionType == ReductionType::REDUCTION_MEAN)
             {
-                this->_output[b] = count/this->_inputNum;
+                layerOutput[b] = count/this->_inputNum;
             }
             else
             {
-                this->_output[b] = count;
+                layerOutput[b] = count;
             }
         }
     }
 
     this->_forwardTime = TimeUtil::getElapsedTime(st);
+}
+
+void ReductionLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            if(!BaseLayer::onlyUseGpu) 
+
+            {
+                this->_output       =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+            }
+#ifdef USE_GPU
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuOutput    =   Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+            }
+#endif
+            this->_memoryMalloced  =  true;
+        }
+    }
+    this->_memReUse         =  0;
 }
 
 ReductionType ReductionLayer::getReductionType() const
@@ -190,7 +242,41 @@ ReductionType ReductionLayer::getReductionType() const
 void ReductionLayer::forwardGPU(NetworkState &netState)
 {
 
-    BlasGPU::gpuFastSum(this->_axis, this->_batch, this->_channel, this->_width, this->_height, netState.input, this->_gpuOutput, this->_reductionType);
+    float* layerGpuInput   = netState.getGpuInput();
+    float* layerGpuOutput  = nullptr;
+
+    if(this->_layerIndex == 0) 
+
+    {
+        layerGpuInput      = netState.input;
+    }
+    else 
+
+    {
+        if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+        {
+            layerGpuInput  = netState.input;
+        }
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerGpuOutput     = netState.getGpuOutput(); 
+
+        netState.shuffleGpuInOut();
+
+    }
+    else
+
+    {
+        layerGpuOutput     = this->_gpuOutput;
+    }
+
+    BlasGPU::gpuFill(this->_outputNum*this->_batch,0,layerGpuOutput,1);
+
+    BlasGPU::gpuFastSum(this->_axis, this->_batch, this->_channel, this->_width, this->_height, layerGpuInput, layerGpuOutput, this->_reductionType);
 
 }
 #endif

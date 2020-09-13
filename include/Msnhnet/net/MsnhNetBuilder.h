@@ -15,7 +15,9 @@
 #include "Msnhnet/layers/MsnhRouteLayer.h"
 #include "Msnhnet/layers/MsnhVariableOpLayer.h"
 #include "Msnhnet/layers/MsnhEmptyLayer.h"
+#include "Msnhnet/layers/MsnhViewLayer.h"
 #include "Msnhnet/layers/MsnhPermuteLayer.h"
+#include "Msnhnet/layers/MsnhSliceLayer.h"
 #include "Msnhnet/layers/MsnhReductionLayer.h"
 #include "Msnhnet/layers/MsnhSoftMaxLayer.h"
 #include "Msnhnet/layers/MsnhUpSampleLayer.h"
@@ -23,8 +25,8 @@
 #include "Msnhnet/layers/MsnhRes2BlockLayer.h"
 #include "Msnhnet/layers/MsnhAddBlockLayer.h"
 #include "Msnhnet/layers/MsnhConcatBlockLayer.h"
-#include "Msnhnet/layers/MsnhYolov3Layer.h"
-#include "Msnhnet/layers/MsnhYolov3OutLayer.h"
+#include "Msnhnet/layers/MsnhYoloLayer.h"
+#include "Msnhnet/layers/MsnhYoloOutLayer.h"
 #include "Msnhnet/layers/MsnhPaddingLayer.h"
 #include "Msnhnet/io/MsnhIO.h"
 #include "Msnhnet/utils/MsnhExport.h"
@@ -50,16 +52,24 @@ class MsnhNet_API NetBuilder
 public:
     NetBuilder();
     ~NetBuilder();
+
+    static void setPreviewMode(const bool &mode);
+
+#ifdef USE_GPU
+    static void setOnlyGpu(const bool &onlyGpu);
+    static void setOnlyCpu(const bool &onlyCpu);
+    static void setUseFp16(const bool &useFp16);
+    static void setForceUseCuda(const bool &onlyUseCuda);
+#endif
+
     void buildNetFromMsnhNet(const std::string &path);
     void loadWeightsFromMsnhBin(const std::string &path);
-    void setPreviewMode(const bool &mode);
-    void setForceUseCuda(const bool &onlyUseCuda);
-    void setUseFp16(const bool &useFp16);
+
     std::vector<float> runClassify(std::vector<float> img);
-    std::vector<std::vector<Yolov3Box>> runYolov3(std::vector<float> img);
+    std::vector<std::vector<YoloBox>> runYolo(std::vector<float> img);
 #ifdef USE_GPU
     std::vector<float> runClassifyGPU(std::vector<float> img);
-    std::vector<std::vector<Yolov3Box>> runYolov3GPU(std::vector<float> img);
+    std::vector<std::vector<YoloBox>> runYoloGPU(std::vector<float> img);
 #endif
 
     Point2I getInputSize();
@@ -86,6 +96,8 @@ public:
 
     size_t getLastLayerOutNum() const;
 
+    void setSaveLayerOutput(bool saveLayerOutput);
+
 private:
 
     Parser          *_parser;
@@ -95,7 +107,8 @@ private:
     int             _lastLayerOutWidth      = 0;
     int             _lastLayerOutHeight     = 0;
     int             _lastLayerOutChannel    = 0;
-    size_t          _lastLayerOutNum       = 0;
+    size_t          _lastLayerOutNum        = 0;
+    bool            _saveLayerOutput        = false;
 };
 }
 #endif 

@@ -64,6 +64,23 @@ public:
         x[3]=(x[3]>0?x[3]:0)>6?6:(x[3]>0?x[3]:0);
     }
 
+    static inline void hardSwishActivateSize4(float *const &x)
+    {
+        float32x4_t load    = vld1q_f32(x);
+        const float32x4_t threeF   =   vdupq_n_f32(3.f);
+        const float32x4_t oneDSixF =   vdupq_n_f32(0.16666667f);
+        float32x4_t result  = vaddq_f32(load,threeF);
+        vst1q_f32(x,result);
+        x[0]=(x[0]>0?x[0]:0)>6?6:(x[0]>0?x[0]:0);
+        x[1]=(x[1]>0?x[1]:0)>6?6:(x[1]>0?x[1]:0);
+        x[2]=(x[2]>0?x[2]:0)>6?6:(x[2]>0?x[2]:0);
+        x[3]=(x[3]>0?x[3]:0)>6?6:(x[3]>0?x[3]:0);
+        float32x4_t load1   = vld1q_f32(x);
+        float32x4_t res     = vmulq_f32(load,load1);
+        res                 = vmulq_f32(res,oneDSixF);
+        vst1q_f32(x,res);
+    }
+
     static inline void eluActivateSize4(float *const &x)
     {
         const float32x4_t one   =   vdupq_n_f32(1.f);  

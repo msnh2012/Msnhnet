@@ -16,6 +16,7 @@ public:
     GlobalAvgPoolLayer(const int &batch, const int &height, const int &width, const int &channel);
     ~GlobalAvgPoolLayer();
 
+    virtual void mallocMemory();
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);
 #endif

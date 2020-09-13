@@ -1,7 +1,7 @@
 ﻿#include "Msnhnet/layers/MsnhBatchNormLayer.h"
 namespace Msnhnet
 {
-BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &height, const int &channel, const ActivationType &activation, const std::vector<float> &actParams)
+BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &height, const int &channel, const ActivationType &activation, const float &eps, const std::vector<float> &actParams)
 {
     this->_type          =  LayerType::BATCHNORM;
     this->_layerName     =  "BatchNorm       ";
@@ -13,6 +13,7 @@ BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &he
     this->_outHeight     =  height;
     this->_outWidth      =  width;
     this->_outChannel    =  channel;
+    this->_eps           =  eps;
 
     this->_activation    =   activation;
     this->_actParams     =   actParams;
@@ -29,32 +30,7 @@ BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &he
 
     this->_numWeights    =   static_cast<size_t>(this->_nScales + this->_nBiases + this->_nRollMean + this->_nRollVariance);
 
-    if(!BaseLayer::isPreviewMode)
-    {
-        this->_output        =  new float[static_cast<size_t>(this->_outputNum * this->_batch)](); 
-
-        this->_biases        =  new float[static_cast<size_t>(channel)](); 
-
-        this->_scales        =  new float[static_cast<size_t>(channel)](); 
-
-        this->_rollMean      =  new float[static_cast<size_t>(channel)](); 
-
-        this->_rollVariance  =  new float[static_cast<size_t>(channel)](); 
-
-        for(int i=0; i<channel; ++i)
-        {
-            this->_scales[i] = 1;                   
-
-        }
-
-#ifdef USE_GPU
-        this->_gpuOutput     = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-        this->_gpuBiases     = Cuda::makeCudaArray(this->_biases, this->_channel);
-        this->_gpuScales     = Cuda::makeCudaArray(this->_scales, this->_channel);
-        this->_gpuRollMean      = Cuda::makeCudaArray(this->_rollMean, this->_channel);
-        this->_gpuRollVariance  = Cuda::makeCudaArray(this->_rollVariance, this->_channel);
-#endif
-    }
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
 
     char msg[100];
 #ifdef WIN32
@@ -69,42 +45,116 @@ BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &he
 void BatchNormLayer::forward(NetworkState &netState)
 {
     auto st = TimeUtil::startRecord();
+
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerOutput     = this->_output; 
+
+        }
+        else 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+        else
+
+        {
+            layerOutput     = this->_output;
+        }
+    }
+
     for (int b = 0; b < this->_batch; ++b)
     {
 
 #ifdef USE_ARM
 #ifdef USE_NEON
         int step = b*this->_outChannel*this->_outHeight*this->_outWidth;
-        BatchNormLayerArm::BatchNorm(netState.input + step,
+        BatchNormLayerArm::BatchNorm(layerInput + step,
                                      this->_width,
                                      this->_height,
                                      this->_channel,
-                                     this->_output + step,
+                                     layerOutput + step,
                                      this->_scales,
                                      this->_rollMean,
                                      this->_rollVariance,
-                                     this->_biases
+                                     this->_biases,
+                                     this->_eps
                                      );
 #else
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-        for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
+        for (int c = 0; c < this->_outChannel; ++c)
         {
-            int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
+            float sqrtVal   = sqrt(this->_rollVariance[c] + this->_eps);
+            float scaleSqrt = this->_scales[c]/sqrtVal;
+            float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
 
-            this->_output[index]  = scaleSqrt*netState.input[index] + meanSqrt + this->_biases[c];
+            for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
+            {
+                int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
+
+                layerOutput[index]  = scaleSqrt*layerInput[index] + meanSqrt + this->_biases[c];
+            }
         }
 #endif
 #endif
 
 #ifdef USE_X86
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
-#endif
+
         for (int c = 0; c < this->_outChannel; ++c)
         {
-            float sqrtVal   = sqrt(this->_rollVariance[c] + 0.00001f);
+            float sqrtVal   = sqrt(this->_rollVariance[c] + this->_eps);
             float scaleSqrt = this->_scales[c]/sqrtVal;
             float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
 
@@ -122,21 +172,21 @@ void BatchNormLayer::forward(NetworkState &netState)
                     __m256 mResult;
 
                     mScaleSqrt  =   _mm256_set1_ps(scaleSqrt);
-                    mInput      =   _mm256_loadu_ps(netState.input+index);
+                    mInput      =   _mm256_loadu_ps(layerInput+index);
                     mMeanSqrt   =   _mm256_set1_ps(meanSqrt);
                     mBias       =   _mm256_set1_ps(this->_biases[c]);
                     mResult     =   _mm256_mul_ps(mScaleSqrt, mInput);
                     mResult     =   _mm256_add_ps(mResult, mMeanSqrt);
                     mResult     =   _mm256_add_ps(mResult, mBias);
 
-                    _mm256_storeu_ps(this->_output+index, mResult);
+                    _mm256_storeu_ps(layerOutput+index, mResult);
 
                 }
 
                 for (int j = (this->_outHeight*this->_outWidth)/8*8; j < this->_outHeight*this->_outWidth; ++j)
                 {
                     int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + j;
-                    this->_output[index]  = scaleSqrt*netState.input[index] + meanSqrt + this->_biases[c];
+                    layerOutput[index]  = scaleSqrt*layerInput[index] + meanSqrt + this->_biases[c];
                 }
             }
             else
@@ -145,7 +195,7 @@ void BatchNormLayer::forward(NetworkState &netState)
                 for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
                 {
                     int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
-                    this->_output[index]  = scaleSqrt*netState.input[index] + meanSqrt + this->_biases[c];
+                    layerOutput[index]  = scaleSqrt*layerInput[index] + meanSqrt + this->_biases[c];
                 }
             }
         }
@@ -154,18 +204,18 @@ void BatchNormLayer::forward(NetworkState &netState)
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
-        Activations::activateArrayNormCh(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                         this->_outWidth*this->_outHeight, this->_output);
+        Activations::activateArrayNormCh(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, layerOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_output,0);
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_output,1);
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {
@@ -176,11 +226,11 @@ void BatchNormLayer::forward(NetworkState &netState)
 
         if(_actParams.size() > 0)
         {
-            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
         }
     }
 
@@ -188,29 +238,123 @@ void BatchNormLayer::forward(NetworkState &netState)
 
 }
 
+void BatchNormLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            if(!BaseLayer::onlyUseGpu) 
+
+            {
+                this->_output        =  new float[static_cast<size_t>(this->_outputNum * this->_batch)](); 
+
+            }
+
+#ifdef USE_GPU
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuOutput        =   Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+            }
+#endif
+            this->_memoryMalloced  =  true;
+        }
+    }
+
+    this->_memReUse         =  0;
+}
+
 #ifdef USE_GPU
 void BatchNormLayer::forwardGPU(NetworkState &netState)
 {
     this->recordCudaStart();
 
-    BlasGPU::gpuSimpleCopy(this->_outputNum*this->_batch, netState.input, this->_gpuOutput);
-    BlasGPU::gpuNorm(this->_gpuOutput, this->_gpuRollMean, this->_gpuRollVariance, this->_batch, this->_outChannel, this->_outHeight *this->_outWidth);
-    BlasGPU::gpuScaleBias(this->_gpuOutput, this->_gpuScales, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
-    BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+    float* layerGpuInput   = netState.getGpuInput();
+    float* layerGpuOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerGpuInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerGpuInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerGpuInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerGpuOutput     = this->_gpuOutput; 
+
+        }
+        else 
+
+        {
+            layerGpuOutput     = netState.getGpuOutput(); 
+
+            netState.shuffleGpuInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerGpuOutput     = netState.getGpuOutput(); 
+
+            netState.shuffleGpuInOut();
+
+        }
+        else
+
+        {
+            layerGpuOutput     = this->_gpuOutput;
+        }
+    }
+
+    BlasGPU::gpuSimpleCopy(this->_outputNum*this->_batch, layerGpuInput, layerGpuOutput);
+    BlasGPU::gpuNorm(layerGpuOutput, this->_gpuRollMean, this->_gpuRollVariance, this->_batch, this->_outChannel, this->_eps, this->_outHeight *this->_outWidth);
+    BlasGPU::gpuScaleBias(layerGpuOutput, this->_gpuScales, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+    BlasGPU::gpuAddBias(layerGpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
     if(this->_activation == ActivationType::NORM_CHAN)
     {
-        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                               this->_outWidth*this->_outHeight, this->_gpuOutput);
+        ActivationsGPU::gpuActivateArrayNormCh(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                               this->_outWidth*this->_outHeight, layerGpuOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                      this->_outWidth*this->_outHeight, layerGpuOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                      this->_outWidth*this->_outHeight, layerGpuOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {
@@ -221,11 +365,11 @@ void BatchNormLayer::forwardGPU(NetworkState &netState)
 
         if(_actParams.size() > 0)
         {
-            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+            ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
         }
         else
         {
-            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+            ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation);
         }
     }
 
@@ -293,17 +437,42 @@ void BatchNormLayer::loadAllWeigths(std::vector<float> &weights)
         throw Exception(1,"BatcnNorm weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__, __FUNCTION__);
     }
 
-    loadScales(weights.data(), _nScales);
-    loadBias(weights.data() + _nScales , _nBiases);
-    loadRollMean(weights.data() + _nScales + _nBiases, _nRollMean);
-    loadRollVariance(weights.data() + _nScales + _nBiases + _nRollVariance, _nRollMean);
+    if(!BaseLayer::isPreviewMode)
+    {
+        this->_biases        =  new float[static_cast<size_t>(this->_nBiases)](); 
+
+        this->_scales        =  new float[static_cast<size_t>(this->_nScales)](); 
+
+        this->_rollMean      =  new float[static_cast<size_t>(this->_nRollMean)](); 
+
+        this->_rollVariance  =  new float[static_cast<size_t>(this->_nRollVariance)](); 
+
+        loadScales(weights.data(), this->_nScales);
+        loadBias(weights.data() + this->_nScales , this->_nBiases);
+        loadRollMean(weights.data() + this->_nScales + this->_nBiases, this->_nRollMean);
+        loadRollVariance(weights.data() + this->_nScales + this->_nBiases + this->_nRollVariance, this->_nRollMean);
 
 #ifdef USE_GPU
-    Cuda::pushCudaArray(this->_gpuScales, this->_scales, this->_nScales);
-    Cuda::pushCudaArray(this->_gpuBiases, this->_biases, this->_nBiases);
-    Cuda::pushCudaArray(this->_gpuRollMean, this->_rollMean, this->_nRollMean);
-    Cuda::pushCudaArray(this->_gpuRollVariance, this->_rollVariance, this->_nRollVariance);
+        if(!BaseLayer::onlyUseCpu)
+
+        {
+            this->_gpuBiases        = Cuda::makeCudaArray(this->_biases, this->_nBiases);
+            this->_gpuScales        = Cuda::makeCudaArray(this->_scales, this->_nScales);
+            this->_gpuRollMean      = Cuda::makeCudaArray(this->_rollMean, this->_nRollMean);
+            this->_gpuRollVariance  = Cuda::makeCudaArray(this->_rollVariance, this->_nRollVariance);
+        }
+
+        if(BaseLayer::onlyUseGpu) 
+
+        {
+            releaseArr(this->_biases      );
+            releaseArr(this->_scales      );
+            releaseArr(this->_rollMean    );
+            releaseArr(this->_rollVariance);
+        }
 #endif
+    }
+
 }
 
 void BatchNormLayer::loadBias(float * const &bias, const int &len)

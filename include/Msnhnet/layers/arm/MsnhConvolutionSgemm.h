@@ -1,11 +1,12 @@
-#define USE_ARN 0
+#ifndef MSNHNETCONVOLUTIONLAYERSGEMM_H
+#define MSNHNETCONVOLUTIONLAYERSGEMM_H
 
 #ifdef USE_ARM
 #include "Msnhnet/config/MsnhnetCfg.h"
 namespace Msnhnet
 {
 
-class ConvolutionLayerSgemm
+class MsnhNet_API ConvolutionLayerSgemm
 {
 public:
     //bottom: src, inWidth, inHeight, inChannel
@@ -19,4 +20,5 @@ public:
 };
 
 }
+#endif
 #endif

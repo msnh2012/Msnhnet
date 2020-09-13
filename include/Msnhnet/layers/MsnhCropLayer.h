@@ -15,6 +15,7 @@ public:
               const int &cropHeight, const int &cropWidth, const int &flip, const float &angle,
               const float &saturation, const float &exposure);
 
+    virtual void mallocMemory();
     virtual void forward(NetworkState &netState);
     void resize(const int &width, const int &height);
 

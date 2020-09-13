@@ -1,4 +1,4 @@
-# Msnhnet
+# 🔥Msnhnet(Yolov5已支持!!请下载最新的models)🔥 
 [English](ReadMe.md)| 中文 |[CSDN](https://blog.csdn.net/MSNH2012/article/details/107216704)</br>
 ###  一款轻量的用于推理pytorch模型的框架,该框架受darknet启发.
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -59,7 +59,9 @@
 - yolov4[(u版yolov3)](https://github.com/ultralytics/yolov3)
 - fcns[(pytorch-FCN-easiest-demo)](https://github.com/bat67/pytorch-FCN-easiest-demo)
 - unet[(bbuf keras)](https://github.com/BBuf/Keras-Semantic-Segmentation)
-- deeplabv3(**torchvision**)</br>
+- deeplabv3(**torchvision**)
+- yolov5s🔥[(U版yolov5,用于导出参数)](https://github.com/msnh2012/Yolov5ForMsnhnet)
+- yolov5m🔥[(U版yolov5,用于导出参数)](https://github.com/msnh2012/Yolov5ForMsnhnet)</br>
 ==============================================================
 - mobilenetv2_yolov3_lite (cudnn分组卷积对Gtx10系列的Pascal显卡支持不好，请使用GPU模式)
 - mobilenetv2_yolov3_nano (cudnn分组卷积对Gtx10系列的Pascal显卡支持不好，请使用GPU模式)
@@ -82,7 +84,8 @@
   |:---:|:---:|:---:|:---:|
   |without NNPack|6s|2.5s|1.2s|
   |with NNPack|2.5s|1.1s|0.6s|
-  
+  |with neon asm|?|0.432s|?|
+
 **Yolo GPU 测试**
 - Ubuntu16.04  GCC  Cuda10.1  GTX1080Ti
   |net|yolov3|yolov3_tiny|yolov4|
@@ -105,6 +108,12 @@
   |net|yoloface100k|yoloface500k|mobilenetv2_yolov3_nano|mobilenetv2_yolov3_lite|
   |:---:|:---:|:---:|:---:|:---:|
   |time|7ms|20ms|20ms|30ms|
+
+**DeepLabv3 GPU 测试**
+- Ubuntu18.04  GCC  Cuda10.1  GTX2080Ti
+  |net|deeplabv3_resnet101|deeplabv3_resnet50|
+  |:---:|:---:|:---:|
+  |time|22.51ms|16.46ms|
 
 **依赖**
   * OpenCV4 [https://github.com/opencv/opencv](https://github.com/opencv/opencv)
@@ -192,9 +201,8 @@
 ![](readme_imgs/ConcatBlock.png)</br>
 
 **如何转换模型**
-[pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
-ps. 对于u版yolo不支持以该方式进行转换，具体方法参看视频教程:[Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
-
+- [pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
+- ps. 对于u版yolo不支持以该方式进行转换，需要先导出主干网络，再手动添加op.
 
 **关于训练**
 - 使用pytorch版本的各个模型训练即可,训练完成后,按照上一步,构建Msnhnet即可.

@@ -133,7 +133,7 @@ conv:
   activation: none
 
 # [17]
-yolov3:
+yolo:
   anchors:  81,82,  135,169,  344,319
   classNum: 80
 
@@ -176,14 +176,14 @@ conv:
   activation: none
 
 # [24]
-yolov3:
+yolo:
   anchors:  10,14,  23,27,  37,58
   classNum: 80
 
 # [25]
-yolov3out:
+yoloout:
   layers: 17,24
   confThresh: 0.2
   nmsThresh: 0.2
   useSoftNms: 0
-  yoloType: yolov3Normal
+  yoloType: yolov3

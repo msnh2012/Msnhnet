@@ -578,8 +578,8 @@ conv:
   stride: 1
   activation: none
 
-# yolov3  [84] cfg[139]:966
-yolov3:
+# yolo  [84] cfg[139]:966
+yolo:
   anchors: 12, 16, 19, 36, 40, 28
   classNum: 80
 
@@ -644,8 +644,8 @@ conv:
   stride: 1
   activation: none
 
-# yolov3  [93] cfg[150]
-yolov3:
+# yolo  [93] cfg[150]
+yolo:
   anchors: 36, 75, 76, 55, 72, 146
   classNum: 80
 
@@ -695,13 +695,13 @@ conv:
   stride: 1
   activation: none
 
-# yolov3  [101] cfg[161]
-yolov3:
+# yolo  [101] cfg[161]
+yolo:
   anchors: 142, 110, 192, 243, 459, 401
   classNum: 80
 
-# yolov3out
-yolov3out:
+# yoloout
+yoloout:
   layers: 84,93,101
   confThresh: 0.4
   nmsThresh: 0.5

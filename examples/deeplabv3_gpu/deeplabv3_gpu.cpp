@@ -16,6 +16,8 @@ int main(int argc, char** argv)
     try
     {
         Msnhnet::NetBuilder  msnhNet;
+        Msnhnet::NetBuilder::setOnlyGpu(true);
+
         msnhNet.buildNetFromMsnhNet(msnhnetPath);
         std::cout<<msnhNet.getLayerDetail();
         msnhNet.loadWeightsFromMsnhBin(msnhbinPath);

@@ -192,6 +192,17 @@ float *Cuda::makeCudaArray(float * const &x, const size_t &n, const cudaMemcpyKi
     return gpuX;
 }
 
+float *Cuda::mallocCudaArray(const size_t &n)
+{
+    float *gpuX;
+    CUDA_CHECK(cudaMalloc((void **)&gpuX, n*sizeof(float)));
+    if(gpuX == nullptr)
+    {
+        throw Exception(1, "Cuda malloc failed. \n",__FILE__,__LINE__, __FUNCTION__);
+    }
+    return gpuX;
+}
+
 __half *Cuda::makeFp16ArrayFromFp32(float *const &x, const size_t &n)
 {
     __half* gpuX;

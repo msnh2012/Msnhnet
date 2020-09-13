@@ -24,6 +24,8 @@ Yolov3Layer::Yolov3Layer(const int &batch, const int &width, const int &height, 
     this->_outputNum =   this->_height*this->_width*this->_num;
     this->_inputNum  =   this->_outputNum;
 
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
+
     this->anchors   =   anchors;
 
     this->_ratios    =   1.f*orgHeight/_outHeight;  
@@ -35,20 +37,47 @@ Yolov3Layer::Yolov3Layer(const int &batch, const int &width, const int &height, 
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->_output    =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+        if(!BaseLayer::onlyUseGpu) 
+
+        {
+            this->_output    =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+        }
 #ifdef USE_GPU
-        this->_gpuOutput =   Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
+        if(!BaseLayer::onlyUseCpu)
+
+        {
+            this->_gpuOutput =   Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+        }
 #endif
     }
-
+    this->_memReUse   =   0;
     this->_layerDetail.append("yolov3. class num : " + std::to_string(classNum) + "\n");
 }
 
 void Yolov3Layer::forward(NetworkState &netState)
 {
-    auto st = TimeUtil::startRecord();
+    /*yolov3 layer should not be 0 layer */
+    if(this->_layerIndex == 0)
+    {
+        throw Exception(1,"yolov3 layer should not be 0 layer",__FILE__,__LINE__,__FUNCTION__);
+    }
 
-    Blas::cpuCopy(netState.inputNum, netState.input, 1, this->_output, 1);
+    /*yolov3 layer should not be 0 layer */
+    if(this->_isBranchLayer)
+    {
+        throw Exception(1,"yolov3 layer should not be branch layer",__FILE__,__LINE__,__FUNCTION__);
+    }
+
+    auto st = TimeUtil::startRecord();
+    float* layerInput   = netState.getInput();
+
+    if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+    {
+        layerInput  = netState.input;
+    }
+
+    Blas::cpuCopy(netState.inputNum, layerInput, 1, this->_output, 1);
 
     for (int b = 0; b < this->_batch; ++b)
     {
@@ -83,7 +112,15 @@ void Yolov3Layer::forwardGPU(NetworkState &netState)
 {
     this->recordCudaStart();
 
-    BlasGPU::gpuCopy(netState.inputNum, netState.input, 1, this->_gpuOutput, 1);
+    float* layerGpuInput   = netState.getGpuInput();
+
+    if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+    {
+        layerGpuInput  = netState.input;
+    }
+
+    BlasGPU::gpuCopy(netState.inputNum, layerGpuInput, 1, this->_gpuOutput, 1);
 
     int num     = this->_width*this->_height;
     int nxClass =  num * (1+this->_classNum);

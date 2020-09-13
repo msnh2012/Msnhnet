@@ -213,8 +213,8 @@ addblock:
       stride: 1
       activation: none
 
-# yolov3_1  [33]
-yolov3:
+# yolo_1  [33]
+yolo:
   anchors: 116,90,  156,198,  373,326
   classNum: 80
 
@@ -285,8 +285,8 @@ addblock:
       stride: 1
       activation: none
 
-# yolov3_2  [42]
-yolov3:
+# yolo_2  [42]
+yolo:
   anchors: 30,61,  62,45,  59,119
   classNum: 80
 
@@ -338,13 +338,13 @@ conv:
   stride: 1
   activation: none
 
-# yolov3_3  [51]
-yolov3:
+# yolo_3  [51]
+yolo:
   anchors: 10,13,  16,30,  33,23
   classNum: 80
 
-# yolov3out
-yolov3out:
+# yoloout
+yoloout:
   layers: 33,42,51
   confThresh: 0.5
   nmsThresh: 0.6

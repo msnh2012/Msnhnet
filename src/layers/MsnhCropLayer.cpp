@@ -23,11 +23,7 @@ CropLayer::CropLayer(const int &batch, const int &height, const int &width, cons
     this->_outputNum     =   this->_outWidth * this->_outHeight * this->_outChannel;
     this->_inputNum      =   width * height * channel;
 
-    if(!BaseLayer::isPreviewMode)
-    {
-        this->_output        =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
-    }
-
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
     char msg[100];
 #ifdef WIN32
     sprintf_s(msg, "Crop Layer: %d x %d -> %d x %d x %d image\n", height, width, cropHeight, cropWidth, channel);
@@ -37,9 +33,54 @@ CropLayer::CropLayer(const int &batch, const int &height, const int &width, cons
     this->_layerDetail   = msg;
 }
 
+void CropLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            this->_output           =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+            this->_memoryMalloced   =   true;
+        }
+    }
+    this->_memReUse  =   0;
+}
+
 void CropLayer::forward(NetworkState &netState)
 {
     auto st = TimeUtil::startRecord();
+
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    if(this->_layerIndex == 0) 
+
+    {
+        layerInput      = netState.input;
+    }
+    else 
+
+    {
+        if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+        {
+            layerInput  = netState.input;
+        }
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerOutput     = netState.getOutput(); 
+
+        netState.shuffleInOut();
+
+    }
+    else
+
+    {
+        layerOutput     = this->_output;
+    }
 
     int flip        =   (this->_flip && rand() % 2);
     int dh          =   rand()%(this->_height - this->_outHeight + 1);
@@ -80,7 +121,7 @@ void CropLayer::forward(NetworkState &netState)
 
                     row     = i + dh;
                     index   = col + this->_width *(row + this->_height*(c + this->_channel*b));
-                    this->_output[cnt++]   =   netState.input[index]*scale + trans;
+                    layerOutput[cnt++]   =   layerInput[index]*scale + trans;
                 }
             }
         }

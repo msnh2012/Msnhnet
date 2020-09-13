@@ -27,30 +27,118 @@ PaddingLayer::PaddingLayer(const int &batch, const int &height, const int &width
 
     this->_outputNum     =   this->_outHeight * this->_outWidth * this->_outChannel;
 
-    if(!BaseLayer::isPreviewMode)
-    {
-        this->_output        =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
-#ifdef USE_GPU
-        this->_gpuOutput     =   Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-#endif
-    }
-
     char msg[100];
 
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
+
 #ifdef WIN32
-    sprintf_s(msg, "padding                      %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
+    sprintf_s(msg, "Padding                      %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
               this->_outWidth, this->_outHeight, this->_outChannel, this->_bFlops);
 #else
-    sprintf(msg, "padding                      %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
+    sprintf(msg, "Padding                      %4d x%4d x%4d -> %4d x%4d x%4d %5.3f BF\n", this->_width, this->_height, this->_channel,
             this->_outWidth, this->_outHeight, this->_outChannel, this->_bFlops);
 #endif
     this->_layerDetail = msg;
+}
+
+void PaddingLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            if(!BaseLayer::onlyUseGpu) 
+
+            {
+                this->_output        =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+            }
+#ifdef USE_GPU
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuOutput     =   Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+            }
+#endif
+            this->_memoryMalloced  =  true;
+        }
+    }
+    this->_memReUse         =  0;
 }
 
 void PaddingLayer::forward(NetworkState &netState)
 {
     auto st = TimeUtil::startRecord();
 
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerOutput     = this->_output; 
+
+        }
+        else 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+        else
+
+        {
+            layerOutput     = this->_output;
+        }
+    }
+
+#ifdef USE_ARM
+    PaddingLayerArm::padding(layerInput, this->_width, this->_height, this->_channel, layerOutput, this->_top, this->_down, this->_left, this->_right, this->_paddingVal);
+#else
     for (int i = 0; i < this->_batch; ++i)
     {
 #ifdef USE_OMP
@@ -76,16 +164,17 @@ void PaddingLayer::forward(NetworkState &netState)
                         }
                         else
                         {
-                            val     =   netState.input[ i*this->_channel*this->_height*this->_width + j*this->_height*this->_width + (m-this->_top)*this->_width + (n - this->_left)];
+                            val     =   layerInput[ i*this->_channel*this->_height*this->_width + j*this->_height*this->_width + (m-this->_top)*this->_width + (n - this->_left)];
                         }
                     }
 
-                    this->_output[i*this->_outChannel*this->_outHeight*this->_outWidth + j*this->_outHeight*this->_outWidth + m*this->_outWidth + n] = val;
+                    layerOutput[i*this->_outChannel*this->_outHeight*this->_outWidth + j*this->_outHeight*this->_outWidth + m*this->_outWidth + n] = val;
 
                 }
             }
         }
     }
+#endif
 
     this->_forwardTime = TimeUtil::getElapsedTime(st);
 
@@ -95,13 +184,81 @@ void PaddingLayer::forward(NetworkState &netState)
 void PaddingLayer::forwardGPU(NetworkState &netState)
 {
     this->recordCudaStart();
+
+    float* layerGpuInput   = netState.getGpuInput();
+    float* layerGpuOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerGpuInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerGpuInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerGpuInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerGpuOutput     = this->_gpuOutput; 
+
+        }
+        else 
+
+        {
+            layerGpuOutput     = netState.getGpuOutput(); 
+
+            netState.shuffleGpuInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerGpuOutput     = netState.getGpuOutput(); 
+
+            netState.shuffleGpuInOut();
+
+        }
+        else
+
+        {
+            layerGpuOutput     = this->_gpuOutput;
+        }
+    }
+
     PaddingLayerGPU::forwardNormalGPU(this->_batch, this->_outChannel, this->_outHeight, this->_outWidth,
-                     this->_height, this->_width, this->_channel,
-                     this->_top, this->_left,
-                     this->_paddingVal,
-                     netState.input,
-                     this->_gpuOutput
-                     );
+                                      this->_height, this->_width, this->_channel,
+                                      this->_top, this->_left,
+                                      this->_paddingVal,
+                                      layerGpuInput,
+                                      layerGpuOutput
+                                      );
     this->recordCudaStop();
 }
 #endif

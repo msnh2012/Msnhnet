@@ -17,6 +17,8 @@ public:
 
     ~PaddingLayer(){}
 
+    virtual void mallocMemory();
+
     virtual void forward(NetworkState &netState);
 
 #ifdef USE_GPU

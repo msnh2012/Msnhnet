@@ -66,8 +66,10 @@ DeConvolutionalLayer::DeConvolutionalLayer(const int &batch, const int &height, 
             this->_biases        =   new float[static_cast<size_t>(this->_nBiases)]();
         }
         this->_colImg        =   new float[static_cast<size_t>(this->_height * this->_width * this->_kSizeX * this->_kSizeX * this->_num)]();
-        this->_output        =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
     }
+
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
+
     char msg[100];
 #ifdef WIN32
     sprintf_s(msg, "Deconvolutional Layer: %d x %d x %d image, %d filters -> %d x %d x %d image\n", this->_height, this->_width, this->_channel, this->_num,
@@ -80,9 +82,54 @@ DeConvolutionalLayer::DeConvolutionalLayer(const int &batch, const int &height, 
 
 }
 
+void DeConvolutionalLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            this->_output         =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
+            this->_memoryMalloced =   true;
+        }
+    }
+    this->_memReUse        =   0;
+}
+
 void DeConvolutionalLayer::forward(NetworkState &netState)
 {
     auto st = TimeUtil::startRecord();
+
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    if(this->_layerIndex == 0) 
+
+    {
+        layerInput      = netState.input;
+    }
+    else 
+
+    {
+        if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+        {
+            layerInput  = netState.input;
+        }
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerOutput     = netState.getOutput(); 
+
+        netState.shuffleInOut();
+
+    }
+    else
+
+    {
+        layerOutput     = this->_output;
+    }
 
     int mOutH           =   deConvOutHeight();
     int mOutW           =   deConvOutWidth();
@@ -92,38 +139,38 @@ void DeConvolutionalLayer::forward(NetworkState &netState)
     int n               =   this->_height * this->_width;
     int k               =   this->_channel / this->_groups;
 
-    Blas::cpuFill(this->_outputNum*this->_batch, 0, this->_output, 1);
+    Blas::cpuFill(this->_outputNum*this->_batch, 0, layerOutput, 1);
 
     for (int i = 0; i < this->_batch; ++i)
     {
         for (int j = 0; j < this->_groups; ++j)
         {
             float *a        =   this->_weights + j*this->_nWeights /this->_groups;
-            float *b        =   netState.input + i*this->_channel/this->_groups*this->_height*this->_width;
+            float *b        =   layerInput + i*this->_channel/this->_groups*this->_height*this->_width;
             float *c        =   this->_colImg + (i*this->_groups + j)*n*k;
             Gemm::cpuGemm(1,0,m,n,k,1,a,m,b,n,0,c,n, this->supportAvx&&this->supportFma);
 
             Gemm::cpuCol2Im(c, this->_num/this->_groups, mOutH, mOutW, this->_kSizeX, this->_kSizeY, this->_strideX, this->_strideY, this->_paddingX,
-                            this->_paddingY, this->_output + i*this->_num*whOutSize);
+                            this->_paddingY, layerOutput + i*this->_num*whOutSize);
         }
 
     }
-    ConvolutionalLayer::addBias(this->_output, this->_biases, this->_batch, this->_num, whOutSize);
+    ConvolutionalLayer::addBias(layerOutput, this->_biases, this->_batch, this->_num, whOutSize);
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
-        Activations::activateArrayNormCh(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                         this->_outWidth*this->_outHeight, this->_output);
+        Activations::activateArrayNormCh(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, layerOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_output,0);
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_output,1);
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {
@@ -133,11 +180,11 @@ void DeConvolutionalLayer::forward(NetworkState &netState)
     {
         if(_actParams.size() > 0)
         {
-            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
         }
     }
 

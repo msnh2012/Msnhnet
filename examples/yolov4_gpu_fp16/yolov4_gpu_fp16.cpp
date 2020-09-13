@@ -17,7 +17,8 @@ int main(int argc, char** argv)
     try
     {
         Msnhnet::NetBuilder  msnhNet;
-        msnhNet.setUseFp16(true); // FP16 must be set before build net
+        Msnhnet::NetBuilder::setOnlyGpu(true);
+        Msnhnet::NetBuilder::setUseFp16(true); // FP16 must be set before build net
         msnhNet.buildNetFromMsnhNet(msnhnetPath);
         std::cout<<msnhNet.getLayerDetail();
         msnhNet.loadWeightsFromMsnhBin(msnhbinPath);
@@ -26,18 +27,18 @@ int main(int argc, char** argv)
         Msnhnet::Point2I inSize = msnhNet.getInputSize();
 
         std::vector<float> img;
-        std::vector<std::vector<Msnhnet::Yolov3Box>> result;
+        std::vector<std::vector<Msnhnet::YoloBox>> result;
         img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imgPath, cv::Size(inSize.x,inSize.y));
 
         for (size_t i = 0; i < 10; i++)
         {
 		   auto st = Msnhnet::TimeUtil::startRecord();
-           result = msnhNet.runYolov3GPU(img);
+           result = msnhNet.runYoloGPU(img);
            std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl<<std::flush;
         }
     
         cv::Mat org = cv::imread(imgPath);
-        Msnhnet::OpencvUtil::drawYolov3Box(org,labels,result,inSize);
+        Msnhnet::OpencvUtil::drawYoloBox(org,labels,result,inSize);
         cv::imshow("test",org);
         cv::waitKey();
     }

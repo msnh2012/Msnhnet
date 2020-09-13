@@ -1,5 +1,3 @@
-#define USE_ARM 0
-
 #ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolutionSgemm.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
@@ -702,6 +700,8 @@ namespace Msnhnet
 
         delete [] src_im2col;
         delete [] src_im2col_pack;
+        src_im2col = nullptr;
+        src_im2col_pack = nullptr;
     }
 }
 

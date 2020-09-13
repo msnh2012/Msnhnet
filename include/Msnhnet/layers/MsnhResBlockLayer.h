@@ -32,6 +32,7 @@ public:
 
     std::vector<BaseLayer *> baseLayers;
 
+    virtual void mallocMemory();
     virtual void forward(NetworkState &netState);
 
 #ifdef USE_GPU

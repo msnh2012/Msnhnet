@@ -23,6 +23,8 @@ public:
     static bool     supportFma;
     static bool     isPreviewMode;
     static bool     onlyUseCuda;
+    static bool     onlyUseCpu;
+    static bool     onlyUseGpu;
     static bool     useFp16;
 
 #ifdef USE_GPU
@@ -32,10 +34,14 @@ public:
 
     static void setPreviewMode(const bool &isPreviewMode);
 
+#ifdef USE_GPU
     static void setForceUseCuda(const bool &forceUseCuda);
-
     static void setUseFp16(const bool &useFp16);
+    static void setOnlyGpu(const bool &onlyGpu);
+    static void setOnlyCpu(const bool &onlyCpu);
+#endif
 
+    virtual void mallocMemory();
     virtual void forward(NetworkState &netState);
 
 #ifdef USE_GPU
@@ -43,6 +49,7 @@ public:
     float *getGpuOutput() const;
     void recordCudaStart();
     void recordCudaStop();
+     static std::vector<float> getVecFromCuda(float* const data, const int &num);
 #endif
     virtual void loadAllWeigths(std::vector<float> &weights);
 
@@ -104,6 +111,20 @@ public:
 
     size_t getInputSpaceSize() const;
 
+    uint8_t getMemReUse() const;
+
+    int getLayerIndex() const;
+
+    void setLayerIndex(int layerIndex);
+
+    size_t getMaxOutputNum() const;
+
+    void setIsBranchLayer(bool isBranchLayer);
+
+    void setBranchFirst(bool branchFirst);
+
+    void setBranchLast(bool branchLast);
+
 protected:
     LayerType          _type;                       
 
@@ -116,6 +137,13 @@ protected:
     size_t          _workSpaceSize   =  0;
     size_t          _inputSpaceSize  =  0;
 
+    uint8_t         _memReUse         =  1;
+    bool            _memoryMalloced   =  false;
+
+    bool            _isBranchLayer    =  false;
+    bool            _isFirstBranch    =  false;
+    bool            _isLastBranch     =  false;
+
     int             _height          =  0;
     int             _width           =  0;
     int             _channel         =  0;
@@ -126,6 +154,7 @@ protected:
 
     int             _inputNum        =  0;
     int             _outputNum       =  0;
+    size_t          _maxOutputNum    =  0;
 
     size_t          _numWeights      =  0;       
 
@@ -142,6 +171,7 @@ protected:
     std::string     _layerDetail     =  "";
 
     float           _forwardTime     =  0;
+    int             _layerIndex      =  0;
 };
 }
 

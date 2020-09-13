@@ -23,13 +23,52 @@ NetBuilder::~NetBuilder()
 
     delete _net;
     _net         =   nullptr;
-
 }
+
+void NetBuilder::setPreviewMode(const bool &mode)
+{
+    BaseLayer::setPreviewMode(mode);
+}
+
+#ifdef USE_GPU
+void NetBuilder::setForceUseCuda(const bool &onlyUseCuda)
+{
+    BaseLayer::setForceUseCuda(onlyUseCuda);
+}
+
+void NetBuilder::setUseFp16(const bool &useFp16)
+{
+    BaseLayer::setUseFp16(useFp16);
+}
+
+void NetBuilder::setOnlyGpu(const bool &onlyGpu)
+{
+    if(onlyGpu && BaseLayer::onlyUseCpu)
+    {
+        throw Exception(1,"Gpu only mode and cpu only mode can not be set at the same time",__FILE__,__LINE__,__FUNCTION__);
+    }
+    BaseLayer::setOnlyGpu(onlyGpu);
+}
+
+void NetBuilder::setOnlyCpu(const bool &onlyCpu)
+{
+    if(onlyCpu && BaseLayer::onlyUseGpu)
+    {
+        throw Exception(1,"Gpu only mode and cpu only mode can not be set at the same time",__FILE__,__LINE__,__FUNCTION__);
+    }
+    BaseLayer::setOnlyCpu(onlyCpu);
+}
+#endif
 
 void NetBuilder::buildNetFromMsnhNet(const string &path)
 {
     _parser->readCfg(path);
     clearLayers();
+
+    if(BaseLayer::onlyUseGpu && BaseLayer::onlyUseCpu)
+    {
+        throw Exception(1,"Gpu only mode and cpu only mode can not use at the same time!", __FILE__, __LINE__, __FUNCTION__);
+    }
 
     if(BaseLayer::useFp16)
     {
@@ -38,31 +77,39 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
     NetBuildParams      params;
     size_t      maxWorkSpace    = 0;
     size_t      maxInputSpace   = 0;
+    size_t      maxOutputSpace  = 0;
     for (size_t i = 0; i < _parser->params.size(); ++i)
     {
         BaseLayer   *layer;
-        if(_parser->params[i]->type == LayerType::CONFIG)
+        if(i == 0)
         {
-            NetConfigParams* netCfgParams     =   reinterpret_cast<NetConfigParams*>(_parser->params[i]);
-            _net->batch                  =   netCfgParams->batch;
-            _net->channels               =   netCfgParams->channels;
-            _net->width                  =   netCfgParams->width;
-            _net->height                 =   netCfgParams->height;
-
-            if(netCfgParams->height == 0    || netCfgParams->height < 0||
-                    netCfgParams->width == 0     || netCfgParams->width < 0 ||
-                    netCfgParams->channels == 0  || netCfgParams->width < 0)
+            if(_parser->params[i]->type == LayerType::CONFIG)
             {
-                throw Exception(1,"net config params err, params = 0 or < 0", __FILE__, __LINE__, __FUNCTION__);
-            }
-            _net->inputNum               =   _net->batch * _net->channels * _net->width * _net->height;
+                NetConfigParams* netCfgParams     =   reinterpret_cast<NetConfigParams*>(_parser->params[i]);
+                _net->batch                  =   netCfgParams->batch;
+                _net->channels               =   netCfgParams->channels;
+                _net->width                  =   netCfgParams->width;
+                _net->height                 =   netCfgParams->height;
 
-            params.height               =   _net->height;
-            params.batch                =   _net->batch;
-            params.width                =   _net->width;
-            params.channels             =   _net->channels;
-            params.inputNums            =   _net->inputNum;
-            continue;
+                if(netCfgParams->height == 0    || netCfgParams->height < 0||
+                        netCfgParams->width == 0     || netCfgParams->width < 0 ||
+                        netCfgParams->channels == 0  || netCfgParams->width < 0)
+                {
+                    throw Exception(1,"net config params err, params = 0 or < 0", __FILE__, __LINE__, __FUNCTION__);
+                }
+                _net->inputNum               =   _net->batch * _net->channels * _net->width * _net->height;
+
+                params.height               =   _net->height;
+                params.batch                =   _net->batch;
+                params.width                =   _net->width;
+                params.channels             =   _net->channels;
+                params.inputNums            =   _net->inputNum;
+                continue;
+            }
+            else
+            {
+                throw Exception(1,"The first params must be config",__FILE__, __LINE__, __FUNCTION__);
+            }
         }
 
         if(_parser->params[i]->type == LayerType::CONVOLUTIONAL)
@@ -76,13 +123,13 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             layer                                   =   new ConvolutionalLayer(params.batch, 1, params.height, params.width, params.channels, convParams->filters,convParams->groups,
                                                                                convParams->kSizeX, convParams->kSizeY, convParams->strideX, convParams->strideY, convParams->dilationX,
                                                                                convParams->dilationY,convParams->paddingX, convParams->paddingY,
-                                                                               convParams->activation, convParams->actParams, convParams->batchNorm, convParams->useBias,
+                                                                               convParams->activation, convParams->actParams, convParams->batchNorm, convParams->bnEps, convParams->useBias,
                                                                                0,0,0,0,convParams->antialiasing, nullptr, 0,0);
         }
         else if(_parser->params[i]->type == LayerType::ACTIVE)
         {
             ActivationParams *activationParams      =   reinterpret_cast<ActivationParams*>(_parser->params[i]);
-            layer                                   =   new ActivationLayer(params.batch, params.height, params.width, params.channels, params.inputNums, activationParams->activation);
+            layer                                   =   new ActivationLayer(params.batch, params.height, params.width, params.channels, params.inputNums, activationParams->activation, activationParams->actParams);
         }
         else if(_parser->params[i]->type == LayerType::DECONVOLUTIONAL)
         {
@@ -100,7 +147,7 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
         {
             ConnectParams *connectParams            =   reinterpret_cast<ConnectParams*>(_parser->params[i]);
             layer                                   =   new ConnectedLayer(params.batch, 1, params.inputNums, connectParams->output, connectParams->activation, connectParams->actParams,
-                                                                           connectParams->batchNorm, connectParams->useBias);
+                                                                           connectParams->batchNorm, connectParams->bnEps, connectParams->useBias);
         }
         else if(_parser->params[i]->type == LayerType::MAXPOOL)
         {
@@ -128,7 +175,7 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
         else if(_parser->params[i]->type == LayerType::BATCHNORM)
         {
             BatchNormParams *batchNormParams        =   reinterpret_cast<BatchNormParams*>(_parser->params[i]);
-            layer                                   =   new BatchNormLayer(params.batch, params.width, params.height, params.channels, batchNormParams->activation, batchNormParams->actParams);
+            layer                                   =   new BatchNormLayer(params.batch, params.width, params.height, params.channels, batchNormParams->activation, batchNormParams->eps, batchNormParams->actParams);
         }
         else if(_parser->params[i]->type == LayerType::RES_BLOCK)
         {
@@ -265,6 +312,15 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
                 }
             }
 
+            for (size_t k = 0; k < routeParams->layerIndexes.size(); ++k)
+            {
+                int index = routeParams->layerIndexes[k];
+                if(index != (i-2))
+                {
+                    _net->layers[index]->mallocMemory();
+                }
+            }
+
             layer                                   =   new RouteLayer(params.batch, routeParams->layerIndexes, layersOutputNum,
                                                                        routeParams->groups, routeParams->groupsId, routeParams->addModel, routeParams->activation, routeParams->actParams);
             layer->setOutChannel(outChannel);
@@ -386,12 +442,28 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
                 throw Exception(1, "VarOp layer error, a op is not supported  ", __FILE__, __LINE__, __FUNCTION__);
             }
 
+            for (size_t k = 0; k < variableOpParams->layerIndexes.size(); ++k)
+            {
+                int index = variableOpParams->layerIndexes[k];
+                _net->layers[index]->mallocMemory();
+            }
+
             layer                                   =   new VariableOpLayer(params.batch, params.width, params.height, params.channels, variableOpParams->layerIndexes, variableOpParams->varOpType, variableOpParams->constVal);
         }
         else if(_parser->params[i]->type == LayerType::PERMUTE)
         {
             PermuteParams *permuteParams            =   reinterpret_cast<PermuteParams*>(_parser->params[i]);
             layer                                   =   new PermuteLayer(params.batch, params.height, params.width, params.channels, permuteParams->dim0, permuteParams->dim1, permuteParams->dim2);
+        }
+        else if(_parser->params[i]->type == LayerType::SLICE)
+        {
+            SliceParams *sliceParams                =   reinterpret_cast<SliceParams*>(_parser->params[i]);
+            layer                                   =   new SliceLayer(params.batch, params.height, params.width, params.channels, sliceParams->start0, sliceParams->step0, sliceParams->start1, sliceParams->step1, sliceParams->start2, sliceParams->step2);
+        }
+        else if(_parser->params[i]->type == LayerType::VIEW)
+        {
+            ViewParams *viewParams                  =   reinterpret_cast<ViewParams*>(_parser->params[i]);
+            layer                                   =   new ViewLayer(params.batch, params.height, params.width, params.channels, viewParams->dim0, viewParams->dim1, viewParams->dim2);
         }
         else if(_parser->params[i]->type == LayerType::REDUCTION)
         {
@@ -409,40 +481,39 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             SoftMaxParams  *softmaxParams           =   reinterpret_cast<SoftMaxParams*>(_parser->params[i]);
             layer                                   =   new SoftMaxLayer(params.batch, params.inputNums, softmaxParams->groups, softmaxParams->temperature);
         }
-        else if(_parser->params[i]->type == LayerType::YOLOV3)
+        else if(_parser->params[i]->type == LayerType::YOLO)
         {
-            Yolov3Params *yolov3Params              =   reinterpret_cast<Yolov3Params*>(_parser->params[i]);
-            layer                                   =   new Yolov3Layer(params.batch, params.width, params.height, params.channels, yolov3Params->orgWidth, yolov3Params->orgHeight,
-                                                                        yolov3Params->classNum, yolov3Params->anchors);
+            YoloParams *yoloParams              =   reinterpret_cast<YoloParams*>(_parser->params[i]);
+            layer                               =   new YoloLayer(params.batch, params.width, params.height, params.channels, yoloParams->orgWidth, yoloParams->orgHeight,
+                                                                  yoloParams->classNum, yoloParams->anchors, yoloParams->yoloType);
         }
-        else if(_parser->params[i]->type == LayerType::YOLOV3_OUT)
+        else if(_parser->params[i]->type == LayerType::YOLO_OUT)
         {
-            Yolov3OutParams     *yolov3OutParams    =   reinterpret_cast<Yolov3OutParams*>(_parser->params[i]);
+            YoloOutParams     *yoloOutParams    =   reinterpret_cast<YoloOutParams*>(_parser->params[i]);
+            std::vector<YoloInfo> yoloLayersInfo;
 
-            std::vector<Yolov3Info> yolov3LayersInfo;
-
-            if(yolov3OutParams->layerIndexes.size() < 1)
+            if(yoloOutParams->layerIndexes.size() < 1)
             {
-                throw Exception(1, "yolov3out layer error, no yolov3 layers", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1, "yoloOut layer error, no yolo layers", __FILE__, __LINE__, __FUNCTION__);
             }
 
-            for (size_t k = 0; k < yolov3OutParams->layerIndexes.size(); ++k)
+            for (size_t k = 0; k < yoloOutParams->layerIndexes.size(); ++k)
             {
-                size_t index   =   static_cast<size_t>(yolov3OutParams->layerIndexes[k]);
+                size_t index   =   static_cast<size_t>(yoloOutParams->layerIndexes[k]);
 
-                if(_net->layers[index]->type() != LayerType::YOLOV3)
+                if(_net->layers[index]->type() != LayerType::YOLO)
                 {
-                    throw Exception(1, "yolov3out layer error, not a yolov3 layer", __FILE__, __LINE__, __FUNCTION__);
+                    throw Exception(1, "yoloout layer error, not a yolo layer", __FILE__, __LINE__, __FUNCTION__);
                 }
 
-                yolov3LayersInfo.push_back(Yolov3Info(_net->layers[index]->getOutHeight(),
+                yoloLayersInfo.push_back(YoloInfo(_net->layers[index]->getOutHeight(),
                                                       _net->layers[index]->getOutWidth(),
                                                       _net->layers[index]->getOutChannel()
                                                       ));
             }
 
-            layer                                   =   new Yolov3OutLayer(params.batch, yolov3OutParams->orgWidth, yolov3OutParams->orgHeight, yolov3OutParams->layerIndexes,
-                                                                           yolov3LayersInfo,yolov3OutParams->confThresh, yolov3OutParams->nmsThresh, yolov3OutParams->useSoftNms, yolov3OutParams->yoloType);
+            layer                                   =   new YoloOutLayer(params.batch, yoloOutParams->orgWidth, yoloOutParams->orgHeight, yoloOutParams->layerIndexes,
+                                                                           yoloLayersInfo,yoloOutParams->confThresh, yoloOutParams->nmsThresh, yoloOutParams->useSoftNms, yoloOutParams->yoloType);
         }
 
         params.height       =   layer->getOutHeight();
@@ -455,27 +526,79 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             maxWorkSpace = layer->getWorkSpaceSize();
         }
 
+        if(layer->getMaxOutputNum() > maxOutputSpace)
+        {
+            maxOutputSpace = layer->getMaxOutputNum();
+        }
+
         if(layer->getInputSpaceSize() > maxInputSpace)
         {
             maxInputSpace = layer->getInputSpaceSize();
         }
+
+        layer->setLayerIndex(i-1);
+
+        if(layer->getMemReUse()==0)
+        {
+            layer->mallocMemory();
+        }
+
         _net->layers.push_back(layer);
+
     }
-    _netState->workspace     =   new float[maxWorkSpace]();
 
 #ifdef USE_GPU
-    if(maxInputSpace != 0)
+    if(BaseLayer::onlyUseCpu && BaseLayer::onlyUseGpu)
     {
-        _netState->gpuWorkspace  =   Cuda::makeCudaArray(_netState->workspace,maxWorkSpace);
-    }
-    else
-    {
-        std::cout<<" Warning: workspace size equal 0 "<<std::endl;
+        throw Exception(1,"Gpu only mode and cpu only mode can not be set at the same time",__FILE__,__LINE__,__FUNCTION__);
     }
 
-    if(BaseLayer::useFp16)
+    if(!BaseLayer::onlyUseGpu) 
+
     {
-        _netState->gpuInputFp16 = (float*)Cuda::makeFp16ArrayFromFp32(nullptr, maxInputSpace);
+#endif
+        _netState->releaseArr(_netState->workspace);
+        _netState->releaseArr(_netState->memPool1);
+        _netState->releaseArr(_netState->memPool2);
+        if(maxInputSpace != 0)
+        {
+            _netState->workspace     =   new float[maxWorkSpace]();
+        }
+        else
+        {
+            std::cout<<" Warning: workspace size equal 0 "<<std::endl;
+        }
+        _netState->memPool1      =   new float[maxOutputSpace]();
+        _netState->memPool2      =   new float[maxOutputSpace]();
+#ifdef USE_GPU
+    }
+#endif
+
+#ifdef USE_GPU
+    if(!BaseLayer::onlyUseCpu) 
+
+    {
+        Cuda::freeCuda(_netState->gpuWorkspace);
+        Cuda::freeCuda(_netState->gpuMemPool1);
+        Cuda::freeCuda(_netState->gpuMemPool2);
+        Cuda::freeCuda(_netState->gpuInputFp16);
+
+        if(maxInputSpace != 0)
+        {
+            _netState->gpuWorkspace  =   Cuda::mallocCudaArray(maxWorkSpace);
+        }
+        else
+        {
+            std::cout<<" Warning: workspace size equal 0 "<<std::endl;
+        }
+
+        _netState->gpuMemPool1       =   Cuda::mallocCudaArray(maxOutputSpace);
+        _netState->gpuMemPool2       =   Cuda::mallocCudaArray(maxOutputSpace);
+
+        if(BaseLayer::useFp16)
+        {
+            _netState->gpuInputFp16 = (float*)Cuda::makeFp16ArrayFromFp32(nullptr, maxInputSpace);
+        }
     }
 #endif
 
@@ -522,23 +645,13 @@ void NetBuilder::loadWeightsFromMsnhBin(const string &path)
 
 }
 
-void NetBuilder::setPreviewMode(const bool &mode)
-{
-    BaseLayer::setPreviewMode(mode);
-}
-
-void NetBuilder::setForceUseCuda(const bool &onlyUseCuda)
-{
-    BaseLayer::setForceUseCuda(onlyUseCuda);
-}
-
-void NetBuilder::setUseFp16(const bool &useFp16)
-{
-    BaseLayer::setUseFp16(useFp16);
-}
-
 std::vector<float> NetBuilder::runClassify(std::vector<float> img)
 {
+    if(BaseLayer::onlyUseGpu)
+    {
+        throw Exception(1, "Gpu mode , can not run with cpu",__FILE__, __LINE__, __FUNCTION__);
+    }
+
     if(BaseLayer::isPreviewMode)
     {
         throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__, __FUNCTION__);
@@ -546,8 +659,10 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
 #ifdef USE_NNPACK
     nnp_initialize();
 #endif
+
     _netState->input     =   img.data();
     _netState->inputNum  =   static_cast<int>(img.size());
+
     if(_net->layers[0]->getInputNum() != _netState->inputNum)
     {
         throw Exception(1,"input image size err. Needed :" + std::to_string(_net->layers[0]->getInputNum()) + " given :" +
@@ -558,7 +673,10 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
     {
         _net->layers[i]->forward(*_netState);
 
-        _netState->input     =   _net->layers[i]->getOutput();
+        if(_net->layers[i]->getMemReUse() == 0)
+        {
+            _netState->input   =   _net->layers[i]->getOutput();
+        }
         _netState->inputNum  =   _net->layers[i]->getOutputNum();
 
         if(i == _net->layers.size()-1)
@@ -569,18 +687,49 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
             this->_lastLayerOutNum     = _net->layers[i]->getOutputNum();
         }
 
+        if(this->_saveLayerOutput)
+        {
+            std::cout<<"Saving layer outputs. Layer : "<<i<<std::endl;
+
+            if(_net->layers[i]->getMemReUse()==1)
+            {
+                std::vector<float> pred(_netState->getInput() , _netState->getInput() + _netState->inputNum);
+                std::string path = std::to_string(i)+"cpu.txt";
+                IO::saveVector<float>(pred,path.data(),"\n");
+            }
+            else
+            {
+                std::vector<float> pred(_netState->input, _netState->input + _netState->inputNum);
+                std::string path = std::to_string(i)+"cpu.txt";
+                IO::saveVector<float>(pred,path.data(),"\n");
+            }
+        }
+
     }
 
 #ifdef USE_NNPACK
     nnp_deinitialize();
 #endif
-    std::vector<float> pred(_netState->input, _netState->input + _netState->inputNum);
+    if(_net->layers[_net->layers.size()-1]->getMemReUse()==1)
+    {
+        std::vector<float> pred(_netState->getInput(), _netState->getInput() + _netState->inputNum);
+        return pred;
+    }
+    else
+    {
+        std::vector<float> pred(_netState->input, _netState->input + _netState->inputNum);
+        return pred;
+    }
 
-    return pred;
 }
 
-std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img)
+std::vector<std::vector<YoloBox>> NetBuilder::runYolo(std::vector<float> img)
 {
+    if(BaseLayer::onlyUseGpu)
+    {
+        throw Exception(1, "Gpu mode , can not run with cpu",__FILE__, __LINE__, __FUNCTION__);
+    }
+
     if(BaseLayer::isPreviewMode)
     {
         throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__, __FUNCTION__);
@@ -599,7 +748,7 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img
     for (size_t i = 0; i < _net->layers.size(); ++i)
     {
 
-        if(_net->layers[i]->type() != LayerType::ROUTE && _net->layers[i]->type() != LayerType::YOLOV3_OUT) 
+        if(_net->layers[i]->type() != LayerType::ROUTE && _net->layers[i]->type() != LayerType::YOLO_OUT) 
 
         {
             if(_netState->inputNum != _net->layers[i]->getInputNum())
@@ -609,24 +758,49 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3(std::vector<float> img
             }
         }
 
+        if(i==236)
+        {
+            int ac = 10;
+        }
+
         _net->layers[i]->forward(*_netState);
 
-        _netState->input     =   _net->layers[i]->getOutput();
+        if(_net->layers[i]->getMemReUse() == 0)
+        {
+            _netState->input   =   _net->layers[i]->getOutput();
+        }
         _netState->inputNum  =   _net->layers[i]->getOutputNum();
 
+        if(this->_saveLayerOutput)
+        {
+            std::cout<<"Saving layer outputs. Layer : "<<i<<std::endl;
+
+            if(_net->layers[i]->getMemReUse()==1)
+            {
+                std::vector<float> pred(_netState->getInput() , _netState->getInput() + _netState->inputNum);
+                std::string path = std::to_string(i)+"cpu.txt";
+                IO::saveVector<float>(pred,path.data(),"\n");
+            }
+            else
+            {
+                std::vector<float> pred(_netState->input, _netState->input + _netState->inputNum);
+                std::string path = std::to_string(i)+"cpu.txt";
+                IO::saveVector<float>(pred,path.data(),"\n");
+            }
+        }
     }
 
 #ifdef USE_NNPACK
     nnp_deinitialize();
 #endif
 
-    if((_net->layers[_net->layers.size()-1])->type() == LayerType::YOLOV3_OUT)
+    if((_net->layers[_net->layers.size()-1])->type() == LayerType::YOLO_OUT)
     {
-        return (reinterpret_cast<Yolov3OutLayer*>((_net->layers[_net->layers.size()-1])))->finalOut;
+        return (reinterpret_cast<YoloOutLayer*>((_net->layers[_net->layers.size()-1])))->finalOut;
     }
     else
     {
-        throw Exception(1,"not a yolov3 net", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"not a yolo net", __FILE__, __LINE__, __FUNCTION__);
     }
 }
 
@@ -635,6 +809,12 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
 {
     _gpuInferenceTime = 0;
     auto st = TimeUtil::startRecord();
+
+    if(BaseLayer::onlyUseCpu)
+    {
+        throw Exception(1, "Cpu mode , can not run with gpu",__FILE__, __LINE__, __FUNCTION__);
+    }
+
     if(BaseLayer::isPreviewMode)
     {
         throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__, __FUNCTION__);
@@ -653,7 +833,18 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
     for (size_t i = 0; i < _net->layers.size(); ++i)
     {
         _net->layers[i]->forwardGPU(*_netState);
-        _netState->input     =   _net->layers[i]->getGpuOutput();
+        if(i == 0)
+        {
+            if(_netState->input!=nullptr)
+            {
+                Cuda::freeCuda(_netState->input);
+            }
+        }
+
+        if(_net->layers[i]->getMemReUse() == 0)
+        {
+            _netState->input     =   _net->layers[i]->getGpuOutput();
+        }
         _netState->inputNum  =   _net->layers[i]->getOutputNum();
 
         if(i == _net->layers.size()-1)
@@ -663,10 +854,37 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
             this->_lastLayerOutChannel = _net->layers[i]->getOutChannel();
             this->_lastLayerOutNum     = _net->layers[i]->getOutputNum();
         }
+
+        if(this->_saveLayerOutput)
+        {
+            std::cout<<"Saving layer gpu outputs. Layer : "<<i<<std::endl;
+            float* out = new float[_netState->inputNum]();
+            if(_net->layers[i]->getMemReUse()==1)
+            {
+                Cuda::pullCudaArray(_netState->getGpuInput(), out,_netState->inputNum);
+                std::string path = std::to_string(i)+"gpu.txt";
+                std::vector<float> pred(out, out + _netState->inputNum);
+                IO::saveVector<float>(pred,path.data(),"\n");
+            }
+            else
+            {
+                Cuda::pullCudaArray(_netState->input, out,_netState->inputNum);
+                std::string path = std::to_string(i)+"gpu.txt";
+                std::vector<float> pred(out, out + _netState->inputNum);
+                IO::saveVector<float>(pred,path.data(),"\n");
+            }
+        }
     }
 
     float* out = new float[_netState->inputNum]();
-    Cuda::pullCudaArray(_netState->input, out,_netState->inputNum);
+    if(_net->layers[_net->layers.size()-1]->getMemReUse()==1)
+    {
+        Cuda::pullCudaArray(_netState->getGpuInput(), out,_netState->inputNum);
+    }
+    else
+    {
+        Cuda::pullCudaArray(_netState->input, out,_netState->inputNum);
+    }
     std::vector<float> pred(out, out + _netState->inputNum);
     delete[] out;
     out = nullptr;
@@ -675,10 +893,15 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
     return pred;
 }
 
-std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3GPU(std::vector<float> img)
+std::vector<std::vector<YoloBox>> NetBuilder::runYoloGPU(std::vector<float> img)
 {
     _gpuInferenceTime = 0;
     auto st = TimeUtil::startRecord();
+    if(BaseLayer::onlyUseCpu)
+    {
+        throw Exception(1, "Cpu mode , can not run with gpu",__FILE__, __LINE__, __FUNCTION__);
+    }
+
     if(BaseLayer::isPreviewMode)
     {
         throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__, __FUNCTION__);
@@ -696,7 +919,7 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3GPU(std::vector<float> 
     for (size_t i = 0; i < _net->layers.size(); ++i)
     {
 
-        if(_net->layers[i]->type() != LayerType::ROUTE && _net->layers[i]->type() != LayerType::YOLOV3_OUT) 
+        if(_net->layers[i]->type() != LayerType::ROUTE && _net->layers[i]->type() != LayerType::YOLO_OUT) 
 
         {
             if(_netState->inputNum != _net->layers[i]->getInputNum())
@@ -708,19 +931,49 @@ std::vector<std::vector<Yolov3Box>> NetBuilder::runYolov3GPU(std::vector<float> 
 
         _net->layers[i]->forwardGPU(*_netState);
 
-        _netState->input     =   _net->layers[i]->getGpuOutput();
+        if(i == 0)
+        {
+            if(_netState->input!=nullptr)
+            {
+                Cuda::freeCuda(_netState->input);
+            }
+        }
+
+        if(_net->layers[i]->getMemReUse() == 0)
+        {
+            _netState->input     =   _net->layers[i]->getGpuOutput();
+        }
         _netState->inputNum  =   _net->layers[i]->getOutputNum();
 
+        if(this->_saveLayerOutput)
+        {
+            std::cout<<"Saving layer gpu outputs. Layer : "<<i<<std::endl;
+            float* out = new float[_netState->inputNum]();
+            if(_net->layers[i]->getMemReUse()==1)
+            {
+                Cuda::pullCudaArray(_netState->getGpuInput(), out,_netState->inputNum);
+                std::string path = std::to_string(i)+"gpu.txt";
+                std::vector<float> pred(out, out + _netState->inputNum);
+                IO::saveVector<float>(pred,path.data(),"\n");
+            }
+            else
+            {
+                Cuda::pullCudaArray(_netState->input, out,_netState->inputNum);
+                std::string path = std::to_string(i)+"gpu.txt";
+                std::vector<float> pred(out, out + _netState->inputNum);
+                IO::saveVector<float>(pred,path.data(),"\n");
+            }
+        }
     }
 
-    if((_net->layers[_net->layers.size()-1])->type() == LayerType::YOLOV3_OUT)
+    if((_net->layers[_net->layers.size()-1])->type() == LayerType::YOLO_OUT)
     {
         _gpuInferenceTime = TimeUtil::getElapsedTime(st);
-        return (reinterpret_cast<Yolov3OutLayer*>((_net->layers[_net->layers.size()-1])))->finalOut;
+        return (reinterpret_cast<YoloOutLayer*>((_net->layers[_net->layers.size()-1])))->finalOut;
     }
     else
     {
-        throw Exception(1,"not a yolov3 net", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"not a yolo net", __FILE__, __LINE__, __FUNCTION__);
     }
 }
 
@@ -828,13 +1081,13 @@ void NetBuilder::clearLayers()
             {
                 delete reinterpret_cast<UpSampleLayer*>(_net->layers[i]);
             }
-            else if(_net->layers[i]->type() == LayerType::YOLOV3)
+            else if(_net->layers[i]->type() == LayerType::YOLO)
             {
-                delete reinterpret_cast<Yolov3Layer*>(_net->layers[i]);
+                delete reinterpret_cast<YoloLayer*>(_net->layers[i]);
             }
-            else if(_net->layers[i]->type() == LayerType::YOLOV3_OUT)
+            else if(_net->layers[i]->type() == LayerType::YOLO_OUT)
             {
-                delete reinterpret_cast<Yolov3OutLayer*>(_net->layers[i]);
+                delete reinterpret_cast<YoloOutLayer*>(_net->layers[i]);
             }
             else if(_net->layers[i]->type() == LayerType::PADDING)
             {
@@ -844,9 +1097,17 @@ void NetBuilder::clearLayers()
             {
                 delete reinterpret_cast<PermuteLayer*>(_net->layers[i]);
             }
+            else if(_net->layers[i]->type() == LayerType::VIEW)
+            {
+                delete reinterpret_cast<ViewLayer*>(_net->layers[i]);
+            }
             else if(_net->layers[i]->type() == LayerType::REDUCTION)
             {
                 delete reinterpret_cast<ReductionLayer*>(_net->layers[i]);
+            }
+            else if(_net->layers[i]->type() == LayerType::SLICE)
+            {
+                delete reinterpret_cast<SliceLayer*>(_net->layers[i]);
             }
             _net->layers[i] = nullptr;
         }
@@ -930,6 +1191,11 @@ int NetBuilder::getLastLayerOutChannel() const
 size_t NetBuilder::getLastLayerOutNum() const
 {
     return _lastLayerOutNum;
+}
+
+void NetBuilder::setSaveLayerOutput(bool saveLayerOutput)
+{
+    _saveLayerOutput = saveLayerOutput;
 }
 
 }

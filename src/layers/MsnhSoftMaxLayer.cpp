@@ -13,13 +13,7 @@ SoftMaxLayer::SoftMaxLayer(const int &batch, const int &inputNum, const int &gro
     this->_inputNum      =   inputNum;
     this->_outputNum     =   inputNum;
 
-    if(!BaseLayer::isPreviewMode)
-    {
-        this->_output        =   new float[static_cast<size_t>(this->_inputNum * this->_batch)]();
-#ifdef USE_GPU
-        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-#endif
-    }
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
 
 #ifdef USE_GPU
 #ifdef USE_CUDNN
@@ -57,16 +51,106 @@ void SoftMaxLayer::forward(NetworkState &netState)
 {
     auto st = TimeUtil::startRecord();
 
-    Blas::cpuSoftmax(netState.input, this->_inputNum/this->_groups, this->_batch, this->_inputNum,
-                     this->_groups, this->_inputNum/this->_groups, this->_temperature, 1, this->_output, BaseLayer::supportAvx);
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    if(this->_layerIndex == 0) 
+
+    {
+        layerInput      = netState.input;
+    }
+    else 
+
+    {
+        if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+        {
+            layerInput  = netState.input;
+        }
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerOutput     = netState.getOutput(); 
+
+        netState.shuffleInOut();
+
+    }
+    else
+
+    {
+        layerOutput     = this->_output;
+    }
+
+    Blas::cpuSoftmax(layerInput, this->_inputNum/this->_groups, this->_batch, this->_inputNum,
+                     this->_groups, this->_inputNum/this->_groups, this->_temperature, 1, layerOutput, BaseLayer::supportAvx);
 
     this->_forwardTime =   TimeUtil::getElapsedTime(st);
+}
+
+void SoftMaxLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            if(!BaseLayer::onlyUseGpu) 
+
+            {
+                this->_output        =   new float[static_cast<size_t>(this->_inputNum * this->_batch)]();
+            }
+#ifdef USE_GPU
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuOutput     =   Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+            }
+#endif
+            this->_memoryMalloced  =  true;
+        }
+    }
+    this->_memReUse         =  0;
 }
 
 #ifdef USE_GPU
 void SoftMaxLayer::forwardGPU(NetworkState &netState)
 {
+
+    float* layerGpuInput   = netState.getGpuInput();
+    float* layerGpuOutput  = nullptr;
+
+    if(this->_layerIndex == 0) 
+
+    {
+        layerGpuInput      = netState.input;
+    }
+    else 
+
+    {
+        if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+        {
+            layerGpuInput  = netState.input;
+        }
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerGpuOutput     = netState.getGpuOutput(); 
+
+        netState.shuffleGpuInOut();
+
+    }
+    else
+
+    {
+        layerGpuOutput     = this->_gpuOutput;
+    }
+
     this->recordCudaStart();
+
 #ifdef USE_CUDNN
     if(!onlyUseCuda)
     {
@@ -75,19 +159,19 @@ void SoftMaxLayer::forwardGPU(NetworkState &netState)
         CUDNN_CHECK(cudnnSoftmaxForward(Cuda::getCudnnHandle(), CUDNN_SOFTMAX_FAST,
                                         CUDNN_SOFTMAX_MODE_CHANNEL,
                                         &a,
-                                        _inputDesc, netState.input,
+                                        _inputDesc, layerGpuInput,
                                         &b,
-                                        _outputDesc, this->_gpuOutput));
+                                        _outputDesc, layerGpuOutput));
     }
     else
     {
-        BlasGPU::gpuSoftmax(netState.input, this->_inputNum/this->_groups, this->_batch, this->_inputNum,
-                         this->_groups, this->_inputNum/this->_groups, this->_temperature, 1, this->_gpuOutput);
+        BlasGPU::gpuSoftmax(layerGpuInput, this->_inputNum/this->_groups, this->_batch, this->_inputNum,
+                            this->_groups, this->_inputNum/this->_groups, this->_temperature, 1, layerGpuOutput);
     }
 #else
 
-    BlasGPU::gpuSoftmax(netState.input, this->_inputNum/this->_groups, this->_batch, this->_inputNum,
-                     this->_groups, this->_inputNum/this->_groups, this->_temperature, 1, this->_gpuOutput);
+    BlasGPU::gpuSoftmax(layerGpuInput, this->_inputNum/this->_groups, this->_batch, this->_inputNum,
+                        this->_groups, this->_inputNum/this->_groups, this->_temperature, 1, layerGpuOutput);
 #endif
     this->recordCudaStop();
 }

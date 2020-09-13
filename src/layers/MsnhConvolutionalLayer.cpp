@@ -1,10 +1,11 @@
-﻿#include "Msnhnet/layers/MsnhConvolutionalLayer.h"
+﻿
+#include "Msnhnet/layers/MsnhConvolutionalLayer.h"
 
 namespace Msnhnet
 {
 ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const int &height, const int &width, const int &channel, const int &num,
                                        const int &groups, const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY, const int &dilationX, const int &dilationY,
-                                       const int &paddingX, const int &paddingY, ActivationType activation, const std::vector<float> &actParams, const int &batchNorm, const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex, const int &antialiasing,
+                                       const int &paddingX, const int &paddingY, ActivationType activation, const std::vector<float> &actParams, const int &batchNorm, const float &bnEps, const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex, const int &antialiasing,
                                        ConvolutionalLayer * const &shareLayer, const int &assistedExcitation, const int &deform)
 {
     (void) deform;
@@ -63,6 +64,7 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     this->_nWeights          = (this->_channel / groups) * num * kSizeX * kSizeY; 
 
     this->_useBias           = useBias;
+    this->_bnEps             = bnEps;
 
     if(this->_useBias)
     {
@@ -71,39 +73,6 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     else
     {
         this->_nBiases       =   0;
-    }
-
-    if(this->_shareLayer != nullptr)
-    {
-        if(     this->_kSizeX    != this->_shareLayer->_kSizeX ||
-                this->_kSizeY    != this->_shareLayer->_kSizeY ||
-                this->_nWeights != this->_shareLayer->_nWeights||
-                this->_channel  != this->_shareLayer->_channel ||
-                this->_num      != this->_shareLayer->_num)
-        {
-            throw Exception(1, "Layer size, nweights, channels or filters don't match for the share_layer", __FILE__, __LINE__, __FUNCTION__);
-        }
-
-        this->_weights       = this->_shareLayer->_weights;
-        this->_biases        = this->_shareLayer->_biases;
-    }
-    else
-    {
-        if(!BaseLayer::isPreviewMode)
-        {
-            this->_weights       = new float[static_cast<size_t>(this->_nWeights)]();
-            this->_biases        = new float[static_cast<size_t>(this->_num)]();
-#ifdef USE_GPU
-            this->_gpuWeights    = Cuda::makeCudaArray(this->_weights, this->_nWeights);
-            this->_gpuBiases     = Cuda::makeCudaArray(this->_biases , this->_num);
-#ifdef USE_CUDNN
-            if (useFp16)
-            {
-                this->_gpuWeightsFp16 = Cuda::makeCudaArray(this->_weights, this->_nWeights);
-            }
-#endif 
-#endif
-        }
     }
 
     this->_outHeight         = convOutHeight();
@@ -116,87 +85,8 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     this->_activation        = activation;
     this->_actParams         = actParams;
 
-    if(!BaseLayer::isPreviewMode)
-    {
-        this->_output            = new float[static_cast<size_t>(_outputNum * this->_batch)]();
-#ifdef USE_GPU
-        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-#ifdef USE_CUDNN
-        if (useFp16)
-        {
-            this->_gpuOutputFp16 = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-        }
-#endif 
-
-#endif
-    }
-
-    if(binary)
-    {
-        if(!BaseLayer::isPreviewMode)
-        {
-            this->_binaryWeights = new float[static_cast<size_t>(this->_nWeights)]();
-            this->_cWeights      = new char[static_cast<size_t>(this->_nWeights)]();
-            this->_scales        = new float[static_cast<size_t>(this->_num)]();
-
-#ifdef USE_GPU
-
-#endif
-        }
-    }
-
-    if(xnor)
-    {
-        int align            = 32; 
-
-        int srcAlign         = this->_outHeight * this->_outWidth;
-        this->_bitAlign      = srcAlign + (align - srcAlign % align);
-        this->_ldaAlign      = 256;
-
-        if(!BaseLayer::isPreviewMode)
-        {
-            this->_binaryWeights = new float[static_cast<size_t>(this->_nWeights)]();
-            this->_binaryInputs  = new float[static_cast<size_t>(this->_inputNum * this->_batch)]();
-            this->_meanArr       = new float[static_cast<size_t>(this->_num)]();
-
-            const int newCh     = this->_channel / 32;
-            int rePackedISize   = newCh * this->_width * this->_height + 1;
-            this->_binRePackedIn = new uint32_t[static_cast<size_t>(rePackedISize)]();
-
-            int k               = this->_kSizeX * this->_kSizeY * this->_channel;
-            int kAligned        = k + (this->_ldaAlign - k%this->_ldaAlign);
-            int tBitInSize      = kAligned * this->_bitAlign / 8;
-            this->_tBitInput     = new char[static_cast<size_t>(tBitInSize)]();
-#ifdef USE_GPU
-
-#endif
-        }
-    }
-
     if(batchNorm)
     {
-        if(this->_shareLayer!=nullptr)
-        {
-            this->_scales            = this->_shareLayer->_scales;
-            this->_rollMean          = this->_shareLayer->_rollMean;
-            this->_rollVariance      = this->_shareLayer->_rollVariance;
-        }
-        else
-        {
-            if(!BaseLayer::isPreviewMode)
-            {
-                this->_scales         = new float[static_cast<size_t>(this->_num)]();
-                this->_rollMean       = new float[static_cast<size_t>(this->_num)]();
-                this->_rollVariance   = new float[static_cast<size_t>(this->_num)]();
-#ifdef USE_GPU
-                this->_gpuScales      = Cuda::makeCudaArray(this->_scales, this->_num);
-                this->_gpuRollMean    = Cuda::makeCudaArray(this->_rollMean, this->_num);
-                this->_gpuRollVariance= Cuda::makeCudaArray(this->_rollVariance, this->_num);
-#endif
-
-            }
-        }
-
         this->_nScales           =   num;
         this->_nRollMean         =   num;
         this->_nRollVariance     =   num;
@@ -241,13 +131,18 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
                                                     0,
 
                                                     &this->_fwAlgo));
-
+    if (useFp16)
+    {
+        this->_gpuOutputFp16 = Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+    }
 #endif
 #endif
 
     this->_workSpaceSize = getConvWorkSpaceSize();
 
     this->_inputSpaceSize = _inputNum;
+
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
 
     this->_bFlops        = (2.0f * this->_nWeights * this->_outHeight * this->_outWidth) / 1000000000.f;
 
@@ -533,9 +428,100 @@ void ConvolutionalLayer::swapBinary()
 #endif
 }
 
+void ConvolutionalLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            if(!BaseLayer::onlyUseGpu) 
+
+            {
+                this->_output            = new float[static_cast<size_t>(_outputNum * this->_batch)]();
+            }
+#ifdef USE_GPU
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuOutput         = Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+            }
+#endif
+            this->_memoryMalloced     = true;
+        }
+    }
+    this->_memReUse           = 0;
+}
+
 void ConvolutionalLayer::forward(NetworkState &netState)
 {
     auto st = TimeUtil::startRecord();
+
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerOutput     = this->_output; 
+
+        }
+        else 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+        else
+
+        {
+            layerOutput     = this->_output;
+        }
+    }
 
     int m       =  this->_num / this->_groups; 
 
@@ -543,7 +529,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 
     int n       =  this->_outHeight * this->_outWidth; 
 
-    Blas::cpuFill(this->_outputNum * this->_batch, 0, this->_output, 1);
+    Blas::cpuFill(this->_outputNum * this->_batch, 0, layerOutput, 1);
 
 #ifdef USE_NNPACK
     struct nnp_size     nnInSize    = {static_cast<size_t>(this->_width),static_cast<size_t>(this->_height)};
@@ -556,6 +542,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 
     if(this->_xnor && (!this->_alignBitWeights))
     {
+        /* TODO */
         if(!this->_alignBitWeights)
         {
             binarizeWeights(this->_weights,this->_num, this->_nWeights,this->_binaryWeights);
@@ -576,7 +563,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 
             float *b    =  netState.workspace;
 
-            float *c    =  this->_output + (i*this->_groups +j)*n*m;
+            float *c    =  layerOutput+ (i*this->_groups +j)*n*m;
 
             if(this->_xnor && this->_alignBitWeights && this->_strideX == this->_strideY)
             {
@@ -586,7 +573,7 @@ void ConvolutionalLayer::forward(NetworkState &netState)
             else
             {
 
-                float *im = netState.input + (i*this->_groups + j)*(this->_channel / this->_groups)*this->_height*this->_width;
+                float *im = layerInput+ (i*this->_groups + j)*(this->_channel / this->_groups)*this->_height*this->_width;
 
 #ifdef USE_NNPACK
                 nnp_status status;
@@ -639,7 +626,6 @@ TempARRCH64:
                     if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
                     {
                         b = im;
-
                     }
                     else
                     {
@@ -651,6 +637,7 @@ TempARRCH64:
                     }
 
                     Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
+                    int a = 0;
 #ifdef USE_ARM
                 }
 #endif
@@ -668,26 +655,33 @@ TempARRCH64:
         {
 #ifdef USE_ARM
 #ifdef USE_NEON
-        int step = b*this->_outChannel*this->_outHeight*this->_outWidth;
-        BatchNormLayerArm::BatchNorm(this->_output + step,
-                                     this->_width,
-                                     this->_height,
-                                     this->_channel,
-                                     this->_output + step,
-                                     this->_scales,
-                                     this->_rollMean,
-                                     this->_rollVariance,
-                                     this->_biases
-                                     );
+            int step = b*this->_outChannel*this->_outHeight*this->_outWidth;
+            BatchNormLayerArm::BatchNorm(layerOutput + step,
+                                         this->_width,
+                                         this->_height,
+                                         this->_channel,
+                                         layerOutput + step,
+                                         this->_scales,
+                                         this->_rollMean,
+                                         this->_rollVariance,
+                                         this->_biases,
+                                         this->_bnEps
+                                         );
 #else
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-            for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
+            for (int c = 0; c < this->_outChannel; ++c)
             {
-                int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
+                float sqrtVal   = sqrt(this->_rollVariance[c] + this->_bnEps);
+                float scaleSqrt = this->_scales[c]/sqrtVal;
+                float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
+                for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
+                {
+                    int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
 
-                this->_output[index]  = scaleSqrt*this->_output[index] + meanSqrt + this->_biases[c];
+                    layerOutput[index]  = scaleSqrt*layerOutput[index] + meanSqrt + this->_biases[c];
+                }
             }
 #endif
 #endif
@@ -698,7 +692,7 @@ TempARRCH64:
 #endif
             for (int c = 0; c < this->_outChannel; ++c)
             {
-                float sqrtVal   = sqrt(this->_rollVariance[c] + 0.00001f);
+                float sqrtVal   = sqrt(this->_rollVariance[c] + this->_bnEps);
                 float scaleSqrt = this->_scales[c]/sqrtVal;
                 float meanSqrt  = -this->_scales[c]*this->_rollMean[c]/sqrtVal;
                 if(this->supportAvx)
@@ -715,21 +709,21 @@ TempARRCH64:
                         __m256 mResult;
 
                         mScaleSqrt  =   _mm256_set1_ps(scaleSqrt);
-                        mInput      =   _mm256_loadu_ps(this->_output+index);
+                        mInput      =   _mm256_loadu_ps(layerOutput+index);
                         mMeanSqrt   =   _mm256_set1_ps(meanSqrt);
                         mBias       =   _mm256_set1_ps(this->_biases[c]);
                         mResult     =   _mm256_mul_ps(mScaleSqrt, mInput);
                         mResult     =   _mm256_add_ps(mResult, mMeanSqrt);
                         mResult     =   _mm256_add_ps(mResult, mBias);
 
-                        _mm256_storeu_ps(this->_output+index, mResult);
+                        _mm256_storeu_ps(layerOutput+index, mResult);
 
                     }
 
                     for (int j = (this->_outHeight*this->_outWidth)/8*8; j < this->_outHeight*this->_outWidth; ++j)
                     {
                         int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + j;
-                        this->_output[index]  = scaleSqrt*this->_output[index] + meanSqrt + this->_biases[c];
+                        layerOutput[index]  = scaleSqrt*layerOutput[index] + meanSqrt + this->_biases[c];
                     }
                 }
                 else
@@ -738,7 +732,7 @@ TempARRCH64:
                     for (int i = 0; i < this->_outHeight*this->_outWidth; ++i)
                     {
                         int index = b*this->_outChannel*this->_outHeight*this->_outWidth + c*this->_outHeight*this->_outWidth + i;
-                        this->_output[index]  = scaleSqrt*this->_output[index] + meanSqrt + this->_biases[c];
+                        layerOutput[index]  = scaleSqrt*layerOutput[index] + meanSqrt + this->_biases[c];
                     }
                 }
             }
@@ -749,23 +743,23 @@ TempARRCH64:
     else
     {
         if(_useBias == 1)
-            addBias(this->_output, this->_biases, this->_batch, this->_num, this->_outHeight * this->_outWidth);
+            addBias(layerOutput, this->_biases, this->_batch, this->_num, this->_outHeight * this->_outWidth);
     }
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
-        Activations::activateArrayNormCh(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                         this->_outWidth*this->_outHeight, this->_output);
+        Activations::activateArrayNormCh(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, layerOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_output,0);
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_output,1);
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {
@@ -775,11 +769,11 @@ TempARRCH64:
     {
         if(_actParams.size() > 0)
         {
-            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
         }
     }
 
@@ -797,6 +791,72 @@ TempARRCH64:
 void ConvolutionalLayer::forwardGPU(NetworkState &netState)
 {
     this->recordCudaStart();
+    float* layerGpuInput   = netState.getGpuInput();
+    float* layerGpuOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerGpuInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerGpuInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerGpuInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerGpuOutput     = this->_gpuOutput; 
+
+        }
+        else 
+
+        {
+            layerGpuOutput     = netState.getGpuOutput(); 
+
+            netState.shuffleGpuInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerGpuOutput     = netState.getGpuOutput(); 
+
+            netState.shuffleGpuInOut();
+
+        }
+        else
+
+        {
+            layerGpuOutput     = this->_gpuOutput;
+        }
+    }
 
 #ifdef USE_CUDNN
     if(!onlyUseCuda)
@@ -806,7 +866,7 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
 
         if(useFp16 && (this->_num%8==0) && (this->_channel%8==0) && this->_groups == 1)
         {
-            Cuda::fp32ToFp16(netState.input, netState.inputNum, netState.gpuInputFp16);
+            Cuda::fp32ToFp16(layerGpuInput, netState.inputNum, netState.gpuInputFp16);
             Cuda::fp32ToFp16(this->_gpuWeights, this->_nWeights, this->_gpuWeightsFp16);
 
             CUDNN_CHECK(cudnnConvolutionForward(Cuda::getCudnnHandle(),
@@ -818,18 +878,18 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
                                                 &b,
                                                 this->_outputDesc16, this->_gpuOutputFp16));
 
-            Cuda::fp16ToFp32(this->_gpuOutputFp16, this->_outputNum, this->_gpuOutput);
+            Cuda::fp16ToFp32(this->_gpuOutputFp16, this->_outputNum, layerGpuOutput);
         }
         else
         {
             CUDNN_CHECK(cudnnConvolutionForward(Cuda::getCudnnHandle(),
                                                 &a,
-                                                this->_inputDesc, netState.input,
+                                                this->_inputDesc, layerGpuInput,
                                                 this->_weightDesc, this->_gpuWeights,
                                                 this->_convDesc, this->_fwAlgo,
                                                 netState.gpuWorkspace, this->_workSpaceSize,
                                                 &b,
-                                                this->_outputDesc, this->_gpuOutput));
+                                                this->_outputDesc, layerGpuOutput));
         }
     }
     else
@@ -840,7 +900,7 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
 
         int n       =  this->_outHeight * this->_outWidth; 
 
-        BlasGPU::gpuFill(this->_outputNum * this->_batch, 0, this->_gpuOutput, 1);
+        BlasGPU::gpuFill(this->_outputNum * this->_batch, 0, layerGpuOutput, 1);
 
         for (int i = 0; i < this->_batch; ++i)
         {
@@ -852,7 +912,7 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
 
                 float *b    =  netState.gpuWorkspace;
 
-                float *c    =  this->_gpuOutput + (i*this->_groups +j)*n*m;
+                float *c    =  layerGpuOutput + (i*this->_groups +j)*n*m;
 
                 if(this->_xnor && this->_alignBitWeights && this->_strideX == this->_strideY)
                 {
@@ -861,7 +921,7 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
                 else
                 {
 
-                    float *im = netState.input + (i*this->_groups + j)*(this->_channel / this->_groups)*this->_height*this->_width;
+                    float *im = layerGpuInput + (i*this->_groups + j)*(this->_channel / this->_groups)*this->_height*this->_width;
 
                     if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
                     {
@@ -889,7 +949,7 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
 
     int n       =  this->_outHeight * this->_outWidth; 
 
-    BlasGPU::gpuFill(this->_outputNum * this->_batch, 0, this->_gpuOutput, 1);
+    BlasGPU::gpuFill(this->_outputNum * this->_batch, 0, layerGpuOutput, 1);
 
     for (int i = 0; i < this->_batch; ++i)
     {
@@ -901,7 +961,7 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
 
             float *b    =  netState.gpuWorkspace;
 
-            float *c    =  this->_gpuOutput + (i*this->_groups +j)*n*m;
+            float *c    =  layerGpuOutput + (i*this->_groups +j)*n*m;
 
             if(this->_xnor && this->_alignBitWeights && this->_strideX == this->_strideY)
             {
@@ -910,7 +970,7 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
             else
             {
 
-                float *im = netState.input + (i*this->_groups + j)*(this->_channel / this->_groups)*this->_height*this->_width;
+                float *im = layerGpuInput + (i*this->_groups + j)*(this->_channel / this->_groups)*this->_height*this->_width;
 
                 if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
                 {
@@ -930,37 +990,38 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
         }
 
     }
+
 #endif
 
     if(this->_batchNorm == 1)
     {
 
         ConvolutionalLayerGPU::convBn(this->_batch, this->_outChannel, this->_outHeight, this->_outWidth, this->_gpuScales,
-                                      this->_gpuRollMean, this->_gpuRollVariance, this->_gpuBiases, this->_gpuOutput
+                                      this->_gpuRollMean, this->_gpuRollVariance, this->_gpuBiases, this->_bnEps, layerGpuOutput
                                       );
     }
     else
     {
         if(this->_useBias)
         {
-            BlasGPU::gpuAddBias(this->_gpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
+            BlasGPU::gpuAddBias(layerGpuOutput, this->_gpuBiases, this->_batch, this->_outChannel, this->_outHeight*this->_outWidth);
         }
     }
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
-        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                               this->_outWidth*this->_outHeight, this->_gpuOutput);
+        ActivationsGPU::gpuActivateArrayNormCh(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                               this->_outWidth*this->_outHeight, layerGpuOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                      this->_outWidth*this->_outHeight, layerGpuOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                      this->_outWidth*this->_outHeight, layerGpuOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {
@@ -971,11 +1032,11 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
 
         if(_actParams.size() > 0)
         {
-            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+            ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
         }
         else
         {
-            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+            ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation);
         }
     }
 
@@ -987,7 +1048,7 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
 
     if(netState.fixNan==1)
     {
-        BlasGPU::gpuFixNanAndInf(this->_gpuOutput, this->_outputNum*this->_batch);
+        BlasGPU::gpuFixNanAndInf(layerGpuOutput, this->_outputNum*this->_batch);
     }
 
     this->recordCudaStop();
@@ -1001,40 +1062,174 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
         throw Exception(1,"Conv weights load err. needed : " + std::to_string(this->_numWeights) + " given : " +  std::to_string(weights.size()), __FILE__, __LINE__, __FUNCTION__);
     }
 
-    loadWeights(weights.data(), _nWeights);
+    if(!BaseLayer::isPreviewMode)
+    {
 
-    if(this->_batchNorm)
-    {
-        loadScales(weights.data() + _nWeights, _nScales);
-        loadBias(weights.data() + _nWeights + _nScales, _nBiases);
-        loadRollMean(weights.data() + _nWeights + _nScales + _nBiases, _nRollMean);
-        loadRollVariance(weights.data() + _nWeights + _nScales + _nBiases + _nRollMean, _nRollVariance);
-    }
-    else
-    {
-        if(this->_useBias==1)
+        if(this->_shareLayer != nullptr)
         {
-            loadBias(weights.data() + _nWeights, _nBiases);
-        }
-    }
+            if(     this->_kSizeX    != this->_shareLayer->_kSizeX ||
+                    this->_kSizeY    != this->_shareLayer->_kSizeY ||
+                    this->_nWeights != this->_shareLayer->_nWeights||
+                    this->_channel  != this->_shareLayer->_channel ||
+                    this->_num      != this->_shareLayer->_num
+                    )
+            {
+                throw Exception(1, "Layer size, nweights, channels or filters don't match for the share_layer", __FILE__, __LINE__, __FUNCTION__);
+            }
+
+            this->_weights       = this->_shareLayer->_weights;
+
+            if(this->_batchNorm)
+            {
+                this->_scales            = this->_shareLayer->_scales;
+                this->_biases            = this->_shareLayer->_biases;
+                this->_rollMean          = this->_shareLayer->_rollMean;
+                this->_rollVariance      = this->_shareLayer->_rollVariance;
+            }
+            else
+            {
+                if(this->_useBias)
+                {
+                    this->_biases    = this->_shareLayer->_biases;
+                }
+            }
 
 #ifdef USE_GPU
-    Cuda::pushCudaArray(this->_gpuWeights, this->_weights, this->_nWeights);
-    if(this->_batchNorm)
-    {
-        Cuda::pushCudaArray(this->_gpuScales       , this->_scales       , this->_nScales      );
-        Cuda::pushCudaArray(this->_gpuBiases       , this->_biases       , this->_nBiases      );
-        Cuda::pushCudaArray(this->_gpuRollMean     , this->_rollMean     , this->_nRollMean    );
-        Cuda::pushCudaArray(this->_gpuRollVariance , this->_rollVariance, this->_nRollVariance);
-    }
-    else
-    {
-        if(this->_useBias == 1)
+            this->_gpuWeights    = this->_shareLayer->_gpuWeights;
+            if(useFp16)
+            {
+                this->_gpuWeightsFp16   = this->_shareLayer->_gpuWeightsFp16;
+            }
+
+            if(this->_batchNorm)
+            {
+                this->_gpuScales        = this->_shareLayer->_gpuScales;
+                this->_gpuBiases        = this->_shareLayer->_gpuBiases;
+                this->_gpuRollMean      = this->_shareLayer->_gpuRollMean;
+                this->_gpuRollVariance  = this->_shareLayer->_gpuRollVariance;
+            }
+            else
+            {
+                if(this->_useBias)
+                {
+                    this->_gpuBiases        = this->_shareLayer->_gpuBiases;
+                }
+            }
+#endif
+        }
+        else
         {
-            Cuda::pushCudaArray(this->_gpuBiases, this->_biases, this->_nBiases);
+            this->_weights              = new float[static_cast<size_t>(this->_nWeights)]();
+            loadWeights(weights.data(), _nWeights);
+
+            if(this->_batchNorm)
+            {
+                this->_scales           = new float[static_cast<size_t>(this->_nScales)]();
+                this->_biases           = new float[static_cast<size_t>(this->_nBiases)]();
+                this->_rollMean         = new float[static_cast<size_t>(this->_nRollMean)]();
+                this->_rollVariance     = new float[static_cast<size_t>(this->_nRollVariance)]();
+                loadScales(weights.data() + _nWeights, _nScales);
+                loadBias(weights.data() + _nWeights + _nScales, _nBiases);
+                loadRollMean(weights.data() + _nWeights + _nScales + _nBiases, _nRollMean);
+                loadRollVariance(weights.data() + _nWeights + _nScales + _nBiases + _nRollMean, _nRollVariance);
+            }
+            else
+            {
+                if(this->_useBias)
+                {
+                    this->_biases           = new float[static_cast<size_t>(this->_nBiases)]();
+                    loadBias(weights.data() + _nWeights, _nBiases);
+                }
+            }
+
+#ifdef USE_GPU
+
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuWeights    = Cuda::makeCudaArray(this->_weights, this->_nWeights);
+#ifdef USE_CUDNN
+                if (useFp16)
+                {
+                    this->_gpuWeightsFp16 = Cuda::makeCudaArray(this->_weights, this->_nWeights);
+                }
+#endif
+                if(this->_batchNorm)
+                {
+                    this->_gpuScales      = Cuda::makeCudaArray(this->_scales, this->_nScales);
+                    this->_gpuBiases     = Cuda::makeCudaArray(this->_biases , this->_nBiases);
+                    this->_gpuRollMean    = Cuda::makeCudaArray(this->_rollMean, this->_nRollMean);
+                    this->_gpuRollVariance= Cuda::makeCudaArray(this->_rollVariance, this->_nRollVariance);
+                }
+                else
+                {
+                    if(this->_useBias)
+                    {
+                        this->_gpuBiases     = Cuda::makeCudaArray(this->_biases , this->_nBiases);
+                    }
+                }
+            }
+
+            if(BaseLayer::onlyUseGpu) 
+
+            {
+                releaseArr(this->_weights     );
+                releaseArr(this->_scales      );
+                releaseArr(this->_rollMean    );
+                releaseArr(this->_rollVariance);
+                releaseArr(this->_biases      );
+            }
+
+#endif
+        }
+
+        /* TODO
+    if(binary)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            this->_binaryWeights = new float[static_cast<size_t>(this->_nWeights)]();
+            this->_cWeights      = new char[static_cast<size_t>(this->_nWeights)]();
+            this->_scales        = new float[static_cast<size_t>(this->_num)]();
+
+#ifdef USE_GPU
+
+#endif
         }
     }
+*/
+
+        /* TODO
+    if(xnor)
+    {
+        int align            = 32; 
+
+        int srcAlign         = this->_outHeight * this->_outWidth;
+        this->_bitAlign      = srcAlign + (align - srcAlign % align);
+        this->_ldaAlign      = 256;
+
+        if(!BaseLayer::isPreviewMode)
+        {
+            this->_binaryWeights = new float[static_cast<size_t>(this->_nWeights)]();
+            this->_binaryInputs  = new float[static_cast<size_t>(this->_inputNum * this->_batch)]();
+            this->_meanArr       = new float[static_cast<size_t>(this->_num)]();
+
+            const int newCh     = this->_channel / 32;
+            int rePackedISize   = newCh * this->_width * this->_height + 1;
+            this->_binRePackedIn = new uint32_t[static_cast<size_t>(rePackedISize)]();
+
+            int k               = this->_kSizeX * this->_kSizeY * this->_channel;
+            int kAligned        = k + (this->_ldaAlign - k%this->_ldaAlign);
+            int tBitInSize      = kAligned * this->_bitAlign / 8;
+            this->_tBitInput     = new char[static_cast<size_t>(tBitInSize)]();
+#ifdef USE_GPU
+
 #endif
+        }
+    }
+*/
+
+    }
 }
 
 void ConvolutionalLayer::loadScales(float * const &weights, const int &len)

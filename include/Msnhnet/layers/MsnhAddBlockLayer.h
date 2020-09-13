@@ -34,6 +34,7 @@ public:
 
     void loadAllWeigths(std::vector<float> &weights);
 
+    virtual void mallocMemory();
     virtual void forward(NetworkState &netState);
 
 #ifdef USE_GPU

@@ -14,7 +14,9 @@ public:
     EmptyLayer(const int &batch, const int &width, const int &height, const int &channel);
     ~EmptyLayer();
 
-    virtual  void forward(NetworkState &netState);
+    virtual void forward(NetworkState &netState);
+
+    virtual void mallocMemory();
 
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);

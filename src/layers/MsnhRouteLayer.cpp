@@ -50,31 +50,65 @@ RouteLayer::RouteLayer(const int &batch, std::vector<int> &inputLayerIndexes, st
     this->_outputNum     =   mOutputNum;
     this->_inputNum      =   mOutputNum;
 
-    if(!BaseLayer::isPreviewMode)
-    {
-        this->_output        =   new float[static_cast<size_t>(this->_outputNum*this->_batch)]();
-#ifdef USE_GPU
-        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-#endif
-    }
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
 
 }
 
 void RouteLayer::forward(NetworkState &netState)        
 
 {
+    if(this->_layerIndex == 0)
+    {
+        throw Exception(1,"route layer should not be 0 layer",__FILE__,__LINE__,__FUNCTION__);
+    }
+
     auto st = TimeUtil::startRecord();
+
     int offset          =   0;
+
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    if(this->_memReUse==1)
+    {
+        layerOutput     = netState.getOutput(); 
+
+        netState.shuffleInOut();
+
+    }
+    else
+    {
+        layerOutput     = this->_output;
+    }
 
     if(this->_addModel == 1)
     {
-        Blas::cpuFill(this->_outputNum, 0, this->_output,1);
+        Blas::cpuFill(this->_outputNum, 0, layerOutput,1);
     }
 
     for (size_t i = 0; i < _inputLayerIndexes.size(); ++i)
     {
         int index       =   this->_inputLayerIndexes[i];
-        float *mInput   =   netState.net->layers[static_cast<size_t>(index)]->getOutput();
+        float *mInput   =   nullptr;
+        if( index == (this->_layerIndex-1) ) 
+
+        {
+            if(netState.net->layers[index]->getMemReUse() == 1)
+
+            {
+                mInput      =   layerInput;
+            }
+            else 
+
+            {
+                mInput      =   netState.input;
+            }
+        }
+        else
+        {
+            mInput      =   netState.net->layers[static_cast<size_t>(index)]->getOutput();
+        }
+
         int inputLayerOutputs   =   this->_inputLayerOutputs[i];
         int partInSize  =   inputLayerOutputs / this->_groups;
         for (int j = 0; j < this->_batch; ++j)
@@ -82,12 +116,12 @@ void RouteLayer::forward(NetworkState &netState)
             if(_addModel == 1)
             {
                 Blas::cpuAxpy(partInSize, 1, mInput + j*inputLayerOutputs + partInSize*this->_groupIndex, 1,
-                              this->_output + offset + j*this->_outputNum,1);
+                              layerOutput + offset + j*this->_outputNum,1);
             }
             else
             {
                 Blas::cpuCopy(partInSize, mInput + j*inputLayerOutputs + partInSize*this->_groupIndex, 1,
-                              this->_output + offset + j*this->_outputNum,1);
+                              layerOutput + offset + j*this->_outputNum,1);
             }
         }
         if(_addModel != 1)
@@ -97,18 +131,18 @@ void RouteLayer::forward(NetworkState &netState)
     }
     if(this->_activation == ActivationType::NORM_CHAN)
     {
-        Activations::activateArrayNormCh(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                         this->_outWidth*this->_outHeight, this->_output);
+        Activations::activateArrayNormCh(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, layerOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_output,0);
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        Activations::activateArrayNormChSoftMax(this->_output, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                this->_outWidth*this->_outHeight, this->_output,1);
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {
@@ -118,11 +152,11 @@ void RouteLayer::forward(NetworkState &netState)
     {
         if(_actParams.size() > 0)
         {
-            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
         }
         else
         {
-            Activations::activateArray(this->_output, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
         }
     }
 
@@ -130,21 +164,80 @@ void RouteLayer::forward(NetworkState &netState)
 
 }
 
+void RouteLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            if(!BaseLayer::onlyUseGpu) 
+
+            {
+                this->_output        =   new float[static_cast<size_t>(this->_outputNum*this->_batch)]();
+            }
+#ifdef USE_GPU
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuOutput     =   Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+            }
+#endif
+            this->_memoryMalloced  =  true;
+        }
+    }
+    this->_memReUse         =  0;
+}
+
 #ifdef USE_GPU
 void RouteLayer::forwardGPU(NetworkState &netState)
 {
     this->recordCudaStart();
 
+    float* layerGpuInput   = netState.getGpuInput();
+    float* layerGpuOutput  = nullptr;
+
+    if(this->_memReUse==1)
+    {
+        layerGpuOutput     = netState.getGpuOutput(); 
+
+        netState.shuffleGpuInOut();
+
+    }
+    else
+    {
+        layerGpuOutput     = this->_gpuOutput;
+    }
+
     if(this->_addModel == 1)
     {
-        BlasGPU::gpuFill(this->_outputNum, 0, this->_gpuOutput,1);
+        BlasGPU::gpuFill(this->_outputNum, 0, layerGpuOutput,1);
     }
 
     int offset          =   0;
     for (size_t i = 0; i < _inputLayerIndexes.size(); ++i)
     {
         int index       =   this->_inputLayerIndexes[i];
-        float *mInput   =   netState.net->layers[static_cast<size_t>(index)]->getGpuOutput();
+
+        float *mInput   =   nullptr;
+        if( index == (this->_layerIndex-1) ) 
+
+        {
+            if(netState.net->layers[index]->getMemReUse() == 1)
+
+            {
+                mInput      =   layerGpuInput;
+            }
+            else 
+
+            {
+                mInput      =   netState.input;
+            }
+        }
+        else
+        {
+            mInput      =   netState.net->layers[static_cast<size_t>(index)]->getGpuOutput();
+        }
+
         int inputLayerOutputs   =   this->_inputLayerOutputs[i];
         int partInSize  =   inputLayerOutputs / this->_groups;
         for (int j = 0; j < this->_batch; ++j)
@@ -152,12 +245,12 @@ void RouteLayer::forwardGPU(NetworkState &netState)
             if(_addModel == 1)
             {
                 BlasGPU::gpuAxpy(partInSize, 1, mInput + j*inputLayerOutputs + partInSize*this->_groupIndex, 1,
-                              this->_gpuOutput + offset + j*this->_outputNum,1);
+                                 layerGpuOutput + offset + j*this->_outputNum,1);
             }
             else
             {
                 BlasGPU::gpuCopy(partInSize, mInput + j*inputLayerOutputs + partInSize*this->_groupIndex, 1,
-                              this->_gpuOutput + offset + j*this->_outputNum,1);
+                                 layerGpuOutput+ offset + j*this->_outputNum,1);
             }
         }
         if(_addModel != 1)
@@ -168,18 +261,18 @@ void RouteLayer::forwardGPU(NetworkState &netState)
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
-        ActivationsGPU::gpuActivateArrayNormCh(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                               this->_outWidth*this->_outHeight, this->_gpuOutput);
+        ActivationsGPU::gpuActivateArrayNormCh(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                               this->_outWidth*this->_outHeight, layerGpuOutput);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
     {
-        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,0);
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                      this->_outWidth*this->_outHeight, layerGpuOutput,0);
     }
     else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
     {
-        ActivationsGPU::gpuActivateArrayNormChSoftMax(this->_gpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
-                                                      this->_outWidth*this->_outHeight, this->_gpuOutput,1);
+        ActivationsGPU::gpuActivateArrayNormChSoftMax(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                      this->_outWidth*this->_outHeight, layerGpuOutput,1);
     }
     else if(this->_activation == ActivationType::NONE)
     {
@@ -190,11 +283,11 @@ void RouteLayer::forwardGPU(NetworkState &netState)
 
         if(_actParams.size() > 0)
         {
-            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+            ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
         }
         else
         {
-            ActivationsGPU::gpuActivateArray(this->_gpuOutput, this->_outputNum*this->_batch, this->_activation);
+            ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation);
         }
     }
 

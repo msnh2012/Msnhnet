@@ -1,4 +1,4 @@
-# Msnhnet
+# 🔥 Msnhnet(Yolov5 is ready!! Please download lastest models)🔥
 English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/details/107216704)</br>
 ###  A mini pytorch inference framework which inspired from darknet.
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -9,7 +9,7 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 
 | |windows|linux|mac|
 |:---:|:---:|:---:|:---:|
-|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
+|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-passing-brightgreen.svg)|
 |gpu|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Linux](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Mac](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
 
 **CPU checked**
@@ -59,7 +59,9 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 - yolov4[(u版yolov3)](https://github.com/ultralytics/yolov3)
 - fcns[(pytorch-FCN-easiest-demo)](https://github.com/bat67/pytorch-FCN-easiest-demo)
 - unet[(bbuf keras)](https://github.com/BBuf/Keras-Semantic-Segmentation)
-- deeplabv3(**torchvision**)</br>
+- deeplabv3(**torchvision**)
+- yolov5s🔥[(U版yolov5, for params)](https://github.com/msnh2012/Yolov5ForMsnhnet)
+- yolov5m🔥[(U版yolov5,for params)](https://github.com/msnh2012/Yolov5ForMsnhnet)</br>
 ==============================================================
 - mobilenetv2_yolov3_lite (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
 - mobilenetv2_yolov3_nano (cudnn does not work with GTX10** Pascal Card, please use GPU model only)
@@ -83,6 +85,7 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
   |:---:|:---:|:---:|:---:|
   |without NNPack|6s|2.5s|1.2s|
   |with NNPack|2.5s|1.1s|0.6s|
+  |with neon asm|?|0.432s|?|
 
 **Yolo GPU Test**
 - Ubuntu16.04  GCC  Cuda10.1  GTX1080Ti
@@ -106,6 +109,12 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
   |net|yoloface100k|yoloface500k|mobilenetv2_yolov3_nano|mobilenetv2_yolov3_lite|
   |:---:|:---:|:---:|:---:|:---:|
   |time|7ms|20ms|20ms|30ms|
+
+**DeepLabv3 GPU Test**
+- Ubuntu18.04  GCC  Cuda10.1  GTX2080Ti
+  |net|deeplabv3_resnet101|deeplabv3_resnet50|
+  |:---:|:---:|:---:|
+  |time|22.51ms|16.46ms|
   
 **Requirements**
   * OpenCV4 https://github.com/opencv/opencv
@@ -166,6 +175,78 @@ sudo make install
 vim ~/.bashrc # Last line add: export PATH=/usr/local/bin:$PATH
 sudo ldconfig
 ```
+
+- MacOS(MacOS Catalina) Without viewer
+
+PS: XCode should be pre-installed. 
+
+Please download cmake from official website with gui support and the source code of yaml and opencv.
+
+```
+# install cmake
+
+vim .bash_profile
+export CMAKE_ROOT=/Applications/CMake.app/Contents/bin/
+export PATH=$CMAKE_ROOT:$PATH
+source .bash_profile
+
+# install brew to install necessary libraries
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+
+brew install wget
+brew install openjpeg
+brew install hdf5
+brew install gflags
+brew install glog
+brew install eigen
+brew install libomp
+
+# build yaml-cpp
+git clone https://github.com/jbeder/yaml-cpp.git
+cd yaml-cpp
+mkdir build
+source .bash_profile
+cmake-gui
+Set the source code path: ./yaml-cpp
+Set the build binary path: ./yaml-cpp/build
+configure
+CMAKE_BUILD_TYPE = Release
+uncheck YAML_CPP_BUILD_TESTS
+configure (and continue to debug)
+generate
+cd ./yaml-cpp/build
+sudo make install -j8
+
+# build opencv
+# download opencv.zip from official website(Remember to download opencv-contrib together)
+cd opencv-4.4.0
+mkdir build
+source .bash_profile
+cmake-gui
+
+
+Set the source code path: ./opencv-4.4.0
+Set the build binary path: ./opencv-4.4.0/build
+configure (use default)
+search for OPENCV_ENABLE_NONFREE and enable it
+seach for OPENCV_EXTRA_MODULES_PATH to the path of opencv-contrib
+configure (and continue to debug)
+generate
+cd ./opencv-4.4.0/build/
+sudo make install -j8
+
+
+# build Msnhnet
+git clone https://github.com/msnh2012/Msnhnet.git
+mkdir build 
+
+cd Msnhnet/build
+cmake -DCMAKE_BUILD_TYPE=Release ..  
+make -j4
+sudo make install
+```
+
 **Test Msnhnet**
 - 1. Download pretrained model and extract. eg.D:/models. 
 - 2. Open terminal and cd "Msnhnet install bin". eg. D:/Msnhnet/bin
@@ -195,8 +276,8 @@ sudo ldconfig
 ![](readme_imgs/ConcatBlock.png)</br>
 
 **How to convert your own pytorch network**
-[pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
-ps. ultralytics yolov3 is not supported. Another way:[Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
+- [pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
+- ps. ultralytics yolov3 is not supported. You can trans backbone first and then add some OPs manually. 
 
 **About Train**
 - Just use pytorch to train your model, and export as msnhbin.

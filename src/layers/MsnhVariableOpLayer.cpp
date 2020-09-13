@@ -21,10 +21,14 @@ VariableOpLayer::VariableOpLayer(const int &batch, const int &width, const int &
     this->_varOpType         =   varOpType;
     this->_constVal          =   constVal;
 
+    this->_inputLayerIndexes =   inputLayerIndexes;
+
+    this->_inputNum  =   width * height * channel;
+    this->_outputNum =   this->_outWidth * this->_outHeight * this->_outChannel;
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
+
     this->_layerDetail.append("VarOp   : " + VariableOpParams::getStrFromVarOpType(varOpType));
     char msg[100];
-
-    this->_inputLayerIndexes =   inputLayerIndexes;
 
     for (size_t i = 0; i < inputLayerIndexes.size(); ++i)
     {
@@ -38,57 +42,147 @@ VariableOpLayer::VariableOpLayer(const int &batch, const int &width, const int &
 
     this->_layerDetail.append("\n");
 
-    this->_inputNum  =   width * height * channel;
-    this->_outputNum =   this->_outWidth * this->_outHeight * this->_outChannel;
-
-    if(!BaseLayer::isPreviewMode)
-    {
-        this->_output        =   new float[static_cast<size_t>(this->_outputNum*this->_batch)]();
-#ifdef USE_GPU
-        this->_gpuOutput         = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-#endif
-    }
 }
 
 void VariableOpLayer::forward(NetworkState &netState)
 {
+    if(this->_layerIndex == 0)
+    {
+        throw Exception(1,"varop layer should not be 0 layer",__FILE__,__LINE__,__FUNCTION__);
+    }
+
     auto st = TimeUtil::startRecord();
+
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    if(this->_memReUse==1)
+    {
+        layerOutput     = netState.getOutput(); 
+
+        netState.shuffleInOut();
+
+    }
+    else
+    {
+        layerOutput     = this->_output;
+    }
 
     if(this->_varOpType == VariableOpParams::VAR_OP_ADD || this->_varOpType == VariableOpParams::VAR_OP_SUB || this->_varOpType == VariableOpParams::VAR_OP_SUB_INV||
             this->_varOpType == VariableOpParams::VAR_OP_MUL || this->_varOpType == VariableOpParams::VAR_OP_DIV || this->_varOpType == VariableOpParams::VAR_OP_DIV_INV)
     {
-        float *inputA;
-        float *inputB;
+        float *inputA   = nullptr;
+        float *inputB   = nullptr;
         if(this->_inputLayerIndexes.size() == 2)
         {
             int indexA          =   this->_inputLayerIndexes[0];
-            inputA              =   netState.net->layers[static_cast<size_t>(indexA)]->getOutput();
+            if(indexA == (this->_layerIndex-1)) 
+
+            {
+                if(netState.net->layers[static_cast<size_t>(indexA)]->getMemReUse() == 1) 
+
+                {
+                    inputA      =   layerInput;
+                }
+                else
+
+                {
+                    inputA      =   netState.input;
+                }
+
+            }
+            else 
+
+            {
+                inputA      =   netState.net->layers[static_cast<size_t>(indexA)]->getOutput();
+            }
+
             int indexB          =   this->_inputLayerIndexes[1];
-            inputB              =   netState.net->layers[static_cast<size_t>(indexB)]->getOutput();
+
+            if(indexB == (this->_layerIndex-1)) 
+
+            {
+                if(netState.net->layers[static_cast<size_t>(indexB)]->getMemReUse() == 1) 
+
+                {
+                    inputB      =   layerInput;
+                }
+                else
+
+                {
+                    inputB      =   netState.input;
+                }
+            }
+            else 
+
+            {
+                inputB      =   netState.net->layers[static_cast<size_t>(indexB)]->getOutput();
+            }
+
         }
         else
         {
-            inputA              =   netState.input;
+            if(netState.net->layers[this->_layerIndex-1]->getMemReUse()==1)
+
+            {
+                inputA          =   layerInput; 
+
+            }
+            else
+            {
+                inputA          =   netState.input;
+
+            }
+
             int indexB          =   this->_inputLayerIndexes[0];
-            inputB              =   netState.net->layers[static_cast<size_t>(indexB)]->getOutput();
+
+            if(indexB == (this->_layerIndex-1)) 
+
+            {
+                if(netState.net->layers[static_cast<size_t>(indexB)]->getMemReUse() == 1) 
+
+                {
+                    inputB      =   layerInput;
+                }
+                else
+
+                {
+                    inputB      =   netState.input;
+                }
+            }
+            else 
+
+            {
+                inputB      =   netState.net->layers[static_cast<size_t>(indexB)]->getOutput();
+            }
         }
 
         for (int j = 0; j < this->_batch; ++j)
         {
             int id = (this->_varOpType - VariableOpParams::VAR_OP_ADD);
-            Blas::cpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, inputA + j*this->_inputNum, 1, inputB  + j*this->_inputNum, 1 , this->_output  + j*this->_inputNum, 1);
+            Blas::cpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, inputA + j*this->_inputNum, 1, inputB  + j*this->_inputNum, 1 , layerOutput  + j*this->_inputNum, 1);
         }
     }
     else if(this->_varOpType == VariableOpParams::VAR_OP_ADD_CONST || this->_varOpType == VariableOpParams::VAR_OP_SUB_CONST || this->_varOpType == VariableOpParams::VAR_OP_SUB_CONST_INV||
             this->_varOpType == VariableOpParams::VAR_OP_MUL_CONST || this->_varOpType == VariableOpParams::VAR_OP_DIV_CONST || this->_varOpType == VariableOpParams::VAR_OP_DIV_CONST_INV)
     {
 
-        float *inputA           =   netState.input;
+        float *inputA        = nullptr;
+
+        if(netState.net->layers[this->_layerIndex-1]->getMemReUse() == 1)
+
+        {
+            inputA           = layerInput;
+        }
+        else
+        {
+            inputA           = netState.input;
+        }
 
         for (int j = 0; j < this->_batch; ++j)
         {
             int id = (this->_varOpType - VariableOpParams::VAR_OP_ADD_CONST);
-            Blas::cpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, inputA + j*this->_inputNum, 1, this->_constVal, this->_output  + j*this->_inputNum, 1);
+            Blas::cpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, inputA + j*this->_inputNum, 1, this->_constVal, layerOutput  + j*this->_inputNum, 1);
         }
     }
     else if(this->_varOpType == VariableOpParams::VAR_OP_ABS || this->_varOpType == VariableOpParams::VAR_OP_ACOS || this->_varOpType == VariableOpParams::VAR_OP_ASIN||
@@ -98,12 +192,22 @@ void VariableOpLayer::forward(NetworkState &netState)
             this->_varOpType == VariableOpParams::VAR_OP_LOG || this->_varOpType == VariableOpParams::VAR_OP_LOG10||this->_varOpType == VariableOpParams::VAR_OP_SQRT
             )
     {
-        float *inputA           =   netState.input;
+        float *inputA        = nullptr;
+
+        if(netState.net->layers[this->_layerIndex-1]->getMemReUse() == 1)
+
+        {
+            inputA           = layerInput;
+        }
+        else
+        {
+            inputA           = netState.input;
+        }
 
         for (int j = 0; j < this->_batch; ++j)
         {
             int id = (this->_varOpType - VariableOpParams::VAR_OP_ABS);
-            Blas::cpuScientific(static_cast<Scientific>(id),this->_inputNum, inputA + j*this->_inputNum, 1, this->_constVal, this->_output  + j*this->_inputNum, 1, BaseLayer::supportAvx);
+            Blas::cpuScientific(static_cast<Scientific>(id),this->_inputNum, inputA + j*this->_inputNum, 1, this->_constVal, layerOutput  + j*this->_inputNum, 1, BaseLayer::supportAvx);
         }
     }
 
@@ -111,9 +215,48 @@ void VariableOpLayer::forward(NetworkState &netState)
 
 }
 
+void VariableOpLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+            if(!BaseLayer::onlyUseGpu) 
+
+            {
+                this->_output        =   new float[static_cast<size_t>(this->_outputNum*this->_batch)]();
+            }
+#ifdef USE_GPU
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuOutput     =   Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+            }
+#endif
+            this->_memoryMalloced  =  true;
+        }
+    }
+    this->_memReUse         =  0;
+}
+
 #ifdef USE_GPU
 void VariableOpLayer::forwardGPU(NetworkState &netState)
 {
+    float* layerGpuInput   = netState.getGpuInput();
+    float* layerGpuOutput  = nullptr;
+
+    if(this->_memReUse==1)
+    {
+        layerGpuOutput     = netState.getGpuOutput(); 
+
+        netState.shuffleGpuInOut();
+
+    }
+    else
+    {
+        layerGpuOutput     = this->_gpuOutput;
+    }
+
     if(this->_varOpType == VariableOpParams::VAR_OP_ADD || this->_varOpType == VariableOpParams::VAR_OP_SUB || this->_varOpType == VariableOpParams::VAR_OP_SUB_INV||
             this->_varOpType == VariableOpParams::VAR_OP_MUL || this->_varOpType == VariableOpParams::VAR_OP_DIV || this->_varOpType == VariableOpParams::VAR_OP_DIV_INV)
     {
@@ -123,32 +266,112 @@ void VariableOpLayer::forwardGPU(NetworkState &netState)
         if(this->_inputLayerIndexes.size() == 2)
         {
             int indexA          =   this->_inputLayerIndexes[0];
-            gpuInputA           =   netState.net->layers[static_cast<size_t>(indexA)]->getGpuOutput();
+            if(indexA == (this->_layerIndex-1)) 
+
+            {
+                if(netState.net->layers[static_cast<size_t>(indexA)]->getMemReUse() == 1) 
+
+                {
+                    gpuInputA      =   layerGpuInput;
+                }
+                else
+
+                {
+                    gpuInputA      =   netState.input;
+                }
+
+            }
+            else 
+
+            {
+                gpuInputA      =   netState.net->layers[static_cast<size_t>(indexA)]->getGpuOutput();
+            }
+
             int indexB          =   this->_inputLayerIndexes[1];
-            gpuInputB           =   netState.net->layers[static_cast<size_t>(indexB)]->getGpuOutput();
+
+            if(indexB == (this->_layerIndex-1)) 
+
+            {
+                if(netState.net->layers[static_cast<size_t>(indexB)]->getMemReUse() == 1) 
+
+                {
+                    gpuInputB      =   layerGpuInput;
+                }
+                else
+
+                {
+                    gpuInputB      =   netState.input;
+                }
+            }
+            else 
+
+            {
+                gpuInputB      =   netState.net->layers[static_cast<size_t>(indexB)]->getGpuOutput();
+            }
+
         }
         else
         {
-            gpuInputA           =   netState.input;
+            if(netState.net->layers[this->_layerIndex-1]->getMemReUse()==1)
+
+            {
+                gpuInputA          =   layerGpuInput; 
+
+            }
+            else
+            {
+                gpuInputA          =   netState.input;
+
+            }
+
             int indexB          =   this->_inputLayerIndexes[0];
-            gpuInputB           =   netState.net->layers[static_cast<size_t>(indexB)]->getGpuOutput();
+
+            if(indexB == (this->_layerIndex-1)) 
+
+            {
+                if(netState.net->layers[static_cast<size_t>(indexB)]->getMemReUse() == 1) 
+
+                {
+                    gpuInputB      =   layerGpuInput;
+                }
+                else
+
+                {
+                    gpuInputB      =   netState.input;
+                }
+            }
+            else 
+
+            {
+                gpuInputB      =   netState.net->layers[static_cast<size_t>(indexB)]->getGpuOutput();
+            }
         }
 
         for (int j = 0; j < this->_batch; ++j)
         {
             int id = (this->_varOpType - VariableOpParams::VAR_OP_ADD);
-            BlasGPU::gpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, gpuInputA + j*this->_inputNum, 1, gpuInputB  + j*this->_inputNum, 1 , this->_gpuOutput  + j*this->_inputNum, 1);
+            BlasGPU::gpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, gpuInputA + j*this->_inputNum, 1, gpuInputB  + j*this->_inputNum, 1 , layerGpuOutput  + j*this->_inputNum, 1);
         }
     }
     else if(this->_varOpType == VariableOpParams::VAR_OP_ADD_CONST || this->_varOpType == VariableOpParams::VAR_OP_SUB_CONST || this->_varOpType == VariableOpParams::VAR_OP_SUB_CONST_INV||
             this->_varOpType == VariableOpParams::VAR_OP_MUL_CONST || this->_varOpType == VariableOpParams::VAR_OP_DIV_CONST || this->_varOpType == VariableOpParams::VAR_OP_DIV_CONST_INV)
     {
-        float *gpuInputA           =   netState.input;
+        float *gpuInputA        = nullptr;
+
+        if(netState.net->layers[this->_layerIndex-1]->getMemReUse() == 1)
+
+        {
+            gpuInputA           = layerGpuInput;
+        }
+        else
+        {
+            gpuInputA           = netState.input;
+        }
 
         for (int j = 0; j < this->_batch; ++j)
         {
             int id = (this->_varOpType - VariableOpParams::VAR_OP_ADD_CONST);
-            BlasGPU::gpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, gpuInputA + j*this->_inputNum, 1, this->_constVal, this->_gpuOutput  + j*this->_inputNum, 1);
+            BlasGPU::gpuArithmetic(static_cast<Arithmetic>(id), this->_inputNum, gpuInputA + j*this->_inputNum, 1, this->_constVal, layerGpuOutput  + j*this->_inputNum, 1);
         }
     }
     else if(this->_varOpType == VariableOpParams::VAR_OP_ABS || this->_varOpType == VariableOpParams::VAR_OP_ACOS || this->_varOpType == VariableOpParams::VAR_OP_ASIN||
@@ -158,12 +381,22 @@ void VariableOpLayer::forwardGPU(NetworkState &netState)
             this->_varOpType == VariableOpParams::VAR_OP_LOG || this->_varOpType == VariableOpParams::VAR_OP_LOG10||this->_varOpType == VariableOpParams::VAR_OP_SQRT
             )
     {
-        float *inputA           =   netState.input;
+        float *gpuInputA        = nullptr;
+
+        if(netState.net->layers[this->_layerIndex-1]->getMemReUse() == 1)
+
+        {
+            gpuInputA           = layerGpuInput;
+        }
+        else
+        {
+            gpuInputA           = netState.input;
+        }
 
         for (int j = 0; j < this->_batch; ++j)
         {
             int id = (this->_varOpType - VariableOpParams::VAR_OP_ABS);
-            BlasGPU::gpuScientific(static_cast<Scientific>(id),this->_inputNum, inputA + j*this->_inputNum, 1, this->_constVal, this->_output  + j*this->_inputNum, 1);
+            BlasGPU::gpuScientific(static_cast<Scientific>(id),this->_inputNum, gpuInputA + j*this->_inputNum, 1, this->_constVal, layerGpuOutput  + j*this->_inputNum, 1);
         }
     }
 }

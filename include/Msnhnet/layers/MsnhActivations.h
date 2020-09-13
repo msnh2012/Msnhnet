@@ -55,6 +55,11 @@ private:
         return (x>0?x:0)>6?6:(x>0?x:0);
     }
 
+    static inline float hardSwishActivate(const float &x)
+    {
+        return x*relu6Activate(x+3.f)/6.f;
+    }
+
     static inline float eluActivate(const float &x)
     {
         return ((x >= 0)*x + (x < 0)*(expf(x)-1.f));

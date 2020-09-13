@@ -190,7 +190,7 @@ public:
 #if defined(_MSC_VER)
         return static_cast<int>(__popcnt64(_mm_cvtsi128_si64(n)) + __popcnt64(_mm_cvtsi128_si64(nHi)));
 #elif defined(__APPLE__) && defined(__clang__)
-        return _mm_popcnt_u64(_mm_cvtsi128_si64(n)) + _mm_popcnt_u64(_mm_cvtsi128_si64(n_hi));
+        return _mm_popcnt_u64(_mm_cvtsi128_si64(n)) + _mm_popcnt_u64(_mm_cvtsi128_si64(nHi));
 #else
         return __popcntq(_mm_cvtsi128_si64(n)) + __popcntq(_mm_cvtsi128_si64(nHi));
 #endif

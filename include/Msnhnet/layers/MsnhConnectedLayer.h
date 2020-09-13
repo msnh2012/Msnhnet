@@ -14,11 +14,13 @@ class MsnhNet_API ConnectedLayer : public BaseLayer
 {
 public:
     ConnectedLayer(const int &batch, const int &steps, const int &inputNum, const int &outputNum,
-                   const ActivationType &activation, const std::vector<float> &actParams, const int &batchNorm, const int &useBias);
+                   const ActivationType &activation, const std::vector<float> &actParams, const int &batchNorm, const float &bnEps, const int &useBias);
 
     ~ConnectedLayer();
 
     virtual void forward(NetworkState &netState);
+
+    virtual void mallocMemory();
 
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);
@@ -101,6 +103,9 @@ protected:
     int         _padding             =   0;
     int         _dilation            =   0;
     int         _batchNorm           =   0;
+
+    int         _totalBatch          =   0;
+    float       _bnEps               =   0.00001f;
 };
 }
 

@@ -103,16 +103,6 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
 
     this->_inputNum       =  height * width * channel; 
 
-    if(!BaseLayer::isPreviewMode)
-    {
-
-        this->_output         = new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
-
-#ifdef USE_GPU
-        this->_gpuOutput      = Cuda::makeCudaArray(this->_output, this->_outputNum * this->_batch);
-#endif
-    }
-
 #ifdef USE_GPU
 #ifdef USE_CUDNN
 
@@ -132,6 +122,8 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
 #endif
 
     this->_bFlops            = (this->_kSizeX*this->_kSizeY* this->_channel*this->_outHeight*this->_outWidth)/ 1000000000.f;
+
+    this->_maxOutputNum  = this->_batch*this->_outputNum;
 
     char msg[100];
 
@@ -182,6 +174,73 @@ void MaxPoolLayer::forward(NetworkState &netState)
 
     auto st = TimeUtil::startRecord();
 
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerOutput     = this->_output; 
+
+        }
+        else 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+        else
+
+        {
+            layerOutput     = this->_output;
+        }
+    }
+
     if(this->_maxPoolDepth)
     {
         for(int b=0; b<this->_batch; ++b)                    
@@ -206,12 +265,12 @@ void MaxPoolLayer::forward(NetworkState &netState)
                         for(int k=g; k<this->_channel; k+=this->_outChannel)
                         {
                             int inIndex = j + this->_width*(i + this->_height*(k + this->_channel*b));
-                            float val   = netState.input[inIndex];
+                            float val   = layerInput[inIndex];
 
                             max         = (val > max)? val:max;
                         }
 
-                        this->_output[outIndex] = max;
+                        layerOutput[outIndex] = max;
                     }
 
                 }
@@ -224,15 +283,15 @@ void MaxPoolLayer::forward(NetworkState &netState)
 #ifdef USE_X86
     if((this->_strideX == this->_strideY) && supportAvx )
     {
-        forwardAvx(netState.input,this->_output,this->_kSizeX, this->_kSizeY, this->_width,this->_height,this->_outWidth,
+        forwardAvx(layerInput,layerOutput,this->_kSizeX, this->_kSizeY, this->_width,this->_height,this->_outWidth,
                    this->_outHeight,this->_channel,this->_paddingX, this->_paddingY,this->_stride,this->_batch);
     }
     else
 #endif
     {
 
-        int widthOffset  =     -(this->_paddingX + 1)/2;
-        int heightOffset =     -(this->_paddingY + 1)/2;
+        int widthOffset  =     -this->_paddingX;
+        int heightOffset =     -this->_paddingY;
 
         int mHeight         =   this->_outHeight;
         int mWidth          =   this->_outWidth;
@@ -272,14 +331,13 @@ void MaxPoolLayer::forward(NetworkState &netState)
                                 bool valid    =  (curHeight >=0 && curHeight < this->_height &&
                                                   curWidth  >=0 && curWidth  < this->_width);
 
-                                float value   =  (valid)? netState.input[index] : -FLT_MAX;
+                                float value   =  (valid)? layerInput[index] : -FLT_MAX;
 
                                 max           =  (value > max) ? value : max;
                             }
                         }
 
-                        this->_output[outIndex] = max;
-
+                        layerOutput[outIndex] = max;
                     }
                 }
             }
@@ -290,14 +348,106 @@ void MaxPoolLayer::forward(NetworkState &netState)
 
 }
 
+void MaxPoolLayer::mallocMemory()
+{
+    if(!this->_memoryMalloced)
+    {
+        if(!BaseLayer::isPreviewMode)
+        {
+
+            if(!BaseLayer::onlyUseGpu) 
+
+            {
+                this->_output         = new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+            }
+#ifdef USE_GPU
+            if(!BaseLayer::onlyUseCpu)
+
+            {
+                this->_gpuOutput      = Cuda::mallocCudaArray(this->_outputNum * this->_batch);
+            }
+#endif
+            this->_memoryMalloced  =  true;
+        }
+    }
+    this->_memReUse         =  0;
+}
+
 #ifdef USE_GPU
 void MaxPoolLayer::forwardGPU(NetworkState &netState)
 {
     this->recordCudaStart();
 
+    float* layerGpuInput   = netState.getGpuInput();
+    float* layerGpuOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerGpuInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerGpuInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerGpuInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerGpuOutput     = this->_gpuOutput; 
+
+        }
+        else 
+
+        {
+            layerGpuOutput     = netState.getGpuOutput(); 
+
+            netState.shuffleGpuInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerGpuOutput     = netState.getGpuOutput(); 
+
+            netState.shuffleGpuInOut();
+
+        }
+        else
+
+        {
+            layerGpuOutput     = this->_gpuOutput;
+        }
+    }
+
     if(this->_maxPoolDepth)
     {
-        MaxPoolLayerGPU::forwardDepthGPU(this->_width, this->_height, this->_channel, this->_outWidth, this->_outHeight, this->_outChannel, this->_batch, netState.input, this->_gpuOutput);
+        MaxPoolLayerGPU::forwardDepthGPU(this->_width, this->_height, this->_channel, this->_outWidth, this->_outHeight, this->_outChannel, this->_batch, layerGpuInput, layerGpuOutput);
     }
     else
     {
@@ -307,9 +457,9 @@ void MaxPoolLayer::forwardGPU(NetworkState &netState)
             float a = 1.f;
             float b = 0;
             CUDNN_CHECK(cudnnPoolingForward(Cuda::getCudnnHandle(), this->_maxPoolDesc, &a,
-                                            this->_inputDesc, netState.input,
+                                            this->_inputDesc, layerGpuInput,
                                             &b,
-                                            this->_outputDesc, this->_gpuOutput));
+                                            this->_outputDesc, layerGpuOutput));
         }
         else
         {
@@ -319,8 +469,8 @@ void MaxPoolLayer::forwardGPU(NetworkState &netState)
                                               this->_kSizeX, this->_kSizeY,
                                               this->_paddingX, this->_paddingY,
                                               this->_batch,
-                                              netState.input,
-                                              this->_gpuOutput
+                                              layerGpuInput,
+                                              layerGpuOutput
                                               );
         }
 
@@ -331,8 +481,8 @@ void MaxPoolLayer::forwardGPU(NetworkState &netState)
                                           this->_kSizeX, this->_kSizeY,
                                           this->_paddingX, this->_paddingY,
                                           this->_batch,
-                                          netState.input,
-                                          this->_gpuOutput
+                                          layerGpuInput,
+                                          layerGpuOutput
                                           );
 #endif
     }
@@ -347,12 +497,14 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
                               const int &channel,const int &paddingX,const int &paddingY,const int &stride, const int &batch)
 {
 
-    int widthOffset  =     -(paddingX + 1)/2;
-    int heightOffset =     -(paddingY + 1)/2;
+    int widthOffset  =     -paddingX ;
+    int heightOffset =     -paddingY ;
 
     for(int b=0; b<batch; ++b)
     {
+#ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
         for(int k=0; k<channel; ++k)
         {
             for(int i=0; i<outHeight; ++i)

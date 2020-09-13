@@ -7,8 +7,8 @@
 #include "MsnhException.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/utils/MsnhExport.h"
-#include "Msnhnet/layers/MsnhYolov3Def.h"
-#include "Msnhnet/layers/MsnhYolov3OutLayer.h"
+#include "Msnhnet/layers/MsnhYoloDef.h"
+#include "Msnhnet/layers/MsnhYoloOutLayer.h"
 
 namespace Msnhnet
 {
@@ -39,7 +39,7 @@ public:
     static std::vector<float> getCaffeModeF32C3(const std::string &path,  const cv::Size &size);
     static std::vector<float> getCaffeModeF32C3(cv::Mat &mat,  const cv::Size &size);
 
-    static void drawYolov3Box(cv::Mat &mat, std::vector<string> &labels, std::vector<std::vector<Msnhnet::Yolov3Box>> &boxs, const Point2I &size);
+    static void drawYoloBox(cv::Mat &mat, std::vector<string> &labels, std::vector<std::vector<Msnhnet::YoloBox>> &boxs, const Point2I &size);
 
     static void drawSegMask(const int &channel, const int &wxh, std::vector<float> &inVal,cv::Mat &mask);
 };

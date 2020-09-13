@@ -73,7 +73,7 @@ std::vector<float> OpencvUtil::getImgDataF32C1(cv::Mat &mat, const cv::Size &siz
     {
         for (int x = 0; x < width; ++x)
         {
-            imgs[static_cast<size_t>(y*width + x)] = mat.data[y*width + x ] / 256.0f;
+            imgs[static_cast<size_t>(y*width + x)] = mat.data[y*width + x ] / 255.0f;
         }
     }
     mat.release();
@@ -337,11 +337,11 @@ std::vector<float> OpencvUtil::getCaffeModeF32C3(cv::Mat &mat, const cv::Size &s
     return imgs;
 }
 
-void OpencvUtil::drawYolov3Box(cv::Mat &mat, std::vector<std::string> &labels, std::vector<std::vector<Yolov3Box>> &boxs, const Point2I &size)
+void OpencvUtil::drawYoloBox(cv::Mat &mat, std::vector<std::string> &labels, std::vector<std::vector<YoloBox>> &boxs, const Point2I &size)
 {
     for (size_t i = 0; i < boxs[0].size(); ++i)
     {
-        Msnhnet::Yolov3Box box = Msnhnet::Yolov3OutLayer::bboxResize2org(boxs[0][i],size,Msnhnet::Point2I(mat.cols,mat.rows));
+        Msnhnet::YoloBox box = Msnhnet::YoloOutLayer::bboxResize2org(boxs[0][i],size,Msnhnet::Point2I(mat.cols,mat.rows));
 
         std::string label = std::to_string(static_cast<int>(box.conf*100)) + "% "+labels[static_cast<size_t>(box.bestClsIdx)];
 

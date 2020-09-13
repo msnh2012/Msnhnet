@@ -12,6 +12,8 @@ const __m256 ActivationsAvx::c4f     = _mm256_set1_ps(4.f);
 const __m256 ActivationsAvx::cN4f    = _mm256_set1_ps(-4.f);
 const __m256 ActivationsAvx::c0_001f = _mm256_set1_ps(0.001f);
 const __m256 ActivationsAvx::c0_125f = _mm256_set1_ps(0.125f);
+const __m256 ActivationsAvx::c3f     = _mm256_set1_ps(3.f);
+const __m256 ActivationsAvx::c0_16f  = _mm256_set1_ps(0.16666667f);
 
 void ActivationsAvx::activateAvx8( float* const &x, const ActivationType &actType, const float &params)
 {
@@ -67,6 +69,9 @@ void ActivationsAvx::activateAvx8( float* const &x, const ActivationType &actTyp
         break;
     case SWISH:
         swishActivateSize8(x);
+        break;
+    case HARD_SWISH:
+        hardSwishActivateSize8(x);
         break;
     }
 }

@@ -34,6 +34,8 @@
 
 #define MIN_OMP_DATA 10000
 
+#define MSNHNET_VERSION 1100
+
 enum ActivationType
 {
     LOGISTIC,
@@ -52,6 +54,7 @@ enum ActivationType
     SOFT_PLUS,
     SELU,
     SWISH,
+    HARD_SWISH,
     MISH,
     NORM_CHAN,
     NORM_CHAN_SOFTMAX,
@@ -76,13 +79,15 @@ enum LayerType
     ACTIVE,
     BATCHNORM,
     NETWORK,
-    YOLOV3,
-    YOLOV3_OUT,
+    YOLO,
+    YOLO_OUT,
     GAUSSIAN_YOLO,
     UPSAMPLE,
     L2NORM,
     EMPTY,
+    VIEW,
     PERMUTE,
+    SLICE,
     REDUCTION,
     CONFIG,
     RES_BLOCK,
@@ -141,5 +146,4 @@ enum WeightsNorm
     SOFTMAX_NORM
 };
 
-#endif 
-
+#endif // MSNHINFERENCECFG_H

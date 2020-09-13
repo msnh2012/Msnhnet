@@ -4,14 +4,14 @@
 
 namespace Msnhnet
 {
-    void PaddingLayerArm::padding(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, 
-                                        float* &dest, const int &Top, const int &Down, const int &Left, const int &Right, const int &Val){
+    void PaddingLayerArm::padding(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel,
+                                        float* &dest, const int &top, const int &down, const int &left, const int &right, const int &val){
         
-        const int outWidth = inWidth + Left + Right;
-        const int outHeight = inHeight + Top + Down;
-        const int inSize = inHeight * inWidth;
-        const int outSize = outHeight * outWidth;
-        float pval = float(Val);
+        const int outWidth  = inWidth + left + right;
+        const int outHeight = inHeight + top + down;
+        const int inSize    = inHeight * inWidth;
+        const int outSize   = outHeight * outWidth;
+        float pval          = static_cast<float>(val);
         
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
@@ -22,7 +22,7 @@ namespace Msnhnet
         int nn = 0;
         int remain = 0;
 
-        for(; i < Top; i++){
+        for(; i < top; i++){
             float *destptr = dest + c * outSize + i * outWidth;
 
 #if USE_NEON
@@ -67,10 +67,10 @@ namespace Msnhnet
         nn = 0;
         remain = 0;
 
-        for(; i < Top + inHeight; i++){
-            const float *srcptr = src + c * inSize +  (i - Top) * inWidth;
+        for(; i < top + inHeight; i++){
+            const float *srcptr = src + c * inSize +  (i - top) * inWidth;
             float *destptr = dest + c * outSize + i * outWidth;
-            remain = Left;
+            remain = left;
             for(; remain > 0; remain--){
                 *destptr = pval;
                 destptr++;
@@ -114,7 +114,7 @@ namespace Msnhnet
                 destptr++;
             }
 
-            remain = Right;
+            remain = right;
             for(; remain > 0; remain--){
                 *destptr = pval;
                 destptr++;

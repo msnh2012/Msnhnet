@@ -11,6 +11,7 @@ int main(int argc, char** argv)
     }
     std::string root = argv[1];
     std::string imgPath = "../images/cat.jpg";
+    Msnhnet::NetBuilder::setOnlyGpu(true);
     try
     {
         std::vector<float> img = Msnhnet::OpencvUtil::getImgDataF32C3(imgPath,cv::Size(227,227));
