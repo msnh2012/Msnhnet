@@ -19,6 +19,7 @@ cudaEvent_t  BaseLayer::_stop;
 
 void BaseLayer::initSimd()
 {
+    std::cout<<"Msnhnet Version : "<<MSNHNET_VERSION/1000<<"."<<MSNHNET_VERSION%1000<<std::endl;
     std::cout<<"Checking......"<<std::endl;
 #ifdef USE_X86
     SimdInfo info;

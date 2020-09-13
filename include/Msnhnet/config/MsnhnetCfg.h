@@ -34,6 +34,8 @@
 
 #define MIN_OMP_DATA 10000
 
+#define MSNHNET_VERSION 1100
+
 enum ActivationType
 {
     LOGISTIC,
@@ -144,5 +146,4 @@ enum WeightsNorm
     SOFTMAX_NORM
 };
 
-#endif 
-
+#endif // MSNHINFERENCECFG_H

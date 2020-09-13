@@ -5,7 +5,7 @@
 namespace Msnhnet
 {
 
-class BatchNormLayerArm
+class MsnhNet_API BatchNormLayerArm
 {
 public:
     static void BatchNorm(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float* dest,
