@@ -1,3 +1,4 @@
+#ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhMaxPooling2x2s2.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include <iostream>
@@ -33,6 +34,8 @@ void MaxPooling2x2s2Arm::pooling(float *const &src, const int &inWidth, const in
                 int remain = outWidth;
 #endif
 
+#if USE_NEON
+
                 if(nn > 0){
 #if __aarch64__
                     throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
@@ -66,6 +69,8 @@ void MaxPooling2x2s2Arm::pooling(float *const &src, const int &inWidth, const in
 #endif
                 }
 
+#endif
+
                 for(; remain > 0; remain--){
                     float mx0 = std::max(r0[0], r0[1]);
                     float mx1 = std::max(r1[0], r1[1]);
@@ -84,3 +89,4 @@ void MaxPooling2x2s2Arm::pooling(float *const &src, const int &inWidth, const in
 
 
 }
+#endif
