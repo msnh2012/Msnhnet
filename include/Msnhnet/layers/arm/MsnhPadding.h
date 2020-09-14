@@ -12,7 +12,7 @@ class MsnhNet_API PaddingLayerArm
 public:
     //bottom: src, inWidth, inHeight, inChannel
     //top: dest, outWidth, outHeight, outChannel
-    void padding(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, 
+    static void padding(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel,
                                         float* &dest, const int &top, const int &down, const int &left, const int &right, const int& val);
 };
 

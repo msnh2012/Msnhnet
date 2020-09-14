@@ -1,6 +1,5 @@
 #ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhPadding.h"
-#include "Msnhnet/config/MsnhnetCfg.h"
 
 namespace Msnhnet
 {

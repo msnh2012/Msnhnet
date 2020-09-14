@@ -1,6 +1,6 @@
 
 #ifdef USE_ARM
-#include "MsnhNet/layers/arm/MsnhActivation.h"
+#include "Msnhnet/layers/arm/MsnhActivation.h"
 namespace Msnhnet
 {
 

@@ -3,7 +3,7 @@
 namespace Msnhnet
 {
 void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float* dest,
-                                  float *const &Scales, float *const &rollMean, float *const &rollVariance, float *const &biases)
+                                  float *const &Scales, float *const &rollMean, float *const &rollVariance, float *const &biases, const float &eps )
 {
     const int in_size = inWidth * inHeight;
     const float *srcPtr0 = src ;
@@ -16,18 +16,18 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
         const float *srcPtr = src + i * in_size;
         float *destPtr = dest + i * in_size;
 
-        float sqrtVar = sqrt(rollVariance[i] + 0.00001f);
+        float sqrtVar = sqrt(rollVariance[i] + eps);
         float a = biases[i] - Scales[i] * rollMean[i] / sqrtVar;
         float b = Scales[i] / sqrtVar;
 
-#if USE_NEON
+#if USE_NEON1
         int nn = in_size >> 2;
         int remain = in_size - (nn << 2);
 #else
         int remain = in_size;
 #endif
 
-#if USE_NEON
+#if USE_NEON1
         // for(; nn > 0; nn--){
         //     #if __aarch64__
         //         throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
