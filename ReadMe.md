@@ -276,7 +276,7 @@ sudo make install
 ![](readme_imgs/ConcatBlock.png)</br>
 
 **How to convert your own pytorch network**
-- [pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
+- [pytorch2msnhnet](https://github.com/msnh2012/Msnhnet/tree/master/tools/pytorch2Msnhnet)
 - ps. ultralytics yolov3 is not supported. You can trans backbone first and then add some OPs manually. 
 
 **About Train**

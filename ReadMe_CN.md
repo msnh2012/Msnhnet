@@ -201,7 +201,7 @@
 ![](readme_imgs/ConcatBlock.png)</br>
 
 **如何转换模型**
-- [pytorch2msnhnet](tools/pytorch2msnhnet/Readme.md)
+- [pytorch2msnhnet](https://github.com/msnh2012/Msnhnet/tree/master/tools/pytorch2Msnhnet)
 - ps. 对于u版yolo不支持以该方式进行转换，需要先导出主干网络，再手动添加op.
 
 **关于训练**

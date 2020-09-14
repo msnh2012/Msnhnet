@@ -1,7 +1,11 @@
+#ifndef MSNHMAXPOOLING2x2S2ARM_H
+#define MSNHMAXPOOLING2x2S2ARM_H
+
+#ifdef USE_ARM
 namespace Msnhnet
 {
 
-class MaxPooling2x2s2Arm
+class MsnhNet_API MaxPooling2x2s2Arm
 {
 public:
     //bottom: src, inWidth, inHeight, inChannel
@@ -12,3 +16,5 @@ public:
 };
 
 }
+#endif
+#endif
