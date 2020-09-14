@@ -136,7 +136,7 @@ void PaddingLayer::forward(NetworkState &netState)
         }
     }
 
-#ifdef USE_ARM
+#ifdef USE_ARM1/*TODO*/
     PaddingLayerArm::padding(layerInput, this->_width, this->_height, this->_channel, layerOutput, this->_top, this->_down, this->_left, this->_right, this->_paddingVal);
 #else
     for (int i = 0; i < this->_batch; ++i)

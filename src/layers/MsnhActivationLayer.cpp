@@ -95,7 +95,7 @@ void ActivationLayer::forward(NetworkState &netState)
                                        _activation,
                                        this->supportAvx,
                                        this->_actParams[0]
-                    );
+                                       );
         }
         else
         {

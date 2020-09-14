@@ -758,11 +758,6 @@ std::vector<std::vector<YoloBox>> NetBuilder::runYolo(std::vector<float> img)
             }
         }
 
-        if(i==236)
-        {
-            int ac = 10;
-        }
-
         _net->layers[i]->forward(*_netState);
 
         if(_net->layers[i]->getMemReUse() == 0)

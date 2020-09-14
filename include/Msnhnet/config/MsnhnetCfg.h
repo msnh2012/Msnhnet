@@ -146,4 +146,5 @@ enum WeightsNorm
     SOFTMAX_NORM
 };
 
-#endif // MSNHINFERENCECFG_H
+#endif 
+
