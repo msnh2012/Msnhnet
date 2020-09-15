@@ -9,7 +9,7 @@ class MsnhNet_API BatchNormLayerArm
 {
 public:
     static void BatchNorm(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float* dest,
-                          float *const &Scales, float *const &rollMean, float *const &rollVariance, float *const &biases);
+                          float *const &Scales, float *const &rollMean, float *const &rollVariance, float *const &biases, const float &eps);
 };
 
 }

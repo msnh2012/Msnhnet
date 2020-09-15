@@ -637,7 +637,6 @@ TempARRCH64:
                     }
 
                     Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
-                    int a = 0;
 #ifdef USE_ARM
                 }
 #endif
@@ -654,7 +653,7 @@ TempARRCH64:
         for (int b = 0; b < this->_batch; ++b)
         {
 #ifdef USE_ARM
-#ifdef USE_NEON
+#ifdef USE_NEON1 /*TODO:*/
             int step = b*this->_outChannel*this->_outHeight*this->_outWidth;
             BatchNormLayerArm::BatchNorm(layerOutput + step,
                                          this->_width,

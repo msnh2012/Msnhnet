@@ -45,7 +45,6 @@ BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &he
 void BatchNormLayer::forward(NetworkState &netState)
 {
     auto st = TimeUtil::startRecord();
-
     float* layerInput   = netState.getInput();
     float* layerOutput  = nullptr;
 

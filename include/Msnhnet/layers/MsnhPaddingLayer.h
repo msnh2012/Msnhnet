@@ -7,6 +7,11 @@
 #ifdef USE_GPU
 #include "Msnhnet/layers/cuda/MsnhPaddingLayerGPU.h"
 #endif
+
+#ifdef USE_ARM
+#include "Msnhnet/layers/arm/MsnhPadding.h"
+#endif
+
 namespace Msnhnet
 {
 class MsnhNet_API PaddingLayer : public BaseLayer
