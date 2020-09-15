@@ -88,9 +88,9 @@ namespace Msnhnet
 #else
                 asm volatile(
                     "0:                             \n"
-                    "vld1.f32   {d0-d3}, [%1]       \n"
+                    "vld1.f32   {d0-d1}, [%1]!       \n"
 
-                    "vst1.f32   {d0-d3}, [%2]!      \n"
+                    "vst1.f32   {d0-d1}, [%2]!      \n"
 
                     "subs       %0, #1              \n"
                     "bne        0b                  \n"
