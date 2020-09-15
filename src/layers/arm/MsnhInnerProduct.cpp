@@ -75,64 +75,6 @@ namespace Msnhnet
                         w3 += 4;
                     }
 
-                     asm volatile(
-                        "0:                             \n"
-
-                        "pld        [%1, #128]          \n"
-                        "vld1.f32   {d0-d1}, [%1]!      \n"
-
-                        "pld        [%2, #128]          \n"
-                        "vld1.f32   {d2-d3}, [%2]!      \n"
-
-                        "pld        [%3, #128]          \n"
-                        "vld1.f32   {d4-d5}, [%3]!      \n"
-
-                        "pld        [%4, #128]          \n"
-                        "vld1.f32   {d6-d7}, [%4]!      \n"
-
-                        "pld        [%5, #128]          \n"
-                        "vld1.f32   {d8-d9}, [%5]!      \n"
-
-
-
-                        "vmla.f32   q5, q0, q1          \n"
-                        "vmla.f32   q6, q0, q2          \n"
-                        "vmla.f32   q7, q0, q3          \n"
-                        "vmla.f32   q8, q0, q4          \n"
-
-                        "vst1.f32   {d10-d11}, [%6]    \n"
-                        "vst1.f32   {d12-d13}, [%7]    \n"
-                        "vst1.f32   {d14-d15}, [%8]    \n"
-                        "vst1.f32   {d16-d17}, [%9]    \n"
-
-
-                        "subs       %0, #1              \n"
-                        "bne        0b                  \n"
-
-                        : "=r"(nn),  // %0
-                        "=r"(src0),  // %1
-                        "=r"(w0),    // %2
-                        "=r"(w1),    // %3
-                        "=r"(w2),    // %4
-                        "=r"(w3),    // %5
-                        "=r"(_sum0), // %6
-                        "=r"(_sum1), // %7
-                        "=r"(_sum2), // %8
-                        "=r"(_sum3)  // %9
-
-                        : "0"(nn),  // %10
-                        "1"(src0),  // %11
-                        "2"(w0),    // %12
-                        "3"(w1),    // %13
-                        "4"(w2),    // %14
-                        "5"(w3),    // %15
-                        "6"(_sum0), // %16
-                        "7"(_sum1), // %17
-                        "8"(_sum2), // %18
-                        "9"(_sum3)  // %19
-
-                        : "cc", "memory", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8");
-
 #endif
             }
 
@@ -186,8 +128,8 @@ namespace Msnhnet
 #endif
 
 #if USE_NEON
-            int nn = inChannel >> 3;
-            int remain = inChannel & 7;
+            int nn = inChannel >> 2;
+            int remain = inChannel & 3;
 #else
             int remain = inChannel;
 #endif
@@ -197,36 +139,16 @@ namespace Msnhnet
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
-                    asm volatile(
-                        "0:                             \n"
+                    for(; nn > 0; nn--){
+                        float32x4_t _src0 = vld1q_f32(src0);
 
-                        "pld        [%1, #256]          \n"
-                        "vld1.f32   {d0-d3}, [%1]!      \n"
+                        float32x4_t _w0 = vld1q_f32(w0);
+                        _sum0 = vmlaq_f32(_sum0, _src0, _w0);
 
-                        "pld        [%2, #256]          \n"
-                        "vld1.f32   {d4-d7}, [%2]!      \n"
-
-                        "vmla.f32   q4, q0, q2          \n"
-                        "vmla.f32   q5, q1, q3          \n"
-
-                        "vst1.f32   {d8-d9}, [%3]       \n"
-                        "vst1.f32   {d10-d11}, [%4]     \n"
-
-                        "subs       %0, #1              \n"
-                        "bne        0b                  \n"
-
-                        : "=r"(nn),   // %0
-                        "=r"(src0),    // %1
-                        "=r"(w0),    // %2
-                        "=r"(_sum0), // %3
-                        "=r"(_sum1) // %4
-
-                        : "0"(nn),
-                        "1"(src0),
-                        "2"(w0),
-                        "3"(_sum0),
-                        "4"(_sum1)
-                        : "cc", "memory", "q0", "q1", "q2", "q3", "q4", "q5");
+                        src0 += 4;
+                        w0 += 4;
+                        w1 += 4;
+                    }
 #endif
                 }
 #endif
@@ -237,10 +159,9 @@ namespace Msnhnet
                     w0++;
                 }
 #if USE_NEON
-                _sum0 = vaddq_f32(_sum0, _sum1);
-                float32x2_t _sumss = vadd_f32(vget_low_f32(_sum0), vget_high_f32(_sum0));
-                _sumss = vpadd_f32(_sumss, _sumss);
-                sum += vget_lane_f32(_sumss, 0);
+                float32x2_t _sum0ss = vadd_f32(vget_low_f32(_sum0), vget_high_f32(_sum0));
+                float32x2_t _sum01ss = vpadd_f32(_sum0ss, _sum0ss);
+                sum += vget_lane_f32(_sum01ss, 0);
 #endif
                 *destptr0 = sum;
 
