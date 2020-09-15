@@ -277,7 +277,11 @@ sudo make install
 
 **How to convert your own pytorch network**
 - [pytorch2msnhnet](https://github.com/msnh2012/Msnhnet/tree/master/tools/pytorch2Msnhnet)
-- ps. ultralytics yolov3 is not supported. You can trans backbone first and then add some OPs manually. 
+- **ps:**
+- 1 . Please check out OPs which supported by pytorch2msnhnet before trans.
+- 2 . Maybe some model can not be translated.
+- 3 . If your model contains preprocessors and postprocessors which are quite complicated, please trans backbone first and then add some OPs manually.
+- 4 . As for yolov3 & yolov4, just follow this [video](https://www.bilibili.com/video/BV1rh41197L8).
 
 **About Train**
 - Just use pytorch to train your model, and export as msnhbin.
