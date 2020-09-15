@@ -206,7 +206,7 @@
 - 在转换之前，请务必检查下你的模型所用的算子被pytorch2Msnhnet支持。
 - 可能有些模型转换不成功。
 - 如果你的模型包含非常复杂的前处理和后处理，请先转backbone，再手动添加OP.
-- 对于u版yolov3和yolov4.参考这个[视频](https://www.bilibili.com/video/BV1rh41197L8)。
+- 对于u版yolov3和yolov4.参考这个[视频](https://www.bilibili.com/video/BV1rh41197L8)。视频中的工具迁移[至此](https://github.com/msnh2012/Msnhnet/tree/master/tools/pytorch2msnhbin).
 
 **关于训练**
 - 使用pytorch版本的各个模型训练即可,训练完成后,按照上一步,构建Msnhnet即可.
