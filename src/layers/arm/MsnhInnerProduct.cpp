@@ -20,10 +20,10 @@ namespace Msnhnet
             float sum1 = 0.f;
             float sum2 = 0.f;
             float sum3 = 0.f;
-            const float* w0 = weightPtr + c;
-            const float* w1 = weightPtr + c + 1;
-            const float* w2 = weightPtr + c + 2;
-            const float* w3 = weightPtr + c + 3;
+            const float* w0 = weightPtr + c * inChannel;
+            const float* w1 = weightPtr + (c + 1) * inChannel;
+            const float* w2 = weightPtr + (c + 2) * inChannel;
+            const float* w3 = weightPtr + (c + 3) * inChannel;
             float *destptr0 = dest + c;
             float *destptr1 = dest + c + 1;
             float *destptr2 = dest + c + 2;
@@ -46,6 +46,8 @@ namespace Msnhnet
             int remain = inChannel;
 
 #endif
+
+#if USE_NEON
 
             if(nn > 0){
 #if __aarch64__
@@ -72,8 +74,11 @@ namespace Msnhnet
                         w2 += 4;
                         w3 += 4;
                     }
+
 #endif
             }
+
+#endif
 
             for(; remain > 0; remain--){
                 sum0 += (*src0) * (*w0);
@@ -114,7 +119,7 @@ namespace Msnhnet
         for(int cc = ccRemainOutChannel; cc < outChannel; cc++){
             int c = cc;
             float sum = 0.f;
-            const float* w0 = weightPtr + c;
+            const float* w0 = weightPtr + c * inChannel;
             const float *src0 = src;
             float *destptr0 = dest + c;
 #if USE_NEON
@@ -123,48 +128,30 @@ namespace Msnhnet
 #endif
 
 #if USE_NEON
-            int nn = inChannel >> 3;
-            int remain = inChannel & 7;
+            int nn = inChannel >> 2;
+            int remain = inChannel & 3;
 #else
             int remain = inChannel;
 #endif
 
+#if USE_NEON
                 if(nn > 0){
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
-                    asm volatile(
-                        "0:                             \n"
+                    for(; nn > 0; nn--){
+                        float32x4_t _src0 = vld1q_f32(src0);
 
-                        "pld        [%1, #256]          \n"
-                        "vld1.f32   {d0-d3}, [%1]!      \n"
+                        float32x4_t _w0 = vld1q_f32(w0);
+                        _sum0 = vmlaq_f32(_sum0, _src0, _w0);
 
-                        "pld        [%2, #256]          \n"
-                        "vld1.f32   {d4-d7}, [%2]!      \n"
-
-                        "vmla.f32   q4, q0, q2          \n"
-                        "vmla.f32   q5, q1, q3          \n"
-
-                        "vst1.f32   {d8-d9}, [%3]!      \n"
-                        "vst1.f32   {d10-d11}, [%4]!    \n"
-
-                        "subs       %0, #1              \n"
-                        "bne        0b                  \n"
-
-                        : "=r"(nn),   // %0
-                        "=r"(src0),    // %1
-                        "=r"(w0),    // %2
-                        "=w"(_sum0), // %3
-                        "=w"(_sum1) // %4
-
-                        : "0"(nn),
-                        "1"(src0),
-                        "2"(w0),
-                        "3"(_sum0),
-                        "4"(_sum1)
-                        : "cc", "memory", "q0", "q1", "q2", "q3", "q4", "q5");
+                        src0 += 4;
+                        w0 += 4;
+                        w1 += 4;
+                    }
 #endif
                 }
+#endif
 
                 for(; remain > 0; remain--){
                     sum += (*src0) * (*w0);
@@ -172,10 +159,9 @@ namespace Msnhnet
                     w0++;
                 }
 #if USE_NEON
-                _sum = vaddq_f32(_sum0, _sum1);
-                float32x2_t _sumss = vadd_f32(vget_low_f32(_sum), vget_high_f32(_sum));
-                _sumss = vpadd_f32(_sumss, _sumss);
-                sum += vget_lane_f32(_sumss, 0);
+                float32x2_t _sum0ss = vadd_f32(vget_low_f32(_sum0), vget_high_f32(_sum0));
+                float32x2_t _sum01ss = vpadd_f32(_sum0ss, _sum0ss);
+                sum += vget_lane_f32(_sum01ss, 0);
 #endif
                 *destptr0 = sum;
 

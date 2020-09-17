@@ -17,19 +17,17 @@ namespace Msnhnet
 #endif
         for(int c = 0; c < inChannel; c++){
         // fill top
-        int i = 0;
-        int nn = 0;
-        int remain = 0;
-
-        for(; i < top; i++){
+        for(int i = 0; i < top; i++){
             float *destptr = dest + c * outSize + i * outWidth;
 
 #if USE_NEON
-            nn = outWidth >> 2;
-            remain = outWidth - (nn << 2);
+            int nn = outWidth >> 2;
+            int remain = outWidth - (nn << 2);
 #else
-            remain = outWidth;
+            int remain = outWidth;
 #endif
+
+#if USE_NEON
 
             if(nn > 0){
 #if __aarch64__
@@ -49,10 +47,12 @@ namespace Msnhnet
                     : "0"(nn),
                     "1"(destptr),
                     "r"(pval) // %4
-                    : "memory", "q0", "q1"
+                    : "memory", "q0", "q1", "q2", "q3"
                 );
 #endif
             }
+
+#endif
 
             for(; remain > 0; remain--){
                 *destptr = pval;
@@ -63,33 +63,32 @@ namespace Msnhnet
 
         // fill center
 
-        nn = 0;
-        remain = 0;
 
-        for(; i < top + inHeight; i++){
+        for(int i = top; i < top + inHeight; i++){
             const float *srcptr = src + c * inSize +  (i - top) * inWidth;
             float *destptr = dest + c * outSize + i * outWidth;
-            remain = left;
-            for(; remain > 0; remain--){
+            int remain1 = left;
+            for(; remain1 > 0; remain1--){
                 *destptr = pval;
                 destptr++;
             }
 
             //memcpy
 #if USE_NEON
-            nn = inWidth >> 2;
-            remain = inWidth - (nn << 2);
+            int nn = inWidth >> 2;
+            int remain = inWidth - (nn << 2);
 #else
-            remain = inWidth;
+            int remain = inWidth;
 #endif
 
+#if USE_NEON
             if(nn > 0){
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
                 asm volatile(
                     "0:                             \n"
-                    "vld1.f32   {d0-d1}, [%1]       \n"
+                    "vld1.f32   {d0-d1}, [%1]!       \n"
 
                     "vst1.f32   {d0-d1}, [%2]!      \n"
 
@@ -102,10 +101,11 @@ namespace Msnhnet
                     : "0"(nn),
                     "1"(srcptr),
                     "2"(destptr)
-                    : "memory", "q0", "q1"
+                    : "memory", "q0", "q1", "q2", "q3"
                 );
 #endif
             }
+#endif
 
             for(; remain > 0; remain--){
                 *destptr = *srcptr;
@@ -113,28 +113,27 @@ namespace Msnhnet
                 destptr++;
             }
 
-            remain = right;
-            for(; remain > 0; remain--){
+            int remain2 = right;
+            for(; remain2 > 0; remain2--){
                 *destptr = pval;
                 destptr++;
             }
 
         }
 
-        nn  = 0;
-        remain = 0;
         //fill bottom
 
-        for(; i < outHeight; i++){
+        for(int i = top + inHeight; i < outHeight; i++){
             float *destptr = dest + c * outSize +  i * outWidth;
 
 #if USE_NEON
-            nn = 0;
-            remain = outWidth - (nn << 2);
+            int nn = 0;
+            int remain = outWidth - (nn << 2);
 #else
-            remain = outWidth;
+            int remain = outWidth;
 #endif
 
+#if USE_NEON
             if(nn > 0){
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
@@ -152,10 +151,11 @@ namespace Msnhnet
                     : "0"(nn),
                     "1"(destptr),
                     "r"(pval) // %4
-                    : "memory", "q0", "q1"
+                    : "memory", "q0", "q1", "q2", "q3"
                 );
 #endif
             }
+#endif
 
             for(; remain > 0; remain--){
                 *destptr = pval;
@@ -167,5 +167,3 @@ namespace Msnhnet
     }
 }
 #endif
-
-

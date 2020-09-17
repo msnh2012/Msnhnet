@@ -71,6 +71,7 @@
 ==============================================================
 - **pretrained models** 链接：https://pan.baidu.com/s/1mBaJvGx7tp2ZsLKzT5ifOg 
 提取码：x53z 
+- [效果](https://github.com/msnh2012/Msnhnet/tree/master/examples)
 
 **Yolo测试** 
 - Win10 MSVC 2017 I7-10700F (Linux平台大约比Win快10~20%,当然不是所有网络)
