@@ -21,15 +21,5 @@ deeplabv3.eval()
 
 input=torch.ones([1,3,224,224])
 
-''' 
-# trans msnhnet file only  
-transNet(deeplabv3, input, "deeplabv3.msnhnet")
-'''
-
-'''
-# trans msnhbin file only  
-transBin(deeplabv3, "deeplabv3.msnhbin")
-'''
-
 # trans msnhnet and msnhbin file
 trans(deeplabv3, input,"deeplabv3.msnhnet","deeplabv3.msnhbin")
