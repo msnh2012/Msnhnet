@@ -80,13 +80,13 @@ std::vector<float> OpencvUtil::getImgDataF32C1(cv::Mat &mat, const cv::Size &siz
     return imgs;
 }
 
-std::vector<float> OpencvUtil::getImgDataF32C3(const std::string &path, const cv::Size &size)
+std::vector<float> OpencvUtil::getImgDataF32C3(const std::string &path, const cv::Size &size, const bool &needShuffleRGB)
 {
     cv::Mat mat = cv::imread(path.data());
-    return getImgDataF32C3(mat, size);
+    return getImgDataF32C3(mat, size, needShuffleRGB);
 }
 
-std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &size)
+std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &size, const bool &needShuffleRGB)
 {
     if(mat.empty())
     {
@@ -94,6 +94,9 @@ std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &siz
     }
 
     cv::resize(mat, mat, size);
+
+    if(needShuffleRGB)
+        cv::cvtColor(mat,mat,cv::COLOR_RGB2BGR);
 
     std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols*3));
 
@@ -122,13 +125,13 @@ std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &siz
     return imgs;
 }
 
-std::vector<float> OpencvUtil::getGoogLenetF32C3(const std::string &path, const cv::Size &size)
+std::vector<float> OpencvUtil::getGoogLenetF32C3(const std::string &path, const cv::Size &size, const bool &needShuffleRGB)
 {
     cv::Mat mat = cv::imread(path.data());
-    return getGoogLenetF32C3(mat, size);
+    return getGoogLenetF32C3(mat, size, needShuffleRGB);
 }
 
-std::vector<float> OpencvUtil::getGoogLenetF32C3(cv::Mat &mat, const cv::Size &size)
+std::vector<float> OpencvUtil::getGoogLenetF32C3(cv::Mat &mat, const cv::Size &size, const bool &needShuffleRGB)
 {
     if(mat.empty())
     {
@@ -136,6 +139,9 @@ std::vector<float> OpencvUtil::getGoogLenetF32C3(cv::Mat &mat, const cv::Size &s
     }
 
     cv::resize(mat, mat, size);
+
+    if(needShuffleRGB)
+        cv::cvtColor(mat,mat,cv::COLOR_RGB2BGR);
 
     std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols*3));
 
@@ -174,13 +180,13 @@ std::vector<float> OpencvUtil::getGoogLenetF32C3(cv::Mat &mat, const cv::Size &s
     return imgs;
 }
 
-std::vector<float> OpencvUtil::getPaddingZeroF32C3(const std::string &path, const cv::Size &size)
+std::vector<float> OpencvUtil::getPaddingZeroF32C3(const std::string &path, const cv::Size &size, const bool &needShuffleRGB)
 {
     cv::Mat mat = cv::imread(path.data());
-    return getPaddingZeroF32C3(mat, size);
+    return getPaddingZeroF32C3(mat, size, needShuffleRGB);
 }
 
-std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size &size)
+std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size &size, const bool &needShuffleRGB)
 {
     if(mat.empty())
     {
@@ -206,7 +212,8 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
 
     cv::resize(mat, mat, size);
 
-    cv::cvtColor(mat,mat,cv::COLOR_RGB2BGR);
+    if(needShuffleRGB)
+        cv::cvtColor(mat,mat,cv::COLOR_RGB2BGR);
 
     width   = mat.cols;
     height  = mat.rows;
@@ -233,13 +240,13 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
 
 }
 
-std::vector<float> OpencvUtil::getTransformedF32C3(const string &path, const cv::Size &size, const cv::Scalar &mean, const cv::Scalar &std)
+std::vector<float> OpencvUtil::getTransformedF32C3(const string &path, const cv::Size &size, const cv::Scalar &mean, const cv::Scalar &std, const bool &needShuffleRGB)
 {
     cv::Mat mat = cv::imread(path.data());
-    return getTransformedF32C3(mat, size, mean, std);
+    return getTransformedF32C3(mat, size, mean, std, needShuffleRGB);
 }
 
-std::vector<float> OpencvUtil::getTransformedF32C3(cv::Mat &mat, const cv::Size &size, const cv::Scalar &mean, const cv::Scalar &std)
+std::vector<float> OpencvUtil::getTransformedF32C3(cv::Mat &mat, const cv::Size &size, const cv::Scalar &mean, const cv::Scalar &std, const bool &needShuffleRGB)
 {
     if(mat.empty())
     {
@@ -247,6 +254,9 @@ std::vector<float> OpencvUtil::getTransformedF32C3(cv::Mat &mat, const cv::Size 
     }
 
     cv::resize(mat, mat, size);
+
+    if(needShuffleRGB)
+        cv::cvtColor(mat,mat,cv::COLOR_RGB2BGR);
 
     std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols*3));
 
@@ -285,13 +295,13 @@ std::vector<float> OpencvUtil::getTransformedF32C3(cv::Mat &mat, const cv::Size 
     return imgs;
 }
 
-std::vector<float> OpencvUtil::getCaffeModeF32C3(const string &path, const cv::Size &size)
+std::vector<float> OpencvUtil::getCaffeModeF32C3(const string &path, const cv::Size &size, const bool &needShuffleRGB)
 {
     cv::Mat mat = cv::imread(path.data());
-    return getCaffeModeF32C3(mat, size);
+    return getCaffeModeF32C3(mat, size, needShuffleRGB);
 }
 
-std::vector<float> OpencvUtil::getCaffeModeF32C3(cv::Mat &mat, const cv::Size &size)
+std::vector<float> OpencvUtil::getCaffeModeF32C3(cv::Mat &mat, const cv::Size &size, const bool &needShuffleRGB)
 {
     if(mat.empty())
     {
@@ -299,6 +309,9 @@ std::vector<float> OpencvUtil::getCaffeModeF32C3(cv::Mat &mat, const cv::Size &s
     }
 
     cv::resize(mat, mat, size);
+
+    if(needShuffleRGB)
+        cv::cvtColor(mat,mat,cv::COLOR_RGB2BGR);
 
     std::vector<float> imgs(static_cast<size_t>(mat.rows*mat.cols*3));
 
@@ -337,11 +350,15 @@ std::vector<float> OpencvUtil::getCaffeModeF32C3(cv::Mat &mat, const cv::Size &s
     return imgs;
 }
 
-void OpencvUtil::drawYoloBox(cv::Mat &mat, std::vector<std::string> &labels, std::vector<std::vector<YoloBox>> &boxs, const Point2I &size)
+void OpencvUtil::drawYoloBox(cv::Mat &mat, std::vector<std::string> &labels, std::vector<std::vector<YoloBox>> &boxs, const Point2I &size, const bool &noPad)
 {
     for (size_t i = 0; i < boxs[0].size(); ++i)
     {
-        Msnhnet::YoloBox box = Msnhnet::YoloOutLayer::bboxResize2org(boxs[0][i],size,Msnhnet::Point2I(mat.cols,mat.rows));
+        Msnhnet::YoloBox box;
+        if(noPad)
+            box= Msnhnet::YoloOutLayer::bboxResize2OrgNoPad(boxs[0][i],size,Msnhnet::Point2I(mat.cols,mat.rows));
+        else
+            box= Msnhnet::YoloOutLayer::bboxResize2Org(boxs[0][i],size,Msnhnet::Point2I(mat.cols,mat.rows));
 
         std::string label = std::to_string(static_cast<int>(box.conf*100)) + "% "+labels[static_cast<size_t>(box.bestClsIdx)];
 

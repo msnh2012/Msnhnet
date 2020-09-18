@@ -28,7 +28,7 @@ int main(int argc, char** argv)
         std::vector<float> img;
         std::vector<std::vector<Msnhnet::YoloBox>> result;
 
-        img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imgPath, cv::Size(inSize.x,inSize.y));
+        img = Msnhnet::OpencvUtil::getImgDataF32C3(imgPath, cv::Size(inSize.x,inSize.y),true);
         for (size_t i = 0; i < 10; i++)
         {
 			auto st = Msnhnet::TimeUtil::startRecord();
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
         }
     
         cv::Mat org = cv::imread(imgPath);
-        Msnhnet::OpencvUtil::drawYoloBox(org,labels,result,inSize);
+        Msnhnet::OpencvUtil::drawYoloBox(org,labels,result,inSize,true);
         cv::imshow("test",org);
         cv::waitKey();
     }

@@ -125,9 +125,9 @@ void YoloOutLayer::forward(NetworkState &netState)
                 YoloBox box;
 
                 box.xywhBox         =   Box::XYWHBox(this->_shuffleInput[ptr + i*this->_channel],
-                                                    this->_shuffleInput[ptr + i*this->_channel + 1],
-                                                    this->_shuffleInput[ptr + i*this->_channel + 2],
-                                                    this->_shuffleInput[ptr + i*this->_channel + 3]);
+                        this->_shuffleInput[ptr + i*this->_channel + 1],
+                        this->_shuffleInput[ptr + i*this->_channel + 2],
+                        this->_shuffleInput[ptr + i*this->_channel + 3]);
 
                 box.conf            =   this->_shuffleInput[ptr + i*this->_channel + 4];
 
@@ -316,7 +316,7 @@ void YoloOutLayer::forwardGPU(NetworkState &netState)
 }
 #endif
 
-YoloBox YoloOutLayer::bboxResize2org( YoloBox &box, const Point2I &currentShape, const Point2I &orgShape)
+YoloBox YoloOutLayer::bboxResize2Org( YoloBox &box, const Point2I &currentShape, const Point2I &orgShape)
 {
     /*
          w > h       w < h
@@ -352,6 +352,26 @@ YoloBox YoloOutLayer::bboxResize2org( YoloBox &box, const Point2I &currentShape,
         box.xywhBox.h       =   box.xywhBox.h / scaledRatio;
 
     }
+
+    return box;
+}
+
+YoloBox YoloOutLayer::bboxResize2OrgNoPad(YoloBox &box, const Point2I &currentShape, const Point2I &orgShape)
+{
+
+    int orgW    =   orgShape.x;
+    int orgH    =   orgShape.y;
+
+    int curW    =   currentShape.x;
+    int curH    =   currentShape.y;
+
+    float scaledRatioW   =   1.0f * curW / orgW;
+    float scaledRatioH   =   1.0f * curH / orgH;
+
+    box.xywhBox.x       =   box.xywhBox.x / scaledRatioW;
+    box.xywhBox.w       =   box.xywhBox.w / scaledRatioW;
+    box.xywhBox.y       =   box.xywhBox.y / scaledRatioH;
+    box.xywhBox.h       =   box.xywhBox.h / scaledRatioH;
 
     return box;
 }

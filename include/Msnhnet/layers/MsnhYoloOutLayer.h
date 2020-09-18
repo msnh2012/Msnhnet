@@ -31,7 +31,9 @@ public:
     virtual void forwardGPU(NetworkState &netState);
 #endif
 
-    static YoloBox bboxResize2org(YoloBox &box, const Point2I &currentShape , const Point2I &orgShape);
+    static YoloBox bboxResize2Org(YoloBox &box, const Point2I &currentShape , const Point2I &orgShape);
+
+    static YoloBox bboxResize2OrgNoPad(YoloBox &box, const Point2I &currentShape , const Point2I &orgShape);
 
     static std::vector<YoloBox> nms(const std::vector<YoloBox> &bboxes, const float& _nmsThresh, const bool &useSoftNms=false, const float &sigma =0.3f);
 
