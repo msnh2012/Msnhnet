@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhAvePooling.h"
+#include "Msnhnet/layers/arm/MsnhGlobalAvePooling.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include <iostream>
 #include <algorithm>
@@ -11,7 +11,7 @@ namespace Msnhnet
 
 //bottom: src, inWidth, inHeight, inChannel
 //top: dest, outWidth, outHeight, outChannel
-void AvePoolingLayerArm::pooling(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, 
+void GlobalAvePoolingLayerArm::pooling(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, 
                         float* &dest, const int& ceilModel){
      const int inSize = inHeight * inWidth;
 #if USE_OMP
