@@ -179,17 +179,98 @@ namespace Msnhnet
         int Right = W;
         int PadHeight = Bottom - Top;
         int PadWidth = Right - Left;
+        int PadSize = PadHeight * PadWidth;
         float *srcPadding = new float[PadHeight * PadWidth * inChannel];
         PaddingLayerArm now;
         now.padding(src, inWidth, inHeight, inChannel, srcPadding, Top, Bottom, Left, Right, 0);
         
         int w_tm = outW / 6 * 8;
         int h_tm = outH / 6 * 8;
+        int tiles = w_tm / 8 * h_tm / 8;
         int src_tm_channel = inChannel;
         int src_tm_h = 16 * w_tm / 8 * h_tm / 8;
         int src_tm_w = 4;
+        int src_tm_size = src_tm_h * src_tm_w;
         float *src_tm  = new float[src_tm_channel * src_tm_h * src_tm_w];
         
+        // BT = 
+        // ⎡1   0    -21/4    0    21/4     0    -1  0⎤
+        // ⎢                                          ⎥
+        // ⎢0   1      1    -17/4  -17/4    1    1   0⎥
+        // ⎢                                          ⎥
+        // ⎢0   -1     1    17/4   -17/4   -1    1   0⎥
+        // ⎢                                          ⎥
+        // ⎢0  1/2    1/4   -5/2   -5/4     2    1   0⎥
+        // ⎢                                          ⎥
+        // ⎢0  -1/2   1/4    5/2   -5/4    -2    1   0⎥
+        // ⎢                                          ⎥
+        // ⎢0   2      4    -5/2    -5     1/2   1   0⎥
+        // ⎢                                          ⎥
+        // ⎢0   -2     4     5/2    -5    -1/2   1   0⎥
+        // ⎢                                          ⎥
+        // ⎣0   -1     0    21/4     0    -21/4  0   1⎦
+
+
+        // 0 = r00 - r06 + (r04 - r02) * 5.25
+        // 7 = r07 - r01 + (r03 - r05) * 5.25
+
+        // 1 = (r02 + r06 - r04 * 4.25) + (r01 - r03 * 4.25 + r05)
+        // 2 = (r02 + r06 - r04 * 4.25) - (r01 - r03 * 4.25 + r05)
+
+        // 3 = (r06 + r02 * 0.25 - r04 * 1.25) + (r01 * 0.5 - r03 * 2.5 + r05 * 2)
+        // 4 = (r06 + r02 * 0.25 - r04 * 1.25) - (r01 * 0.5 - r03 * 2.5 + r05 * 2)
+
+        // reuse r04 * 1.25
+        // reuse r03 * 2.5
+        // 5 = (r06 + (r02 - r04 * 1.25) * 4) + (r01 * 2 - r03 * 2.5 + r05 * 0.5)
+        // 6 = (r06 + (r02 - r04 * 1.25) * 4) - (r01 * 2 - r03 * 2.5 + r05 * 0.5)
+
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int q = 0; q < inChannel; q++){
+            const float *padptr = srcPadding + q * PadSize;
+            float *srcptr = src_tm + q * src_tm_size;
+
+            float tmpV[8][8];
+
+            //tile
+            for(int i = 0; i < h_tm / 8; i++){
+                for(int j = 0; j < w_tm / 8; j++){
+                    const float *r0 = padptr + i * 6 * PadWidth + j * 6;
+                    
+                    // Bd_{c,b}
+                    for(int m = 0; m < 8; m++){
+
+                        tmpV[0][m] = r0[0] - r0[6] + (r0[4] - r0[2]) * 5.25f;
+                        tmpV[7][m] = r0[7] - r0[1] + (r0[3] - r0[5]) * 5.25f;
+
+                        float t1 = (r0[2] + r0[6] - r0[4] * 4.25f);
+                        float t2 = (r0[1] + r0[5] - r0[3] * 4.25f);
+
+                        tmpV[1][m] = t1 + t2;
+                        tmpV[2][m] = t1 - t2;
+
+                        float t3 = (r0[6] + r0[2] * 0.25f - r0[4] * 1.25f);
+                        float t4 = (r0[1] * 0.5f - r0[3] * 2.5f + r0[5] * 2.f);
+                        tmpV[3][m] = t3 + t4;
+                        tmpV[4][m] = t3 - t4;
+
+                        float t5 = (r0[6] + (r0[2] - r0[4] * 1.25f) * 4.f);
+                        float t6 = (r0[1] * 2.f - r0[3] * 2.5f + r0[5] * 0.5f);
+
+                        tmpV[5][m] = t5 + t6;
+                        tmpV[6][m] = t5 - t6;
+
+                        r0 += PadWidth;
+                    }
+
+                    //Bd_{c,b}B^T
+
+
+                }
+            }
+        }
 
         return;
     }
