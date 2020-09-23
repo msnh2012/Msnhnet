@@ -326,10 +326,10 @@ namespace Msnhnet
 #endif
         for(int cc = 0; cc < nnOutChannel; cc++){
             int c = cc * 4;
-            float *destptr0 = dest_tm + c * dst_tm_size;
-            float *destptr1 = dest_tm + (c + 1) * dst_tm_size;
-            float *destptr2 = dest_tm + (c + 2) * dst_tm_size;
-            float *destptr3 = dest_tm + (c + 3) * dst_tm_size;
+            float *dest0 = dest_tm + c * dst_tm_size;
+            float *dest1 = dest_tm + (c + 1) * dst_tm_size;
+            float *dest2 = dest_tm + (c + 2) * dst_tm_size;
+            float *dest3 = dest_tm + (c + 3) * dst_tm_size;
 
             const float *ktm = kernel + cc * kernelSize;
             int q = 0;
@@ -337,11 +337,129 @@ namespace Msnhnet
             for(; q + 1 < inChannel; q += 2){
                 const float* r0 = src_tm + q * src_tm_size;
                 const float* r1 = src_tm + (q + 1) * src_tm_size;
-                 
+                
+                float* destptr0 = dest0;
+                float *destptr1 = dest1;
+                float *destptr2 = dest2;
+                float *destptr3 = dest3;
+
+                for(int r = 0; r < 16; r++){
+                    for(int t = 0; t < tiles; t++){
+                        for(int m = 0; m < 4; m++){
+                            destptr0[m] += r0[m] * ktm[m];
+                            destptr0[m] += r1[m] * ktm[m + 4];
+                            destptr1[m] += r0[m] * ktm[m + 8];
+                            destptr1[m] += r1[m] * ktm[m + 12];
+                            destptr2[m] += r0[m] * ktm[m + 16];
+                            destptr2[m] += r1[m] * ktm[m + 20];
+                            destptr3[m] += r0[m] * ktm[m + 24];
+                            destptr3[m] += r1[m] * ktm[m + 28];  
+                        }
+
+                        r0 += 4;
+                        r1 += 4;
+                        destptr0 += 4;
+                        destptr1 += 4;
+                        destptr2 += 4;
+                        destptr3 += 4;
+                    }
+
+                    ktm += 32;
+                }
+            }
+
+            for(; q < inChannel; q++){
+                const float *r0 = src_tm + q * src_tm_size;
+                float* destptr0 = dest0;
+                float *destptr1 = dest1;
+                float *destptr2 = dest2;
+                float *destptr3 = dest3;
+
+                for(int r = 0; r < 16; r++){
+                    for(int t = 0; t < tiles; t++){
+                        for(int m = 0; m < 4; m++){
+                            destptr0[m] += r0[m] * ktm[m];
+                            destptr1[m] += r0[m] * ktm[m + 4];
+                            destptr2[m] += r0[m] * ktm[m + 8];
+                            destptr3[m] += r0[m] * ktm[m + 12];
+                        }
+
+                        r0 += 4;
+                        destptr0 += 4;
+                        destptr1 += 4;
+                        destptr2 += 4;
+                        destptr3 += 4;
+                    }
+
+                    ktm += 16;
+                }
             }
         }
 
-        return;
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int cc = remainOutChannel; cc < outChannel; cc++){
+            int c = cc;
+            float *dest0 = dest_tm + c * dst_tm_size;
+            const float *ktm = kernel + nnOutChannel * kernelSize + 8 * 8 * inChannel * (c - remainOutChannel);
+
+            int q = 0;
+            for(; q < inChannel; q++){
+                const float* r0 = src_tm + q * src_tm_size;
+                float* destptr0 = dest0;
+                for(int r = 0; r < 16; r++){
+                    for(int i = 0; i < tiles; i++){
+                        for(int m = 0; m < 4; m++){
+                            destptr0[m] += r0[m] * ktm[m];
+                        }
+
+                        r0 += 4;
+                        destptr0 += 4;
+                    }
+
+                    ktm += 4;
+                }
+            }
+        }
+
+        delete [] src_tm;
+
+// Yk,b=A^TMk,bA
+// AT=
+// ⎡1  1  1   1    1    1      1    0⎤
+// ⎢                                 ⎥
+// ⎢0  1  -1  2   -2   1/2   -1/2   0⎥
+// ⎢                                 ⎥
+// ⎢0  1  1   4    4   1/4    1/4   0⎥
+// ⎢                                 ⎥
+// ⎢0  1  -1  8   -8   1/8   -1/8   0⎥
+// ⎢                                 ⎥
+// ⎢0  1  1   16  16   1/16  1/16   0⎥
+// ⎢                                 ⎥
+// ⎣0  1  -1  32  -32  1/32  -1/32  1⎦
+
+        // 0 = r0 + (r1 + r2) + (r3 + r4)     + (r5 + r6) * 32
+        // 1 =      (r1 - r2) + (r3 - r4) * 2 + (r5 - r6) * 16
+        // 2 =      (r1 + r2) + (r3 + r4) * 4 + (r5 + r6) * 8
+        // 3 =      (r1 - r2) + (r3 - r4) * 8 + (r5 - r6) * 4
+        // 4 =      (r1 + r2) + (r3 + r4) * 16+ (r5 + r6) * 2
+        // 5 = r7 + (r1 - r2) + (r3 - r4) * 32+ (r5 - r6)
+
+        int outSize = outHeight * outWidth;
+
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int cc = 0; cc < outChannel; cc++){
+            const float *destptr = dest_tm + cc * dst_tm_size;
+            float *outptr = dest + cc * outSize;
+
+            float tmpA[6][8];
+
+            
+        }        
+
     }
 }
 
