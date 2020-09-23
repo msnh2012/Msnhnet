@@ -58,7 +58,7 @@ namespace Msnhnet
         int nnOutchannel = outChannel >> 2;
         int remainOutChannel = nnOutchannel << 2;
         
-        int packOutChannel = nnOutchannel + (outChannel % 4 + 3) / 4);
+        int packOutChannel = nnOutchannel + (outChannel % 4 + 3) / 4;
         int packOutH = 1;
         int packOutW = (8 * 8 * inChannel * 4);
 
@@ -164,7 +164,7 @@ namespace Msnhnet
 
     // F(6x6, 3x3) <=> input: 8x8, weight: 8x8
     void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
-                                 float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
+                                 const int &kHeight, const int &kWidth, float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
         
         // Vc,b = B^Td_{c,b}B
         
@@ -209,6 +209,16 @@ namespace Msnhnet
         // ⎢0   -2     4     5/2    -5    -1/2   1   0⎥
         // ⎢                                          ⎥
         // ⎣0   -1     0    21/4     0    -21/4  0   1⎦
+
+        //B = 
+        // ⎡1	    0	    0	   0	   0	  0	    0	  0    ⎤
+	    // ⎢0	    1	    -1	   1/2	   -1/2	  2	   -2	  -1   ⎥
+	    // ⎢-21/4	1	    1	   1/4	   1/4	  4	    4	  0    ⎥
+	    // ⎢0	    -17/4	17/4   -5/2	   5/2	  -5/2	5/2	  21/4 ⎥
+	    // ⎢21/4	-17/4	-17/4  -5/4	  -5/4	  -5	-5	  0    ⎥   
+	    // ⎢0	    1	    -1	   2	   2	  1/2	-1/2  -21/4⎥
+	    // ⎢-1	    1	    1	   1	   1	  1	    1	  0    ⎥
+	    // ⎢0	    0	    0	   0	   0	  0	    0	  1    ⎥
 
 
         // 0 = r00 - r06 + (r04 - r02) * 5.25
@@ -266,9 +276,68 @@ namespace Msnhnet
                     }
 
                     //Bd_{c,b}B^T
+                    float *r00 = srcptr + (i * w_tm / 8 + j) * src_tm_w;
+                    float *r04 = srcptr + (i * w_tm /8 + j + tiles) * src_tm_w;
 
+                    for(int m = 0; m < 8; m++){
+                        const float* tmpVPtr = tmpV[m];
+                        r00[0] = tmpVPtr[0] - tmpVPtr[6] + (tmpVPtr[4] - tmpVPtr[2]) * 5.25f;
+                        r04[3] = tmpVPtr[7] - tmpVPtr[1] + (tmpVPtr[3] - tmpVPtr[5]) * 5.25f;
+                        
+                        float t1 =  (tmpVPtr[2] + tmpVPtr[6] - tmpVPtr[4] * 4.25f);
+                        float t2 =  (tmpVPtr[1] - tmpVPtr[3] * 4.25f + tmpVPtr[5]);
+                        r00[1] = t1 + t2;
+                        r00[2] = t1 - t2;
+
+                        float t3 = (tmpVPtr[6] + tmpVPtr[2] * 0.25f - tmpVPtr[4] * 1.25;
+                        float t4 = (tmpVPtr[1] * 0.5f - tmpVPtr[3] * 2.5f + tmpVPtr[5] * 2.f);
+                        r00[3] = t3 + t4;
+                        r04[0] = t3 - t4;
+
+                        float t5 = (tmpVPtr[6] + (tmpVPtr[2] - tmpVPtr[4] * 1.25f) * 4.f);
+                        float t6 = (tmpVPtr[1] * 2.f - tmpVPtr[3] * 2.5f + tmpVPtr[5] * 0.5f);
+
+                        r04[1] = t5 + t6;
+                        r04[2] = t5 - t6;
+
+                        r00 += tiles * 2 * src_tm_w;
+                        r04 += tiles * 2 * src_tm_w;
+
+                    }
 
                 }
+            }
+        }
+
+        delete [] srcPadding;
+
+        //Mk,b = \sum_{c}U_{k,c}V_{c,b}
+        //k表示outChannel，b表示tile序号
+        int dst_tm_h = src_tm_h;
+        int dst_tm_w = src_tm_w;
+        int dst_tm_size = dst_tm_h * dst_tm_w;
+        float *dest_tm = new float[outChannel * dst_tm_h * dst_tm_w];
+        int nnOutChannel = outChannel >> 2;
+        int remainOutChannel = nnOutChannel << 2;
+        int kernelSize = kHeight * kWidth;
+
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int cc = 0; cc < nnOutChannel; cc++){
+            int c = cc * 4;
+            float *destptr0 = dest_tm + c * dst_tm_size;
+            float *destptr1 = dest_tm + (c + 1) * dst_tm_size;
+            float *destptr2 = dest_tm + (c + 2) * dst_tm_size;
+            float *destptr3 = dest_tm + (c + 3) * dst_tm_size;
+
+            const float *ktm = kernel + cc * kernelSize;
+            int q = 0;
+            
+            for(; q + 1 < inChannel; q += 2){
+                const float* r0 = src_tm + q * src_tm_size;
+                const float* r1 = src_tm + (q + 1) * src_tm_size;
+                 
             }
         }
 
