@@ -457,7 +457,58 @@ namespace Msnhnet
 
             float tmpA[6][8];
 
-            
+            for(int i = 0; i < outHeight / 6; i++){
+                for(int j = 0; j < outWidth / 6; j++){
+                    const float *destptr0 = destptr + (i * w_tm / 8 + j) * dst_tm_w;
+                    const float *destptr4 = destptr + (i * w_tm / 8 + j + tiles) * dst_tm_w;
+
+                    for(int m = 0; m < 8; m++){
+
+                        float t1 = destptr0[1] + destptr0[2];
+                        float t2 = destptr0[1] - destptr0[2];
+
+                        float t3 = destptr0[3] + destptr4[0];
+                        float t4 = destptr0[3] - destptr4[0];
+
+                        float t5 = destptr4[1] + destptr4[2];
+                        float t6 = destptr4[1] - destptr4[2];
+
+                        tmpA[0][m] = destptr0[0] + t1 + t3 + t5 * 32;
+                        tmpA[2][m] = t1 + t3 * 4 + t5 * 8;
+                        tmpA[4][m] = t1 + t3 * 16 + t5 + t5;
+
+                        tmpA[1][m] = t2 + t4 + t4 + t6 * 16;
+                        tmpA[3][m] = t2 + t4 * 8 + t6 * 4;
+                        tmpA[5][m] = destptr4[3] + t2 + t4 * 32 + t6;
+                    }
+
+                    float *outptr0 = outptr + (i * 6) * outWidth + j * 6;
+
+                    for(int m = 0; m < 6; m++){
+
+                        const float* tmp0 = tmpA[m];
+
+                        float t1 = tmp0[1] + tmp0[2];
+                        float t2 = tmp0[1] - tmp0[2];
+
+                        float t3 = tmp0[3] + tmp0[4];
+                        float t4 = tmp0[3] - tmp0[4];
+
+                        float t5 = tmp0[5] + tmp0[6];
+                        float t6 = tmp0[5] - tmp0[6];
+
+                        outptr0[0] = tmp0[0] + t1 + t3 + t5 * 32;
+                        outptr0[2] = t1 + t3 * 4 + t5 * 8;
+                        outptr0[4] = t1 + t3 * 16 + t5 + t5;
+
+                        outptr0[1] = t2 + t4 + t4 + t6 * 16;
+                        outptr0[3] = t2 + t4 * 8 + t6 * 4;
+                        outptr0[5] = tmp0[7] + t2 + t4 * 32 + t6;
+
+                        outptr0 += outWidth;
+                    }
+                }
+            }
         }        
 
     }
