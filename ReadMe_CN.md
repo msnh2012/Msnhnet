@@ -71,6 +71,7 @@
 ==============================================================
 - **pretrained models** 链接：https://pan.baidu.com/s/1mBaJvGx7tp2ZsLKzT5ifOg 
 提取码：x53z 
+- **pretrained models** 连接：[Google Drive](https://drive.google.com/drive/folders/1tgTvA80rUnMqKVhB3Rb8sIGvKS98ARG3?usp=sharing)
 - [效果](https://github.com/msnh2012/Msnhnet/tree/master/examples)
 
 **Yolo测试** 
