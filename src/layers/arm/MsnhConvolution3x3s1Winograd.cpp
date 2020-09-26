@@ -192,7 +192,7 @@ namespace Msnhnet
         int tiles = w_tm / 8 * h_tm / 8;
 
         int src_tm_channel = inChannel;
-        int src_tm_h =   * w_tm / 8 * h_tm / 8;
+        int src_tm_h = 16 * w_tm / 8 * h_tm / 8;
         int src_tm_w = 4;
         
         int src_tm_size = src_tm_h * src_tm_w;
