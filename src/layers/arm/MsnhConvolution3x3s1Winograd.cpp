@@ -11,7 +11,7 @@ namespace Msnhnet
     void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *const &kernel, float* &kernel_tm, const int &inChannel, const int &outChannel){
         // 矩阵G
         const float ktm[8][3] = {
-            {1.0f, 0.0f, 0.0f},
+            {1.0f,      0.0f,      0.0f},
             {-2.0f / 9, -2.0f / 9, -2.0f / 9},
             {-2.0f / 9, 2.0f / 9, -2.0f / 9},
             {1.0f / 90, 1.0f / 45, 2.0f / 45},
@@ -29,24 +29,24 @@ namespace Msnhnet
         for(int outc = 0; outc < outChannel; outc++){
             for(int inc = 0; inc < inChannel; inc++){
                 const float* kernel0 = (const float*)kernel + outc * inChannel * 9 + inc * 9;
-                float *kernel_tm0 = kernel_tm + outc * inChannel * 64 + inc * 64;
+                float *kernel_tm0 = kernel_tm + outc * kernelTmSize + inc * 64;
 
                 //需要变换的卷积核
                 const float* k0 = kernel0;
                 const float* k1 = kernel0 + 3;
                 const float* k2 = kernel0 + 6;
 
-                float tmp[8][3];    // tmp = G*g
+                float tmpG[8][3];    // tmp = G*g
                 for(int i = 0; i < 8; i++){
-                    tmp[i][0] = k0[0] * ktm[i][0] + k0[1] * ktm[i][1] + k0[2] * ktm[i][2];
-                    tmp[i][1] = k1[0] * ktm[i][0] + k1[1] * ktm[i][1] + k1[2] * ktm[i][2];
-                    tmp[i][2] = k2[0] * ktm[i][0] + k2[1] * ktm[i][1] + k2[2] * ktm[i][2];
+                    tmpG[i][0] = k0[0] * ktm[i][0] + k0[1] * ktm[i][1] + k0[2] * ktm[i][2];
+                    tmpG[i][1] = k1[0] * ktm[i][0] + k1[1] * ktm[i][1] + k1[2] * ktm[i][2];
+                    tmpG[i][2] = k2[0] * ktm[i][0] + k2[1] * ktm[i][1] + k2[2] * ktm[i][2];
                 }
 
                 //U = kernel_tm0 = G*g*G^T
                 //[8*3] x [3*8]
                 for(int i = 0; i < 8; i++){
-                    float *tmpPtr = &tmp[i][0];
+                    float *tmpPtr = &tmpG[i][0];
                     for(int j = 0; j < 8; j++){
                         kernel_tm0[i * 8 + j] = tmpPtr[0] * ktm[j][0] + tmpPtr[1] * ktm[j][1] + tmpPtr[2] * ktm[j][2];
                     }
@@ -71,12 +71,13 @@ namespace Msnhnet
             int c = cc << 2;
             float *ktm2 = kernel_tm2 + cc * packOutH * packOutW;
             
-            const float *kernel0_tm = kernel_tm + cc * kernelTmSize;
-            const float *kernel1_tm = kernel_tm + (cc + 1) * kernelTmSize;
-            const float *kernel2_tm = kernel_tm + (cc + 2) * kernelTmSize;
-            const float *kernel3_tm = kernel_tm + (cc + 3) * kernelTmSize;
+            const float *kernel0_tm = kernel_tm + c * kernelTmSize;
+            const float *kernel1_tm = kernel_tm + (c + 1) * kernelTmSize;
+            const float *kernel2_tm = kernel_tm + (c + 2) * kernelTmSize;
+            const float *kernel3_tm = kernel_tm + (c + 3) * kernelTmSize;
 
             int q = 0;
+
             for(; q + 1 < inChannel; q += 2){
                 const float *k00 = kernel0_tm + q * 64;
                 const float *k01 = kernel0_tm + (q + 1) * 64;
@@ -146,6 +147,7 @@ namespace Msnhnet
             const float* kernel0_tm = kernel_tm + cc * kernelTmSize;
 
             int q = 0;
+
             for(; q < inChannel; q++){
                 const float* k00 = kernel0_tm + q * 64;
                 for(int i = 0; i < 16; i++){
@@ -168,6 +170,7 @@ namespace Msnhnet
         
         // Vc,b = B^Td_{c,b}B
         
+        // 输出特征图如果长宽不够需要Padding
         int outW = (outWidth + 5) / 6 * 6;
         int outH = (outHeight + 5) / 6 * 6;
 
@@ -182,14 +185,16 @@ namespace Msnhnet
         int PadSize = PadHeight * PadWidth;
         float *srcPadding = new float[PadHeight * PadWidth * inChannel];
         PaddingLayerArm now;
-        now.padding(src, inWidth, inHeight, inChannel, srcPadding, Top, Bottom, Left, Right, 0);
+        now.padding(src, inWidth, inHeight, inChannel, srcPadding, 0, H - inHeight, 0, W - inWidth, 0);
         
         int w_tm = outW / 6 * 8;
         int h_tm = outH / 6 * 8;
         int tiles = w_tm / 8 * h_tm / 8;
+
         int src_tm_channel = inChannel;
-        int src_tm_h = 16 * w_tm / 8 * h_tm / 8;
+        int src_tm_h =   * w_tm / 8 * h_tm / 8;
         int src_tm_w = 4;
+        
         int src_tm_size = src_tm_h * src_tm_w;
         float *src_tm  = new float[src_tm_channel * src_tm_h * src_tm_w];
         
@@ -300,8 +305,8 @@ namespace Msnhnet
                         r04[1] = t5 + t6;
                         r04[2] = t5 - t6;
 
-                        r00 += tiles * 2 * src_tm_w;
-                        r04 += tiles * 2 * src_tm_w;
+                        r00 += 2 * tiles * src_tm_w;
+                        r04 += 2 * tiles * src_tm_w;
 
                     }
 
