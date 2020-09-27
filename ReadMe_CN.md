@@ -105,11 +105,11 @@
   |:---:|:---:|:---:|
   |time|115ms|120ms|
 
-** Yolov5s GPU 测试**
+**Yolov5s GPU 测试**
 - Ubuntu18.04  GCC  Cuda10.1  GTX2080Ti
-  |net|yolov5s|
-  |:---:|:---:|
-  |time|8.35ms|  
+  |net|yolov5s| yolov5s_fp16|
+  |:---:|:---:|:---:|
+  |time|9.57.35ms| 8.57ms| 
 
 **Mobilenet Yolo GPU cuDnn 测试**
 - Jetson NX

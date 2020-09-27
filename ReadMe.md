@@ -105,7 +105,13 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
   |net|yolov3|yolov4|
   |:---:|:---:|:---:|
   |time|115ms|120ms|
-  
+
+**Yolov5s GPU Test**
+- Ubuntu18.04  GCC  Cuda10.1  GTX2080Ti
+  |net|yolov5s| yolov5s_fp16|
+  |:---:|:---:|:---:|
+  |time|9.57.35ms| 8.57ms|
+
 **Mobilenet Yolo GPU cuDnn Test**
 - Jetson NX
   |net|yoloface100k|yoloface500k|mobilenetv2_yolov3_nano|mobilenetv2_yolov3_lite|
