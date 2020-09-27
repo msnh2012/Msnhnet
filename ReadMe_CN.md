@@ -109,7 +109,7 @@
 - Ubuntu18.04  GCC  Cuda10.1  GTX2080Ti
   |net|yolov5s| yolov5s_fp16|
   |:---:|:---:|:---:|
-  |time|9.57.35ms| 8.57ms| 
+  |time|9.57ms| 8.57ms| 
 
 **Mobilenet Yolo GPU cuDnn 测试**
 - Jetson NX
