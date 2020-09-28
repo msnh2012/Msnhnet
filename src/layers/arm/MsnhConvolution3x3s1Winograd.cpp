@@ -543,6 +543,10 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
             }
         }
 
+        delete [] src_tm;
+        delete [] dest_tm;
+        delete [] dest_tm2;
+
     }
 }
 
