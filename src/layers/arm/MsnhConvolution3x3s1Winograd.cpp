@@ -1,4 +1,3 @@
-#define USE_ARM 1
 #ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolution3x3s1Winograd.h"
 #include "Msnhnet/layers/arm/MsnhPadding.h"
@@ -8,7 +7,7 @@ namespace Msnhnet
 {
     // kerneltm: [outChannel, inChannel, 8*8]
     //F(m, r) = GgG^T
-    void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *const &kernel, float* &kernel_tm, const int &inChannel, const int &outChannel){
+void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *const &kernel, float* &kernel_tm, float* &kernel_tm2,const int &inChannel, const int &outChannel){
         // 矩阵G
         const float ktm[8][3] = {
             {1.0f,      0.0f,      0.0f},
@@ -62,7 +61,7 @@ namespace Msnhnet
         int packOutH = 1;
         int packOutW = (8 * 8 * inChannel * 4);
 
-        float *kernel_tm2 = new float[packOutChannel * packOutH * packOutW];
+        //float *kernel_tm2 = new float[packOutChannel * packOutH * packOutW];
 
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
@@ -160,12 +159,13 @@ namespace Msnhnet
             }
         }        
 
-        kernel_tm = kernel_tm2;
+        //kernel_tm = kernel_tm2;
+        //memcpy(kernel_tm, kernel_tm2, sizeof(float)*packOutChannel * packOutH * packOutW);
 
     }
 
     // F(6x6, 3x3) <=> input: 8x8, weight: 8x8
-    void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
+void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                                  const int &kHeight, const int &kWidth, float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
         
         // Vc,b = B^Td_{c,b}B
@@ -174,28 +174,30 @@ namespace Msnhnet
         int outW = (outWidth + 5) / 6 * 6;
         int outH = (outHeight + 5) / 6 * 6;
 
-        int W = outW + 2;
-        int H = outH + 2;
-        int Top = 0;
-        int Left = 0;
-        int Bottom = H;
-        int Right = W;
-        int PadHeight = Bottom - Top;
-        int PadWidth = Right - Left;
-        int PadSize = PadHeight * PadWidth;
+        const int W = outW + 2;
+        const int H = outH + 2;
+        const int Top = 0;
+        const int Left = 0;
+        const int Bottom = H;
+        const int Right = W;
+        const int PadHeight = Bottom - Top;
+        const int PadWidth = Right - Left;
+        const int PadSize = PadHeight * PadWidth;
         float *srcPadding = new float[PadHeight * PadWidth * inChannel];
         PaddingLayerArm now;
         now.padding(src, inWidth, inHeight, inChannel, srcPadding, 0, H - inHeight, 0, W - inWidth, 0);
+
+        //padding(src, inWidth, inHeight, inChannel, srcPadding, 0, H - inHeight, 0, W - inWidth, 0);
         
-        int w_tm = outW / 6 * 8;
-        int h_tm = outH / 6 * 8;
-        int tiles = w_tm / 8 * h_tm / 8;
+        const int w_tm = outW / 6 * 8;
+        const int h_tm = outH / 6 * 8;
+        const int tiles = w_tm / 8 * h_tm / 8;
 
         int src_tm_channel = inChannel;
-        int src_tm_h = 16 * w_tm / 8 * h_tm / 8;
-        int src_tm_w = 4;
+        const int src_tm_h = 16 * w_tm / 8 * h_tm / 8;
+        const int src_tm_w = 4;
         
-        int src_tm_size = src_tm_h * src_tm_w;
+        const int src_tm_size = src_tm_h * src_tm_w;
         float *src_tm  = new float[src_tm_channel * src_tm_h * src_tm_w];
         
         // BT = 
@@ -252,7 +254,7 @@ namespace Msnhnet
             //tile
             for(int i = 0; i < h_tm / 8; i++){
                 for(int j = 0; j < w_tm / 8; j++){
-                    const float *r0 = padptr + i * 6 * PadWidth + j * 6;
+                    float *r0 = padptr + i * 6 * PadWidth + j * 6;
                     
                     // Bd_{c,b}
                     for(int m = 0; m < 8; m++){
@@ -285,7 +287,7 @@ namespace Msnhnet
                     float *r04 = srcptr + (i * w_tm /8 + j + tiles) * src_tm_w;
 
                     for(int m = 0; m < 8; m++){
-                        const float* tmpVPtr = tmpV[m];
+                        float* tmpVPtr = tmpV[m];
                         r00[0] = tmpVPtr[0] - tmpVPtr[6] + (tmpVPtr[4] - tmpVPtr[2]) * 5.25f;
                         r04[3] = tmpVPtr[7] - tmpVPtr[1] + (tmpVPtr[3] - tmpVPtr[5]) * 5.25f;
                         
@@ -294,7 +296,7 @@ namespace Msnhnet
                         r00[1] = t1 + t2;
                         r00[2] = t1 - t2;
 
-                        float t3 = (tmpVPtr[6] + tmpVPtr[2] * 0.25f - tmpVPtr[4] * 1.25;
+                        float t3 = (tmpVPtr[6] + tmpVPtr[2] * 0.25f - tmpVPtr[4] * 1.25);
                         float t4 = (tmpVPtr[1] * 0.5f - tmpVPtr[3] * 2.5f + tmpVPtr[5] * 2.f);
                         r00[3] = t3 + t4;
                         r04[0] = t3 - t4;
@@ -318,13 +320,13 @@ namespace Msnhnet
 
         //Mk,b = \sum_{c}U_{k,c}V_{c,b}
         //k表示outChannel，b表示tile序号
-        int dst_tm_h = src_tm_h;
-        int dst_tm_w = src_tm_w;
-        int dst_tm_size = dst_tm_h * dst_tm_w;
+        const int dst_tm_h = src_tm_h;
+        const int dst_tm_w = src_tm_w;
+        const int dst_tm_size = dst_tm_h * dst_tm_w;
         float *dest_tm = new float[outChannel * dst_tm_h * dst_tm_w];
-        int nnOutChannel = outChannel >> 2;
-        int remainOutChannel = nnOutChannel << 2;
-        int kernelSize = kHeight * kWidth;
+        const int nnOutChannel = outChannel >> 2;
+        const int remainOutChannel = nnOutChannel << 2;
+        const int kernelSize = kHeight * kWidth;
 
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
@@ -335,6 +337,8 @@ namespace Msnhnet
             float *dest1 = dest_tm + (c + 1) * dst_tm_size;
             float *dest2 = dest_tm + (c + 2) * dst_tm_size;
             float *dest3 = dest_tm + (c + 3) * dst_tm_size;
+
+
 
             const float *ktm = kernel + cc * kernelSize;
             int q = 0;
@@ -410,6 +414,7 @@ namespace Msnhnet
             const float *ktm = kernel + nnOutChannel * kernelSize + 8 * 8 * inChannel * (c - remainOutChannel);
 
             int q = 0;
+
             for(; q < inChannel; q++){
                 const float* r0 = src_tm + q * src_tm_size;
                 float* destptr0 = dest0;
@@ -428,7 +433,7 @@ namespace Msnhnet
             }
         }
 
-        delete [] src_tm;
+        //delete [] src_tm;
 
 // Yk,b=A^TMk,bA
 // AT=
@@ -451,21 +456,26 @@ namespace Msnhnet
         // 4 =      (r1 + r2) + (r3 + r4) * 16+ (r5 + r6) * 2
         // 5 = r7 + (r1 - r2) + (r3 - r4) * 32+ (r5 - r6)
 
-        int outSize = outHeight * outWidth;
+
+        float *dest_tm2 = new float[outW * outH * outChannel];
+        const int dst_tm_size2 = outW * outH;
+        
+
+        const int outSize = outHeight * outWidth;
 
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
         for(int cc = 0; cc < outChannel; cc++){
-            const float *destptr = dest_tm + cc * dst_tm_size;
-            float *outptr = dest + cc * outSize;
+            float *destptr = dest_tm + cc * dst_tm_size;
+            float *outptr = dest_tm2 + cc * dst_tm_size2;
 
             float tmpA[6][8];
 
-            for(int i = 0; i < outHeight / 6; i++){
-                for(int j = 0; j < outWidth / 6; j++){
-                    const float *destptr0 = destptr + (i * w_tm / 8 + j) * dst_tm_w;
-                    const float *destptr4 = destptr + (i * w_tm / 8 + j + tiles) * dst_tm_w;
+            for(int i = 0; i < outH / 6; i++){
+                for(int j = 0; j < outW / 6; j++){
+                    float *destptr0 = destptr + (i * w_tm / 8 + j) * dst_tm_w;
+                    float *destptr4 = destptr + (i * w_tm / 8 + j + tiles) * dst_tm_w;
 
                     for(int m = 0; m < 8; m++){
 
@@ -485,9 +495,12 @@ namespace Msnhnet
                         tmpA[1][m] = t2 + t4 + t4 + t6 * 16;
                         tmpA[3][m] = t2 + t4 * 8 + t6 * 4;
                         tmpA[5][m] = destptr4[3] + t2 + t4 * 32 + t6;
+
+                        destptr0 += dst_tm_w * 2 * tiles;
+                        destptr4 += dst_tm_w * 2 * tiles;
                     }
 
-                    float *outptr0 = outptr + (i * 6) * outWidth + j * 6;
+                    float *outptr0 = outptr + (i * 6) * outW + j * 6;
 
                     for(int m = 0; m < 6; m++){
 
@@ -510,11 +523,25 @@ namespace Msnhnet
                         outptr0[3] = t2 + t4 * 8 + t6 * 4;
                         outptr0[5] = tmp0[7] + t2 + t4 * 32 + t6;
 
-                        outptr0 += outWidth;
+                        outptr0 += outW;
                     }
                 }
             }
-        }        
+        }
+
+        //crop
+        for(int cc = 0; cc < outChannel; cc++){
+            float *outptr = dest_tm2 + cc * dst_tm_size2;
+            float *outptr2 = dest + cc * outHeight * outWidth;
+            for(int i = 0; i < outHeight; i++){
+                for(int j = 0; j < outWidth; j++){
+                    outptr2[0] = outptr[0];
+                    outptr2++;
+                    outptr++;
+                }
+                outptr += (outW - outWidth);
+            }
+        }
 
     }
 }
