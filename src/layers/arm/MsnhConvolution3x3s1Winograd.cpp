@@ -1,4 +1,5 @@
 #define USE_ARM 1
+#define __aarch64__ 1
 #ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolution3x3s1Winograd.h"
 #include "Msnhnet/layers/arm/MsnhPadding.h"
@@ -355,6 +356,70 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                 for(int j = 0; j < w_tm / 8; j++){
 
 #if USE_NEON
+                    const float coeff[8] = {
+                        0.25f, 0.5f, -1.25f, 2.f,
+                        -2.5f, 4.f, 4.25f, 5.25f
+                    };
+                    
+                    float32x4_t coeff0 = vld1q_f32(coeff);
+                    float32x4_t coeff1 = vld1q_f32(coeff + 4);
+                    
+                    float *r0 = padptr + i * 6 * PadWidth + j * 6;
+                    float *r1 = r0 + PadWidth;
+                    float *r1 = r0 + PadWidth * 2;
+                    float *r2 = r0 + PadWidth * 3;
+                    //no swap intrinsic, so based on vtrnq_f32 and combile intrinsic
+#if __aarch64__
+                    for(int m = 0; m + 3 < 8; m += 4){
+                        float32x4_t r0_0123 = vld1q_f32(r0);
+                        float32x4_t r0_4567 = vld1q_f32(r0 + 4);
+                        float32x4_t r1_0123 = vld1q_f32(r1);
+                        float32x4_t r1_4567 = vld1q_f32(r1 + 4);
+                        float32x4_t r2_0123 = vld1q_f32(r2);
+                        float32x4_t r2_4567 = vld1q_f32(r2 + 4);
+                        float32x4_t r3_0123 = vld1q_f32(r3);
+                        float32x4_t r3_4567 = vld1q_f32(r3 + 4);
+                        // vtrn_type: 将两个输入vector的元素通过转置生成一个有两个vector的矩阵
+                        // 如：src.val[0] = {1,2,3,4,5,6,7,8}
+                        // src.val[1] = {9,10,11,12,13,14,15,16}
+                        // dst = vtrn_u8(src.val[0], src.val[1])时，
+                        // 则 dst.val[0] = {1,9, 3,11,5,13,7,15}
+                        // dst.val[1] = {2,10,4,12,6,14,8,16}
+                        float32x4x2_t r01_00221133 = vtrnq_f32(r0_0123, r1_0123);
+                        float32x4x2_t r01_44665577 = vtrnq_f32(r0_4567, r1_4567);
+                        float32x4x2_t r23_00221133 = vtrnq_f32(r2_0123, r3_0123);
+                        float32x4x2_t r23_44665577 = vtrnq_f32(r2_4567, r3_4567);
+
+                        //vcombine_type: 将两个元素类型相同的输入vector拼接成一个同类
+                        //型但大小是输入vector两倍的新vector。新vector中低部分元素存放的是第一个输入vector元素。
+                        float32x4_t r00 = vcombine_f32(vget_low_f32(r01_00221133.val[0]), vget_low_f32(r23_00221133.val[0]));
+                        float32x4_t r11 = vcombine_f32(vget_low_f32(r01_00221133.val[1]), vget_low_f32(r23_00221133.val[1]));
+                        float32x4_t r22 = vcombine_f32(vget_high_f32(r01_00221133.val[0]), vget_high_f32(r23_00221133.val[0]));
+                        float32x4_t r33 = vcombine_f32(vget_high_f32(r01_00221133.val[1]), vget_high_f32(r23_00221133.val[1]));
+                        float32x4_t r44 = vcombine_f32(vget_low_f32(r01_44665577.val[0]), vget_low_f32(r23_44665577.val[0]));
+                        float32x4_t r55 = vcombine_f32(vget_low_f32(r01_44665577.val[1]), vget_low_f32(r23_44665577.val[1]));
+                        float32x4_t r66 = vcombine_f32(vget_high_f32(r01_44665577.val[0]), vget_high_f32(r23_44665577.val[0]));
+                        float32x4_t r77 = vcombine_f32(vget_high_f32(r01_44665577.val[1]), vget_high_f32(r23_44665577.val[1]));
+
+                        float32x4_t r06m = vsubq_f32(r00, r66);
+                        float32x4_t r71m = vsubq_f32(r77, r11);
+                        float32x4_t r42m = vsubq_f32(r44, r22);
+                        float32x4_t r35m = vsubq_f32(r33, r55);
+
+                        // vmla_lane_type: ri = ai + bi * c[d]
+                        float32x4_t t0 = vmlaq_lane_f32(r06m, r42m, vget_high_f32(coeff1), 1);
+                        float32x4_t t7 = vmlaq_lane_f32(r71m, r35m, vget_high_f32(coeff1), 1);
+
+                        vst1q_f32(&tmpV[0][m], t0);
+                        vst1q_f32(&tmpV[7][m], t6);
+
+                        
+
+                    }
+#else
+                   
+#endif
+
                    
 #else
 
