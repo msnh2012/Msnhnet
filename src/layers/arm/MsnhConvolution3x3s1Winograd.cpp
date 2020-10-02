@@ -1,3 +1,4 @@
+#define USE_ARM 1
 #ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolution3x3s1Winograd.h"
 #include "Msnhnet/layers/arm/MsnhPadding.h"
@@ -88,6 +89,54 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
                 const float *k31 = kernel3_tm + (q + 1) * 64;
 
                 for(int i = 0; i < 16; i++){
+
+#if USE_NEON
+
+#if __aarch64__
+                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                    asm volatile(
+
+                        // ktm2[0 + j] = k00[j];
+                        // ktm2[4 + j] = k01[j];
+                        "vld1.f32   {d0-d1}, [%1]! \n"
+                        "vld1.f32   {d2-d3}, [%2]! \n"
+                        "vst1.f32   {d0-d3}, [%0]! \n"
+
+                        // ktm2[8 + j] = k10[j];
+                        // ktm2[12 + j] = k11[j];
+                        "vld1.f32   {d0-d1}, [%3]! \n"
+                        "vld1.f32   {d2-d3}, [%4]! \n"
+                        "vst1.f32   {d0-d3}, [%0]! \n"
+
+                        // ktm2[16 + j] = k20[j];
+                        // ktm2[20 + j] = k21[j];
+                        "vld1.f32   {d0-d1}, [%5]! \n"
+                        "vld1.f32   {d2-d3}, [%6]! \n"
+                        "vst1.f32   {d0-d3}, [%0]! \n"
+
+                        // ktm2[24 + j] = k30[j];
+                        // ktm2[28 + j] = k31[j];
+                        "vld1.f32   {d0-d1}, [%7]! \n"
+                        "vld1.f32   {d2-d3}, [%8]! \n"
+                        "vst1.f32   {d0-d3}, [%0]! \n"
+
+                        : "=r"(ktm2), // %0
+                        "=r"(k00),  // %1
+                        "=r"(k01),  // %2
+                        "=r"(k10),  // %3
+                        "=r"(k11),  // %4
+                        "=r"(k20),  // %5
+                        "=r"(k21),  // %6
+                        "=r"(k30),  // %7
+                        "=r"(k31)   // %8
+
+                        :
+                        : "cc", "memory", "q0", "q1");
+#endif
+
+#else
+
                     for(int j = 0; j < 4; j++){
                         ktm2[0 + j] = k00[j];
                         ktm2[4 + j] = k01[j];
@@ -98,7 +147,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
                         ktm2[24 + j] = k30[j];
                         ktm2[28 + j] = k31[j];
                     }
-
+#endif
                     k00 += 4;
                     k01 += 4;
                     k10 += 4;
@@ -120,13 +169,44 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
                 const float *k30 = kernel3_tm + q * 64;
 
                 for(int i = 0; i < 16; i++){
+
+#if USE_NEON
+
+#if __aarch64__
+                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                    asm volatile(
+
+                        // ktm2[0 + j] = k00[j];
+                        // ktm2[4 + j] = k01[j];
+                        "vld1.f32   {d0-d1}, [%1]! \n"
+                        "vld1.f32   {d2-d3}, [%2]! \n"
+                        "vst1.f32   {d0-d3}, [%0]! \n"
+
+                        // ktm2[8 + j] = k10[j];
+                        // ktm2[12 + j] = k11[j];
+                        "vld1.f32   {d0-d1}, [%3]! \n"
+                        "vld1.f32   {d2-d3}, [%4]! \n"
+                        "vst1.f32   {d0-d3}, [%0]! \n"
+
+                        : "=r"(ktm2), // %0
+                        "=r"(k00),  // %1
+                        "=r"(k01),  // %2
+                        "=r"(k10),  // %3
+                        "=r"(k11)  // %4
+
+                        :
+                        : "cc", "memory", "q0", "q1");
+#endif
+
+#else
                     for(int j = 0; j < 4; j++){
                         ktm2[0 + j] = k00[j];
                         ktm2[4 + j] = k10[j];
                         ktm2[8 + j] = k20[j];
                         ktm2[12 + j] = k30[j];
                     }
-
+#endif
                     k00 += 4;
                     k10 += 4;
                     k20 += 4;
@@ -150,9 +230,28 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
             for(; q < inChannel; q++){
                 const float* k00 = kernel0_tm + q * 64;
                 for(int i = 0; i < 16; i++){
+#if USE_NEON                    
+
+#if __aarch64__
+                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                    asm volatile(
+                        // ktm2[0 + j] = k00[j];
+                        "vld1.f32   {d0-d1}, [%1]! \n"
+                        "vst1.f32   {d0-d1}, [%0]! \n"
+
+                        : "=r"(ktm2), // %0
+                        "=r"(k00)  // %1
+
+                        :
+                        : "cc", "memory", "q0");
+#endif
+
+#else
                     for(int j = 0; j < 4; j++){
                         ktm2[j] = k00[j];
                     }
+#endif
                     k00 += 4;
                     ktm2 += 4;
                 }
@@ -246,7 +345,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
         for(int q = 0; q < inChannel; q++){
-            const float *padptr = srcPadding + q * PadSize;
+            float *padptr = srcPadding + q * PadSize;
             float *srcptr = src_tm + q * src_tm_size;
 
             float tmpV[8][8];
@@ -254,8 +353,15 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
             //tile
             for(int i = 0; i < h_tm / 8; i++){
                 for(int j = 0; j < w_tm / 8; j++){
+
+#if USE_NEON
+                   
+#else
+
+#endif
+
                     float *r0 = padptr + i * 6 * PadWidth + j * 6;
-                    
+
                     // Bd_{c,b}
                     for(int m = 0; m < 8; m++){
 
