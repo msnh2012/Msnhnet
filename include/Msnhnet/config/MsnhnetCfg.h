@@ -26,6 +26,10 @@
 #include <nnpack.h>
 #endif
 
+#ifdef USE_OPENGL
+#include <Msnhnet/config/MsnhnetOpenGL.h>
+#endif
+
 #ifndef OMP_THREAD
 #define OMP_THREAD omp_get_max_threads()
 #endif
