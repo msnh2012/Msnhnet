@@ -27,11 +27,11 @@ Mat::Mat(const int &width, const int &height, const MatType &matType)
 
     switch (matType)
     {
-    case MatType::MAT_GARY_U8:
+    case MatType::MAT_GRAY_U8:
         this->_channel  = 1;
         this->_step     = 1;
         break;
-    case MatType::MAT_GARY_F32:
+    case MatType::MAT_GRAY_F32:
         this->_channel  = 1;
         this->_step     = 4;
         break;
@@ -64,11 +64,11 @@ Mat::Mat(const int &width, const int &height, const MatType &matType, void *data
 
     switch (matType)
     {
-    case MatType::MAT_GARY_U8:
+    case MatType::MAT_GRAY_U8:
         this->_channel  = 1;
         this->_step     = 1;
         break;
-    case MatType::MAT_GARY_F32:
+    case MatType::MAT_GRAY_F32:
         this->_channel  = 1;
         this->_step     = 4;
         break;
@@ -108,13 +108,13 @@ void Mat::checkPixelType(const int &array, const int &fmt)
 
     switch (this->_matType)
     {
-    case MatType::MAT_GARY_U8:
+    case MatType::MAT_GRAY_U8:
         if(fmt!='b'||array!=1)
         {
             throw Exception(1,"[CV]: pixel type must be uint8_t", __FILE__, __LINE__, __FUNCTION__);
         }
         break;
-    case MatType::MAT_GARY_F32:
+    case MatType::MAT_GRAY_F32:
         if(fmt!='f'||array!=1)
         {
             throw Exception(1,"[CV]: pixel type must be float", __FILE__, __LINE__, __FUNCTION__);
@@ -159,7 +159,7 @@ void Mat::readImage(const std::string &path)
 
     if(this->_channel == 1)
     {
-        this->_matType  = MatType::MAT_GARY_U8;
+        this->_matType  = MatType::MAT_GRAY_U8;
         this->_step     = this->_channel;
     }
     else if(this->_channel == 3)

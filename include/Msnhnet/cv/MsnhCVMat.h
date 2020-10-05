@@ -16,14 +16,14 @@ public:
     Mat (const int &width, const int &height, const MatType &matType, void *data);
 
     template<typename T>
-    T getPixel(const Vec2U32 &pos)
+    T getPixel(const Vec2I32 &pos)
     {
         int array   = DataType<T>::array;
         int fmt     = DataType<T>::fmt;
 
         checkPixelType(array, fmt);
 
-        if(pos.x1 >= this->_width || pos.x2>= this->_height)
+        if(pos.x1 < 0 || pos.x2 < 0 || pos.x1 >= this->_width || pos.x2>= this->_height)
         {
             throw Exception(1,"[CV]: pixel pos out of memory", __FILE__, __LINE__, __FUNCTION__);
         }
@@ -43,14 +43,14 @@ public:
     }
 
     template<typename T>
-    void setPixel(const Vec2U32 &pos, const T &val)
+    void setPixel(const Vec2I32 &pos, const T &val)
     {
         int array   = DataType<T>::array;
         int fmt     = DataType<T>::fmt;
 
         checkPixelType(array, fmt);
 
-        if(pos.x1 >= this->_width || pos.x2>= this->_height)
+        if(pos.x1 < 0 || pos.x2 < 0 || pos.x1 >= this->_width || pos.x2>= this->_height)
         {
             throw Exception(1,"[CV]: pixel pos out of memory", __FILE__, __LINE__, __FUNCTION__);
         }

@@ -6,8 +6,8 @@ namespace Msnhnet
 {
 enum MatType
 {
-    MAT_GARY_U8,
-    MAT_GARY_F32,
+    MAT_GRAY_U8,
+    MAT_GRAY_F32,
     MAT_RGB_U8,
     MAT_RGB_F32,
     MAT_RGBA_U8,
@@ -21,6 +21,14 @@ enum SaveImageType
     MAT_SAVE_JPG,
     MAT_SAVE_HDR,
     MAT_SAVE_TGA,
+};
+
+enum CvtColorType
+{
+    CVT_RGB2GRAY,
+    CVT_RGBA2GRAY,
+    CVT_RGB2BGR,
+    CVT_RGB2YUV
 };
 
 union MatData
