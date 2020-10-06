@@ -1492,6 +1492,244 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                 float *destptr2 = dest2;
                 float *destptr3 = dest3;
 
+#if USE_NEON
+
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                asm volatile(
+                    // for(int r = 0; r < 16; r++) => r0 = 16
+                    "mov        r0, #16                 \n"
+
+                    "loop0:                             \n"
+                    // q0 = k00 & q1 = k01
+                    "pld        [%6, #256]              \n"
+                    "vld1.f32   {d0-d3}, [%6]!          \n"
+                    // q2 = k10, q3 = k11
+                    "pld        [%6, #256]              \n"
+                    "vld1.f32   {d4-d7}, [%6]!          \n"
+                    // q4 = k20, q5 = q21
+                    "pld        [%6, #256]              \n"
+                    "vld1.f32   {d8-d11}, [%6]!         \n"
+                    // q6 = k30, q7 = k31
+                    "pld        [%6, #256]              \n"
+                    "vld1.f32   {d12-d15}, [%6]!        \n"
+
+                    // for(int t = 0; t < tiles; t++)
+                    // r1 = tiles >> 2
+                    "lsr        r1, %14, #2             \n"
+                    "cmp        r1, #0                  \n"
+                    "beq        loop2                   \n"
+
+                    // 开始tiles的循环
+
+                    // q12 = r0
+                    "pld        [%4, #128]              \n"
+                    "vld1.f32   {d24-d25}, [%4]!        \n"
+
+                    "loop1:                             \n"
+                    // q8 = destptr0[m]
+                    "pld        [%0, #128]              \n"
+                    "vld1.f32   {d16-d17}, [%0]         \n"
+                    // destptr0[m] += r0[m] * ktm[m];
+                    "vmla.f32   q8, q12, q0             \n"
+                    // q9 = destptr1[m]
+                    "pld        [%1, #128]              \n"
+                    "vld1.f32   {d18-d19}, [%1]         \n"
+                    // destptr1[m] += r0[m] * ktm[m + 8];
+                    "vmla.f32   q9, q12, q2             \n"
+                    // q10 = destptr2[m]
+                    "pld        [%2, #128]              \n"
+                    "vld1.f32   {d20-d21}, [%2]         \n"
+                    // destptr2[m] += r0[m] * ktm[m + 16];
+                    "vmla.f32   q10, q12, q4            \n"
+                    // q11 = destptr3[m]
+                    "pld        [%3, #128]              \n"
+                    "vld1.f32   {d22-d23}, [%3]         \n"
+                    // destptr3[m] += r0[m] * ktm[m + 24];
+                    "vmla.f32   q11, q12, q6            \n"
+
+                    // q13 = r1
+                    "pld        [%5, #128]              \n"
+                    "vld1.f32   {d26-d27}, [%5]!        \n"
+                    // destptr0[m] += r1[m] * ktm[m + 4];
+                    "vmla.f32   q8, q13, q1             \n"
+                    // destptr1[m] += r1[m] * ktm[m + 12];
+                    "vmla.f32   q9, q13, q3             \n"
+                    // destptr2[m] += r1[m] * ktm[m + 20];
+                    "vmla.f32   q10, q13, q5            \n"
+                    // destptr3[m] += r1[m] * ktm[m + 28];
+                    "vmla.f32   q11, q13, q7            \n"
+                    
+                    // 
+                    "vst1.f32   {d16-d17}, [%0]!        \n"
+                    "vst1.f32   {d18-d19}, [%1]!        \n"
+                    "vst1.f32   {d20-d21}, [%2]!        \n"
+                    "vst1.f32   {d22-d23}, [%3]!        \n"
+
+                    // q12 = r0
+                    "pld        [%4, #128]              \n" 
+                    "vld1.f32   {d24-d25}, [%4]!        \n" 
+
+                    // q8 = destptr0[m]
+                    "pld        [%0, #128]              \n"
+                    "vld1.f32   {d16-d17}, [%0]         \n"
+                    // destptr0[m] += r0[m] * ktm[m];
+                    "vmla.f32   q8, q12, q0             \n"
+                    // q9 = destptr1[m]
+                    "pld        [%1, #128]              \n"
+                    "vld1.f32   {d18-d19}, [%1]         \n"
+                    // destptr1[m] += r0[m] * ktm[m + 8];
+                    "vmla.f32   q9, q12, q2             \n"
+                    // q10 = destptr2[m]
+                    "pld        [%2, #128]              \n"
+                    "vld1.f32   {d20-d21}, [%2]         \n"
+                    // destptr2[m] += r0[m] * ktm[m + 16];
+                    "vmla.f32   q10, q12, q4            \n"
+                    // q11 = destptr3[m]
+                    "pld        [%3, #128]              \n"
+                    "vld1.f32   {d22-d23}, [%3]         \n"
+                    // destptr3[m] += r0[m] * ktm[m + 24];
+                    "vmla.f32   q11, q12, q6            \n"
+
+                    // q13 = r1
+                    "pld        [%5, #128]              \n"
+                    "vld1.f32   {d26-d27}, [%5]!        \n"
+                    // destptr0[m] += r1[m] * ktm[m + 4];
+                    "vmla.f32   q8, q13, q1             \n"
+                    // destptr1[m] += r1[m] * ktm[m + 12];
+                    "vmla.f32   q9, q13, q3             \n"
+                    // destptr2[m] += r1[m] * ktm[m + 20];
+                    "vmla.f32   q10, q13, q5            \n"
+                    // destptr3[m] += r1[m] * ktm[m + 28];
+                    "vmla.f32   q11, q13, q7            \n"
+                    
+                    // 
+                    "vst1.f32   {d16-d17}, [%0]!        \n"
+                    "vst1.f32   {d18-d19}, [%1]!        \n"
+                    "vst1.f32   {d20-d21}, [%2]!        \n"
+                    "vst1.f32   {d22-d23}, [%3]!        \n"
+
+
+                    // q12 = r0
+                    "pld        [%4, #128]              \n" 
+                    "vld1.f32   {d24-d25}, [%4]!        \n" 
+
+                    // q8 = destptr0[m]
+                    "pld        [%0, #128]              \n"
+                    "vld1.f32   {d16-d17}, [%0]         \n"
+                    // destptr0[m] += r0[m] * ktm[m];
+                    "vmla.f32   q8, q12, q0             \n"
+                    // q9 = destptr1[m]
+                    "pld        [%1, #128]              \n"
+                    "vld1.f32   {d18-d19}, [%1]         \n"
+                    // destptr1[m] += r0[m] * ktm[m + 8];
+                    "vmla.f32   q9, q12, q2             \n"
+                    // q10 = destptr2[m]
+                    "pld        [%2, #128]              \n"
+                    "vld1.f32   {d20-d21}, [%2]         \n"
+                    // destptr2[m] += r0[m] * ktm[m + 16];
+                    "vmla.f32   q10, q12, q4            \n"
+                    // q11 = destptr3[m]
+                    "pld        [%3, #128]              \n"
+                    "vld1.f32   {d22-d23}, [%3]         \n"
+                    // destptr3[m] += r0[m] * ktm[m + 24];
+                    "vmla.f32   q11, q12, q6            \n"
+
+                    // q13 = r1
+                    "pld        [%5, #128]              \n"
+                    "vld1.f32   {d26-d27}, [%5]!        \n"
+                    // destptr0[m] += r1[m] * ktm[m + 4];
+                    "vmla.f32   q8, q13, q1             \n"
+                    // destptr1[m] += r1[m] * ktm[m + 12];
+                    "vmla.f32   q9, q13, q3             \n"
+                    // destptr2[m] += r1[m] * ktm[m + 20];
+                    "vmla.f32   q10, q13, q5            \n"
+                    // destptr3[m] += r1[m] * ktm[m + 28];
+                    "vmla.f32   q11, q13, q7            \n"
+                    
+                    // 
+                    "vst1.f32   {d16-d17}, [%0]!        \n"
+                    "vst1.f32   {d18-d19}, [%1]!        \n"
+                    "vst1.f32   {d20-d21}, [%2]!        \n"
+                    "vst1.f32   {d22-d23}, [%3]!        \n"
+
+                    // q12 = r0
+                    "pld        [%4, #128]              \n" 
+                    "vld1.f32   {d24-d25}, [%4]!        \n" 
+
+                    // q8 = destptr0[m]
+                    "pld        [%0, #128]              \n"
+                    "vld1.f32   {d16-d17}, [%0]         \n"
+                    // destptr0[m] += r0[m] * ktm[m];
+                    "vmla.f32   q8, q12, q0             \n"
+                    // q9 = destptr1[m]
+                    "pld        [%1, #128]              \n"
+                    "vld1.f32   {d18-d19}, [%1]         \n"
+                    // destptr1[m] += r0[m] * ktm[m + 8];
+                    "vmla.f32   q9, q12, q2             \n"
+                    // q10 = destptr2[m]
+                    "pld        [%2, #128]              \n"
+                    "vld1.f32   {d20-d21}, [%2]         \n"
+                    // destptr2[m] += r0[m] * ktm[m + 16];
+                    "vmla.f32   q10, q12, q4            \n"
+                    // q11 = destptr3[m]
+                    "pld        [%3, #128]              \n"
+                    "vld1.f32   {d22-d23}, [%3]         \n"
+                    // destptr3[m] += r0[m] * ktm[m + 24];
+                    "vmla.f32   q11, q12, q6            \n"
+
+                    // q13 = r1
+                    "pld        [%5, #128]              \n"
+                    "vld1.f32   {d26-d27}, [%5]!        \n"
+                    // destptr0[m] += r1[m] * ktm[m + 4];
+                    "vmla.f32   q8, q13, q1             \n"
+                    // destptr1[m] += r1[m] * ktm[m + 12];
+                    "vmla.f32   q9, q13, q3             \n"
+                    // destptr2[m] += r1[m] * ktm[m + 20];
+                    "vmla.f32   q10, q13, q5            \n"
+                    // destptr3[m] += r1[m] * ktm[m + 28];
+                    "vmla.f32   q11, q13, q7            \n"
+                    
+                    // 
+                    "vst1.f32   {d16-d17}, [%0]!        \n"
+                    "vst1.f32   {d18-d19}, [%1]!        \n"
+                    "vst1.f32   {d20-d21}, [%2]!        \n"
+                    "vst1.f32   {d22-d23}, [%3]!        \n"
+
+                    "subs       r1, #1                  \n"
+                    "bne        loop1                   \n"
+                    "sub        %4, %4, #16             \n"
+
+                    // tiles循环结束
+
+                    "loop2:                             \n"
+                    // r1 = remain = tiles & 3
+                    "and        r1, %14, #3             \n"
+                    "cmp        r1, #0                  \n"
+                    "beq        loop4                      \n"
+
+                    : "=r"(destptr0), // %0
+                    "=r"(destptr1), // %1
+                    "=r"(destptr2), // %2
+                    "=r"(destptr3), // %3
+                    "=r"(r0),         // %4
+                    "=r"(r1),         // %5
+                    "=r"(ktm)         // %6
+                    : "0"(destptr0),
+                    "1"(destptr1),
+                    "2"(destptr2),
+                    "3"(destptr3),
+                    "4"(r0),
+                    "5"(r1),
+                    "6"(ktm),
+                    "r"(tiles) // %14
+                    : "cc", "memory", "r0", "r1", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13");
+                );
+#endif
+
+#else
+
                 for(int r = 0; r < 16; r++){
                     for(int t = 0; t < tiles; t++){
                         for(int m = 0; m < 4; m++){
@@ -1515,6 +1753,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
 
                     ktm += 32;
                 }
+#endif
             }
 
             for(; q < inChannel; q++){
