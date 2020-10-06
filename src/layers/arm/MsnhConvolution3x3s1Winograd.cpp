@@ -1814,6 +1814,36 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                 float *destptr2 = dest2;
                 float *destptr3 = dest3;
 
+#if USE_NEON
+
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                asm volatile(
+                    // for(int r = 0; r < 16; r++)
+                    "mov        r0, #16                 \n"
+                    "loop0:                             \n"
+
+                    : "=r"(destptr0), // %0
+                    "=r"(destptr1), // %1
+                    "=r"(destptr2), // %2
+                    "=r"(destptr3), // %3
+                    "=r"(r0),         // %4
+                    "=r"(r1),         // %5
+                    "=r"(ktm)         // %6
+                    : "0"(destptr0),
+                    "1"(destptr1),
+                    "2"(destptr2),
+                    "3"(destptr3),
+                    "4"(r0),
+                    "5"(r1),
+                    "6"(ktm),
+                    "r"(tiles) // %14
+                    : "cc", "memory", "r0", "r1", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13"
+                );
+#endif
+
+#else
                 for(int r = 0; r < 16; r++){
                     for(int t = 0; t < tiles; t++){
                         for(int m = 0; m < 4; m++){
@@ -1832,6 +1862,8 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
 
                     ktm += 16;
                 }
+#endif
+
             }
         }
 
