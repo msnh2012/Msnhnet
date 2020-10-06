@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <Msnhnet/cv/MsnhCVType.h>
 #include <Msnhnet/utils/MsnhException.h>
+#include <Msnhnet/config/MsnhnetCfg.h>
 #include <iostream>
 
 namespace Msnhnet
@@ -11,9 +12,10 @@ class Mat
 {
 public:
     Mat ();
-    ~Mat ();
+    Mat (const Mat& mat);
     Mat (const int &width, const int &height, const MatType &matType);
     Mat (const int &width, const int &height, const MatType &matType, void *data);
+    ~Mat ();
 
     template<typename T>
     T getPixel(const Vec2I32 &pos)
@@ -101,6 +103,16 @@ public:
 
     void clearMat();
 
+    Mat operator + (const Mat & mat);
+
+    Mat operator - (const Mat & mat);
+
+    Mat operator * (const Mat & mat);
+
+    Mat operator / (const Mat & mat);
+
+    Mat &operator = (const Mat & mat);
+
     void copyTo(Mat &mat);
 
     int getWidth() const;
@@ -126,6 +138,9 @@ public:
     void setMatType(const MatType &matType);
 
     void setU8Ptr(uint8_t *const &ptr);
+
+    bool isEmpty();
+
 private:
     int _width          = 0;
     int _height         = 0;

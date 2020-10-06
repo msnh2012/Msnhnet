@@ -11,7 +11,24 @@ namespace Msnhnet
 
 Mat::Mat()
 {
+}
 
+Mat::Mat(const Mat &mat) 
+
+{
+    clearMat();
+    this->_channel  = mat.getChannel();
+    this->_height   = mat.getHeight();
+    this->_width    = mat.getWidth();
+    this->_matType  = mat.getMatType();
+    this->_step     = mat.getStep();
+
+    this->_data.u8  = new uint8_t[this->_width*this->_height*this->_step]();
+
+    if(mat.getData().u8!=nullptr)
+    {
+        memcpy(this->_data.u8, mat.getData().u8, this->_width*this->_height*this->_step);
+    }
 }
 
 Mat::~Mat()
@@ -53,7 +70,7 @@ Mat::Mat(const int &width, const int &height, const MatType &matType)
         break;
     }
 
-    this->_data.u8 = new uint8_t[this->_width*this->_height*this->_step]();
+    this->_data.u8      = new uint8_t[this->_width*this->_height*this->_step]();
 }
 
 Mat::Mat(const int &width, const int &height, const MatType &matType, void *data)
@@ -223,6 +240,178 @@ void Mat::clearMat()
     this->_matType  = MatType::MAT_RGB_F32;
 }
 
+Mat Mat::operator + (const Mat &mat)
+{
+    Mat tmpMat;
+
+    if(mat.getMatType() != this->_matType || mat.getChannel() != this->_channel || mat.getStep() != this->_step ||
+            mat.getWidth() != this->_width || mat.getHeight() != this->_height)
+    {
+        throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    this->copyTo(tmpMat);
+
+    if(this->_matType == MAT_GRAY_U8 || this->_matType == MAT_RGB_U8 || this->_matType == MAT_RGBA_U8)
+    {
+        int datas = this->_width*this->_height*this->_step;
+        for (int i = 0; i < datas; ++i)
+        {
+            int add = this->_data.u8[i] + tmpMat.getData().u8[i];
+
+            add = (add>255)?255:add;
+
+            tmpMat.getData().u8[i] = static_cast<uint8_t>(add);
+
+        }
+    }
+    else if(this->_matType == MAT_GRAY_F32 || this->_matType == MAT_RGB_F32 || this->_matType == MAT_RGBA_F32)
+    {
+        int datas = this->_width*this->_height*this->_step;
+        for (int i = 0; i < datas; ++i)
+        {
+            tmpMat.getData().f32[i] = tmpMat.getData().f32[i]+this->_data.f32[i];
+        }
+    }
+    return tmpMat;
+}
+
+Mat Mat::operator - (const Mat &mat)
+{
+    Mat tmpMat;
+
+    if(mat.getMatType() != this->_matType || mat.getChannel() != this->_channel || mat.getStep() != this->_step ||
+            mat.getWidth() != this->_width || mat.getHeight() != this->_height)
+    {
+        throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    this->copyTo(tmpMat);
+
+    if(this->_matType == MAT_GRAY_U8 || this->_matType == MAT_RGB_U8 || this->_matType == MAT_RGBA_U8)
+    {
+        int datas = this->_width*this->_height*this->_step;
+        for (int i = 0; i < datas; ++i)
+        {
+            int sub = this->_data.u8[i] - tmpMat.getData().u8[i];
+
+            sub = (sub<0)?0:sub;
+
+            tmpMat.getData().u8[i] = static_cast<uint8_t>(sub);
+
+        }
+    }
+    else if(this->_matType == MAT_GRAY_F32 || this->_matType == MAT_RGB_F32 || this->_matType == MAT_RGBA_F32)
+    {
+        int datas = this->_width*this->_height*this->_step;
+        for (int i = 0; i < datas; ++i)
+        {
+            tmpMat.getData().f32[i] = tmpMat.getData().f32[i]-this->_data.f32[i];
+        }
+    }
+    return tmpMat;
+}
+
+Mat Mat::operator * (const Mat &mat)
+{
+    Mat tmpMat;
+
+    if(mat.getMatType() != this->_matType || mat.getChannel() != this->_channel || mat.getStep() != this->_step ||
+            mat.getWidth() != this->_width || mat.getHeight() != this->_height)
+    {
+        throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    this->copyTo(tmpMat);
+
+    if(this->_matType == MAT_GRAY_U8 || this->_matType == MAT_RGB_U8 || this->_matType == MAT_RGBA_U8)
+    {
+        int datas = this->_width*this->_height*this->_step;
+        for (int i = 0; i < datas; ++i)
+        {
+            int mul = this->_data.u8[i] * tmpMat.getData().u8[i];
+
+            mul = (mul>255)?255:mul;
+
+            tmpMat.getData().u8[i] = static_cast<uint8_t>(mul);
+
+        }
+    }
+    else if(this->_matType == MAT_GRAY_F32 || this->_matType == MAT_RGB_F32 || this->_matType == MAT_RGBA_F32)
+    {
+        int datas = this->_width*this->_height*this->_step;
+        for (int i = 0; i < datas; ++i)
+        {
+            tmpMat.getData().f32[i] = tmpMat.getData().f32[i]*this->_data.f32[i];
+        }
+    }
+    return tmpMat;
+}
+
+Mat Mat::operator / (const Mat &mat)
+{
+    Mat tmpMat;
+
+    if(mat.getMatType() != this->_matType || mat.getChannel() != this->_channel || mat.getStep() != this->_step ||
+            mat.getWidth() != this->_width || mat.getHeight() != this->_height)
+    {
+        throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    this->copyTo(tmpMat);
+
+    if(this->_matType == MAT_GRAY_U8 || this->_matType == MAT_RGB_U8 || this->_matType == MAT_RGBA_U8)
+    {
+        int datas = this->_width*this->_height*this->_step;
+        for (int i = 0; i < datas; ++i)
+        {
+            int div = 0;
+            if(tmpMat.getData().u8[i] == 0)
+            {
+                div = 255;
+            }
+            else
+            {
+                div = this->_data.u8[i] / (tmpMat.getData().u8[i]);
+            }
+
+            tmpMat.getData().u8[i] = static_cast<uint8_t>(div);
+
+        }
+    }
+    else if(this->_matType == MAT_GRAY_F32 || this->_matType == MAT_RGB_F32 || this->_matType == MAT_RGBA_F32)
+    {
+        int datas = this->_width*this->_height*this->_step;
+        for (int i = 0; i < datas; ++i)
+        {
+            tmpMat.getData().f32[i] = tmpMat.getData().f32[i]/this->_data.f32[i];
+        }
+    }
+    return tmpMat;
+}
+
+Mat &Mat::operator = (const Mat &mat) 
+
+{
+    if(this!=&mat)
+    {
+        clearMat();
+        this->_channel  = mat._channel;
+        this->_width    = mat._width;
+        this->_height   = mat._height;
+        this->_step     = mat._step;
+        this->_matType  = mat._matType;
+
+        if(mat._data.u8!=nullptr)
+        {
+            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+            memcpy(u8Ptr, mat.getData().u8, this->_width*this->_height*this->_step);
+            this->_data.u8 =u8Ptr;
+        }
+    }
+    return *this;
+}
+
 void Mat::copyTo(Mat &mat)
 {
 
@@ -241,7 +430,7 @@ void Mat::copyTo(Mat &mat)
         memcpy(u8Ptr, this->_data.u8, this->_width*this->_height*this->_step);
     }
 
-     mat.setU8Ptr(u8Ptr);
+    mat.setU8Ptr(u8Ptr);
 }
 
 int Mat::getWidth() const
@@ -302,6 +491,18 @@ void Mat::setMatType(const MatType &matType)
 void Mat::setU8Ptr(uint8_t * const &ptr)
 {
     this->_data.u8 = ptr;
+}
+
+bool Mat::isEmpty()
+{
+    if(this->_data.u8==nullptr||this->_height==0||this->_width==0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 }
