@@ -1080,22 +1080,283 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                         // dst = vtrn_u8(src.val[0], src.val[1])时，
                         // 则 dst.val[0] = {1,9, 3,11,5,13,7,15}
                         // dst.val[1] = {2,10,4,12,6,14,8,16}
+
+                        // q9: float32x4_t r0_tm4 = vsubq_f32(tmp34a, tmp34b);
+                        // q9 => [a, b, c, d]
+                        
+                        // q2: float32x4_t r0_tm_4_1 = vaddq_f32(tmp56a, tmp56b);
+                        // q2 => [e, f, g, h]
+
+                        // q3: float32x4_t r0_tm_4_2 = vsubq_f32(tmp56a, tmp56b);
+                        // q3 => [i, j, k, l]
+
+                        // q6: float32x4_t t7135 = vmlaq_lane_f32(t71, t35, vget_high_f32(coeff1), 1);
+                        // q6 => [m, n, o, p]
+
+                        // r04[0] = vgetq_lane_f32(r0_tm4, 0);
+                        // r14[0] = vgetq_lane_f32(r0_tm4, 1);
+                        // r24[0] = vgetq_lane_f32(r0_tm4, 2);
+                        // r34[0] = vgetq_lane_f32(r0_tm4, 3);
+
+                        // r04[1] = vgetq_lane_f32(r0_tm_4_1, 0);
+                        // r14[1] = vgetq_lane_f32(r0_tm_4_1, 1);
+                        // r24[1] = vgetq_lane_f32(r0_tm_4_1, 2);
+                        // r34[1] = vgetq_lane_f32(r0_tm_4_1, 3);
+
+                        // r04[2] = vgetq_lane_f32(r0_tm_4_2, 0);
+                        // r14[2] = vgetq_lane_f32(r0_tm_4_2, 1);
+                        // r24[2] = vgetq_lane_f32(r0_tm_4_2, 2);
+                        // r34[2] = vgetq_lane_f32(r0_tm_4_2, 3);
+
+                        // r04[3] = vgetq_lane_f32(t7135, 0);
+                        // r14[3] = vgetq_lane_f32(t7135, 1);
+                        // r24[3] = vgetq_lane_f32(t7135, 2);
+                        // r34[3] = vgetq_lane_f32(t7135, 3);
+
+                        // q9 = [a, e, c, g]
+                        // q2 = [b, f, d, h]
                         "vtrn.32    q9, q2              \n"
+                        // q3 = [i, m, k, o]
+                        // q6 = [j, n, l, p]
                         "vtrn.32    q3, q6              \n"
 
-                        // 
+                        // 多移动了3*4=12个字节
                         "sub        %0, %0, #12         \n"
                         "sub        %2, %2, #12         \n"
                         "sub        %4, %4, #12         \n"
                         "sub        %6, %6, #12         \n"
 
+                        // q9 = [a, e, i, m]
+                        // q3 = [c, g, k, o]
                         "vswp       d19, d6             \n"
+                        // q2 = [b, f, j, n]
+                        // q6 = [d, h, l, p]
                         "vswp       d5, d12             \n"
 
                         "vst1.f32   {d18-d19}, [%1], %26 \n"
                         "vst1.f32   {d4-d5}, [%3], %26  \n"
                         "vst1.f32   {d6-d7}, [%5], %26  \n"
                         "vst1.f32   {d12-d13}, [%7], %26 \n"
+
+                        /**************************************************************/
+                        // loop2
+                        // float32x4_t t0_0123 = vld1q_f32(t0);
+                        // float32x4_t t0_4567 = vld1q_f32(t0 + 4);
+                        "vld1.f32   {d16-d19}, [%8]     \n"
+                        // t0 += 8*4 -> t0 += 32*4 = 128
+                        "add        %8, %8, #128        \n"
+                        // float32x4_t t1_0123 = vld1q_f32(t1);
+                        // float32x4_t t1_4567 = vld1q_f32(t1 + 4);
+                        "vld1.f32   {d20-d23}, [%9]     \n"
+                        "add        %9, %9, #128        \n"
+                        // float32x4_t t2_0123 = vld1q_f32(t2);
+                        // float32x4_t t2_4567 = vld1q_f32(t2 + 4);
+                        "vld1.f32   {d24-d27}, [%10]    \n"
+                        "add        %10, %10, #128      \n"
+                        // float32x4_t t3_0123 = vld1q_f32(t3);
+                        // float32x4_t t3_4567 = vld1q_f32(t3 + 4);
+                        "vld1.f32   {d28-d31}, [%11]    \n"
+                        "add        %11, %11, #128      \n"
+
+                        // float32x4x2_t t01_00221133 = vtrnq_f32(t0_0123, t1_0123);
+                        "vtrn.32    q8, q10             \n"
+                        // float32x4x2_t t01_44665577 = vtrnq_f32(t0_4567, t1_4567);
+                        "vtrn.32    q9, q11             \n"
+                        // float32x4x2_t t23_00221133 = vtrnq_f32(t2_0123, t3_0123);
+                        "vtrn.32    q12, q14            \n"
+                        // float32x4x2_t t23_44665577 = vtrnq_f32(t2_4567, t3_4567);
+                        "vtrn.32    q13, q15            \n"
+
+                        //  q8 = 00   q9 = 44  q10 = 11  q11 = 55
+                        // q12 = 22  q13 = 66  q14 = 33  q15 = 77
+                        // float32x4_t t_00 = vcombine_f32(vget_low_f32(t01_00221133.val[0]), vget_low_f32(t23_00221133.val[0]));
+                        // float32x4_t t_11 = vcombine_f32(vget_low_f32(t01_00221133.val[1]), vget_low_f32(t23_00221133.val[1]));
+                        // float32x4_t t_22 = vcombine_f32(vget_high_f32(t01_00221133.val[0]), vget_high_f32(t23_00221133.val[0]));
+                        // float32x4_t t_33 = vcombine_f32(vget_high_f32(t01_00221133.val[1]), vget_high_f32(t23_00221133.val[1]));
+                        // float32x4_t t_44 = vcombine_f32(vget_low_f32(t01_44665577.val[0]), vget_low_f32(t23_44665577.val[0]));
+                        // float32x4_t t_55 = vcombine_f32(vget_low_f32(t01_44665577.val[1]), vget_low_f32(t23_44665577.val[1]));
+                        // float32x4_t t_66 = vcombine_f32(vget_high_f32(t01_44665577.val[0]), vget_high_f32(t23_44665577.val[0]));
+                        // float32x4_t t_77 = vcombine_f32(vget_high_f32(t01_44665577.val[1]), vget_high_f32(t23_44665577.val[1]));
+                        "vswp       d17, d24            \n"
+                        "vswp       d19, d26            \n"
+                        "vswp       d21, d28            \n"
+                        "vswp       d23, d30            \n"
+
+                        // float32x4_t t06 = vsubq_f32(t_00, t_66);
+                        "vsub.f32   q2, q8, q13         \n"
+                        // float32x4_t t42 = vsubq_f32(t_44, t_22);
+                        "vsub.f32   q3, q9, q12         \n"
+
+                        // float32x4_t t26 = vaddq_f32(t_22, t_66);
+                        "vadd.f32   q4, q12, q13        \n"
+                        // float32x4_t t15 = vaddq_f32(t_11, t_55);
+                        "vadd.f32   q5, q10, q11        \n"
+                        // float32x4_t t0642 = vmlaq_lane_f32(t06, t42, vget_high_f32(coeff1), 1);
+                        "vmla.f32   q2, q3, %f25[1]     \n"
+                        // float32x4_t t3c = vmulq_lane_f32(t_33, vget_low_f32(coeff1), 0);
+                        "vmul.f32   q7, q14, %e25[0]    \n" 
+                        // float32x4_t t4c = vmulq_lane_f32(t_44, vget_high_f32(coeff0), 0);
+                        "vmul.f32   q6, q9, %f24[0]     \n" 
+
+                        // float32x4_t tmp12a = vmlsq_lane_f32(t26, t_44, vget_high_f32(coeff1), 0);
+                        "vmls.f32   q4, q9, %f25[0]     \n"
+                        // float32x4_t tmp12b = vmlsq_lane_f32(t15, t_33, vget_high_f32(coeff1), 0);
+                        "vmls.f32   q5, q14, %f25[0]    \n"
+
+                        // r00[0] = vgetq_lane_f32(t0642, 0);
+                        // r10[0] = vgetq_lane_f32(t0642, 1);
+                        "vst1.f32   {d4[0]}, [%0]!      \n"
+                        "vst1.f32   {d4[1]}, [%2]!      \n"
+
+                        "vmov       q3, q7              \n"  //q3 = q7
+
+                        // r20[0] = vgetq_lane_f32(t0642, 2);
+                        // r30[0] = vgetq_lane_f32(t0642, 3);
+                        "vst1.f32   {d5[0]}, [%4]!      \n"
+                        "vst1.f32   {d5[1]}, [%6]!      \n"
+                        // float32x4_t tmp34a = vaddq_f32(t_66, t4c);
+                        "vadd.f32   q2, q13, q6         \n" 
+                        // float32x4_t tmp34b = vmlaq_lane_f32(t3c, t_11, vget_low_f32(coeff0), 1);
+                        "vmla.f32   q3, q10, %e24[1]    \n"
+
+                        // float32x4_t r0_tm1 = vaddq_f32(tmp12a, tmp12b);
+                        "vadd.f32   q8, q4, q5          \n"
+                        // float32x4_t r0_tm2 = vsubq_f32(tmp12a, tmp12b);
+                        "vsub.f32   q9, q4, q5          \n"
+
+                        "vmov       q5, q7              \n" //q5 = q7 = t3c
+                        
+                        // float32x4_t t2c = vaddq_f32(t_22, t4c);
+                        "vadd.f32   q6, q12, q6         \n" 
+                        // float32x4_t tmp56b = vmlaq_lane_f32(_t_3_x_c, _t_11, vget_high_f32(_coeff0), 1);
+                        "vmla.f32   q5, q10, %f24[1]    \n"
+
+                        "vmov       q4, q13             \n" //q4 = q13 = t_66
+
+                        // tmp34a = vmlaq_lane_f32(tmp34, t_22, vget_low_f32(coeff0), 0);
+                        "vmla.f32   q2, q12, %e24[0]    \n"
+                        // tmp34b = vmlaq_lane_f32(tmp34b, t_55, vget_high_f32(coeff0), 1);
+                        "vmla.f32   q3, q11, %f24[1]    \n"
+
+                        // r00[1] = vgetq_lane_f32(r0_tm1, 0);
+                        // r10[1] = vgetq_lane_f32(r0_tm1, 1);
+                        "vst1.f32   {d16[0]}, [%0]!     \n"
+                        "vst1.f32   {d16[1]}, [%2]!     \n"
+
+                        // float32x4_t tmp56a = vmlaq_lane_f32(t_66, t2c, vget_low_f32(_coeff1), 1);
+                        "vmla.f32   q4, q6, %e25[1]     \n"
+
+                        // r20[1] = vgetq_lane_f32(r0_tm1, 2);
+                        // r30[1] = vgetq_lane_f32(r0_tm1, 3);
+                        "vst1.f32   {d17[0]}, [%4]!     \n"
+                        "vst1.f32   {d17[1]}, [%6]!     \n"
+
+                        // tmp56b = vmlaq_lane_f32(tmp56b, t_55, vget_low_f32(coeff0), 1);
+                        "vmla.f32   q5, q11, %e24[1]    \n"
+
+                        // r00[2] = vgetq_lane_f32(r0_tm2, 0);
+                        // r10[2] = vgetq_lane_f32(r0_tm2, 1);
+                        "vst1.f32   {d18[0]}, [%0]!     \n"
+                        "vst1.f32   {d18[1]}, [%2]!     \n"
+
+                        // float32x4_t r0_tm3 = vaddq_f32(tmp34a, tmp34b);
+                        "vadd.f32   q8, q2, q3          \n"
+
+                        // r20[2] = vgetq_lane_f32(r0_tm2, 2);
+                        // r30[2] = vgetq_lane_f32(r0_tm2, 3);
+                        "vst1.f32   {d19[0]}, [%4]!     \n"
+                        "vst1.f32   {d19[1]}, [%6]!     \n"
+
+                        // float32x4_t r0_tm4 = vsubq_f32(tmp34a, tmp34b);
+                        "vsub.f32   q9, q2, q3          \n"
+
+                        // float32x4_t t71 = vsubq_f32(t_77, t_11);
+                        "vsub.f32   q6, q15, q10        \n"
+                        // float32x4_t t35 = vsubq_f32(t_33, t_55);
+                        "vsub.f32   q7, q14, q11        \n"
+
+                        // float32x4_t r0_tm_4_1 = vaddq_f32(tmp56a, tmp56b);
+                        "vadd.f32   q2, q4, q5          \n"
+                        // float32x4_t r0_tm_4_2 = vsubq_f32(tmp56a, tmp56b);
+                        "vsub.f32   q3, q4, q5          \n"
+
+                        // r00[3] = vgetq_lane_f32(r0_tm3, 0);
+                        // r10[3] = vgetq_lane_f32(r0_tm3, 1);
+                        "vst1.f32   {d16[0]}, [%0], %26 \n"
+                        "vst1.f32   {d16[1]}, [%2], %26 \n"
+
+                        // float32x4_t t7135 = vmlaq_lane_f32(t71, t35, vget_high_f32(coeff1), 1);
+                        "vmla.f32   q6, q7, %f25[1]     \n"
+
+                        // r20[3] = vgetq_lane_f32(r0_tm3, 2);
+                        // r30[3] = vgetq_lane_f32(r0_tm3, 3);
+                        "vst1.f32   {d17[0]}, [%4], %26 \n"
+                        "vst1.f32   {d17[1]}, [%6], %26 \n"
+
+                        // vtrn_type: 将两个输入vector的元素通过转置生成一个有两个vector的矩阵
+                        // 如：src.val[0] = {1,2,3,4,5,6,7,8}
+                        // src.val[1] = {9,10,11,12,13,14,15,16}
+                        // dst = vtrn_u8(src.val[0], src.val[1])时，
+                        // 则 dst.val[0] = {1,9, 3,11,5,13,7,15}
+                        // dst.val[1] = {2,10,4,12,6,14,8,16}
+
+                        // q9: float32x4_t r0_tm4 = vsubq_f32(tmp34a, tmp34b);
+                        // q9 => [a, b, c, d]
+                        
+                        // q2: float32x4_t r0_tm_4_1 = vaddq_f32(tmp56a, tmp56b);
+                        // q2 => [e, f, g, h]
+
+                        // q3: float32x4_t r0_tm_4_2 = vsubq_f32(tmp56a, tmp56b);
+                        // q3 => [i, j, k, l]
+
+                        // q6: float32x4_t t7135 = vmlaq_lane_f32(t71, t35, vget_high_f32(coeff1), 1);
+                        // q6 => [m, n, o, p]
+
+                        // r04[0] = vgetq_lane_f32(r0_tm4, 0);
+                        // r14[0] = vgetq_lane_f32(r0_tm4, 1);
+                        // r24[0] = vgetq_lane_f32(r0_tm4, 2);
+                        // r34[0] = vgetq_lane_f32(r0_tm4, 3);
+
+                        // r04[1] = vgetq_lane_f32(r0_tm_4_1, 0);
+                        // r14[1] = vgetq_lane_f32(r0_tm_4_1, 1);
+                        // r24[1] = vgetq_lane_f32(r0_tm_4_1, 2);
+                        // r34[1] = vgetq_lane_f32(r0_tm_4_1, 3);
+
+                        // r04[2] = vgetq_lane_f32(r0_tm_4_2, 0);
+                        // r14[2] = vgetq_lane_f32(r0_tm_4_2, 1);
+                        // r24[2] = vgetq_lane_f32(r0_tm_4_2, 2);
+                        // r34[2] = vgetq_lane_f32(r0_tm_4_2, 3);
+
+                        // r04[3] = vgetq_lane_f32(t7135, 0);
+                        // r14[3] = vgetq_lane_f32(t7135, 1);
+                        // r24[3] = vgetq_lane_f32(t7135, 2);
+                        // r34[3] = vgetq_lane_f32(t7135, 3);
+
+                        // q9 = [a, e, c, g]
+                        // q2 = [b, f, d, h]
+                        "vtrn.32    q9, q2              \n"
+                        // q3 = [i, m, k, o]
+                        // q6 = [j, n, l, p]
+                        "vtrn.32    q3, q6              \n"
+
+                        // 多移动了3*4=12个字节
+                        "sub        %0, %0, #12         \n"
+                        "sub        %2, %2, #12         \n"
+                        "sub        %4, %4, #12         \n"
+                        "sub        %6, %6, #12         \n"
+
+                        // q9 = [a, e, i, m]
+                        // q3 = [c, g, k, o]
+                        "vswp       d19, d6             \n"
+                        // q2 = [b, f, j, n]
+                        // q6 = [d, h, l, p]
+                        "vswp       d5, d12             \n"
+
+                        //注意越界问题
+                        "vst1.f32   {d18-d19}, [%1]     \n"
+                        "vst1.f32   {d4-d5}, [%3]       \n"
+                        "vst1.f32   {d6-d7}, [%5]       \n"
+                        "vst1.f32   {d12-d13}, [%7]     \n"
 
                         : "=r"(r00), // %0
                         "=r"(r04), // %1
