@@ -141,6 +141,7 @@ public:
 
     bool isEmpty();
 
+    uint8_t getDataBytes();
 private:
     int _width          = 0;
     int _height         = 0;

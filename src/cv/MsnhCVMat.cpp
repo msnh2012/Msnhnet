@@ -505,4 +505,9 @@ bool Mat::isEmpty()
     }
 }
 
+uint8_t Mat::getDataBytes()
+{
+    return static_cast<uint8_t>(this->_step/this->_channel);
+}
+
 }
