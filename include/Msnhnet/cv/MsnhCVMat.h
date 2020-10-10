@@ -1,9 +1,10 @@
-#ifndef MSNHCVMAT_H
+﻿#ifndef MSNHCVMAT_H
 #define MSNHCVMAT_H
 #include <algorithm>
-#include <Msnhnet/cv/MsnhCVType.h>
-#include <Msnhnet/utils/MsnhException.h>
-#include <Msnhnet/config/MsnhnetCfg.h>
+#include "Msnhnet/cv/MsnhCVType.h"
+#include "Msnhnet/utils/MsnhException.h"
+#include "Msnhnet/config/MsnhnetCfg.h"
+#include "Msnhnet/utils/MsnhExString.h"
 #include <iostream>
 
 namespace Msnhnet
@@ -13,6 +14,7 @@ class Mat
 public:
     Mat ();
     Mat (const Mat& mat);
+    Mat (const std::string &path);
     Mat (const int &width, const int &height, const MatType &matType);
     Mat (const int &width, const int &height, const MatType &matType, void *data);
     ~Mat ();
@@ -54,7 +56,8 @@ public:
 
         if(pos.x1 < 0 || pos.x2 < 0 || pos.x1 >= this->_width || pos.x2>= this->_height)
         {
-            throw Exception(1,"[CV]: pixel pos out of memory", __FILE__, __LINE__, __FUNCTION__);
+            return;
+
         }
 
         if(fmt=='b')
@@ -101,7 +104,9 @@ public:
 
     void saveImage(const std::string& path, const SaveImageType &saveImageType, const int &quality=100);
 
-    void clearMat();
+    void saveImage(const std::string& path, const int &quality=100);
+
+    void release();
 
     Mat operator + (const Mat & mat);
 
@@ -140,6 +145,8 @@ public:
     void setU8Ptr(uint8_t *const &ptr);
 
     bool isEmpty();
+
+    Vec2I32 getSize();
 
     uint8_t getDataBytes();
 private:

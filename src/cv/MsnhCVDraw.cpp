@@ -1,24 +1,11 @@
-#include <Msnhnet/cv/MsnhCVDraw.h>
+﻿#include <Msnhnet/cv/MsnhCVDraw.h>
 
 namespace Msnhnet
 {
 
 void Draw::drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color)
 {
-    if(mat.getWidth() == 0 || mat.getHeight() == 0)
-    {
-        throw Exception(1,"[CV]: img width == 0 || height == 0!", __FILE__, __LINE__, __FUNCTION__);
-    }
-
-    if(p1.x1 >= mat.getWidth()) p1.x1 = mat.getWidth()-1;
-    if(p1.x1 < 0) p1.x1 = 0;
-    if(p2.x1 >= mat.getWidth()) p2.x1 = mat.getWidth()-1;
-    if(p2.x1 < 0) p2.x1 = 0;
-
-    if(p1.x2 >= mat.getHeight()) p1.x2 = mat.getWidth()-1;
-    if(p1.x2 < 0) p1.x2 = 0;
-    if(p2.x2 >= mat.getHeight()) p2.x2 = mat.getWidth()-1;
-    if(p2.x2 < 0) p2.x2 = 0;
+    checkMat(mat);
 
     float alpha = 0;
     if(p2.x1 == p1.x1)
@@ -88,54 +75,253 @@ void Draw::drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color)
 
 }
 
-void Draw::drawRect(Mat &mat, const Vec2I32 &p1, const Vec2I32 &p2, const Vec3U8 &color)
+void Draw::drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color, const int &width)
 {
-    Vec2I32 p3(p2.x1,p1.x2);
-    Vec2I32 p4(p1.x1,p2.x2);
 
-    drawLine(mat, p1, p3, color);
-    drawLine(mat, p2, p3, color);
-    drawLine(mat, p1, p4, color);
-    drawLine(mat, p2, p4, color);
+    if(width <= 1)
+    {
+        drawLine(mat, p1, p2, color);
+    }
+    else
+    {
+        int dx = p1.x1-p2.x1;
+        int dy = p1.x2-p2.x2;
+
+        if(dx == 0)
+        {
+            drawLine(mat, p1, p2, color);
+            int w = 1;
+            for (int i = 1; i < width; ++i)
+            {
+                Vec2I32 p11 = p1;
+                Vec2I32 p12 = p2;
+                if(i%2 == 1)
+                {
+                    p11.x1 = p11.x1-w;
+                    p12.x1 = p12.x1-w;
+                    p11.x2 = p11.x2;
+                    p12.x2 = p12.x2;
+                    drawLine(mat, p11, p12, color);
+                }
+                else if(i%2 == 0)
+                {
+                    p11.x1 = p11.x1+w;
+                    p12.x1 = p12.x1+w;
+                    p11.x2 = p11.x2;
+                    p12.x2 = p12.x2;
+                    drawLine(mat, p11, p12, color);
+                    w++;
+                }
+            }
+        }
+        else if(dy == 0)
+        {
+            drawLine(mat, p1, p2, color);
+            int w = 1;
+            for (int i = 1; i < width; ++i)
+            {
+                Vec2I32 p11 = p1;
+                Vec2I32 p12 = p2;
+                if(i%2 == 1)
+                {
+                    p11.x1 = p11.x1;
+                    p12.x1 = p12.x1;
+                    p11.x2 = p11.x2-w;
+                    p12.x2 = p12.x2-w;
+                    drawLine(mat, p11, p12, color);
+                }
+                else if(i%2 == 0)
+                {
+                    p11.x1 = p11.x1;
+                    p12.x1 = p12.x1;
+                    p11.x2 = p11.x2+w;
+                    p12.x2 = p12.x2+w;
+                    drawLine(mat, p11, p12, color);
+                    w++;
+                }
+            }
+        }
+        else if(1.0f*dx/dy<0)
+        {
+            drawLine(mat, p1, p2, color);
+
+            float fx = 1.f;
+            float fy = 1.f ;
+
+            if(abs(dx) < abs(dy))
+            {
+                fy = -1.f*dx/dy;
+            }
+
+            if(abs(dx) > abs(dy))
+            {
+                fx = -1.f*dy/dx;
+            }
+
+            int k = 1;
+            int w = 1;
+
+            for (int i = 1; i < width; ++i)
+            {
+                Vec2I32 p11 = p1;
+                Vec2I32 p12 = p2;
+                if(k == 1)
+                {
+                    p11.x1 = p11.x1-int(w*fx-1);
+                    p12.x1 = p12.x1-int(w*fx);
+                    p11.x2 = p11.x2-int(w*fy);
+                    p12.x2 = p12.x2-int(w*fy-1);
+                    drawLine(mat, p11, p12, color);
+                }
+                else if(k == 2)
+                {
+                    p11.x1 = p11.x1+int(w*fx);
+                    p12.x1 = p12.x1+int(w*fx-1);
+                    p11.x2 = p11.x2+int(w*fy-1);
+                    p12.x2 = p12.x2+int(w*fy);
+                    drawLine(mat, p11, p12, color);
+                }
+                else if(k == 3)
+                {
+                    p11.x1 = p11.x1-int(w*fx);
+                    p12.x1 = p12.x1-int(w*fx);
+                    p11.x2 = p11.x2-int(w*fy);
+                    p12.x2 = p12.x2-int(w*fy);
+                    drawLine(mat, p11, p12, color);
+                }
+                else if(k == 4)
+                {
+                    p11.x1 = p11.x1+int(w*fx);
+                    p12.x1 = p12.x1+int(w*fx);
+                    p11.x2 = p11.x2+int(w*fy);
+                    p12.x2 = p12.x2+int(w*fy);
+                    drawLine(mat, p11, p12, color);
+                    k = 1;
+                    w ++;
+                    continue;
+                }
+                k++;
+            }
+        }
+        else if(1.0f*dx/dy>0)
+        {
+            drawLine(mat, p1, p2, color);
+
+            float fx = 1.f;
+            float fy = 1.f ;
+
+            if(abs(dx) < abs(dy))
+            {
+                fy = 1.f*dx/dy;
+            }
+
+            if(abs(dx) > abs(dy))
+            {
+                fx = 1.f*dy/dx;
+            }
+
+            int k = 1;
+            int w = 1;
+
+            for (int i = 1; i < width; ++i)
+            {
+                Vec2I32 p11 = p1;
+                Vec2I32 p12 = p2;
+                if(k == 1)
+                {
+                    p11.x1 = p11.x1+int(w*fx-1);
+                    p12.x1 = p12.x1+int(w*fx);
+                    p11.x2 = p11.x2-int(w*fy);
+                    p12.x2 = p12.x2-int(w*fy-1);
+                    drawLine(mat, p11, p12, color);
+                }
+                else if(k == 2)
+                {
+                    p11.x1 = p11.x1-int(w*fx);
+                    p12.x1 = p12.x1-int(w*fx-1);
+                    p11.x2 = p11.x2+int(w*fy-1);
+                    p12.x2 = p12.x2+int(w*fy);
+                    drawLine(mat, p11, p12, color);
+                }
+                else if(k == 3)
+                {
+                    p11.x1 = p11.x1+int(w*fx);
+                    p12.x1 = p12.x1+int(w*fx);
+                    p11.x2 = p11.x2-int(w*fy);
+                    p12.x2 = p12.x2-int(w*fy);
+                    drawLine(mat, p11, p12, color);
+                }
+                else if(k == 4)
+                {
+                    p11.x1 = p11.x1-int(w*fx);
+                    p12.x1 = p12.x1-int(w*fx);
+                    p11.x2 = p11.x2+int(w*fy);
+                    p12.x2 = p12.x2+int(w*fy);
+                    drawLine(mat, p11, p12, color);
+                    k = 1;
+                    w ++;
+                    continue;
+                }
+                k++;
+            }
+        }
+    }
 
 }
 
-void Draw::drawRect(Mat &mat, const Vec2I32 &pos, const int32_t &width, const int32_t &height, const Vec3U8 &color)
+void Draw::drawRect(Mat &mat, const Vec2I32 &p1, const Vec2I32 &p2, const Vec3U8 &color, const int &width)
 {
+    checkMat(mat);
+
+    Vec2I32 p3(p2.x1,p1.x2);
+    Vec2I32 p4(p1.x1,p2.x2);
+
+    drawLine(mat, p1, p3, color, width);
+    drawLine(mat, p2, p3, color, width);
+    drawLine(mat, p1, p4, color, width);
+    drawLine(mat, p2, p4, color, width);
+
+}
+
+void Draw::drawRect(Mat &mat, const Vec2I32 &pos, const int32_t &width, const int32_t &height, const Vec3U8 &color, const int &lineWidth)
+{
+    checkMat(mat);
+
     Vec2I32 p1(pos.x1-width/2,pos.x2-height/2);
     Vec2I32 p2(pos.x1+width/2,pos.x2-height/2);
     Vec2I32 p3(pos.x1+width/2,pos.x2+height/2);
     Vec2I32 p4(pos.x1-width/2,pos.x2+height/2);
 
-    drawLine(mat, p1, p2, color);
-    drawLine(mat, p2, p3, color);
-    drawLine(mat, p3, p4, color);
-    drawLine(mat, p4, p1, color);
+    drawLine(mat, p1, p2, color, lineWidth);
+    drawLine(mat, p2, p3, color, lineWidth);
+    drawLine(mat, p3, p4, color, lineWidth);
+    drawLine(mat, p4, p1, color, lineWidth);
 }
 
-void Draw::drawRect(Mat &mat, const Vec2I32 &p1, const Vec2I32 &p2, const Vec2I32 &p3, const Vec2I32 &p4, const Vec3U8 &color)
+void Draw::drawRect(Mat &mat, const Vec2I32 &p1, const Vec2I32 &p2, const Vec2I32 &p3, const Vec2I32 &p4, const Vec3U8 &color, const int &width)
 {
-    drawLine(mat, p1, p2, color);
-    drawLine(mat, p2, p3, color);
-    drawLine(mat, p3, p4, color);
-    drawLine(mat, p4, p1, color);
+    checkMat(mat);
+
+    drawLine(mat, p1, p2, color, width);
+    drawLine(mat, p2, p3, color, width);
+    drawLine(mat, p3, p4, color, width);
+    drawLine(mat, p4, p1, color, width);
 }
 
-void Draw::drawPoly(Mat &mat, std::vector<Vec2I32> &points, const Vec3U8 &color)
+void Draw::drawPoly(Mat &mat, std::vector<Vec2I32> &points, const Vec3U8 &color, const int &width)
 {
+    checkMat(mat);
+
     for (int i = 0; i < points.size()-1; ++i)
     {
-        drawLine(mat, points[i], points[i+1], color);
+        drawLine(mat, points[i], points[i+1], color, width);
     }
-    drawLine(mat, points[0], points[points.size()-1], color);
+    drawLine(mat, points[0], points[points.size()-1], color, width);
 }
 
 void Draw::drawEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const int32_t &height, const Vec3U8 &color)
 {
-    if(mat.getWidth() == 0 || mat.getHeight() == 0)
-    {
-        throw Exception(1,"[CV]: img width == 0 || height == 0!", __FILE__, __LINE__, __FUNCTION__);
-    }
+    checkMat(mat);
 
     Vec2I32 p1;
     Vec2I32 p2;
@@ -244,7 +430,7 @@ void Draw::drawEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const
         {
             Vec3U8 mColor = color;
             if(!ignoreP1)
-               mat.setPixel<Vec3U8>(p1,mColor);
+                mat.setPixel<Vec3U8>(p1,mColor);
             if(!ignoreP2)
                 mat.setPixel<Vec3U8>(p2,mColor);
             if(!ignoreP3)
@@ -389,8 +575,37 @@ void Draw::drawEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const
 
 }
 
+void Draw::drawEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const int32_t &height, const Vec3U8 &color, const int &lineWidth)
+{
+    checkMat(mat);
+    if(lineWidth<=1)
+    {
+        drawEllipse(mat, pos, width, height, color);
+    }
+    else
+    {
+        drawEllipse(mat, pos, width, height, color);
+        int k = 1;
+        for (int i = 1; i < lineWidth; ++i)
+        {
+            if(i%2==1)
+            {
+                drawEllipse(mat, pos, width-k, height-k, color);
+            }
+            else if(i%2==0)
+            {
+                drawEllipse(mat, pos, width+k, height+k, color);
+                k++;
+            }
+        }
+    }
+
+}
+
 void Draw::fillRect(Mat &mat, const Vec2I32 &p1, const Vec2I32 &p2, const Vec3U8 &color, const bool &addMode)
 {
+    checkMat(mat);
+
     int32_t w = abs(p2.x1-p1.x1);
     int32_t h = abs(p2.x2-p1.x2);
 
@@ -406,12 +621,6 @@ void Draw::fillRect(Mat &mat, const Vec2I32 &p1, const Vec2I32 &p2, const Vec3U8
         {
             int32_t x = j + baseW;
             int32_t y = i + baseH;
-
-            x = (x<0)?0:x;
-            x = (x>=matW)?(matW-1):x;
-
-            y = (y<0)?0:y;
-            y = (y>=matH)?(matH-1):y;
 
             if(mat.getChannel()==1)
             {
@@ -474,6 +683,8 @@ void Draw::fillRect(Mat &mat, const Vec2I32 &p1, const Vec2I32 &p2, const Vec3U8
 
 void Draw::fillEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const int32_t &height, const Vec3U8 &color)
 {
+    checkMat(mat);
+
     Vec2I32 p1;
     Vec2I32 p2;
     Vec2I32 p3;
@@ -553,6 +764,8 @@ void Draw::fillEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const
 
 void Draw::drawFont(Mat &mat, const std::string &content, const Vec2I32 &pos, const Vec3U8 &color)
 {
+    checkMat(mat);
+
     Font::init();
 
     for (int i = 0; i < content.length(); ++i)
@@ -611,6 +824,21 @@ void Draw::drawFont(Mat &mat, const std::string &content, const Vec2I32 &pos, co
             }
         }
 
+    }
+}
+
+void Draw::checkMat(Mat &mat)
+{
+    MatType srcMatType = mat.getMatType();
+
+    if(srcMatType != MatType::MAT_GRAY_U8 && srcMatType != MatType::MAT_RGB_U8 && srcMatType != MatType::MAT_RGBA_U8)
+    {
+        throw Exception(1,"[CV]: draw functions only support for uint8_t mat!", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(mat.isEmpty())
+    {
+        throw Exception(1,"[CV]: mat Empty!", __FILE__, __LINE__, __FUNCTION__);
     }
 }
 }

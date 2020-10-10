@@ -4,7 +4,6 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
-#include "MsnhException.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/utils/MsnhExport.h"
 #include "Msnhnet/layers/MsnhYoloDef.h"

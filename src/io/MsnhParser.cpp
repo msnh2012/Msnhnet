@@ -55,6 +55,10 @@ void Parser::clearParams()
             {
                 delete reinterpret_cast<LocalAvgPoolParams*>(params[i]);
             }
+            else if(params[i]->type == LayerType::GLOBAL_AVGPOOL)
+            {
+                delete reinterpret_cast<GlobalAvgPoolParams*>(params[i]);
+            }
             else if(params[i]->type == LayerType::CONNECTED)
             {
                 delete reinterpret_cast<ConnectParams*>(params[i]);

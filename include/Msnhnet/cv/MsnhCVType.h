@@ -1,4 +1,4 @@
-#ifndef MSNHCVTYPE_H
+﻿#ifndef MSNHCVTYPE_H
 #define MSNHCVTYPE_H
 #include <stdint.h>
 
@@ -32,7 +32,12 @@ enum CvtColorType
     CVT_RGBA2RGB,
     CVT_RGB2RGBA,
     CVT_RGB2BGR,
-    CVT_RGB2YUV
+};
+
+enum ResizeType
+{
+    RESIZE_NEAREST,
+    RESIZE_BILINEAR
 };
 
 union MatData

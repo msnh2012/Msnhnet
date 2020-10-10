@@ -1,4 +1,4 @@
-#include <Msnhnet/cv/MsnhCVMat.h>
+﻿#include <Msnhnet/cv/MsnhCVMat.h>
 
 #define  STB_IMAGE_IMPLEMENTATION
 #include <Msnhnet/cv/stb/stb_image.h>
@@ -16,7 +16,7 @@ Mat::Mat()
 Mat::Mat(const Mat &mat) 
 
 {
-    clearMat();
+    release();
     this->_channel  = mat.getChannel();
     this->_height   = mat.getHeight();
     this->_width    = mat.getWidth();
@@ -31,9 +31,14 @@ Mat::Mat(const Mat &mat)
     }
 }
 
+Mat::Mat(const std::string &path)
+{
+    readImage(path);
+}
+
 Mat::~Mat()
 {
-    clearMat();
+    release();
 }
 
 Mat::Mat(const int &width, const int &height, const MatType &matType)
@@ -166,7 +171,7 @@ void Mat::checkPixelType(const int &array, const int &fmt)
 
 void Mat::readImage(const std::string &path)
 {
-    clearMat();
+    release();
     this->_data.u8 = stbi_load(path.data(), &this->_width, &this->_height, &this->_channel, 0);
 
     if(this->_data.u8==nullptr)
@@ -226,7 +231,38 @@ void Mat::saveImage(const std::string &path, const SaveImageType &saveImageType,
 
 }
 
-void Mat::clearMat()
+void Mat::saveImage(const std::string &path, const int &quality)
+{
+    std::vector<std::string> splits;
+    ExString::split(splits, path, ".");
+    std::string imgType = splits[splits.size()-1];
+    if(imgType == "jpg" || imgType == "jpeg" || imgType == "JPG" || imgType == "JPEG")
+    {
+        saveImage(path,SaveImageType::MAT_SAVE_JPG,quality);
+    }
+    else if(imgType == "png" || imgType == "PNG")
+    {
+        saveImage(path,SaveImageType::MAT_SAVE_PNG,quality);
+    }
+    else if(imgType == "bmp" || imgType == "BMP")
+    {
+        saveImage(path,SaveImageType::MAT_SAVE_BMP,quality);
+    }
+    else if(imgType == "tga" || imgType == "TGA")
+    {
+        saveImage(path,SaveImageType::MAT_SAVE_TGA,quality);
+    }
+    else if(imgType == "hdr" || imgType == "HDR")
+    {
+        saveImage(path,SaveImageType::MAT_SAVE_TGA,quality);
+    }
+    else
+    {
+        throw Exception(1,"[CV]: unknown image type : "  + imgType, __FILE__, __LINE__, __FUNCTION__);
+    }
+}
+
+void Mat::release()
 {
     if(this->_data.u8!=nullptr)
     {
@@ -395,7 +431,7 @@ Mat &Mat::operator = (const Mat &mat)
 {
     if(this!=&mat)
     {
-        clearMat();
+        release();
         this->_channel  = mat._channel;
         this->_width    = mat._width;
         this->_height   = mat._height;
@@ -415,7 +451,7 @@ Mat &Mat::operator = (const Mat &mat)
 void Mat::copyTo(Mat &mat)
 {
 
-    mat.clearMat();
+    mat.release();
 
     mat.setWidth(this->_width);
     mat.setHeight(this->_height);
@@ -503,6 +539,11 @@ bool Mat::isEmpty()
     {
         return false;
     }
+}
+
+Vec2I32 Mat::getSize()
+{
+    return Vec2I32(this->_width, this->_height);
 }
 
 uint8_t Mat::getDataBytes()
