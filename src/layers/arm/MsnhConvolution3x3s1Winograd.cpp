@@ -132,7 +132,15 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
                         "=r"(k30),  // %7
                         "=r"(k31)   // %8
 
-                        :
+                        :"0"(ktm2),
+                        "1"(k00),
+                        "2"(k01),
+                        "3"(k10),
+                        "4"(k11),
+                        "5"(k20),
+                        "6"(k21),
+                        "7"(k30),
+                        "8"(k31)
                         : "cc", "memory", "q0", "q1");
 #endif
 
@@ -148,7 +156,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
                         ktm2[24 + j] = k30[j];
                         ktm2[28 + j] = k31[j];
                     }
-#endif
+
                     k00 += 4;
                     k01 += 4;
                     k10 += 4;
@@ -158,7 +166,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
                     k30 += 4;
                     k31 += 4;
                     ktm2 += 32;
-
+#endif
                 }
             }
 
@@ -192,11 +200,14 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
 
                         : "=r"(ktm2), // %0
                         "=r"(k00),  // %1
-                        "=r"(k01),  // %2
-                        "=r"(k10),  // %3
-                        "=r"(k11)  // %4
-
-                        :
+                        "=r"(k10),  // %2
+                        "=r"(k20),  // %3
+                        "=r"(k30)  // %4
+                        : "0"(ktm2),
+                        "1"(k00),
+                        "2"(k10),
+                        "3"(k20),
+                        "4"(k30)
                         : "cc", "memory", "q0", "q1");
 #endif
 
@@ -207,12 +218,13 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
                         ktm2[8 + j] = k20[j];
                         ktm2[12 + j] = k30[j];
                     }
-#endif
+
                     k00 += 4;
                     k10 += 4;
                     k20 += 4;
                     k30 += 4;
                     ktm2 += 16;
+#endif
                 }
             }
 
@@ -243,8 +255,8 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
 
                         : "=r"(ktm2), // %0
                         "=r"(k00)  // %1
-
-                        :
+                        : "0"(ktm2),
+                        "1"(k00)
                         : "cc", "memory", "q0");
 #endif
 
@@ -252,16 +264,15 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(float *
                     for(int j = 0; j < 4; j++){
                         ktm2[j] = k00[j];
                     }
-#endif
                     k00 += 4;
                     ktm2 += 4;
+#endif
                 }
             }
         }        
 
         //kernel_tm = kernel_tm2;
         //memcpy(kernel_tm, kernel_tm2, sizeof(float)*packOutChannel * packOutH * packOutW);
-
     }
 
     // F(6x6, 3x3) <=> input: 8x8, weight: 8x8
@@ -342,6 +353,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
         // 5 = (r06 + (r02 - r04 * 1.25) * 4) + (r01 * 2 - r03 * 2.5 + r05 * 0.5)
         // 6 = (r06 + (r02 - r04 * 1.25) * 4) - (r01 * 2 - r03 * 2.5 + r05 * 0.5)
 
+
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
@@ -363,11 +375,11 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     
                     float32x4_t coeff0 = vld1q_f32(coeff);
                     float32x4_t coeff1 = vld1q_f32(coeff + 4);
-                    
+
                     float *r0 = padptr + i * 6 * PadWidth + j * 6;
                     float *r1 = r0 + PadWidth;
-                    float *r1 = r0 + PadWidth * 2;
-                    float *r2 = r0 + PadWidth * 3;
+                    float *r2 = r0 + PadWidth * 2;
+                    float *r3 = r0 + PadWidth * 3;
                     //no swap intrinsic, so based on vtrnq_f32 and combile intrinsic
 #if __aarch64__
                     
@@ -621,7 +633,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     float *t6 = tmpV[6];
                     float *t7 = tmpV[7];
 
-                    int stepw = PadWidth * 4;
+                    int stepw = PadWidth * 4 * 4;
 
                     asm volatile(
                         // 一共2个loop，直接复制一份
@@ -904,7 +916,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     );
 
                     t0 = tmpV[0];
-                    t1 = tmpV[0];
+                    t1 = tmpV[1];
                     t2 = tmpV[2];
                     t3 = tmpV[3];
 
@@ -1391,9 +1403,6 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
 
                    
 #else
-
-#endif
-
                     float *r0 = padptr + i * 6 * PadWidth + j * 6;
 
                     // Bd_{c,b}
@@ -1451,12 +1460,13 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                         r04 += 2 * tiles * src_tm_w;
 
                     }
+#endif
 
                 }
             }
         }
 
-        delete [] srcPadding;
+        //delete [] srcPadding;
 
         //Mk,b = \sum_{c}U_{k,c}V_{c,b}
         //k表示outChannel，b表示tile序号
@@ -1501,7 +1511,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     // for(int r = 0; r < 16; r++) => r0 = 16
                     "mov        r0, #16                 \n"
 
-                    "loop0:                             \n"
+                    "0:                                 \n"
                     // q0 = k00 & q1 = k01
                     "pld        [%6, #256]              \n"
                     "vld1.f32   {d0-d3}, [%6]!          \n"
@@ -1519,7 +1529,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     // r1 = tiles >> 2
                     "lsr        r1, %14, #2             \n"
                     "cmp        r1, #0                  \n"
-                    "beq        loop2                   \n"
+                    "beq        2f                      \n"
 
                     // 开始tiles的循环
 
@@ -1527,7 +1537,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     "pld        [%4, #128]              \n"
                     "vld1.f32   {d24-d25}, [%4]!        \n"
 
-                    "loop1:                             \n"
+                    "1:                                 \n"
                     // q8 = destptr0[m]
                     "pld        [%0, #128]              \n"
                     "vld1.f32   {d16-d17}, [%0]         \n"
@@ -1556,21 +1566,21 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     "vmla.f32   q8, q13, q1             \n"
                     // destptr1[m] += r1[m] * ktm[m + 12];
                     "vmla.f32   q9, q13, q3             \n"
-                    // destptr2[m] += r1[m] * ktm[m + 20];
-                    "vmla.f32   q10, q13, q5            \n"
-                    // destptr3[m] += r1[m] * ktm[m + 28];
-                    "vmla.f32   q11, q13, q7            \n"
-                    
-                    // 
-                    "vst1.f32   {d16-d17}, [%0]!        \n"
-                    "vst1.f32   {d18-d19}, [%1]!        \n"
-                    "vst1.f32   {d20-d21}, [%2]!        \n"
-                    "vst1.f32   {d22-d23}, [%3]!        \n"
-
                     // q12 = r0
                     "pld        [%4, #128]              \n" 
                     "vld1.f32   {d24-d25}, [%4]!        \n" 
+                    // destptr2[m] += r1[m] * ktm[m + 20];
+                    "vmla.f32   q10, q13, q5            \n"
+                    // destptr3[m] += r1[m] * ktm[m + 28];
+                    "vmla.f32   q11, q13, q7            \n"
+                    
+                    // 
+                    "vst1.f32   {d16-d17}, [%0]!        \n"
+                    "vst1.f32   {d18-d19}, [%1]!        \n"
+                    "vst1.f32   {d20-d21}, [%2]!        \n"
+                    "vst1.f32   {d22-d23}, [%3]!        \n"
 
+                    
                     // q8 = destptr0[m]
                     "pld        [%0, #128]              \n"
                     "vld1.f32   {d16-d17}, [%0]         \n"
@@ -1599,21 +1609,19 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     "vmla.f32   q8, q13, q1             \n"
                     // destptr1[m] += r1[m] * ktm[m + 12];
                     "vmla.f32   q9, q13, q3             \n"
-                    // destptr2[m] += r1[m] * ktm[m + 20];
-                    "vmla.f32   q10, q13, q5            \n"
-                    // destptr3[m] += r1[m] * ktm[m + 28];
-                    "vmla.f32   q11, q13, q7            \n"
-                    
-                    // 
-                    "vst1.f32   {d16-d17}, [%0]!        \n"
-                    "vst1.f32   {d18-d19}, [%1]!        \n"
-                    "vst1.f32   {d20-d21}, [%2]!        \n"
-                    "vst1.f32   {d22-d23}, [%3]!        \n"
-
-
                     // q12 = r0
                     "pld        [%4, #128]              \n" 
                     "vld1.f32   {d24-d25}, [%4]!        \n" 
+                    // destptr2[m] += r1[m] * ktm[m + 20];
+                    "vmla.f32   q10, q13, q5            \n"
+                    // destptr3[m] += r1[m] * ktm[m + 28];
+                    "vmla.f32   q11, q13, q7            \n"
+                    
+                    // 
+                    "vst1.f32   {d16-d17}, [%0]!        \n"
+                    "vst1.f32   {d18-d19}, [%1]!        \n"
+                    "vst1.f32   {d20-d21}, [%2]!        \n"
+                    "vst1.f32   {d22-d23}, [%3]!        \n"
 
                     // q8 = destptr0[m]
                     "pld        [%0, #128]              \n"
@@ -1643,20 +1651,19 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     "vmla.f32   q8, q13, q1             \n"
                     // destptr1[m] += r1[m] * ktm[m + 12];
                     "vmla.f32   q9, q13, q3             \n"
-                    // destptr2[m] += r1[m] * ktm[m + 20];
-                    "vmla.f32   q10, q13, q5            \n"
-                    // destptr3[m] += r1[m] * ktm[m + 28];
-                    "vmla.f32   q11, q13, q7            \n"
-                    
-                    // 
-                    "vst1.f32   {d16-d17}, [%0]!        \n"
-                    "vst1.f32   {d18-d19}, [%1]!        \n"
-                    "vst1.f32   {d20-d21}, [%2]!        \n"
-                    "vst1.f32   {d22-d23}, [%3]!        \n"
-
                     // q12 = r0
                     "pld        [%4, #128]              \n" 
                     "vld1.f32   {d24-d25}, [%4]!        \n" 
+                    // destptr2[m] += r1[m] * ktm[m + 20];
+                    "vmla.f32   q10, q13, q5            \n"
+                    // destptr3[m] += r1[m] * ktm[m + 28];
+                    "vmla.f32   q11, q13, q7            \n"
+                    
+                    // 
+                    "vst1.f32   {d16-d17}, [%0]!        \n"
+                    "vst1.f32   {d18-d19}, [%1]!        \n"
+                    "vst1.f32   {d20-d21}, [%2]!        \n"
+                    "vst1.f32   {d22-d23}, [%3]!        \n"
 
                     // q8 = destptr0[m]
                     "pld        [%0, #128]              \n"
@@ -1686,6 +1693,9 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     "vmla.f32   q8, q13, q1             \n"
                     // destptr1[m] += r1[m] * ktm[m + 12];
                     "vmla.f32   q9, q13, q3             \n"
+                    // q12 = r0
+                    "pld        [%4, #128]              \n" 
+                    "vld1.f32   {d24-d25}, [%4]!        \n" 
                     // destptr2[m] += r1[m] * ktm[m + 20];
                     "vmla.f32   q10, q13, q5            \n"
                     // destptr3[m] += r1[m] * ktm[m + 28];
@@ -1696,18 +1706,21 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     "vst1.f32   {d18-d19}, [%1]!        \n"
                     "vst1.f32   {d20-d21}, [%2]!        \n"
                     "vst1.f32   {d22-d23}, [%3]!        \n"
+                    
 
                     "subs       r1, #1                  \n"
-                    "bne        loop1                   \n"
+                    "bne        1b                      \n"
                     "sub        %4, %4, #16             \n"
 
                     // tiles循环结束
 
-                    "loop3:                             \n"
+                    "2:                                 \n"
                     // r1 = remain = tiles & 3
                     "and        r1, %14, #3             \n"
                     "cmp        r1, #0                  \n"
-                    "beq        loop4                   \n"
+                    "beq        4f                      \n"
+
+                    "3:                                 \n"
 
                     // q12 = r0
                     "pld        [%4, #128]              \n" 
@@ -1753,11 +1766,11 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     "vst1.f32   {d22-d23}, [%3]!        \n"
 
                     "subs       r1, #1                  \n"
-                    "bne        loop3                   \n"
+                    "bne        3b                      \n"
 
-                    "loop4:                             \n"
+                    "4:                                 \n"
                     "subs       r0, #1                  \n"
-                    "bne        loop0                   \n"
+                    "bne        0b                      \n"
 
 
                     : "=r"(destptr0), // %0
@@ -1822,7 +1835,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                 asm volatile(
                     // for(int r = 0; r < 16; r++)
                     "mov        r0, #16                 \n"
-                    "loop0:                             \n"
+                    "0:                                 \n"
                     // q0 = k00 & q1 = k01
                     "pld        [%5, #256]              \n"
                     "vld1.f32   {d0-d3}, [%5]!          \n"
@@ -1833,9 +1846,9 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     // tiles 循环, r1 = tiles
                     "mov        r1, %12                 \n"
                     "cmp        r1, #0                  \n"
-                    "beq        loop2                   \n"
+                    "beq        2f                      \n"
 
-                    "loop1:                             \n"
+                    "1:                                 \n"
 
                     // q12 = r0
                     "pld        [%4, #128]              \n" 
@@ -1868,11 +1881,11 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                     "vst1.f32   {d22-d23}, [%3]!        \n"
 
                     "subs       r1, #1                  \n"
-                    "bne        loop1                   \n"
+                    "bne        1b                      \n"
 
-                    "loop2:                             \n"
+                    "2:                                 \n"
                     "subs       r0, #1                  \n"
-                    "bne        loop0                   \n"
+                    "bne        0b                      \n"
 
                     : "=r"(destptr0), // %0
                     "=r"(destptr1), // %1
@@ -1929,6 +1942,9 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                 const float* r0 = src_tm + q * src_tm_size;
                 float* destptr0 = dest0;
                 for(int r = 0; r < 16; r++){
+#if USE_NEON
+                    float32x4_t k00 = vld1q_f32(ktm);
+#endif // __ARM_NEON
 
                     for(int i = 0; i < tiles; i++){
 #if USE_NEON
@@ -1936,24 +1952,23 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
-                        asm volatile(
-                            // q0 = k00 & q1 = k01
-                            "pld        [%4, #128]              \n"
-                            "vld1.f32   {d4-d5}, [%4]!          \n"
 
+                        asm volatile(
                             "pld        [%1, #128]              \n"
-                            "vld1.f32   {d0-d1}, [%1]!          \n"
+                            "vld1.f32   {d18-d19}, [%1]!        \n" // q9 = _r0
+
                             "pld        [%0, #128]              \n"
-                            "vld1.f32   {d2-d3}, [%0]           \n"
-                            "vmla.f32   q1, q0, q2              \n"
-                            "vst1.f32   {d2-d3}, [%0]!          \n"
-                            : "=r"(destptr0),
-                            "=r"(r0)
-                            : "=r"(destptr0),
-                            "=r"(r0),
-                            "w"(ktm) //4
-                            :"cc", "memory", "q0", "q1", "q2"
-                        );
+                            "vld1.f32   {d16-d17}, [%0]         \n" // q8 = destptr0
+
+                            "vmla.f32   q8, q9, %q4             \n"
+
+                            "vst1.f32   {d16-d17}, [%0]!        \n"
+                            : "=r"(destptr0), // %0
+                            "=r"(r0)          // %1
+                            : "0"(destptr0),
+                            "1"(r0),
+                            "w"(k00) // %4
+                            : "cc", "memory", "q8", "q9");
 #endif
 
 #else
@@ -2418,7 +2433,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
                         "w"(_coeff), // %20
                         "r"(step)    // %21
                         : "memory", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
-                    )
+                    );
 
                     t0 = tmpA[0];
                     t1 = tmpA[1];
@@ -2890,6 +2905,7 @@ void ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(float *const &src
         delete [] src_tm;
         delete [] dest_tm;
         delete [] dest_tm2;
+        delete [] srcPadding;
 
     }
 }
