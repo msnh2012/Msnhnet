@@ -305,6 +305,7 @@ Msnhnet got ideas and developed based on these projects：
 - [NCNN](https://github.com/Tencent/ncnn)
 - [ACL](https://github.com/ARM-software/ComputeLibrary)
 - [stb_image](https://github.com/nothings/stb)
+- [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 
 
 **加群交流**</br>
