@@ -304,6 +304,8 @@ Msnhnet got ideas and developed based on these projects：
 - [DarkNet](https://github.com/pjreddie/darknet)
 - [NCNN](https://github.com/Tencent/ncnn)
 - [ACL](https://github.com/ARM-software/ComputeLibrary)
+
+**3rdparty Libs**
 - [stb_image](https://github.com/nothings/stb)
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 
