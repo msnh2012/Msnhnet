@@ -390,7 +390,7 @@ void CVUtil::drawYoloBox(Mat &mat, std::vector<std::string> &labels, std::vector
         float w = box.xywhBox.w;
         float h = box.xywhBox.h;
 
-        float orgAngle = 45 / 180.f*3.1415926f;
+        float orgAngle = box.angle / 180.f*3.1415926f;
         float angle    = orgAngle;
 
         float v        = sqrtf(w*w + h*h)/2;
