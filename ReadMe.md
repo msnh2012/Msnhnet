@@ -142,10 +142,10 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 **ps. You can change omp threads by unchecking OMP_MAX_THREAD and modifying "num" val at CMakeLists.txt:52** </br>
 
 - Windows
-1. Compile opencv4 and yaml-cpp.
-2. Config environment. Add "OpenCV_DIR" and "yaml-cpp_DIR" 
+1. Compile opencv4 **(optional)**
+2. Config environment. Add "OpenCV_DIR" **(optional)**
 3. Get qt5 and install. http://download.qt.io/ **(optional)**
-4. Add qt5 bin path to environment.
+4. Add qt5 bin path to environment **(optional)**.
 5. Then use cmake-gui tool and visual studio to make or use vcpkg.
 
 - Linux(Ubuntu)
@@ -155,16 +155,7 @@ ps. If you want to build with Jetson, please uncheck NNPACK, OPENBLAS, NEON.
 ```
 sudo apt-get install qt5-default      #optional
 sudo apt-get install libqt5svg5-dev   #optional
-sudo apt-get install libopencv-dev
-
-# build yaml-cpp
-git clone https://github.com/jbeder/yaml-cpp.git
-cd yaml-cpp
-mkdir build 
-cd build 
-cmake .. -DYAML_BUILD_SHARED_LIBS=True -DYAML_CPP_BUILD_TESTS=False
-make -j4
-sudo make install 
+sudo apt-get install libopencv-dev    #optional
 
 #config 
 sudo echo /usr/local/lib > /etc/ld.so.conf.d/usrlib.conf
