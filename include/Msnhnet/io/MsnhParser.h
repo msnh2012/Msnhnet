@@ -2,7 +2,7 @@
 #define MSNHPASER_H
 
 #include "Msnhnet/config/MsnhnetCfg.h"
-#include <yaml-cpp/yaml.h>
+#include "Msnhnet/3rdparty/yaml-cpp/yaml.h"
 #include "Msnhnet/utils/MsnhExString.h"
 #include "Msnhnet/layers/MsnhActivations.h"
 #include "Msnhnet/layers/MsnhYoloDef.h"

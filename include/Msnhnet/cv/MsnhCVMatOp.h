@@ -6,7 +6,7 @@
 namespace Msnhnet
 {
 
-class MatOp
+class MsnhNet_API MatOp
 {
 public:
     static void getROI(Mat &src, Mat &dst, const Vec2I32 &p1, const Vec2I32 &p2);

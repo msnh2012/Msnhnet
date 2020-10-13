@@ -8,7 +8,7 @@
 
 namespace Msnhnet
 {
-class Draw
+class MsnhNet_API Draw
 {
 public:
     static void drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color);

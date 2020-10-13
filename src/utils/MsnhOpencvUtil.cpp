@@ -1,4 +1,6 @@
-﻿#include "Msnhnet/utils/MsnhOpencvUtil.h"
+﻿#ifdef USE_OPENCV
+
+#include "Msnhnet/utils/MsnhOpencvUtil.h"
 namespace Msnhnet
 {
 
@@ -408,3 +410,5 @@ void OpencvUtil::drawSegMask(const int &channel, const int &wxh, std::vector<flo
     }
 }
 }
+
+#endif

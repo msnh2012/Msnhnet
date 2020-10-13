@@ -1,10 +1,11 @@
-﻿#include <Msnhnet/cv/MsnhCVMat.h>
+﻿
+#include "Msnhnet/cv/MsnhCVMat.h"
 
 #define  STB_IMAGE_IMPLEMENTATION
-#include <Msnhnet/cv/stb/stb_image.h>
+#include "stb/stb_image.h"
 
 #define  STB_IMAGE_WRITE_IMPLEMENTATION
-#include <Msnhnet/cv/stb/stb_image_write.h>
+#include "stb/stb_image_write.h"
 
 namespace Msnhnet
 {
@@ -234,7 +235,8 @@ void Mat::saveImage(const std::string &path, const SaveImageType &saveImageType,
 void Mat::saveImage(const std::string &path, const int &quality)
 {
     std::vector<std::string> splits;
-    ExString::split(splits, path, ".");
+    std::string tmpPath = path;
+    ExString::split(splits, tmpPath, ".");
     std::string imgType = splits[splits.size()-1];
     if(imgType == "jpg" || imgType == "jpeg" || imgType == "JPG" || imgType == "JPEG")
     {
@@ -286,7 +288,7 @@ Mat Mat::operator + (const Mat &mat)
         throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    this->copyTo(tmpMat);
+    tmpMat = mat;
 
     if(this->_matType == MAT_GRAY_U8 || this->_matType == MAT_RGB_U8 || this->_matType == MAT_RGBA_U8)
     {
@@ -322,7 +324,7 @@ Mat Mat::operator - (const Mat &mat)
         throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    this->copyTo(tmpMat);
+    tmpMat = mat;
 
     if(this->_matType == MAT_GRAY_U8 || this->_matType == MAT_RGB_U8 || this->_matType == MAT_RGBA_U8)
     {
@@ -358,7 +360,7 @@ Mat Mat::operator * (const Mat &mat)
         throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    this->copyTo(tmpMat);
+    tmpMat = mat;
 
     if(this->_matType == MAT_GRAY_U8 || this->_matType == MAT_RGB_U8 || this->_matType == MAT_RGBA_U8)
     {
@@ -394,7 +396,7 @@ Mat Mat::operator / (const Mat &mat)
         throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    this->copyTo(tmpMat);
+    tmpMat = mat;
 
     if(this->_matType == MAT_GRAY_U8 || this->_matType == MAT_RGB_U8 || this->_matType == MAT_RGBA_U8)
     {
@@ -546,7 +548,7 @@ Vec2I32 Mat::getSize()
     return Vec2I32(this->_width, this->_height);
 }
 
-uint8_t Mat::getDataBytes()
+uint8_t Mat::getPerDataByteNum()
 {
     return static_cast<uint8_t>(this->_step/this->_channel);
 }

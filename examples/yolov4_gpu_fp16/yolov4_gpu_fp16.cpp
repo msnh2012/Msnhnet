@@ -1,6 +1,78 @@
 ﻿#include <iostream>
 #include "Msnhnet/Msnhnet.h"
 
+#ifdef USE_OPENCV
+void yolov4GPUOpencv(const std::string& msnhnetPath, const std::string& msnhbinPath, const std::string& imgPath, const std::string& labelsPath)
+{
+	try
+	{
+		Msnhnet::NetBuilder  msnhNet;
+		Msnhnet::NetBuilder::setOnlyGpu(true);
+		msnhNet.buildNetFromMsnhNet(msnhnetPath);
+		std::cout << msnhNet.getLayerDetail();
+		msnhNet.loadWeightsFromMsnhBin(msnhbinPath);
+		std::vector<std::string> labels;
+		Msnhnet::IO::readVectorStr(labels, labelsPath.data(), "\n");
+		Msnhnet::Point2I inSize = msnhNet.getInputSize();
+
+		std::vector<float> img;
+		std::vector<std::vector<Msnhnet::YoloBox>> result;
+
+		img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imgPath, cv::Size(inSize.x, inSize.y));
+		for (size_t i = 0; i < 10; i++)
+		{
+			auto st = Msnhnet::TimeUtil::startRecord();
+			result = msnhNet.runYoloGPU(img);
+			std::cout << "time  : " << Msnhnet::TimeUtil::getElapsedTime(st) << "ms" << std::endl << std::flush;
+		}
+
+		cv::Mat org = cv::imread(imgPath);
+		Msnhnet::OpencvUtil::drawYoloBox(org, labels, result, inSize);
+		cv::imshow("test", org);
+		cv::waitKey();
+	}
+	catch (Msnhnet::Exception ex)
+	{
+		std::cout << ex.what() << " " << ex.getErrFile() << " " << ex.getErrLine() << " " << ex.getErrFun() << std::endl;
+	}
+}
+#endif
+
+void yolov4GPUMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath, const std::string& imgPath, const std::string& labelsPath)
+{
+	try
+	{
+		Msnhnet::NetBuilder  msnhNet;
+		Msnhnet::NetBuilder::setOnlyGpu(true);
+		msnhNet.buildNetFromMsnhNet(msnhnetPath);
+		std::cout << msnhNet.getLayerDetail();
+		msnhNet.loadWeightsFromMsnhBin(msnhbinPath);
+		std::vector<std::string> labels;
+		Msnhnet::IO::readVectorStr(labels, labelsPath.data(), "\n");
+		Msnhnet::Point2I inSize = msnhNet.getInputSize();
+
+		std::vector<float> img;
+		std::vector<std::vector<Msnhnet::YoloBox>> result;
+
+		img = Msnhnet::CVUtil::getPaddingZeroF32C3(imgPath, { inSize.x,inSize.y });
+		for (size_t i = 0; i < 10; i++)
+		{
+			auto st = Msnhnet::TimeUtil::startRecord();
+			result = msnhNet.runYoloGPU(img);
+			std::cout << "time  : " << Msnhnet::TimeUtil::getElapsedTime(st) << "ms" << std::endl << std::flush;
+		}
+
+		Msnhnet::Mat org(imgPath);
+		Msnhnet::CVUtil::drawYoloBox(org, labels, result, inSize);
+		org.saveImage("yolov4_gpu_fp16.jpg");
+		system("yolov4_gpu_fp16.jpg");
+	}
+	catch (Msnhnet::Exception ex)
+	{
+		std::cout << ex.what() << " " << ex.getErrFile() << " " << ex.getErrLine() << " " << ex.getErrFun() << std::endl;
+	}
+}
+
 int main(int argc, char** argv)
 {
     if(argc != 2)
@@ -14,38 +86,11 @@ int main(int argc, char** argv)
     std::string msnhbinPath = std::string(argv[1]) + "/yolov4/yolov4.msnhbin";
     std::string labelsPath  = "../labels/coco.names";
     std::string imgPath = "../images/dog.jpg";
-    try
-    {
-        Msnhnet::NetBuilder  msnhNet;
-        Msnhnet::NetBuilder::setOnlyGpu(true);
-        Msnhnet::NetBuilder::setUseFp16(true); // FP16 must be set before build net
-        msnhNet.buildNetFromMsnhNet(msnhnetPath);
-        std::cout<<msnhNet.getLayerDetail();
-        msnhNet.loadWeightsFromMsnhBin(msnhbinPath);
-        std::vector<std::string> labels ;
-        Msnhnet::IO::readVectorStr(labels, labelsPath.data(), "\n");
-        Msnhnet::Point2I inSize = msnhNet.getInputSize();
-
-        std::vector<float> img;
-        std::vector<std::vector<Msnhnet::YoloBox>> result;
-        img = Msnhnet::OpencvUtil::getPaddingZeroF32C3(imgPath, cv::Size(inSize.x,inSize.y));
-
-        for (size_t i = 0; i < 10; i++)
-        {
-		   auto st = Msnhnet::TimeUtil::startRecord();
-           result = msnhNet.runYoloGPU(img);
-           std::cout<<"time  : " << Msnhnet::TimeUtil::getElapsedTime(st) <<"ms"<<std::endl<<std::flush;
-        }
-    
-        cv::Mat org = cv::imread(imgPath);
-        Msnhnet::OpencvUtil::drawYoloBox(org,labels,result,inSize);
-        cv::imshow("test",org);
-        cv::waitKey();
-    }
-    catch (Msnhnet::Exception ex)
-    {
-        std::cout<<ex.what()<<" "<<ex.getErrFile() << " " <<ex.getErrLine()<< " "<<ex.getErrFun()<<std::endl;
-    }
+#ifdef USE_OPENCV
+	yolov4GPUOpencv(msnhnetPath, msnhbinPath, imgPath, labelsPath);
+#else
+	yolov4GPUMsnhCV(msnhnetPath, msnhbinPath, imgPath, labelsPath);
+#endif
     getchar();
 
     return 0;

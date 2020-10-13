@@ -1,4 +1,5 @@
-﻿#include "MsnhnetLib.h"
+﻿#ifdef USE_OPENCV
+#include "MsnhnetLib.h"
 
 static std::unique_ptr<Msnhnet::NetBuilder> net;
 int initMsnhnet()
@@ -453,3 +454,4 @@ int runYoloList(char **msg, unsigned char *imageData, const int width, const int
     }
     return 1;
 }
+#endif

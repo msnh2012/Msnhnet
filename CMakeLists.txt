@@ -15,12 +15,12 @@ option(OMP_MAX_THREAD       "Omp will use max threads"  ON )
 option(ENABLE_OPEN_BLAS     "Use open blas"             OFF)
 option(BUILD_SHARED_LIBS    "Build shared lib"          ON )
 option(BUILD_EXAMPLES       "Build examples"            ON )
+option(BUILD_USE_OPENCV     "Build with Opencv"         OFF)
 option(BUILD_VIEWER         "Build MsnhnetViewer"       OFF)
 option(BUILD_USE_GPU        "Use Gpu"                   OFF)
 if(BUILD_USE_GPU MATCHES ON)
     option(BUILD_USE_CUDNN      "Use cuDnn"                 OFF)
 endif()
-
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_Release} -O3")
@@ -115,6 +115,67 @@ set(SRCS
     src/layers/arm/MsnhConvolution3x3s1.cpp 
     src/layers/arm/MsnhConvolution3x3s2.cpp 
     src/layers/arm/MsnhBatchNorm.cpp 
+    src/layers/arm/MsnhPadding.cpp 
+    src/layers/arm/MsnhActivation.cpp
+    src/3rdparty/yaml_cpp/binary.cpp
+    src/3rdparty/yaml_cpp/contrib/graphbuilder.cpp
+    src/3rdparty/yaml_cpp/contrib/graphbuilderadapter.cpp
+    src/3rdparty/yaml_cpp/convert.cpp
+    src/3rdparty/yaml_cpp/directives.cpp
+    src/3rdparty/yaml_cpp/emit.cpp
+    src/3rdparty/yaml_cpp/emitfromevents.cpp
+    src/3rdparty/yaml_cpp/emitter.cpp
+    src/3rdparty/yaml_cpp/emitterstate.cpp
+    src/3rdparty/yaml_cpp/emitterutils.cpp
+    src/3rdparty/yaml_cpp/exceptions.cpp
+    src/3rdparty/yaml_cpp/exp.cpp
+    src/3rdparty/yaml_cpp/memory.cpp
+    src/3rdparty/yaml_cpp/node.cpp
+    src/3rdparty/yaml_cpp/node_data.cpp
+    src/3rdparty/yaml_cpp/nodebuilder.cpp
+    src/3rdparty/yaml_cpp/nodeevents.cpp
+    src/3rdparty/yaml_cpp/null.cpp
+    src/3rdparty/yaml_cpp/ostream_wrapper.cpp
+    src/3rdparty/yaml_cpp/parse.cpp
+    src/3rdparty/yaml_cpp/parser.cpp
+    src/3rdparty/yaml_cpp/regex_yaml.cpp
+    src/3rdparty/yaml_cpp/scanner.cpp
+    src/3rdparty/yaml_cpp/scanscalar.cpp
+    src/3rdparty/yaml_cpp/scantag.cpp
+    src/3rdparty/yaml_cpp/scantoken.cpp
+    src/3rdparty/yaml_cpp/simplekey.cpp
+    src/3rdparty/yaml_cpp/singledocparser.cpp
+    src/3rdparty/yaml_cpp/stream.cpp
+    src/3rdparty/yaml_cpp/tag.cpp
+    src/3rdparty/yaml_cpp/collectionstack.h
+    src/3rdparty/yaml_cpp/contrib/graphbuilderadapter.h
+    src/3rdparty/yaml_cpp/directives.h
+    src/3rdparty/yaml_cpp/emitterstate.h
+    src/3rdparty/yaml_cpp/emitterutils.h
+    src/3rdparty/yaml_cpp/exp.h
+    src/3rdparty/yaml_cpp/indentation.h
+    src/3rdparty/yaml_cpp/nodebuilder.h
+    src/3rdparty/yaml_cpp/nodeevents.h
+    src/3rdparty/yaml_cpp/ptr_vector.h
+    src/3rdparty/yaml_cpp/regex_yaml.h
+    src/3rdparty/yaml_cpp/regeximpl.h
+    src/3rdparty/yaml_cpp/scanner.h
+    src/3rdparty/yaml_cpp/scanscalar.h
+    src/3rdparty/yaml_cpp/scantag.h
+    src/3rdparty/yaml_cpp/setting.h
+    src/3rdparty/yaml_cpp/singledocparser.h
+    src/3rdparty/yaml_cpp/stream.h
+    src/3rdparty/yaml_cpp/streamcharsource.h
+    src/3rdparty/yaml_cpp/stringsource.h
+    src/3rdparty/yaml_cpp/tag.h
+    src/3rdparty/yaml_cpp/token.h
+    src/cv/MsnhCVDraw.cpp
+    src/cv/MsnhCVFont.cpp
+    src/cv/MsnhCVMat.cpp
+    src/cv/MsnhCVMatOp.cpp
+    src/cv/stb/stb_image.h
+    src/cv/stb/stb_image_write.h
+    src/utils/MsnhCVUtil.cpp
     )
 
 # config GPU
@@ -231,15 +292,21 @@ else()
 endif()
 
 # find 3rdparty libs
+set(USE_OPENCV_MACRO "")
+
+if(BUILD_USE_OPENCV MATCHES ON)
 find_package(OpenCV REQUIRED)
+add_definitions(-DUSE_OPENCV)
 message(STATUS "OpenCV Dir ${OpenCV_DIR}")
 message(STATUS "OpenCV include dir ${OpenCV_INCLUDE_DIRS}")
 message(STATUS "OpenCV libs ${OpenCV_LIBS}")
-find_package(yaml-cpp REQUIRED)
-message(STATUS "Found yaml in ${yaml-cpp_DIR}")
-message(STATUS "Yaml version ${yaml-cpp_VERSION}")
-message(STATUS "yaml include dir ${YAML_CPP_INCLUDE_DIR}")
-message(STATUS "yaml libs ${YAML_CPP_LIBRARIES}")
+set(USE_OPENCV_MACRO "#define USE_OPENCV\n")
+endif()
+# find_package(yaml-cpp REQUIRED)
+# message(STATUS "Found yaml in ${yaml-cpp_DIR}")
+# message(STATUS "Yaml version ${yaml-cpp_VERSION}")
+# message(STATUS "yaml include dir ${YAML_CPP_INCLUDE_DIR}")
+# message(STATUS "yaml libs ${YAML_CPP_LIBRARIES}")
 
 if(BUILD_SHARED_LIBS MATCHES ON)
     add_library(${PROJECT_NAME} SHARED ${SRCS} ${CUDA_SRCS})     #generate libs
@@ -291,15 +358,28 @@ if(ENABLE_NNPACK)
            )
 endif()
 
+
 #link 3rdparty libs
-if(BUILD_USE_GPU MATCHES ON)
-    if(BUILD_USE_CUDNN MATCHES ON)
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp PRIVATE ${CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+if(BUILD_USE_OPENCV MATCHES ON)
+    if(BUILD_USE_GPU MATCHES ON)
+        if(BUILD_USE_CUDNN MATCHES ON)
+            target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} PRIVATE ${CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+        else()
+            target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} PRIVATE ${CUBLAS_LIBRARIES})
+        endif()
     else()
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp PRIVATE ${CUBLAS_LIBRARIES})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} )
     endif()
 else()
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} yaml-cpp )
+    if(BUILD_USE_GPU MATCHES ON)
+        if(BUILD_USE_CUDNN MATCHES ON)
+            target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} PRIVATE ${CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+        else()
+            target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} PRIVATE ${CUBLAS_LIBRARIES})
+        endif()
+    else()
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB})
+    endif()
 endif()
 
 if(BUILD_EXAMPLES MATCHES ON)
@@ -353,7 +433,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     )
 
 # Create cfg macro head file
-file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_NNPACK_MACRO}${USE_GPU_MACRO}${USE_CUDNN_MACRO}#endif")
+file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_OPENCV_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_NNPACK_MACRO}${USE_GPU_MACRO}${USE_CUDNN_MACRO}#endif")
 
 # Install macro head file
 install(FILES MsnhnetTmp/MsnhnetMacro.h

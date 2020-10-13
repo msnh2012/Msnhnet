@@ -1,5 +1,6 @@
 ﻿#ifndef MSNHCVMAT_H
 #define MSNHCVMAT_H
+
 #include <algorithm>
 #include "Msnhnet/cv/MsnhCVType.h"
 #include "Msnhnet/utils/MsnhException.h"
@@ -9,7 +10,7 @@
 
 namespace Msnhnet
 {
-class Mat
+class MsnhNet_API Mat
 {
 public:
     Mat ();
@@ -148,7 +149,7 @@ public:
 
     Vec2I32 getSize();
 
-    uint8_t getDataBytes();
+    uint8_t getPerDataByteNum();
 private:
     int _width          = 0;
     int _height         = 0;

@@ -1,5 +1,6 @@
 ﻿#ifndef MSNHCVTYPE_H
 #define MSNHCVTYPE_H
+
 #include <stdint.h>
 
 namespace Msnhnet
@@ -438,5 +439,6 @@ public:
 };
 
 }
+
 #endif 
 

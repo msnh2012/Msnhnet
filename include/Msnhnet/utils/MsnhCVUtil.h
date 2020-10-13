@@ -1,5 +1,6 @@
 ﻿#ifndef MSNHCVUTIL_H
 #define MSNHCVUTIL_H
+
 #include <vector>
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/utils/MsnhExport.h"
@@ -41,5 +42,6 @@ public:
     static void drawSegMask(const int &channel, const int &wxh, std::vector<float> &inVal,Mat &mask);
 };
 }
+
 #endif 
 

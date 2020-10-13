@@ -7,7 +7,9 @@
 
     add_subdirectory(yolov3tiny)
 
-    add_subdirectory(yolov3tiny_video)
+    if(BUILD_USE_OPENCV MATCHES ON)
+        add_subdirectory(yolov3tiny_video)
+    endif()
 
     add_subdirectory(yolov4)
 
@@ -28,7 +30,9 @@ if(BUILD_USE_GPU MATCHES ON)
 
     add_subdirectory(yolov3tiny_gpu)
 
-    add_subdirectory(yolov3tiny_video_gpu)
+    if(BUILD_USE_OPENCV MATCHES ON)
+        add_subdirectory(yolov3tiny_video_gpu)
+    endif()
 
     add_subdirectory(yolov4_gpu)
 

@@ -1,5 +1,6 @@
 ﻿#ifndef MSNHOPENCVUTIL_H
 #define MSNHOPENCVUTIL_H
+#ifdef USE_OPENCV
 
 #include <vector>
 #include <opencv2/opencv.hpp>
@@ -43,6 +44,6 @@ public:
     static void drawSegMask(const int &channel, const int &wxh, std::vector<float> &inVal,cv::Mat &mask);
 };
 }
-
+#endif
 #endif 
 

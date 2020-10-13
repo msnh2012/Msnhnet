@@ -1,39 +1,40 @@
-﻿#include "Msnhnet/utils/MsnhCVUtil.h"
+﻿
+#include "Msnhnet/utils/MsnhCVUtil.h"
 
 namespace Msnhnet
 {
 
 std::vector<Vec3U8> CVUtil::colorTable =  {
-    Vec3U8(0  , 0   ,200), Vec3U8(0  , 200,   0), Vec3U8(200 , 0 ,   0),
-    Vec3U8(0  , 255 ,200), Vec3U8(255, 200,   0), Vec3U8(200 , 0 , 255),
-    Vec3U8(50 , 0   ,200), Vec3U8(50 , 200,   0), Vec3U8(200 , 50,  50),
-    Vec3U8(50 , 255 ,200), Vec3U8(255, 200,  50), Vec3U8(200 , 50, 255),
-    Vec3U8(100, 0   ,200), Vec3U8(100, 200,   0), Vec3U8(200 ,100,  50),
-    Vec3U8(100, 255 ,200), Vec3U8(255, 200, 100), Vec3U8(200 ,100, 255),
-    Vec3U8(150, 0   ,200), Vec3U8(150, 200,   0), Vec3U8(200 ,150,  50),
-    Vec3U8(150, 255 ,200), Vec3U8(255, 200, 150), Vec3U8(200 ,150, 255),
-    Vec3U8(200, 0   ,200), Vec3U8(200, 200,   0), Vec3U8(200 ,200,  50),
-    Vec3U8(200, 255 ,200), Vec3U8(255, 200, 200), Vec3U8(200 ,200, 255),
-    Vec3U8(0  , 0   ,150), Vec3U8(0  , 150,   0), Vec3U8(150 , 0 ,   0),
-    Vec3U8(0  , 255 ,150), Vec3U8(255, 150,   0), Vec3U8(150 , 0 , 255),
-    Vec3U8(50 , 0   ,150), Vec3U8(50 , 150,   0), Vec3U8(150 , 50,  50),
-    Vec3U8(50 , 255 ,150), Vec3U8(255, 150,  50), Vec3U8(150 , 50, 255),
-    Vec3U8(100, 0   ,150), Vec3U8(100, 150,   0), Vec3U8(150 ,100,  50),
-    Vec3U8(100, 255 ,150), Vec3U8(255, 150, 100), Vec3U8(150 ,100, 255),
-    Vec3U8(150, 0   ,150), Vec3U8(150, 150,   0), Vec3U8(150 ,150,  50),
-    Vec3U8(150, 255 ,150), Vec3U8(255, 150, 150), Vec3U8(150 ,150, 255),
-    Vec3U8(200, 0   ,150), Vec3U8(200, 150,   0), Vec3U8(150 ,200,  50),
-    Vec3U8(200, 255 ,150), Vec3U8(255, 150, 200), Vec3U8(150 ,200, 255),
-    Vec3U8(0  , 0   ,255), Vec3U8(0  , 255,   0), Vec3U8(255 , 0 ,   0),
-    Vec3U8(0  , 255 ,255), Vec3U8(255, 255,   0), Vec3U8(255 , 0 , 255),
-    Vec3U8(50 , 0   ,255), Vec3U8(50 , 255,   0), Vec3U8(255 , 50,  50),
-    Vec3U8(50 , 255 ,255), Vec3U8(255, 255,  50), Vec3U8(255 , 50, 255),
-    Vec3U8(100, 0   ,255), Vec3U8(100, 255,   0), Vec3U8(255 ,100,  50),
-    Vec3U8(100, 255 ,255), Vec3U8(255, 255, 100), Vec3U8(255 ,100, 255),
-    Vec3U8(150, 0   ,255), Vec3U8(150, 255,   0), Vec3U8(255 ,150,  50),
-    Vec3U8(150, 255 ,255), Vec3U8(255, 255, 150), Vec3U8(255 ,150, 255),
-    Vec3U8(200, 0   ,255), Vec3U8(200, 255,   0), Vec3U8(255 ,200,  50),
-    Vec3U8(200, 255 ,255), Vec3U8(255, 255, 200), Vec3U8(255 ,200, 255),
+    Vec3U8(200, 0   ,0  ), Vec3U8(  0, 200, 0  ), Vec3U8(  0,  0 , 200),
+    Vec3U8(200, 255 ,0  ), Vec3U8(  0, 200, 255), Vec3U8(255,  0 , 200),
+    Vec3U8(200, 0   ,50 ), Vec3U8(  0, 200, 50 ), Vec3U8( 50,  50, 200),
+    Vec3U8(200, 255 ,50 ), Vec3U8( 50, 200, 255), Vec3U8(255,  50, 200),
+    Vec3U8(200, 0   ,100), Vec3U8(  0, 200, 100), Vec3U8( 50, 100, 200),
+    Vec3U8(200, 255 ,100), Vec3U8(100, 200, 255), Vec3U8(255, 100, 200),
+    Vec3U8(200, 0   ,150), Vec3U8(  0, 200, 150), Vec3U8( 50, 150, 200),
+    Vec3U8(200, 255 ,150), Vec3U8(150, 200, 255), Vec3U8(255, 150, 200),
+    Vec3U8(200, 0   ,200), Vec3U8(  0, 200, 200), Vec3U8( 50, 200, 200),
+    Vec3U8(200, 255 ,200), Vec3U8(200, 200, 255), Vec3U8(255, 200, 200),
+    Vec3U8(150, 0   ,0  ), Vec3U8(  0, 150, 0  ), Vec3U8(  0,  0 , 150),
+    Vec3U8(150, 255 ,0  ), Vec3U8(  0, 150, 255), Vec3U8(255,  0 , 150),
+    Vec3U8(150, 0   ,50 ), Vec3U8(  0, 150, 50 ), Vec3U8( 50,  50, 150),
+    Vec3U8(150, 255 ,50 ), Vec3U8( 50, 150, 255), Vec3U8(255,  50, 150),
+    Vec3U8(150, 0   ,100), Vec3U8(  0, 150, 100), Vec3U8( 50, 100, 150),
+    Vec3U8(150, 255 ,100), Vec3U8(100, 150, 255), Vec3U8(255, 100, 150),
+    Vec3U8(150, 0   ,150), Vec3U8(  0, 150, 150), Vec3U8( 50, 150, 150),
+    Vec3U8(150, 255 ,150), Vec3U8(150, 150, 255), Vec3U8(255, 150, 150),
+    Vec3U8(150, 0   ,200), Vec3U8(  0, 150, 200), Vec3U8( 50, 200, 150),
+    Vec3U8(150, 255 ,200), Vec3U8(200, 150, 255), Vec3U8(255, 200, 150),
+    Vec3U8(255, 0   ,0  ), Vec3U8(  0, 255, 0  ), Vec3U8(  0,  0 , 255),
+    Vec3U8(255, 255 ,0  ), Vec3U8(  0, 255, 255), Vec3U8(255,  0 , 255),
+    Vec3U8(255, 0   ,50 ), Vec3U8(  0, 255, 50 ), Vec3U8( 50,  50, 255),
+    Vec3U8(255, 255 ,50 ), Vec3U8( 50, 255, 255), Vec3U8(255,  50, 255),
+    Vec3U8(255, 0   ,100), Vec3U8(  0, 255, 100), Vec3U8( 50, 100, 255),
+    Vec3U8(255, 255 ,100), Vec3U8(100, 255, 255), Vec3U8(255, 100, 255),
+    Vec3U8(255, 0   ,150), Vec3U8(  0, 255, 150), Vec3U8( 50, 150, 255),
+    Vec3U8(255, 255 ,150), Vec3U8(150, 255, 255), Vec3U8(255, 150, 255),
+    Vec3U8(255, 0   ,200), Vec3U8(  0, 255, 200), Vec3U8( 50, 200, 255),
+    Vec3U8(255, 255 ,200), Vec3U8(200, 255, 255), Vec3U8(255, 200, 255),
 };
 
 std::vector<float> CVUtil::getImgDataF32C1(const std::string &path, const Vec2I32 &size)
@@ -96,6 +97,9 @@ std::vector<float> CVUtil::getImgDataF32C3(Mat &mat, const Vec2I32 &size, const 
 
     MatOp::resize(mat, mat, size);
 
+	if (mat.getChannel() == 1)
+		MatOp::cvtColor(mat, mat, Msnhnet::CVT_GRAY2RGB);
+
     if(needShuffleRGB)
         MatOp::cvtColor(mat,mat,CVT_RGB2BGR);
 
@@ -139,6 +143,9 @@ std::vector<float> CVUtil::getGoogLenetF32C3(Mat &mat, const Vec2I32 &size, cons
     }
 
     MatOp::resize(mat, mat, size);
+
+    if (mat.getChannel() == 1)
+        MatOp::cvtColor(mat, mat, Msnhnet::CVT_GRAY2RGB);
 
     if(needShuffleRGB)
         MatOp::cvtColor(mat,mat,CVT_RGB2BGR);
@@ -211,6 +218,9 @@ std::vector<float> CVUtil::getPaddingZeroF32C3(Mat &mat, const Vec2I32 &size, co
 
     MatOp::resize(mat, mat, size);
 
+    if (mat.getChannel() == 1)
+        MatOp::cvtColor(mat, mat, Msnhnet::CVT_GRAY2RGB);
+
     if(needShuffleRGB)
         MatOp::cvtColor(mat,mat,CVT_RGB2BGR);
 
@@ -252,6 +262,9 @@ std::vector<float> CVUtil::getTransformedF32C3(Mat &mat, const Vec2I32 &size, co
     }
 
     MatOp::resize(mat, mat, size);
+
+    if (mat.getChannel() == 1)
+        MatOp::cvtColor(mat, mat, Msnhnet::CVT_GRAY2RGB);
 
     if(needShuffleRGB)
         MatOp::cvtColor(mat,mat,CVT_RGB2BGR);
@@ -306,6 +319,9 @@ std::vector<float> CVUtil::getCaffeModeF32C3(Mat &mat, const Vec2I32 &size, cons
     }
 
     MatOp::resize(mat, mat, size);
+
+    if (mat.getChannel() == 1)
+        MatOp::cvtColor(mat, mat, Msnhnet::CVT_GRAY2RGB);
 
     if(needShuffleRGB)
         MatOp::cvtColor(mat,mat,CVT_RGB2BGR);
@@ -374,7 +390,7 @@ void CVUtil::drawYoloBox(Mat &mat, std::vector<std::string> &labels, std::vector
         float w = box.xywhBox.w;
         float h = box.xywhBox.h;
 
-        float orgAngle = box.angle / 180.f*3.1415926f;
+        float orgAngle = 45 / 180.f*3.1415926f;
         float angle    = orgAngle;
 
         float v        = sqrtf(w*w + h*h)/2;
@@ -384,33 +400,33 @@ void CVUtil::drawYoloBox(Mat &mat, std::vector<std::string> &labels, std::vector
         float dy       = v*sinf(rad);
 
         float p1X = - dx;
-        float p1Y = + dy;
+        float p1Y = - dy;
 
         float p2X = + dx;
-        float p2Y = + dy;
+        float p2Y = - dy;
 
         float p3X = + dx;
-        float p3Y = - dy;
+        float p3Y = + dy;
 
         float p4X = - dx;
-        float p4Y = - dy;
+        float p4Y = + dy;
 
-        p1X = p1X * cosf(angle)  + p1Y * sinf(angle);
-        p1Y = -p1X * sinf(angle) + p1Y * cosf(angle);
+        float p1XF = p1X * cosf(angle)  + p1Y * sinf(angle);
+        float p1YF = -p1X * sinf(angle) + p1Y * cosf(angle);
 
-        p2X = p2X * cosf(angle)  + p2Y * sinf(angle);
-        p2Y = -p2X * sinf(angle) + p2Y * cosf(angle);
+        float p2XF = p2X * cosf(angle)  + p2Y * sinf(angle);
+        float p2YF = -p2X * sinf(angle) + p2Y * cosf(angle);
 
-        p3X = p3X * cosf(angle)  + p3Y * sinf(angle);
-        p3Y = -p3X * sinf(angle) + p3Y * cosf(angle);
+        float p3XF = p3X * cosf(angle)  + p3Y * sinf(angle);
+        float p3YF = -p3X * sinf(angle) + p3Y * cosf(angle);
 
-        p4X = p4X * cosf(angle)  + p4Y * sinf(angle);
-        p4Y = -p4X * sinf(angle) + p4Y * cosf(angle);
+        float p4XF = p4X * cosf(angle)  + p4Y * sinf(angle);
+        float p4YF = -p4X * sinf(angle) + p4Y * cosf(angle);
 
-        Vec2I32 p1(static_cast<int>(p1X+x),static_cast<int>(p1Y+y));
-        Vec2I32 p2(static_cast<int>(p2X+x),static_cast<int>(p2Y+y));
-        Vec2I32 p3(static_cast<int>(p3X+x),static_cast<int>(p3Y+y));
-        Vec2I32 p4(static_cast<int>(p4X+x),static_cast<int>(p4Y+y));
+        Vec2I32 p1(static_cast<int>(p1XF+x),static_cast<int>(p1YF+y));
+        Vec2I32 p2(static_cast<int>(p2XF+x),static_cast<int>(p2YF+y));
+        Vec2I32 p3(static_cast<int>(p3XF+x),static_cast<int>(p3YF+y));
+        Vec2I32 p4(static_cast<int>(p4XF+x),static_cast<int>(p4YF+y));
 
         Draw::drawRect(mat,p1,p2,p3,p4,CVUtil::colorTable[static_cast<size_t>(box.bestClsIdx)],3);
     }
