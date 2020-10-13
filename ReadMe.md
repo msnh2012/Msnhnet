@@ -125,10 +125,9 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
   |time|22.51ms|16.46ms|
   
 **Requirements**
-  * OpenCV4 https://github.com/opencv/opencv
-  * yaml-cpp https://github.com/jbeder/yaml-cpp
+  * OpenCV4 (**optional**) https://github.com/opencv/opencv
   * Qt5 (**optional**. for Msnhnet viewer) http://download.qt.io/archive/qt/
-  * cuda10+ cudnn 7.0+.(for GPU)
+  * cuda10+ cudnn 7.0+.(**optional**. for GPU)
 
 **Video tutorials(bilibili)**
 - [Build on Linux](https://www.bilibili.com/video/BV1ai4y1g7Nf)
@@ -136,10 +135,10 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 - [Pytorch Params to msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
 
 **How to build**
-- With CMake 3.10+
+- With CMake 3.15+
 - Viewer can not build with GPU.
 - Options</br>
-![](readme_imgs/cmake_option.png)</br>
+![](readme_imgs/cmake_option.jpg)</br>
 **ps. You can change omp threads by unchecking OMP_MAX_THREAD and modifying "num" val at CMakeLists.txt:52** </br>
 
 - Windows

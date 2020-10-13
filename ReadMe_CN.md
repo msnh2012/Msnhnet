@@ -124,10 +124,9 @@
   |time|22.51ms|16.46ms|
 
 **依赖**
-  * OpenCV4 [https://github.com/opencv/opencv](https://github.com/opencv/opencv)
-  * yaml-cpp [https://github.com/jbeder/yaml-cpp](https://github.com/jbeder/yaml-cpp)
+  * OpenCV4 (**可选**.) [https://github.com/opencv/opencv](https://github.com/opencv/opencv)
   * Qt5 (**可选**. 编译Msnhnet viewer时使用) [http://download.qt.io/archive/qt/](http://download.qt.io/archive/qt/)
-  * Cuda10+, Cudnn7.0+
+  * Cuda10+, Cudnn7.0+. (**可选**)
 
 **视频教程(B站)**
 - [如何在Linux上编译](https://www.bilibili.com/video/BV1ai4y1g7Nf)
@@ -135,17 +134,17 @@
 - [Pytorch参数转msnhbin](https://www.bilibili.com/video/BV1rh41197L8)
 
 **如何编译**
-- CMake要求: CMake 3.10+
+- CMake要求: CMake 3.15+
 - 注意Viewer不能在GPU模式下编译
   
-![](readme_imgs/cmake_option.png)</br>
+![](readme_imgs/cmake_option.jpg)</br>
 **ps. 你可以在CMakeLists.txt:52设置最大OMP占用线程, 默认是OMP使用所有CPU线程.(需取消勾选OMP_MAX_THREAD)** </br>
 
 - **Windows平台编译(MSVC)**
-    - 1.使用CMake编译安装OpenCV4和Yaml-cpp.
-    - 2.在环境变量中添加"OpenCV_DIR"和"yaml-cpp_DIR"变量, 并设置变量内容为每个库的CMake目录.
-    - 3.下载安装Qt5.
-    - 4.把Qt5的bin目录添加环境变量Path.
+    - 1.使用CMake编译安装OpenCV4 **(可选)**.
+    - 2.在环境变量中添加"OpenCV_DIR", 并设置变量内容为每个库的CMake目录 **(可选)**.
+    - 3.下载安装Qt5 **(可选)**.
+    - 4.把Qt5的bin目录添加环境变量Path **(可选)**.
     - 5.最后使用CMake GUI工具配置Msnhnet然后使用Visual Studio编译安装.
 
 - **Linux(Ubuntu )**
@@ -153,16 +152,7 @@
   ```
   sudo apt-get install qt5-default      #optional
   sudo apt-get install libqt5svg5-dev   #optional
-  sudo apt-get install libopencv-dev
-
-  # build yaml-cpp
-  git clone https://github.com/jbeder/yaml-cpp.git
-  cd yaml-cpp
-  mkdir build 
-  cd build 
-  cmake .. -DYAML_BUILD_SHARED_LIBS=True -DYAML_CPP_BUILD_TESTS=False
-  make -j4
-  sudo make install 
+  sudo apt-get install libopencv-dev    #optional
 
   #config 
   sudo echo /usr/local/lib > /etc/ld.so.conf.d/usrlib.conf
