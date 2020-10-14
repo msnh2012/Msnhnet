@@ -230,7 +230,7 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #endif
         for(int i=0; i<inputN; ++i)
         {
-            out[i*stepOut]  = std::abs(x[i*stepX]);
+            out[i*stepOut]  = std::fabs(x[i*stepX]);
         }
     }
     else if(type == Scientific::SCI_ACOS)
@@ -941,7 +941,7 @@ void Blas::cpuSmoothL1(const int &n, float * const &pred, float * const &truth, 
     for (int i = 0; i < n; ++i)
     {
         float diff      = truth[i] - pred[i];
-        float absVal    = fabs(diff);
+        float absVal    = std::fabs(diff);
 
         if(absVal < 1)
         {
@@ -964,7 +964,7 @@ void Blas::cpuL1(const int &n, float * const &pred, float * const &truth, float 
     for (int i = 0; i < n; ++i)
     {
         float diff = truth[i] - pred[i];
-        error[i] = fabs(diff);
+        error[i] = std::fabs(diff);
         delta[i] = diff > 0 ? 1.f : -1.f;
     }
 }

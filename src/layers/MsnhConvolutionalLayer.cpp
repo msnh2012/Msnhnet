@@ -397,7 +397,7 @@ void ConvolutionalLayer::binarizeWeights(float * const &weights, const int &num,
 
         for (int i = 0; i < wtSize; ++i)
         {
-            mean += fabs(weights[f*wtSize + i]);
+            mean += std::fabs(weights[f*wtSize + i]);
         }
 
         mean    = mean / wtSize;
