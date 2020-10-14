@@ -19,7 +19,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
 
         int bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
 
-        if( (abs(Msnhnet::ExVector::max<float>(result)-10.5764f) < 0.1f) && bestIndex==331)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-10.5764f) < 0.1f) && bestIndex==331)
         {
             std::cout<<"\n===== alexnet check success ====="<<std::endl;
         }
@@ -41,7 +41,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-13.60f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-13.60f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== darknet53 check success ====="<<std::endl;
         }
@@ -64,7 +64,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-6.24f) < 0.1f) && bestIndex==284)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-6.24f) < 0.1f) && bestIndex==284)
         {
             std::cout<<"\n===== googLenet check success ====="<<std::endl;
         }
@@ -86,7 +86,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-12.63f) < 1.f) && bestIndex==285) //12.63
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-12.63f) < 1.f) && bestIndex==285) //12.63
         {
             std::cout<<"\n===== mobilenetv2 check success ====="<<std::endl;
         }
@@ -109,7 +109,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-11.10f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-11.10f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== resnet18 check success ====="<<std::endl;
         }
@@ -131,7 +131,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-12.080f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-12.080f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== resnet34 check success ====="<<std::endl;
         }
@@ -153,7 +153,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-13.036f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-13.036f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== resnet50 check success ====="<<std::endl;
         }
@@ -175,7 +175,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-9.273f) < 1.f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-9.273f) < 1.f) && bestIndex==285)
         {
             std::cout<<"\n===== resnet101 check success ====="<<std::endl;
         }
@@ -198,7 +198,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-11.60f) < 1.f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-11.60f) < 1.f) && bestIndex==285)
         {
             std::cout<<"\n===== resnet152 check success ====="<<std::endl;
         }
@@ -220,7 +220,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-12.1254f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-12.1254f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== vgg16 check success ====="<<std::endl;
         }
@@ -242,7 +242,7 @@ void classifyGPUOpencv(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-9.224f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-9.224f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== vgg16_bn check success ====="<<std::endl;
         }
@@ -280,7 +280,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
 
         int bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
 
-        if( (abs(Msnhnet::ExVector::max<float>(result)-10.5764f) < 0.1f) && bestIndex==331)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-10.5764f) < 0.1f) && bestIndex==331)
         {
             std::cout<<"\n===== alexnet check success ====="<<std::endl;
         }
@@ -302,7 +302,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-13.60f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-13.60f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== darknet53 check success ====="<<std::endl;
         }
@@ -325,7 +325,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-6.24f) < 0.1f) && bestIndex==284)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-6.24f) < 0.1f) && bestIndex==284)
         {
             std::cout<<"\n===== googLenet check success ====="<<std::endl;
         }
@@ -347,7 +347,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-12.63f) < 1.f) && bestIndex==285) //12.63
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-12.63f) < 1.f) && bestIndex==285) //12.63
         {
             std::cout<<"\n===== mobilenetv2 check success ====="<<std::endl;
         }
@@ -370,7 +370,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-11.10f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-11.10f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== resnet18 check success ====="<<std::endl;
         }
@@ -392,7 +392,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-12.080f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-12.080f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== resnet34 check success ====="<<std::endl;
         }
@@ -414,7 +414,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-13.036f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-13.036f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== resnet50 check success ====="<<std::endl;
         }
@@ -436,7 +436,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-9.273f) < 1.f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-9.273f) < 1.f) && bestIndex==285)
         {
             std::cout<<"\n===== resnet101 check success ====="<<std::endl;
         }
@@ -459,7 +459,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-11.60f) < 1.f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-11.60f) < 1.f) && bestIndex==285)
         {
             std::cout<<"\n===== resnet152 check success ====="<<std::endl;
         }
@@ -481,7 +481,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-12.1254f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-12.1254f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== vgg16 check success ====="<<std::endl;
         }
@@ -503,7 +503,7 @@ void classifyGPUMsnhCV(const std::string &root ,const std::string &imgPath)
         st = Msnhnet::TimeUtil::startRecord();
         result =  msnhNet.runClassifyGPU(img);
         bestIndex = static_cast<int>(Msnhnet::ExVector::maxIndex(result));
-        if( (abs(Msnhnet::ExVector::max<float>(result)-9.224f) < 0.1f) && bestIndex==285)
+        if( (std::abs(Msnhnet::ExVector::max<float>(result)-9.224f) < 0.1f) && bestIndex==285)
         {
             std::cout<<"\n===== vgg16_bn check success ====="<<std::endl;
         }
