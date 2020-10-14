@@ -34,6 +34,7 @@ public:
 
     void loadAllWeigths(std::vector<float> &weights);
 
+    virtual void saveWeights(const int &mainIdx, const int &branchIdx=-1, const int &branchIdx1=-1);
     virtual void mallocMemory();
     virtual void forward(NetworkState &netState);
 

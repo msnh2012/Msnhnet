@@ -98,6 +98,10 @@ public:
 
     void setSaveLayerOutput(bool saveLayerOutput);
 
+    bool getSaveWeights() const;
+
+    void setSaveWeights(bool saveWeights);
+
 private:
 
     Parser          *_parser;
@@ -109,6 +113,7 @@ private:
     int             _lastLayerOutChannel    = 0;
     size_t          _lastLayerOutNum        = 0;
     bool            _saveLayerOutput        = false;
+    bool            _saveWeights            = false;
 };
 }
 #endif 

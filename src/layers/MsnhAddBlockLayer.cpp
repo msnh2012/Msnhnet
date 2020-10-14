@@ -208,6 +208,19 @@ void AddBlockLayer::loadAllWeigths(std::vector<float> &weights)
     }
 }
 
+void AddBlockLayer::saveWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
+{
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        for (size_t j = 0; j < branchLayers[i].size(); ++j)
+        {
+            branchLayers[i][j]->saveWeights(mainIdx, i, j);
+        }
+    }
+    (void)branchIdx;
+    (void)branchIdx1;
+}
+
 void AddBlockLayer::mallocMemory()
 {
     if(!this->_memoryMalloced)

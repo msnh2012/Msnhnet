@@ -705,6 +705,12 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
             }
         }
 
+        if(this->_saveWeights)
+        {
+            std::cout<<"Saving layer weights. Layer : "<<i<<std::endl;
+            _net->layers[i]->saveWeights(_net->layers[i]->getLayerIndex(),-1,-1);
+        }
+
     }
 
 #ifdef USE_NNPACK
@@ -782,6 +788,12 @@ std::vector<std::vector<YoloBox>> NetBuilder::runYolo(std::vector<float> img)
                 std::string path = std::to_string(i)+"cpu.txt";
                 IO::saveVector<float>(pred,path.data(),"\n");
             }
+        }
+
+        if(this->_saveWeights)
+        {
+            std::cout<<"Saving layer weights. Layer : "<<i<<std::endl;
+            _net->layers[i]->saveWeights(_net->layers[i]->getLayerIndex(),-1,-1);
         }
     }
 
@@ -868,6 +880,12 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
                 std::vector<float> pred(out, out + _netState->inputNum);
                 IO::saveVector<float>(pred,path.data(),"\n");
             }
+        }
+
+        if(this->_saveWeights)
+        {
+            std::cout<<"Saving layer weights. Layer : "<<i<<std::endl;
+            _net->layers[i]->saveWeights(_net->layers[i]->getLayerIndex(),-1,-1);
         }
     }
 
@@ -958,6 +976,12 @@ std::vector<std::vector<YoloBox>> NetBuilder::runYoloGPU(std::vector<float> img)
                 std::vector<float> pred(out, out + _netState->inputNum);
                 IO::saveVector<float>(pred,path.data(),"\n");
             }
+        }
+
+        if(this->_saveWeights)
+        {
+            std::cout<<"Saving layer weights. Layer : "<<i<<std::endl;
+            _net->layers[i]->saveWeights(_net->layers[i]->getLayerIndex(),-1,-1);
         }
     }
 
@@ -1191,6 +1215,16 @@ size_t NetBuilder::getLastLayerOutNum() const
 void NetBuilder::setSaveLayerOutput(bool saveLayerOutput)
 {
     _saveLayerOutput = saveLayerOutput;
+}
+
+bool NetBuilder::getSaveWeights() const
+{
+    return _saveWeights;
+}
+
+void NetBuilder::setSaveWeights(bool saveWeights)
+{
+    _saveWeights = saveWeights;
 }
 
 }

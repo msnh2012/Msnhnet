@@ -233,7 +233,7 @@ void ConnectedLayer::mallocMemory()
     this->_memReUse         =  0;
 }
 
-void ConnectedLayer::saveWeights(const int &mainIdx, const int &branchIdx)
+void ConnectedLayer::saveWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
 {
     if(BaseLayer::isPreviewMode)
     {
@@ -249,7 +249,7 @@ void ConnectedLayer::saveWeights(const int &mainIdx, const int &branchIdx)
 
     if(branchIdx!=-1)
     {
-        name = "_" + std::to_string(mainIdx) + "_" + std::to_string(branchIdx)+".txt";
+        name = "_" + std::to_string(mainIdx) + "_" + std::to_string(branchIdx) + "_" + std::to_string(branchIdx1) +".txt";
     }
     else
     {
