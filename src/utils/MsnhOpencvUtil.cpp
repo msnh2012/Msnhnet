@@ -201,7 +201,7 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
 
     std::vector<float> imgs(static_cast<size_t>(size.height*size.width*3));
 
-    int diff    =   abs(width - height);
+    int diff    =   std::abs(width - height);
 
     if(width > height)
     {

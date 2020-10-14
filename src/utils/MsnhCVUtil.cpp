@@ -205,7 +205,7 @@ std::vector<float> CVUtil::getPaddingZeroF32C3(Mat &mat, const Vec2I32 &size, co
 
     std::vector<float> imgs(static_cast<size_t>(size.x1*size.x2*channel));
 
-    int diff    =   abs(width - height);
+    int diff    =   std::abs(width - height);
 
     if(width > height)
     {

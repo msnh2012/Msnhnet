@@ -19,11 +19,11 @@ void Draw::drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color)
 
     float beta  = p1.x2 - alpha*p1.x1;
 
-    if(abs(p2.x1-p1.x1)>abs(p2.x2-p1.x2))
+    if(std::abs(p2.x1-p1.x1)>std::abs(p2.x2-p1.x2))
     {
         int32_t base = std::min(p1.x1,p2.x1);
 
-        for (int32_t i = 0; i < abs(p1.x1 - p2.x1); ++i)
+        for (int32_t i = 0; i < std::abs(p1.x1 - p2.x1); ++i)
         {
             int32_t x = i + base;
 
@@ -49,7 +49,7 @@ void Draw::drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color)
     {
         int32_t base = std::min(p1.x2,p2.x2);
 
-        for (int32_t i = 0; i < abs(p1.x2 - p2.x2); ++i)
+        for (int32_t i = 0; i < std::abs(p1.x2 - p2.x2); ++i)
         {
 
             int32_t y = i + base;
@@ -148,12 +148,12 @@ void Draw::drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color, const
             float fx = 1.f;
             float fy = 1.f ;
 
-            if(abs(dx) < abs(dy))
+            if(std::abs(dx) < std::abs(dy))
             {
                 fy = -1.f*dx/dy;
             }
 
-            if(abs(dx) > abs(dy))
+            if(std::abs(dx) > std::abs(dy))
             {
                 fx = -1.f*dy/dx;
             }
@@ -210,12 +210,12 @@ void Draw::drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color, const
             float fx = 1.f;
             float fy = 1.f ;
 
-            if(abs(dx) < abs(dy))
+            if(std::abs(dx) < std::abs(dy))
             {
                 fy = 1.f*dx/dy;
             }
 
-            if(abs(dx) > abs(dy))
+            if(std::abs(dx) > std::abs(dy))
             {
                 fx = 1.f*dy/dx;
             }
@@ -606,8 +606,8 @@ void Draw::fillRect(Mat &mat, const Vec2I32 &p1, const Vec2I32 &p2, const Vec3U8
 {
     checkMat(mat);
 
-    int32_t w = abs(p2.x1-p1.x1);
-    int32_t h = abs(p2.x2-p1.x2);
+    int32_t w = std::abs(p2.x1-p1.x1);
+    int32_t h = std::abs(p2.x2-p1.x2);
 
     int32_t baseW = std::min(p1.x1,p2.x1);
     int32_t baseH = std::min(p1.x2,p2.x2);

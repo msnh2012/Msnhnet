@@ -53,6 +53,8 @@ public:
 #endif
     virtual void loadAllWeigths(std::vector<float> &weights);
 
+    virtual void saveWeights(const int& mainIdx, const int& branchIdx=-1);
+
     static void initSimd();
 
     template<typename T>
@@ -162,6 +164,7 @@ protected:
     float          *_output          =  nullptr; 
 
     float           _bFlops          =  0;
+    bool            _weightsLoaded   =  false;
 
 #ifdef USE_GPU
     float          *_gpuOutput       =  nullptr;

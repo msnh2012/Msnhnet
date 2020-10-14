@@ -230,7 +230,7 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #endif
         for(int i=0; i<inputN; ++i)
         {
-            out[i*stepOut]  = abs(x[i*stepX]);
+            out[i*stepOut]  = std::abs(x[i*stepX]);
         }
     }
     else if(type == Scientific::SCI_ACOS)

@@ -268,6 +268,12 @@ void BaseLayer::loadAllWeigths(std::vector<float> &weights)
     (void)weights;
 }
 
+void BaseLayer::saveWeights(const int &mainIdx, const int &branchIdx)
+{
+    (void)mainIdx;
+    (void)branchIdx;
+}
+
 #ifdef USE_GPU
 std::vector<float> BaseLayer::getVecFromCuda(float * const data, const int &num)
 {

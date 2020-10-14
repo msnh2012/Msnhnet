@@ -53,6 +53,8 @@ public:
 #endif
     void loadAllWeigths(std::vector<float> &weights);
 
+    virtual saveWeights(const int &mainIdx, const int &branchIdx=-1);
+
     void loadScales(float *const &weights, const int& len);
     void loadBias(float *const &bias, const int& len);
     void loadWeights(float *const &weights, const int& len);

@@ -9,8 +9,8 @@ void MatOp::getROI(Mat &src, Mat &dst, const Vec2I32 &p1, const Vec2I32 &p2)
         throw Exception(1,"[CV]: img empty", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    int32_t width   = abs(p1.x1 - p2.x1);
-    int32_t height  = abs(p1.x2 - p2.x2);
+    int32_t width   = std::abs(p1.x1 - p2.x1);
+    int32_t height  = std::abs(p1.x2 - p2.x2);
     int channel     = src.getChannel();
     MatType matType = src.getMatType();
     int step        = src.getStep();

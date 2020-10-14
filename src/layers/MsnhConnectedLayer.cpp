@@ -232,6 +232,88 @@ void ConnectedLayer::mallocMemory()
     }
     this->_memReUse         =  0;
 }
+
+void ConnectedLayer::saveWeights(const int &mainIdx, const int &branchIdx)
+{
+    if(BaseLayer::isPreviewMode)
+    {
+        throw Exception(1,"connected preview mode can't save weights.", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(!this->_weightsLoaded)
+    {
+        throw Exception(1,"connected weights had not been loaded yet.", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    std::string name = "";
+
+    if(branchIdx!=-1)
+    {
+        name = "_" + std::to_string(mainIdx) + "_" + std::to_string(branchIdx)+".txt";
+    }
+    else
+    {
+        name = std::to_string(this->_layerIndex)+".txt";
+    }
+
+#ifdef USE_GPU
+    if(BaseLayer::onlyUseGpu) 
+
+    {
+        Cuda::pullCudaArray(this->_gpuWeights, this->_weights, this->_nWeights);
+
+        if(this->_useBias)
+        {
+            Cuda::pullCudaArray(this->_gpuBiases, this->_biases, this->_nBiases);
+        }
+
+        if(this->_batchNorm)
+        {
+            Cuda::pullCudaArray(this->_gpuScales, this->_scales, this->_nScales);
+            Cuda::pullCudaArray(this->_gpuRollMean, this->_rollMean, this->_nRollMean);
+            Cuda::pullCudaArray(this->_gpuRollVariance, this->_rollVariance, this->_nRollVariance);
+        }
+    }
+#endif
+
+    if(this->_weights==nullptr)
+    {
+        throw Exception(1,"connected weights err.", __FILE__, __LINE__, __FUNCTION__);
+    }
+    std::vector<float> weightsVec(this->_weights,this->_weights+this->_nWeights);
+    std::string weightsName = "weights"+name;
+    Msnhnet::IO::saveVector<float>(weightsVec,weightsName.c_str(),"\n");
+
+    if(this->_useBias)
+    {
+        if(this->_biases==nullptr)
+        {
+            throw Exception(1,"connected biases err.", __FILE__, __LINE__, __FUNCTION__);
+        }
+        std::vector<float> biasesVec(this->_biases,this->_biases+this->_nBiases);
+        std::string biasName = "bias"+name;
+        Msnhnet::IO::saveVector<float>(biasesVec,biasName.c_str(),"\n");
+    }
+
+    if(this->_batchNorm)
+    {
+        if(this->_scales==nullptr || this->_rollMean==nullptr || this->_rollVariance==nullptr)
+        {
+            throw Exception(1,"connected weights err.", __FILE__, __LINE__, __FUNCTION__);
+        }
+
+        std::vector<float> scalesVec(this->_scales,this->_scales+this->_nScales);
+        std::vector<float> rollMeanVec(this->_rollMean,this->_rollMean+this->_nRollMean);
+        std::vector<float> rollVarianceVec(this->_rollVariance,this->_rollVariance+this->_nRollVariance);
+
+        std::string scaleName = "scale"+name;
+        Msnhnet::IO::saveVector<float>(scalesVec,scaleName.c_str(),"\n");
+        std::string rollMeanName = "rollMean"+name;
+        Msnhnet::IO::saveVector<float>(rollMeanVec,rollMeanName.c_str(),"\n");
+        std::string rollVarianceName = "rollVariance"+name;
+        Msnhnet::IO::saveVector<float>(rollVarianceVec,rollVarianceName.c_str(),"\n");
+    }
+}
 #ifdef USE_GPU
 void ConnectedLayer::forwardGPU(NetworkState &netState)
 {
@@ -411,6 +493,8 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
         }
 #endif
     }
+
+    this->_weightsLoaded = true;
 }
 
 void ConnectedLayer::loadScales(float * const &weights, const int &len)
