@@ -150,7 +150,9 @@ void BatchNormLayer::forward(NetworkState &netState)
 #endif
 
 #ifdef USE_X86
-
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
         for (int c = 0; c < this->_outChannel; ++c)
         {
             float sqrtVal   = sqrt(this->_rollVariance[c] + this->_eps);
