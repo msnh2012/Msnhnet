@@ -705,10 +705,10 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
             }
         }
 
-        if(this->_saveWeights)
+        if(this->_saveLayerWeights)
         {
             std::cout<<"Saving layer weights. Layer : "<<i<<std::endl;
-            _net->layers[i]->saveWeights(_net->layers[i]->getLayerIndex(),-1,-1);
+            _net->layers[i]->saveAllWeights(_net->layers[i]->getLayerIndex(),-1,-1);
         }
 
     }
@@ -790,10 +790,10 @@ std::vector<std::vector<YoloBox>> NetBuilder::runYolo(std::vector<float> img)
             }
         }
 
-        if(this->_saveWeights)
+        if(this->_saveLayerWeights)
         {
             std::cout<<"Saving layer weights. Layer : "<<i<<std::endl;
-            _net->layers[i]->saveWeights(_net->layers[i]->getLayerIndex(),-1,-1);
+            _net->layers[i]->saveAllWeights(_net->layers[i]->getLayerIndex(),-1,-1);
         }
     }
 
@@ -882,10 +882,10 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
             }
         }
 
-        if(this->_saveWeights)
+        if(this->_saveLayerWeights)
         {
             std::cout<<"Saving layer weights. Layer : "<<i<<std::endl;
-            _net->layers[i]->saveWeights(_net->layers[i]->getLayerIndex(),-1,-1);
+            _net->layers[i]->saveAllWeights(_net->layers[i]->getLayerIndex(),-1,-1);
         }
     }
 
@@ -978,10 +978,10 @@ std::vector<std::vector<YoloBox>> NetBuilder::runYoloGPU(std::vector<float> img)
             }
         }
 
-        if(this->_saveWeights)
+        if(this->_saveLayerWeights)
         {
             std::cout<<"Saving layer weights. Layer : "<<i<<std::endl;
-            _net->layers[i]->saveWeights(_net->layers[i]->getLayerIndex(),-1,-1);
+            _net->layers[i]->saveAllWeights(_net->layers[i]->getLayerIndex(),-1,-1);
         }
     }
 
@@ -1217,14 +1217,13 @@ void NetBuilder::setSaveLayerOutput(bool saveLayerOutput)
     _saveLayerOutput = saveLayerOutput;
 }
 
-bool NetBuilder::getSaveWeights() const
+bool NetBuilder::getSaveLayerWeights() const
 {
-    return _saveWeights;
+    return _saveLayerWeights;
 }
 
-void NetBuilder::setSaveWeights(bool saveWeights)
+void NetBuilder::setSaveLayerWeights(bool saveLayerWeights)
 {
-    _saveWeights = saveWeights;
+    _saveLayerWeights = saveLayerWeights;
 }
-
 }

@@ -207,6 +207,14 @@ void DeConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
     }
 }
 
+void DeConvolutionalLayer::saveAllWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
+{
+    (void)mainIdx;
+    (void)branchIdx;
+    (void)branchIdx1;
+    throw Exception(1,"Deconv saves weights not supported yet", __FILE__, __LINE__, __FUNCTION__);
+}
+
 void DeConvolutionalLayer::loadBias(float * const &bias, const int &len)
 {
     if(len != this->_nBiases)

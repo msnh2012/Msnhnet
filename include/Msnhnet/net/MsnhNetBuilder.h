@@ -98,9 +98,9 @@ public:
 
     void setSaveLayerOutput(bool saveLayerOutput);
 
-    bool getSaveWeights() const;
+    bool getSaveLayerWeights() const;
 
-    void setSaveWeights(bool saveWeights);
+    void setSaveLayerWeights(bool saveLayerWeights);
 
 private:
 
@@ -113,7 +113,7 @@ private:
     int             _lastLayerOutChannel    = 0;
     size_t          _lastLayerOutNum        = 0;
     bool            _saveLayerOutput        = false;
-    bool            _saveWeights            = false;
+    bool            _saveLayerWeights       = false;
 };
 }
 #endif 

@@ -1233,7 +1233,7 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
     this->_weightsLoaded = true;
 }
 
-void ConvolutionalLayer::saveWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
+void ConvolutionalLayer::saveAllWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
 {
     if(BaseLayer::isPreviewMode)
     {

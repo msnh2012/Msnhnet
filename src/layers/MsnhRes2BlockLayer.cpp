@@ -292,16 +292,16 @@ void Res2BlockLayer::loadAllWeigths(std::vector<float> &weights)
     }
 }
 
-void Res2BlockLayer::saveWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
+void Res2BlockLayer::saveAllWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
 {
     for (size_t i = 0; i < baseLayers.size(); ++i)
     {
-        baseLayers[i]->saveWeights(mainIdx, i,-1);
+        baseLayers[i]->saveAllWeights(mainIdx, i,-1);
     }
 
     for (size_t i = 0; i < branchLayers.size(); ++i)
     {
-        branchLayers[i]->saveWeights(mainIdx,-1,i);
+        branchLayers[i]->saveAllWeights(mainIdx,-1,i);
     }
 
     (void)branchIdx;

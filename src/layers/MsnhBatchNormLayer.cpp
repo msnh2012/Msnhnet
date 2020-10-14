@@ -476,7 +476,7 @@ void BatchNormLayer::loadAllWeigths(std::vector<float> &weights)
 
 }
 
-void BatchNormLayer::saveWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
+void BatchNormLayer::saveAllWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
 {
 
     if(BaseLayer::isPreviewMode)

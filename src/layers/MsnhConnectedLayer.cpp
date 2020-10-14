@@ -233,7 +233,7 @@ void ConnectedLayer::mallocMemory()
     this->_memReUse         =  0;
 }
 
-void ConnectedLayer::saveWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
+void ConnectedLayer::saveAllWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
 {
     if(BaseLayer::isPreviewMode)
     {

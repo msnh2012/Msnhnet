@@ -171,11 +171,11 @@ void ResBlockLayer::loadAllWeigths(std::vector<float> &weights)
     }
 }
 
-void ResBlockLayer::saveWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
+void ResBlockLayer::saveAllWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
 {
     for (size_t i = 0; i < baseLayers.size(); ++i)
     {
-        baseLayers[i]->saveWeights(mainIdx,i,-1);
+        baseLayers[i]->saveAllWeights(mainIdx,i,-1);
     }
     (void)branchIdx;
     (void)branchIdx1;

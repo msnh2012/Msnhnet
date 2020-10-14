@@ -19,6 +19,8 @@ public:
     virtual void mallocMemory();
     virtual void forward(NetworkState &netState);
     virtual void loadAllWeigths(std::vector<float> &weights);
+    virtual void saveAllWeights(const int &mainIdx, const int &branchIdx=-1, const int &branchIdx1=-1);
+
     void loadBias(float *const &bias, const int& len);
     void loadWeights(float *const &weights, const int& len);
 

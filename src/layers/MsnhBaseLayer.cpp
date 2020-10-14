@@ -268,7 +268,7 @@ void BaseLayer::loadAllWeigths(std::vector<float> &weights)
     (void)weights;
 }
 
-void BaseLayer::saveWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
+void BaseLayer::saveAllWeights(const int &mainIdx, const int &branchIdx, const int &branchIdx1)
 {
     (void)mainIdx;
     (void)branchIdx;
