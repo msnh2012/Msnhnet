@@ -57,95 +57,75 @@ namespace Msnhnet
 #else  
                 if(nn > 0){
                     asm volatile(
-                         "0:                             \n"
-                        // 每一行连续计算4个输出，所以加载
-                        // r0
-                        // q8 = [a, b, c, d]
-                        // q9 = [e, f, g, h]
-                        "pld        [%3, #256]          \n"
-                        "vld2.f32   {d16-d19}, [%3]!    \n" 
+                            "0:                             \n"
+                            "pld        [%2, #256]          \n"
+                            "vld2.f32   {d4-d7}, [%2]!      \n"
 
-                        //sum0 = q6
-                        "pld        [%1, #128]          \n"
-                        "vld1.f32   {d12-d13}, [%1]     \n"
+                            "pld        [%1, #128]          \n"
+                            "vld1.f32   {d0-d1}, [%1]       \n"
+
+                            "vmla.f32   q0, q2, %e10[0]     \n"
+                            "vmul.f32   q10, q3, %e10[1]    \n"
+
+                            "pld        [%2, #128]          \n"
+                            "vld2.f32   {d16-d17}, [%2]     \n"
+                            "vext.32    q1, q2, q8, #1      \n"
+
+                            "vmul.f32   q11, q1, %f10[0]    \n"
+
+                            "pld        [%3, #256]          \n"
+                            "vld2.f32   {d4-d7}, [%3]!      \n"
+
+                            "vmla.f32   q0, q2, %e11[0]     \n"
+                            "vmla.f32   q10, q3, %e11[1]    \n"
+
+                            "pld        [%3, #128]          \n"
+                            "vld2.f32   {d16-d17}, [%3]     \n"
+                            "vext.32    q1, q2, q8, #1      \n"
+
+                            "vmla.f32   q11, q1, %f11[0]    \n"
+
+                            "pld        [%4, #256]          \n"
+                            "vld2.f32   {d4-d7}, [%4]!      \n"
+
+                            "vmla.f32   q0, q2, %e12[0]     \n"
+                            "vmla.f32   q10, q3, %e12[1]    \n"
+
+                            "pld        [%4, #128]          \n"
+                            "vld2.f32   {d16-d17}, [%4]     \n"
+                            "vext.32    q1, q2, q8, #1      \n"
+
+                            "vmla.f32   q11, q1, %f12[0]    \n"
 
 
-                        // q8和k012的第一个元素相乘
-                        "vmul.f32   q12, q8, %e10[0]    \n"
-                        // q10 = [a, b, c, d]
-                        "pld        [%3, #128]          \n"
-                        "vld2.f32   {d20-d21}, [%3]     \n" 
+                            "vadd.f32   q0, q0, q10         \n"
+                            "vadd.f32   q0, q0, q11         \n"
 
-                        // q9 = [b, d, f, h] 和 k012的第二个元素相乘
-                        "vmla.f32   q6, q9, %e10[1]     \n"
+                            "vst1.f32   {d0-d1}, [%1]!      \n"
 
-                        // q8 = [a, c, e, g]
-                        // q10 = [i, j, k, l]
-                        // q11 = [c, e, g, i]
-                        "vext.32    q11, q8, q10, #1    \n"
-
-                        // q11 = [c, e, g, i] 和 k012的第三个元素相乘
-                        "vmla.f32   q12, q11, %f10[0]   \n"
-
-
-                        // r1
-                        "pld        [%4, #256]          \n"
-                        "vld2.f32   {d16-d19}, [%4]!    \n"
-
-                        "pld        [%4, #128]          \n"
-                        "vld2.f32   {d20-d21}, [%4]     \n"
-
-                        "vmla.f32   q6, q8, %e11[0]     \n"
-
-                        "vext.32    q11, q8, q10, #1    \n"
-
-                        "vmla.f32   q6, q9, %e11[1]    \n"
-
-                        "vmla.f32   q12, q11, %f11[0]    \n"
-
-                        //r2
-                        "pld        [%5, #256]          \n"
-                        "vld2.f32   {d16-d19}, [%5]!    \n"
-
-                        "pld        [%5, #128]          \n"
-                        "vld2.f32   {d20-d21}, [%5]     \n"
-
-                        "vmla.f32   q12, q8, %e12[0]    \n"
-
-                        "vext.32    q11, q8, q10, #1    \n"
-
-                        "vmla.f32   q6, q9, %e12[1]     \n"
-
-                        "vmla.f32   q12, q11, %f12[0]   \n"
-
-                        //sum
-                        "vadd.f32   q6, q6, q12         \n"
-
-                        "vst1.f32   {d12-d13}, [%1]!    \n"
-
-                        "subs       %0, #1              \n"
-                        "bne        0b                  \n"
+                            "subs       %0, #1              \n"
+                            "bne        0b                  \n"
 
 
 
-                        // OutputOperands 
-                        : "=r"(nn),     // %0
-                        "=r"(destptr0), // %1
-                        "=r"(r0),     // %2
-                        "=r"(r1),     // %3
-                        "=r"(r2)      // %4
-                        // InputOperands
-                        : "0"(nn),
-                        "1"(destptr0),
-                        "2"(r0),
-                        "3"(r1),
-                        "4"(r2),
-                        "w"(k012), // %10
-                        "w"(k345), // %11
-                        "w"(k678)  // %12
-                        // Clobbers
-                        : "cc", "memory", "q0", "q1", "q2", "q3", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
-                    );
+                            // OutputOperands 
+                            : "=r"(nn),     // %0
+                            "=r"(destptr0), // %1
+                            "=r"(r0),     // %2
+                            "=r"(r1),     // %3
+                            "=r"(r2)      // %4
+                            // InputOperands
+                            : "0"(nn),
+                            "1"(destptr0),
+                            "2"(r0),
+                            "3"(r1),
+                            "4"(r2),
+                            "w"(k012), // %10
+                            "w"(k345), // %11
+                            "w"(k678)  // %12
+                            // Clobbers
+                            : "cc", "memory", "q0", "q1", "q2", "q3", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
+                        );
                 }
 #endif     
 #endif
