@@ -317,69 +317,50 @@ namespace Msnhnet
                     if(nn > 0){
                         asm volatile(
                             "0:                             \n"
-                            // r0
-                            // q8 = [a, c, e, g]
-                            // q9 = [b, d, f, h]
-                            "pld        [%3, #256]          \n"
-                            "vld2.f32   {d16-d19}, [%3]!    \n" 
+                            "pld        [%2, #256]          \n"
+                            "vld2.f32   {d4-d7}, [%2]!      \n"
 
-                            //sum0 = q6
                             "pld        [%1, #128]          \n"
-                            "vld1.f32   {d12-d13}, [%1]     \n"
+                            "vld1.f32   {d0-d1}, [%1]       \n"
 
+                            "vmla.f32   q0, q2, %e10[0]     \n"
+                            "vmul.f32   q10, q3, %e10[1]    \n"
 
-                            // q8和k012的第一个元素相乘
-                            "vmul.f32   q12, q8, %e10[0]    \n"
-                            // q10 = [a, b, c, d]
+                            "pld        [%2, #128]          \n"
+                            "vld2.f32   {d16-d17}, [%2]     \n"
+                            "vext.32    q1, q2, q8, #1      \n"
+
+                            "vmul.f32   q11, q1, %f10[0]    \n"
+
+                            "pld        [%3, #256]          \n"
+                            "vld2.f32   {d4-d7}, [%3]!      \n"
+
+                            "vmla.f32   q0, q2, %e11[0]     \n"
+                            "vmla.f32   q10, q3, %e11[1]    \n"
+
                             "pld        [%3, #128]          \n"
-                            "vld2.f32   {d20-d21}, [%3]     \n" 
+                            "vld2.f32   {d16-d17}, [%3]     \n"
+                            "vext.32    q1, q2, q8, #1      \n"
 
-                            // q9 = [b, d, f, h] 和 k012的第二个元素相乘
-                            "vmla.f32   q6, q9, %e10[1]     \n"
+                            "vmla.f32   q11, q1, %f11[0]    \n"
 
-                            // q8 = [a, c, e, g]
-                            // q10 = [i, j, k, l]
-                            // q11 = [c, e, g, i]
-                            "vext.32    q11, q8, q10, #1    \n"
-
-                            // q11 = [c, e, g, i] 和 k012的第三个元素相乘
-                            "vmla.f32   q12, q11, %f10[0]   \n"
-
-
-                            // r1
                             "pld        [%4, #256]          \n"
-                            "vld2.f32   {d16-d19}, [%4]!    \n"
+                            "vld2.f32   {d4-d7}, [%4]!      \n"
+
+                            "vmla.f32   q0, q2, %e12[0]     \n"
+                            "vmla.f32   q10, q3, %e12[1]    \n"
 
                             "pld        [%4, #128]          \n"
-                            "vld2.f32   {d20-d21}, [%4]     \n"
+                            "vld2.f32   {d16-d17}, [%4]     \n"
+                            "vext.32    q1, q2, q8, #1      \n"
 
-                            "vmla.f32   q6, q8, %e11[0]     \n"
+                            "vmla.f32   q11, q1, %f12[0]    \n"
 
-                            "vext.32    q11, q8, q10, #1    \n"
 
-                            "vmla.f32   q6, q9, %e11[1]    \n"
+                            "vadd.f32   q0, q0, q10         \n"
+                            "vadd.f32   q0, q0, q11         \n"
 
-                            "vmla.f32   q12, q11, %f11[0]    \n"
-
-                            //r2
-                            "pld        [%5, #256]          \n"
-                            "vld2.f32   {d16-d19}, [%5]!    \n"
-
-                            "pld        [%5, #128]          \n"
-                            "vld2.f32   {d20-d21}, [%5]     \n"
-
-                            "vmla.f32   q12, q8, %e12[0]    \n"
-
-                            "vext.32    q11, q8, q10, #1    \n"
-
-                            "vmla.f32   q6, q9, %e12[1]     \n"
-
-                            "vmla.f32   q12, q11, %f12[0]   \n"
-
-                            //sum
-                            "vadd.f32   q6, q6, q12         \n"
-
-                            "vst1.f32   {d12-d13}, [%1]!    \n"
+                            "vst1.f32   {d0-d1}, [%1]!      \n"
 
                             "subs       %0, #1              \n"
                             "bne        0b                  \n"
