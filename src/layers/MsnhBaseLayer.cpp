@@ -38,10 +38,6 @@ void BaseLayer::initSimd()
 #ifdef USE_NEON
     std::cout<<"Use NEON."<<std::endl;
 #endif
-
-#ifdef USE_NNPACK
-    std::cout<<"Use NNPACK."<<std::endl;
-#endif
 #endif
 
 #ifdef USE_OMP

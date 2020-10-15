@@ -22,10 +22,6 @@
 #include <cblas.h>
 #endif
 
-#ifdef USE_NNPACK
-#include <nnpack.h>
-#endif
-
 #ifdef USE_OPENGL
 #include <Msnhnet/config/MsnhnetOpenGL.h>
 #endif

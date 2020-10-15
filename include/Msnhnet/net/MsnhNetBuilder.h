@@ -31,10 +31,6 @@
 #include "Msnhnet/io/MsnhIO.h"
 #include "Msnhnet/utils/MsnhExport.h"
 
-#ifdef USE_NNPACK
-#include <nnpack.h>
-#endif
-
 namespace Msnhnet
 {
 class NetBuildParams

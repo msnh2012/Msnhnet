@@ -11,13 +11,11 @@
 #include "Msnhnet/layers/cuda/MsnhConvolutionalLayerGPU.h"
 #endif
 
-#ifdef USE_NNPACK
-#include <nnpack.h>
-#endif
-
 #ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolution3x3s1.h"
 #include "Msnhnet/layers/arm/MsnhConvolution3x3s2.h"
+#include "Msnhnet/layers/arm/MsnhConvolutionSgemm.h"
+#include "Msnhnet/layers/arm/MsnhConvolution3x3s1Winograd.h"
 #endif
 
 namespace Msnhnet
@@ -27,9 +25,9 @@ class MsnhNet_API ConvolutionalLayer:public BaseLayer
 public:
 
     ConvolutionalLayer(const int &batch, const int &steps, const int &height, const int &width, const int &channel, const int &num, const int &groups,
-                      const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY, const int &dilationX, const int &dilationY, const int &paddingX, const int &paddingY, ActivationType _activation, const std::vector<float> &actParams,
-                      const int &batchNorm, const float &bnEps,  const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex,
-                      const int &antialiasing, ConvolutionalLayer *const &shareLayer, const int &assistedExcitation, const int &deform);
+                       const int &kSizeX, const int &kSizeY, const int &strideX, const int &strideY, const int &dilationX, const int &dilationY, const int &paddingX, const int &paddingY, ActivationType _activation, const std::vector<float> &actParams,
+                       const int &batchNorm, const float &bnEps,  const int &useBias, const int &binary, const int &xnor, const int &useBinOutput, const int &groupIndex,
+                       const int &antialiasing, ConvolutionalLayer *const &shareLayer, const int &assistedExcitation, const int &deform);
     ~ConvolutionalLayer();
 
     int convOutHeight();
@@ -138,6 +136,22 @@ public:
     int getBatchNorm() const;
 
 protected:
+
+#ifdef USE_ARM
+    void selectArmConv(); 
+
+    float       *_sgemmWeightsPack4  =   nullptr;
+    float       *_winogradWeights1   =   nullptr;
+    float       *_winogradWeights2   =   nullptr;
+
+    int         _winogradOutWidth    =   0;
+    int         _winogradOutHeight   =   0;
+
+    bool        useWinograd3x3S1     =   false;
+    bool        useIm2ColSgemm       =   false;
+    bool        use3x3S1             =   false;
+    bool        use3x3S2             =   false;
+#endif
     float       *_weights            =   nullptr;
     float       *_biases             =   nullptr;
     ConvolutionalLayer* _shareLayer  =   nullptr;

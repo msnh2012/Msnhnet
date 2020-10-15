@@ -89,7 +89,11 @@ void deeplabv3GPUMsnhCV(const std::string& msnhnetPath, const std::string& msnhb
 
         mat = mat + mask;
         mat.saveImage("deeplabv3_gpu.jpg");
+        #ifdef _WIN32
         system("deeplabv3_gpu.jpg");
+        #else
+        std::cout<<"result pic has been saved at /[App Dir]/deeplabv3_gpu.jpg"<<std::endl;
+        #endif
 
     }
     catch (Msnhnet::Exception ex)

@@ -65,7 +65,11 @@ void yolov5mGPUMsnhCV(const std::string& msnhnetPath, const std::string& msnhbin
         Msnhnet::Mat org(imgPath);
         Msnhnet::CVUtil::drawYoloBox(org,labels,result,inSize);
         org.saveImage("yolov5m_gpu.jpg");
+		#ifdef _WIN32
         system("yolov5m_gpu.jpg");
+        #else
+        std::cout<<"result pic has been saved at /[App Dir]/yolov5m_gpu.jpg"<<std::endl;
+        #endif
     }
     catch (Msnhnet::Exception ex)
     {

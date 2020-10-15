@@ -77,7 +77,11 @@ void fcnsMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath, 
         mat = mat + mask;
         mat.saveImage("fcns.jpg");
 		mask.saveImage("fcns_mask.jpg");
+        #ifdef _WIN32
         system("fcns.jpg");
+        #else
+        std::cout<<"result pic has been saved at /[App Dir]/fcns.jpg"<<std::endl;
+        #endif
 
     }
     catch (Msnhnet::Exception ex)

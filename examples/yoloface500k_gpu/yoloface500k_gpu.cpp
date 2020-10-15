@@ -65,7 +65,11 @@ void yoloface500kGPUMsnhCV(const std::string& msnhnetPath, const std::string& ms
 		Msnhnet::Mat org(imgPath);
 		Msnhnet::CVUtil::drawYoloBox(org, labels, result, inSize);
 		org.saveImage("yoloface500k_gpu.jpg");
-		system("yoloface500k_gpu.jpg");
+		#ifdef _WIN32
+        system("yoloface500k_gpu.jpg");
+        #else
+        std::cout<<"result pic has been saved at /[App Dir]/yoloface500k_gpu.jpg"<<std::endl;
+        #endif
 	}
 	catch (Msnhnet::Exception ex)
 	{

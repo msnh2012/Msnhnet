@@ -656,9 +656,6 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
     {
         throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__, __FUNCTION__);
     }
-#ifdef USE_NNPACK
-    nnp_initialize();
-#endif
 
     _netState->input     =   img.data();
     _netState->inputNum  =   static_cast<int>(img.size());
@@ -713,9 +710,6 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
 
     }
 
-#ifdef USE_NNPACK
-    nnp_deinitialize();
-#endif
     if(_net->layers[_net->layers.size()-1]->getMemReUse()==1)
     {
         std::vector<float> pred(_netState->getInput(), _netState->getInput() + _netState->inputNum);
@@ -740,9 +734,7 @@ std::vector<std::vector<YoloBox>> NetBuilder::runYolo(std::vector<float> img)
     {
         throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__, __FUNCTION__);
     }
-#ifdef USE_NNPACK
-    nnp_initialize();
-#endif
+
     _netState->input     =   img.data();
     _netState->inputNum  =   static_cast<int>(img.size());
     if(_net->layers[0]->getInputNum() != _netState->inputNum)
@@ -795,11 +787,8 @@ std::vector<std::vector<YoloBox>> NetBuilder::runYolo(std::vector<float> img)
             std::cout<<"Saving layer weights. Layer : "<<i<<std::endl;
             _net->layers[i]->saveAllWeights(_net->layers[i]->getLayerIndex(),-1,-1);
         }
-    }
 
-#ifdef USE_NNPACK
-    nnp_deinitialize();
-#endif
+    }
 
     if((_net->layers[_net->layers.size()-1])->type() == LayerType::YOLO_OUT)
     {

@@ -94,6 +94,10 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 
     this->_numWeights            =   static_cast<size_t>(this->_nWeights + this->_nScales + this->_nRollMean + this->_nRollVariance + this->_nBiases);
 
+#ifdef USE_ARM
+    selectArmConv();
+#endif
+
 #ifdef USE_GPU
 #ifdef USE_CUDNN
 
@@ -531,15 +535,6 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 
     Blas::cpuFill(this->_outputNum * this->_batch, 0, layerOutput, 1);
 
-#ifdef USE_NNPACK
-    struct nnp_size     nnInSize    = {static_cast<size_t>(this->_width),static_cast<size_t>(this->_height)};
-    struct nnp_padding  nnInPadding = {static_cast<size_t>(this->_paddingX),static_cast<size_t>(this->_paddingX),
-                static_cast<size_t>(this->_paddingY),static_cast<size_t>(this->_paddingY)
-                                      };
-    struct nnp_size     nnKSize     = {static_cast<size_t>(this->_kSizeX),static_cast<size_t>(this->_kSizeY)};
-    struct nnp_size     nnStride    = {static_cast<size_t>(this->_strideX),static_cast<size_t>(this->_strideY)};
-#endif
-
     if(this->_xnor && (!this->_alignBitWeights))
     {
         /* TODO */
@@ -575,48 +570,43 @@ void ConvolutionalLayer::forward(NetworkState &netState)
 
                 float *im = layerInput+ (i*this->_groups + j)*(this->_channel / this->_groups)*this->_height*this->_width;
 
-#ifdef USE_NNPACK
-                nnp_status status;
-                status = nnp_convolution_inference(nnp_convolution_algorithm_implicit_gemm,
-                                                   nnp_convolution_transform_strategy_tuple_based,
-                                                   static_cast<size_t>(this->_channel/this->_groups),
-                                                   static_cast<size_t>(m),
-                                                   nnInSize,
-                                                   nnInPadding,
-                                                   nnKSize,
-                                                   nnStride,
-                                                   im,
-                                                   a,
-                                                   nullptr,
-                                                   c,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nnp_activation_identity,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr
-                                                   );
-                if(status !=0 )
-                {
-                    throw Exception(1,"NNPack error, code : "+std::to_string(status),__FILE__,__LINE__, __FUNCTION__);
-                }
-#else
-
 #ifdef USE_ARM
-                if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+                if(useWinograd3x3S1)
                 {
+#ifdef __arrch64__
+                    goto TempARRCH64;
+#endif
 
+                    ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradNeon(im, this->_width, this->_height,this->_channel, this->_winogradWeights2,
+                                                                              this->_winogradOutHeight, this->_winogradOutWidth, c, this->_outWidth, this->_outHeight, this->_outChannel);
+
+                }
+                else if(use3x3S1)
+                {
 #ifdef __arrch64__
                     goto TempARRCH64;
 #endif
                     ConvolutionalLayerArm3x3s1::conv3x3s1Neon(im, this->_width, this->_height, this->_channel, a, c, this->_outWidth, this->_outHeight, this->_outChannel);
+
                 }
-                else if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 2 && this->_strideX == 2&& this->_paddingX == 0 && this->_paddingY == 0)
+                else if(use3x3S2)
                 {
 #ifdef __arrch64__
                     goto TempARRCH64;
 #endif
                     ConvolutionalLayerArm3x3s2::conv3x3s2Neon(im, this->_width, this->_height, this->_channel, a, c, this->_outWidth, this->_outHeight, this->_outChannel);
+
+                }
+                else if(useIm2ColSgemm)
+                {
+#ifdef __arrch64__
+                    goto TempARRCH64;
+#endif
+
+                    ConvolutionLayerSgemm::convolutionIm2colSgemm(im, this->_width, this->_height, this->_channel,this->_weights, this->_sgemmWeightsPack4,
+                                                                  this->_kSizeX, this->_kSizeY, c, this->_outWidth, this->_outHeight, this->_outChannel,
+                                                                  this->_strideX, this->_strideY);
+
                 }
                 else
                 {
@@ -639,8 +629,6 @@ TempARRCH64:
                     Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
 #ifdef USE_ARM
                 }
-#endif
-
 #endif
             }
 
@@ -1064,7 +1052,7 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
     if(!BaseLayer::isPreviewMode)
     {
 
-        if(this->_shareLayer != nullptr)
+        if(this->_shareLayer != nullptr) /* todo delete */
         {
             if(     this->_kSizeX    != this->_shareLayer->_kSizeX ||
                     this->_kSizeY    != this->_shareLayer->_kSizeY ||
@@ -1120,6 +1108,35 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
         {
             this->_weights              = new float[static_cast<size_t>(this->_nWeights)]();
             loadWeights(weights.data(), _nWeights);
+
+#ifdef USE_ARM
+            if(useWinograd3x3S1)
+            {
+                int packOutChannel  =   this->_outChannel/4 + (this->_outChannel%4 + 3)/4;
+                this->_winogradOutHeight   =   1;
+                this->_winogradOutWidth   =   (8*8*this->_channel*4);
+
+                this->_winogradWeights1 = new float[this->_channel*this->_outChannel*64]();
+                this->_winogradWeights2 = new float[packOutChannel*this->_winogradOutHeight*this->_winogradOutWidth]();
+                ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(this->_weights,
+                                                                                    this->_winogradWeights1,
+                                                                                    this->_winogradWeights2,
+                                                                                    this->_channel,
+                                                                                    this->_outChannel
+                                                                                    );
+            }
+            else if(useIm2ColSgemm)
+            {
+                this->_sgemmWeightsPack4 = new float[(this->_outChannel/4 + this->_outChannel%4)*4*this->_kSizeX*this->_kSizeY*this->_channel]();
+                ConvolutionLayerSgemm::convolutionTransformKernel(this->_weights,
+                                                                  this->_kSizeX,
+                                                                  this->_kSizeY,
+                                                                  this->_sgemmWeightsPack4,
+                                                                  this->_channel,
+                                                                  this->_outChannel
+                                                                  );
+            }
+#endif
 
             if(this->_batchNorm)
             {
@@ -1549,5 +1566,33 @@ int ConvolutionalLayer::getBatchNorm() const
 {
     return _batchNorm;
 }
+
+#ifdef USE_ARM
+void ConvolutionalLayer::selectArmConv()
+{
+   useWinograd3x3S1     =   false;
+   useIm2ColSgemm       =   false;
+   use3x3S1             =   false;
+   use3x3S2             =   false;
+
+/*    if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1 &&
+       this->_channel >=16 && this->_outChannel >= 16 && this->_width <= 120 && this->_height <= 120 && this->_paddingX == 0 && this->_paddingY == 0)
+    {
+        useWinograd3x3S1 = true;
+    }
+    else */if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+    {
+        use3x3S1        = true;
+    }
+    else if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 2 && this->_strideX == 2&& this->_paddingX == 0 && this->_paddingY == 0)
+    {
+        use3x3S2        = true;
+    }
+    else if(this->_channel*this->_kSizeX*this->_kSizeY > 2000)
+    {
+        useIm2ColSgemm  = true;
+    }
+}
+#endif
 
 }

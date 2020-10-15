@@ -97,7 +97,11 @@ void unetMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath, 
 
         mat = mat + mask;
         mat.saveImage("unet_gpu.jpg");
+		#ifdef _WIN32
         system("unet_gpu.jpg");
+        #else
+        std::cout<<"result pic has been saved at /[App Dir]/unet_gpu.jpg"<<std::endl;
+        #endif
     }
     catch (Msnhnet::Exception ex)
     {

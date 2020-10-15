@@ -45,7 +45,11 @@ void yolov4MsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath
         Msnhnet::CVUtil::drawYoloBox(org,labels,result,inSize);
         std::cout<<msnhNet.getTimeDetail()<<std::endl<<std::flush;
         org.saveImage("yolov4.jpg");
+		#ifdef _WIN32
         system("yolov4.jpg");
+        #else
+        std::cout<<"result pic has been saved at /[App Dir]/yolov4.jpg"<<std::endl;
+        #endif
     }
     catch (Msnhnet::Exception ex)
     {
