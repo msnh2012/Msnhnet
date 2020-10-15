@@ -84,8 +84,6 @@
 - ARM(Yolov3Tiny cpu)
   |cpu|raspberry 3B|raspberry 4B|Jeston NX|
   |:---:|:---:|:---:|:---:|
-  |without NNPack|6s|2.5s|1.2s|
-  |with NNPack|2.5s|1.1s|0.6s|
   |with neon asm|?|0.432s|?|
 
 **Yolo GPU 测试**
