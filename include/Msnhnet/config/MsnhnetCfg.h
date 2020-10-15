@@ -34,7 +34,7 @@
 
 #define MIN_OMP_DATA 10000
 
-#define MSNHNET_VERSION 1100
+#define MSNHNET_VERSION 1200
 
 enum ActivationType
 {

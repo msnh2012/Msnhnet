@@ -1,4 +1,4 @@
-# 🔥 Msnhnet(Yolov5 is ready!! Please download lastest models)🔥
+# 🔥 Msnhnet(V1.2 Opencv is optional)🔥
 English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/details/107216704)</br>
 ###  A mini pytorch inference framework which inspired from darknet.
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -24,7 +24,7 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 - CPU supported: Intel X86, AMD(unchecked) and ARM(checked: armv7 armv8 arrch64).
 - x86 avx2 supported.(Working....)
 - arm neon supported.(Working....)。
-- NNPack supported.(arm)。
+- conv2d 3x3s1 3x3s2 winograd3x3s1 is supported(**Arm**)
 - Keras to Msnhnet is supported. (Keras 2 and tensorflow 1.x)
 - GPU cuda supported.(Checked GTX1080Ti, Jetson NX)
 - GPU cudnn supported.(Checked GTX1080Ti, Jetson NX)
@@ -85,8 +85,6 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 - ARM(Yolov3Tiny cpu)
   |cpu|raspberry 3B|raspberry 4B|Jeston NX|
   |:---:|:---:|:---:|:---:|
-  |without NNPack|6s|2.5s|1.2s|
-  |with NNPack|2.5s|1.1s|0.6s|
   |with neon asm|?|0.432s|?|
 
 **Yolo GPU Test**

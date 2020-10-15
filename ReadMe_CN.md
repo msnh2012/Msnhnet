@@ -1,4 +1,4 @@
-# 🔥Msnhnet(Yolov5已支持!!请下载最新的models)🔥 
+# 🔥Msnhnet(V1.2 不再依赖opencv)🔥 
 [English](ReadMe.md)| 中文 |[CSDN](https://blog.csdn.net/MSNH2012/article/details/107216704)</br>
 ###  一款轻量的用于推理pytorch模型的框架,该框架受darknet启发.
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -24,7 +24,7 @@
 - 支持目前主流的cpu芯片, Intel X86,AMD(未测试) 和ARM.
 - 支持x86结构avx2加速(持续优化中)。
 - 支持arm结构neon加速(持续优化中)。
-- 支持NNPack(主要为arm框架所用)。
+- conv2d 3x3s1 3x3s2 winograd3x3s1支持(**Arm**)
 - GPU cuda支持. (测试过的显卡 GTX1080Ti, Jetson NX)
 - GPU cudnn支持. (测试过的显卡 GTX1080Ti, Jetson NX)
 - GPU fp16支持.(测试过的显卡 GTX1080Ti, Jetson NX)
