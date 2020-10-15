@@ -379,10 +379,16 @@ namespace Msnhnet
                     sum1 = vmlaq_f32(sum1, r10, k345);
                     sum1 = vmlaq_f32(sum1, r20, k678);
 
-                    float32x2_t a = vadd_f32(vget_low_f32(sum1), vget_high_f32(sum1));
-                    abs = vpadd_f32(a, a);
+                    sum1 = vsetq_lane_f32(0.f, sum1, 3);
 
+#if __aarch64__
+                    *destptr0 = vaddvq_f32(sum1);
+#else
+                    float32x2_t a = vadd_f32(vget_low_f32(sum1), vget_high_f32(sum1));
+                    a = vpadd_f32(a, a);
                     *destptr0 = vget_lane_f32(a, 0);
+#endif
+                   
 #else
                     float sum1 = 0.f;
                     sum1 += r0[0] * k0[0];

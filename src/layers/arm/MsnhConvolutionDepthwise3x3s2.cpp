@@ -44,7 +44,29 @@ namespace Msnhnet
             int i = 0;
             
             for(; i < outHeight; i++){
-                
+#if USE_NEON
+                int nn = outWidth >> 2;
+                int remain = outWidth & 3;
+#else
+                int remain = outWidth;
+#endif
+
+#if USE_NEON
+
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else  
+                if(nn > 0){
+                    asm volatile(
+
+                    );
+                }
+#endif     
+#endif
+                for(; remain > 0; remain--){
+                    
+                }
+
             }
         }
     }
