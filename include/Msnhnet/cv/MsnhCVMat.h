@@ -121,6 +121,8 @@ public:
 
     void copyTo(Mat &mat);
 
+    void convertTo(Mat &dst, const CvtDataType& cvtDataType);
+
     int getWidth() const;
 
     int getHeight() const;

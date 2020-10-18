@@ -205,23 +205,53 @@ void Mat::saveImage(const std::string &path, const SaveImageType &saveImageType,
         throw Exception(1,"[CV]: img empty!", __FILE__, __LINE__, __FUNCTION__);
     }
 
+    float* f32Val  = nullptr;
+    uint8_t* u8Val = nullptr;
+
+    Mat tmpMat;
+
+    if(saveImageType == SaveImageType::MAT_SAVE_HDR)
+    {
+        if(this->_step/this->_channel == 4)
+        {
+            f32Val = this->_data.f32;
+        }
+        else if(this->_step/this->_channel == 1)
+        {
+            this->convertTo(tmpMat, CVT_DATA_U8_2_F32);
+            f32Val = tmpMat.getData().f32;
+        }
+    }
+    else
+    {
+        if(this->_step/this->_channel == 1)
+        {
+            u8Val = this->_data.u8;
+        }
+        else if(this->_step/this->_channel == 4)
+        {
+            this->convertTo(tmpMat, CVT_DATA_F32_2_U8);
+            u8Val = tmpMat.getData().u8;
+        }
+    }
+
     int ret;
     switch (saveImageType)
     {
     case SaveImageType::MAT_SAVE_BMP:
-        ret = stbi_write_bmp(path.c_str(), this->_width, this->_height,this->_channel,this->_data.u8);
+        ret = stbi_write_bmp(path.c_str(), this->_width, this->_height,this->_channel,u8Val);
         break;
     case SaveImageType::MAT_SAVE_JPG:
-        ret = stbi_write_jpg(path.c_str(), this->_width, this->_height,this->_channel,this->_data.u8, quality);
+        ret = stbi_write_jpg(path.c_str(), this->_width, this->_height,this->_channel,u8Val, quality);
         break;
     case SaveImageType::MAT_SAVE_PNG:
-        ret = stbi_write_png(path.c_str(), this->_width, this->_height,this->_channel,this->_data.u8,0);
+        ret = stbi_write_png(path.c_str(), this->_width, this->_height,this->_channel,u8Val,0);
         break;
     case SaveImageType::MAT_SAVE_HDR:
-        ret = stbi_write_hdr(path.c_str(), this->_width, this->_height,this->_channel,this->_data.f32);
+        ret = stbi_write_hdr(path.c_str(), this->_width, this->_height,this->_channel,f32Val);
         break;
     case SaveImageType::MAT_SAVE_TGA:
-        ret = stbi_write_tga(path.c_str(), this->_width, this->_height,this->_channel,this->_data.u8);
+        ret = stbi_write_tga(path.c_str(), this->_width, this->_height,this->_channel,u8Val);
         break;
     }
 
@@ -469,6 +499,110 @@ void Mat::copyTo(Mat &mat)
     }
 
     mat.setU8Ptr(u8Ptr);
+}
+
+void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
+{
+    switch (cvtDataType)
+    {
+    case CVT_DATA_U8_2_F32:
+        if(cvtDataType == MAT_GRAY_F32 && cvtDataType == MAT_RGB_F32 && cvtDataType == MAT_RGBA_F32)
+        {
+            dst = *this;
+        }
+        else
+        {
+            MatData data;
+            data.u8 = new uint8_t[this->_width*this->_height*this->_channel*4]();
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < this->_height; ++i)
+            {
+                for (int j = 0; j < this->_width; ++j)
+                {
+                    for (int c = 0; c < this->_channel; ++c)
+                    {
+                        float val = 1.0f*this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c]/255;
+                        data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                    }
+                }
+            }
+
+            MatType dstType;
+
+            if(this->_matType == MAT_GRAY_U8)
+            {
+                dstType = MAT_GRAY_F32;
+            }
+            else if(this->_matType == MAT_RGB_U8)
+            {
+                dstType = MAT_RGB_F32;
+            }
+            else if(this->_matType == MAT_RGBA_U8)
+            {
+                dstType = MAT_RGBA_F32;
+            }
+
+            dst.release();
+            dst.setChannel(this->_channel);
+            dst.setMatType(dstType);
+            dst.setStep(this->_step*4);
+            dst.setWidth(this->_width);
+            dst.setHeight(this->_height);
+            dst.setU8Ptr(data.u8);
+        }
+        break;
+    case CVT_DATA_F32_2_U8:
+        if(cvtDataType == MAT_GRAY_U8 && cvtDataType == MAT_RGB_U8 && cvtDataType == MAT_RGBA_U8)
+        {
+            dst = *this;
+        }
+        else
+        {
+            uint8_t* u8Ptr = new uint8_t[this->_width*this->_height*this->_channel]();
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < this->_height; ++i)
+            {
+                for (int j = 0; j < this->_width; ++j)
+                {
+                    for (int c = 0; c < this->_channel; ++c)
+                    {
+                        int val = this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]*255;
+                        uint8_t finalVal = val>255?255:val;
+
+                        u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                    }
+                }
+            }
+
+            MatType dstType;
+
+            if(this->_matType == MAT_GRAY_F32 )
+            {
+                dstType = MAT_GRAY_U8;
+            }
+            else if(this->_matType == MAT_RGB_F32)
+            {
+                dstType = MAT_RGB_U8 ;
+            }
+            else if(this->_matType == MAT_RGBA_F32)
+            {
+                dstType = MAT_RGBA_U8 ;
+            }
+
+            dst.release();
+            dst.setChannel(this->_channel);
+            dst.setMatType(dstType);
+            dst.setStep(this->_step/4);
+            dst.setWidth(this->_width);
+            dst.setHeight(this->_height);
+            dst.setU8Ptr(u8Ptr);
+        }
+        break;
+    }
 }
 
 int Mat::getWidth() const

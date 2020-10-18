@@ -35,6 +35,12 @@ enum CvtColorType
     CVT_RGB2BGR,
 };
 
+enum CvtDataType
+{
+    CVT_DATA_U8_2_F32,
+    CVT_DATA_F32_2_U8
+};
+
 enum ResizeType
 {
     RESIZE_NEAREST,
