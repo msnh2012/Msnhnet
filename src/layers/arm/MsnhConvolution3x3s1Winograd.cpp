@@ -1,5 +1,3 @@
-#define USE_ARM 1
-#define __aarch64__ 1
 #ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolution3x3s1Winograd.h"
 #include "Msnhnet/layers/arm/MsnhPadding.h"
