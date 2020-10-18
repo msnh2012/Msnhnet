@@ -1575,12 +1575,12 @@ void ConvolutionalLayer::selectArmConv()
    use3x3S1             =   false;
    use3x3S2             =   false;
 
-/*    if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1 &&
+    if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1 &&
        this->_channel >=16 && this->_outChannel >= 16 && this->_width <= 120 && this->_height <= 120 && this->_paddingX == 0 && this->_paddingY == 0)
     {
         useWinograd3x3S1 = true;
     }
-    else */if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+    else if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1&& this->_paddingX == 0 && this->_paddingY == 0)
     {
         use3x3S1        = true;
     }
