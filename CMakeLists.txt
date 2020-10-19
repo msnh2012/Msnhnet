@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.15) # cuda
+﻿cmake_minimum_required(VERSION 3.10) # cuda
 
 project(Msnhnet
     LANGUAGES CXX C
@@ -114,6 +114,8 @@ set(SRCS
     src/c_api/MsnhnetLib.cpp
     src/layers/arm/MsnhConvolution3x3s1.cpp 
     src/layers/arm/MsnhConvolution3x3s2.cpp 
+    src/layers/arm/MsnhConvolution3x3s1Winograd.cpp
+    src/layers/arm/MsnhConvolutionSgemm.cpp
     src/layers/arm/MsnhBatchNorm.cpp 
     src/layers/arm/MsnhPadding.cpp 
     src/layers/arm/MsnhActivation.cpp
@@ -248,7 +250,6 @@ endif()
 
 message(${CMAKE_SYSTEM_PROCESSOR})
 
-set(USE_NNPACK_MACRO "")
 # ARM config
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(armv7l)")
     add_definitions(-DUSE_ARM) #===============
@@ -269,23 +270,6 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(armv7l)")
         message(STATUS "Use neon")
     else()
         set(USE_NEON_MACRO "")
-    endif()
-
-    option(ENABLE_NNPACK        "Build with NNAPCK"         ON )
-
-    if(ENABLE_NNPACK MATCHES ON)
-        add_definitions(-DUSE_NNPACK)
-        set(USE_NNPACK_MACRO "#define USE_NNPACK\n")
-        set(NNPACK_LIBS
-                -L$ENV{NNPACK_LIB_DIR}
-		        -lclog 
-                -lnnpack
-                -lpthreadpool
-		        -lcpuinfo
-               )
-        message(STATUS "Use NNPACK")
-        message(STATUS "NNPACK lib ${NNPACK_LIBS}")
-        message(STATUS "NNPACK inc $ENV{NNPACK_INC_DIR}")
     endif()
 else()
     set(USE_ARM_MACRO "")
@@ -348,16 +332,6 @@ target_sources(${PROJECT_NAME}
 if(ENABLE_OPEN_BLAS MATCHES ON)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenBLAS_LIBRARIES})
 endif()
-
-#NNPack
-if(ENABLE_NNPACK)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${NNPACK_LIBS})
-    target_include_directories(${PROJECT_NAME}
-           PUBLIC
-           $ENV{NNPACK_INC_DIR}
-           )
-endif()
-
 
 #link 3rdparty libs
 if(BUILD_USE_OPENCV MATCHES ON)
@@ -433,7 +407,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     )
 
 # Create cfg macro head file
-file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_OPENCV_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_NNPACK_MACRO}${USE_GPU_MACRO}${USE_CUDNN_MACRO}#endif")
+file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_OPENCV_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_GPU_MACRO}${USE_CUDNN_MACRO}#endif")
 
 # Install macro head file
 install(FILES MsnhnetTmp/MsnhnetMacro.h
