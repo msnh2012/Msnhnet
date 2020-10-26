@@ -787,7 +787,6 @@ std::vector<std::vector<YoloBox>> NetBuilder::runYolo(std::vector<float> img)
             std::cout<<"Saving layer weights. Layer : "<<i<<std::endl;
             _net->layers[i]->saveAllWeights(_net->layers[i]->getLayerIndex(),-1,-1);
         }
-
     }
 
     if((_net->layers[_net->layers.size()-1])->type() == LayerType::YOLO_OUT)

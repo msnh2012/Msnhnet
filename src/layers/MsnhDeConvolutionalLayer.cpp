@@ -155,7 +155,11 @@ void DeConvolutionalLayer::forward(NetworkState &netState)
         }
 
     }
-    ConvolutionalLayer::addBias(layerOutput, this->_biases, this->_batch, this->_num, whOutSize);
+
+    if(this->_useBias)
+    {
+        ConvolutionalLayer::addBias(layerOutput, this->_biases, this->_batch, this->_num, whOutSize);
+    }
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {

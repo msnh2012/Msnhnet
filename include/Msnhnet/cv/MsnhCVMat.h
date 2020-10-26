@@ -7,17 +7,20 @@
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/utils/MsnhExString.h"
 #include <iostream>
+#include <iomanip>
+#include <random>
 
 namespace Msnhnet
 {
 class MsnhNet_API Mat
 {
 public:
-    Mat ();
+
     Mat (const Mat& mat);
     Mat (const std::string &path);
     Mat (const int &width, const int &height, const MatType &matType);
     Mat (const int &width, const int &height, const MatType &matType, void *data);
+    Mat ();
     ~Mat ();
 
     template<typename T>
@@ -42,6 +45,10 @@ public:
         else if(fmt=='f')
         {
             memcpy(&val, this->_data.f32+(this->_width*pos.x2 + pos.x1)*array, array*4);
+        }
+        else if(fmt=='d')
+        {
+            memcpy(&val, this->_data.f64+(this->_width*pos.x2 + pos.x1)*array, array*8);
         }
 
         return val;
@@ -69,6 +76,10 @@ public:
         {
             memcpy(this->_data.f32+(this->_width*pos.x2 + pos.x1)*array, &val, array*4);
         }
+        else if(fmt=='d')
+        {
+            memcpy(this->_data.f64+(this->_width*pos.x2 + pos.x1)*array, &val, array*8);
+        }
     }
 
     template<typename T>
@@ -95,6 +106,10 @@ public:
                 {
                     memcpy(this->_data.f32+(this->_width*i + j)*array, &val, array*4);
                 }
+                else if(fmt == 'd')
+                {
+                    memcpy(this->_data.f64+(this->_width*i + j)*array, &val, array*8);
+                }
             }
         }
     }
@@ -108,16 +123,6 @@ public:
     void saveImage(const std::string& path, const int &quality=100);
 
     void release();
-
-    Mat operator + (const Mat & mat);
-
-    Mat operator - (const Mat & mat);
-
-    Mat operator * (const Mat & mat);
-
-    Mat operator / (const Mat & mat);
-
-    Mat &operator = (const Mat & mat);
 
     void copyTo(Mat &mat);
 
@@ -147,12 +152,92 @@ public:
 
     void setU8Ptr(uint8_t *const &ptr);
 
-    bool isEmpty();
+    bool isEmpty() const; 
 
     Vec2I32 getSize();
 
+    size_t getDataNum();
+
     uint8_t getPerDataByteNum();
+
+    /* one channel  */
+    static Mat eye(const int &num, const MatType &matType);
+    static Mat dense(const int &width, const int &height, const MatType &matType, const float &val);
+    static Mat diag(const int &num, const MatType &matType, const float &val);
+    static Mat random(const int &width, const int &height, const MatType &matType);
+    static Mat randomDiag(const int &num, const MatType &matType);
+    template<typename T>
+    static T randUniform(T min, T max)
+    {
+        if(max < min)
+        {
+            T swap = min;
+            min = max;
+            max = swap;
+        }
+
+    #if (RAND_MAX < 65536)
+        int rnd = rand()*(RAND_MAX + 1) + rand();
+        return ((T)rnd / (RAND_MAX*RAND_MAX) * (max - min)) + min;
+    #else
+        return ((T)rand() / RAND_MAX * (max - min)) + min;
+    #endif
+    }
+
+    Mat transpose();
+
+    double det();
+
+    /*      [ U U U U U ]
+     *      [ L U U U U ]
+     *  A = [ L L U U U ]
+     *      [ L L L U U ]
+     *      [ L L L L U ]
+     * */
+    Mat invert();
+
+    Mat solve();
+    /*================*/
+
+    void printMat();
+
+    bool isF32Mat() const; 
+
+    bool isF64Mat() const; 
+
+    bool isU8Mat() const; 
+
+    bool isOneChannel() const; 
+
+    static Mat add(const Mat &A, const Mat &B);
+
+    static Mat sub(const Mat &A, const Mat &B);
+
+    static Mat dot(const Mat &A, const Mat &B);
+
+    static Mat div(const Mat &A, const Mat &B);
+
+    static Mat mul(const Mat &A, const Mat &B);
+
+    Mat &operator = (const Mat &mat);
+
+    friend Mat operator+ (const Mat &A, const Mat &B);
+    friend Mat operator+ (const double &a, const Mat &A);
+    friend Mat operator+ (const Mat &A, const double &a);
+
+    friend Mat operator- (const Mat &A, const Mat &B);
+    friend Mat operator- (const double &a, const Mat &A);
+    friend Mat operator- (const Mat &A, const double &a);
+
+    friend Mat operator* (const Mat &A, const Mat &B);
+    friend Mat operator* (const double &a, const Mat &A);
+    friend Mat operator* (const Mat &A, const double &a);
+
+    friend Mat operator/ (const Mat &A, const Mat &B);
+    friend Mat operator/ (const double &a, const Mat &A);
+    friend Mat operator/ (const Mat &A, const double &a);
 private:
+
     int _width          = 0;
     int _height         = 0;
     int _channel        = 0;

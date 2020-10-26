@@ -43,6 +43,10 @@ public:
             {
                 memcpy(tmpMat.getData().f32+(finalWidth*(i+top)+left)*array, src.getData().f32+(srcWidth*i)*array, array*srcWidth*4);
             }
+            else if(fmt == 'd')
+            {
+                memcpy(tmpMat.getData().f64+(finalWidth*(i+top)+left)*array, src.getData().f64+(srcWidth*i)*array, array*srcWidth*8);
+            }
         }
 
         dst = tmpMat;

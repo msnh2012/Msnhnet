@@ -656,6 +656,99 @@ void Gemm::cpuGemm(const int &TA, const int &TB, const int &M, const int &N, con
 #endif
 }
 
+void Gemm::cpuGemm(const int &TA, const int &TB, const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, const float &BETA, double * const &C, const int &ldc, const bool &supportAvxAndFma)
+{
+#ifdef USE_OPEN_BLAS
+
+    cblas_dgemm(CblasRowMajor,TA==1?CblasTrans:CblasNoTrans, TB==1?CblasTrans:CblasNoTrans,M,N,K,ALPHA,A,lda,B,ldb,BETA,C,ldc);
+
+#else
+
+    if(BETA!=1.f)
+    {
+
+        for (int i = 0; i < M; ++i)
+        {
+            for (int j = 0; j < N; ++j)
+            {
+                C[i*ldc + j] *= BETA;
+            }
+        }
+    }
+
+#ifdef  USE_X86
+
+    if(supportAvxAndFma && TA!=1 && TB!=1)
+    {
+        cpuGemmNNFast(M,N,K,ALPHA,A,lda,B,ldb,C,ldc);
+    }
+    else if(supportAvxAndFma && TA==1 && TB!=1)
+    {
+        cpuGemmTNFast(M,N,K,ALPHA,A,lda,B,ldb,C,ldc);
+    }
+    else
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int m = 0; m < M; ++m)
+        {
+            if(TA!=1 && TB!=1)
+            {
+
+                cpuGemmNN(1,N,K,ALPHA,A+lda*m, lda, B, ldb, C+m*ldc, ldc,supportAvxAndFma);
+            }
+            else if(TA==1 && TB!=1)
+            {
+
+                cpuGemmTN(1,N,K,ALPHA,A+m, lda, B, ldb, C+m*ldc, ldc,supportAvxAndFma);
+            }
+            else if(TA!=1 && TB ==1)
+            {
+
+                cpuGemmNT(1,N,K,ALPHA,A+lda*m, lda, B, ldb, C+m*ldc, ldc,supportAvxAndFma);
+            }
+            else
+            {
+
+                cpuGemmTT(1,N,K,ALPHA,A+m, lda, B, ldb, C+m*ldc, ldc,supportAvxAndFma);
+            }
+        }
+    }
+#endif
+#endif
+
+#ifdef USE_ARM
+#ifndef USE_OPEN_BLAS
+    (void)supportAvxAndFma;
+#pragma omp parallel for num_threads(OMP_THREAD)
+    for (int m = 0; m < M; ++m)
+    {
+        if(TA!=1 && TB!=1)
+        {
+
+            cpuGemmNN(1,N,K,ALPHA,A+lda*m, lda, B, ldb, C+m*ldc, ldc,false);
+        }
+        else if(TA==1 && TB!=1)
+        {
+
+            cpuGemmTN(1,N,K,ALPHA,A+m, lda, B, ldb, C+m*ldc, ldc,false);
+        }
+        else if(TA!=1 && TB ==1)
+        {
+
+            cpuGemmNT(1,N,K,ALPHA,A+lda*m, lda, B, ldb, C+m*ldc, ldc,false);
+        }
+        else
+        {
+
+            cpuGemmTT(1,N,K,ALPHA,A+m, lda, B, ldb, C+m*ldc, ldc,false);
+        }
+    }
+#endif
+#endif
+}
+
 void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPHA,
                      float * const &A, const int &lda, 
 
@@ -796,6 +889,98 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
 #endif
 }
 
+void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc, const bool &supportAvxAndFma)
+{
+
+#ifdef USE_X86
+    if(supportAvxAndFma)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < M; ++i)         
+
+        {
+            for (int k = 0; k < K; ++k)     
+
+            {
+                __m256d a256, b256, c256, result256;    
+
+                double A_PART =  ALPHA*A[i*lda + k];     
+
+                a256         =  _mm256_set1_pd(A_PART);
+                for (int j = 0; j < N - 4; j += 4)     
+
+                {
+                    b256 = _mm256_loadu_pd(&B[k*ldb + j]); 
+
+                    c256 = _mm256_loadu_pd(&C[i*ldc + j]); 
+
+                    result256 = _mm256_mul_pd(a256, b256);     
+
+                    result256 = _mm256_add_pd(result256, c256);
+
+                    _mm256_storeu_pd(&C[i*ldc + j], result256);
+                }
+
+                int prevEnd = (N % 4 == 0) ? (N - 4) : (N / 4) * 4; 
+
+                for (int j = prevEnd; j < N; ++j)   
+
+                {
+                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                }
+            }
+        }
+    }
+    else
+    {
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < M; ++i)   
+
+        {
+            for (int k = 0; k < K; ++k)     
+
+            {
+                double A_PART =  ALPHA*A[i*lda + k];     
+
+                for (int j = 0; j < N; ++j)  
+
+                {
+                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                }
+            }
+        }
+    }
+#endif
+
+#ifdef USE_ARM
+
+    (void) supportAvxAndFma;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+    for (int i = 0; i < M; ++i)   
+
+    {
+        for (int k = 0; k < K; ++k)     
+
+        {
+            double A_PART =  ALPHA*A[i*lda + k];     
+
+            for (int j = 0; j < N; ++j)  
+
+            {
+                C[i*ldc + j] += A_PART*B[k*ldb + j];
+            }
+        }
+    }
+#endif
+}
+
 void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPHA,
                      float * const &A, const int &lda,
                      float * const &B, const int &ldb,
@@ -932,6 +1117,96 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPH
 #endif
 }
 
+void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc, const bool &supportAvxAndFma)
+{
+
+#ifdef USE_X86
+
+    if(supportAvxAndFma)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < M; ++i)         
+
+        {
+            for (int k = 0; k < K; ++k)     
+
+            {
+                __m256d a256, b256, c256, result256;    
+
+                double A_PART =  ALPHA*A[k*lda + i];     
+
+                a256         =  _mm256_set1_pd(A_PART);
+                for (int j = 0; j < N - 4; j += 4)     
+
+                {
+                    b256 = _mm256_loadu_pd(&B[k*ldb + j]); 
+
+                    c256 = _mm256_loadu_pd(&C[i*ldc + j]); 
+
+                    result256 = _mm256_mul_pd(a256, b256);     
+
+                    result256 = _mm256_add_pd(result256, c256);
+
+                    _mm256_storeu_pd(&C[i*ldc + j], result256);
+                }
+                int prevEnd = (N % 4 == 0) ? (N - 4) : (N / 4) * 4; 
+
+                for (int j = prevEnd; j < N; ++j)   
+
+                {
+                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                }
+            }
+        }
+    }
+    else
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < M; ++i)   
+
+        {
+            for (int k = 0; k < K; ++k)     
+
+            {
+                double A_PART =  ALPHA*A[k*lda + i];     
+
+                for (int j = 0; j < N; ++j)  
+
+                {
+                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                }
+            }
+        }
+    }
+#endif
+
+#ifdef USE_ARM
+    (void) supportAvxAndFma;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+    for (int i = 0; i < M; ++i)   
+
+    {
+        for (int k = 0; k < K; ++k)     
+
+        {
+            double A_PART =  ALPHA*A[k*lda + i];     
+
+            for (int j = 0; j < N; ++j)  
+
+            {
+                C[i*ldc + j] += A_PART*B[k*ldb + j];
+            }
+        }
+    }
+#endif
+}
+
 void Gemm::cpuGemmNT(const int &M, const int &N, const int &K, const float &ALPHA,
                      float * const &A, const int &lda,
                      float * const &B, const int &ldb,
@@ -948,6 +1223,29 @@ void Gemm::cpuGemmNT(const int &M, const int &N, const int &K, const float &ALPH
         for (int j = 0; j < N; ++j)
         {
             float sum = 0;
+
+            for (int k = 0; k < K; ++k)
+            {
+                sum += ALPHA*A[i*lda + k]*B[j*ldb + k];
+            }
+
+            C[i*ldc + j] += sum;
+        }
+    }
+}
+
+void Gemm::cpuGemmNT(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc, const bool &supportAvxAndFma)
+{
+
+    (void)supportAvxAndFma;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+    for (int i = 0; i < M; ++i)
+    {
+        for (int j = 0; j < N; ++j)
+        {
+            double sum = 0;
 
             for (int k = 0; k < K; ++k)
             {
@@ -976,6 +1274,29 @@ void Gemm::cpuGemmTT(const int &M, const int &N, const int &K, const float &ALPH
         for (int j = 0; j < N; ++j)
         {
             float sum = 0;
+            for (int k = 0; k < K; ++k)
+            {
+                sum += ALPHA*A[i + k*lda ]*B[k + j*ldb];
+            }
+
+            C[i*ldc + j] += sum;
+        }
+    }
+}
+
+void Gemm::cpuGemmTT(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc, const bool &supportAvxAndFma)
+{
+
+    (void)supportAvxAndFma;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+    for (int i = 0; i < M; ++i)
+    {
+
+        for (int j = 0; j < N; ++j)
+        {
+            double sum = 0;
             for (int k = 0; k < K; ++k)
             {
                 sum += ALPHA*A[i + k*lda ]*B[k + j*ldb];
@@ -1026,11 +1347,11 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-    for (int i = 0; i < (M / TILE_M)*TILE_M; i += TILE_M)
+    for (int i = 0; i < (M / TILE_F32_M)*TILE_F32_M; i += TILE_F32_M)
     {
-        for (int k = 0; k < (K / TILE_K)*TILE_K; k += TILE_K)
+        for (int k = 0; k < (K / TILE_F32_K)*TILE_F32_K; k += TILE_F32_K)
         {
-            for (int j = 0; j < (N / TILE_N)*TILE_N; j += TILE_N)
+            for (int j = 0; j < (N / TILE_F32_N)*TILE_F32_N; j += TILE_F32_N)
             {
 
                 __m256 result256;
@@ -1055,7 +1376,7 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
                 c256_6 = _mm256_loadu_ps(&C[(2 + i)*ldc + (8 + j)]);
                 c256_7 = _mm256_loadu_ps(&C[(3 + i)*ldc + (8 + j)]);
 
-                for (int k_d = 0; k_d < (TILE_K); ++k_d)
+                for (int k_d = 0; k_d < (TILE_F32_K); ++k_d)
                 {
                     a256_0 = _mm256_set1_ps(ALPHA*A[(0 + i)*lda + (k_d + k)]);
                     a256_1 = _mm256_set1_ps(ALPHA*A[(1 + i)*lda + (k_d + k)]);
@@ -1101,11 +1422,11 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
                 _mm256_storeu_ps(&C[(3 + i)*ldc + (8 + j)], c256_7);
             }
 
-            for (int j = (N / TILE_N)*TILE_N; j < N; ++j)
+            for (int j = (N / TILE_F32_N)*TILE_F32_N; j < N; ++j)
             {
-                for (int i_d = i; i_d < (i + TILE_M); ++i_d)
+                for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
                 {
-                    for (int k_d = k; k_d < (k + TILE_K); ++k_d)
+                    for (int k_d = k; k_d < (k + TILE_F32_K); ++k_d)
                     {
                         float A_PART = ALPHA*A[i_d*lda + k_d];
                         C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
@@ -1114,9 +1435,9 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
             }
         }
 
-        for (int k = (K / TILE_K)*TILE_K; k < K; ++k)
+        for (int k = (K / TILE_F32_K)*TILE_F32_K; k < K; ++k)
         {
-            for (int i_d = i; i_d < (i + TILE_M); ++i_d)
+            for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
             {
                 float A_PART = ALPHA*A[i_d*lda + k];
                 for (int j = 0; j < N; ++j)
@@ -1127,11 +1448,147 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
         }
     }
 
-    for (int i = (M / TILE_M)*TILE_M; i < M; ++i)
+    for (int i = (M / TILE_F32_M)*TILE_F32_M; i < M; ++i)
     {
         for (int k = 0; k < K; ++k)
         {
             float A_PART = ALPHA*A[i*lda + k];
+            for (int j = 0; j < N; ++j)
+            {
+                C[i*ldc + j] += A_PART*B[k*ldb + j];
+            }
+        }
+    }
+#endif
+
+#ifdef USE_ARM
+    (void)M;
+    (void)N;
+    (void)K;
+    (void)ALPHA;
+    (void)A;
+    (void)lda;
+    (void)B;
+    (void)ldb;
+    (void)C;
+    (void)ldc;
+    throw Exception(1, "TODO: for arm", __FILE__, __LINE__, __FUNCTION__);
+#endif
+}
+
+void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc)
+{
+#ifdef USE_X86
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+    for (int i = 0; i < (M / TILE_F64_M)*TILE_F64_M; i += TILE_F64_M)
+    {
+        for (int k = 0; k < (K / TILE_F64_K)*TILE_F64_K; k += TILE_F64_K)
+        {
+            for (int j = 0; j < (N / TILE_F64_N)*TILE_F64_N; j += TILE_F64_N)
+            {
+
+                __m256d result256;
+                __m256d a256_0, b256_0;    
+
+                __m256d a256_1, b256_1;    
+
+                __m256d a256_2;
+
+                __m256d a256_3;
+
+                __m256d c256_0, c256_1, c256_2, c256_3;
+                __m256d c256_4, c256_5, c256_6, c256_7;
+
+                c256_0 = _mm256_loadu_pd(&C[(0 + i)*ldc + (0 + j)]);
+                c256_1 = _mm256_loadu_pd(&C[(1 + i)*ldc + (0 + j)]);
+                c256_2 = _mm256_loadu_pd(&C[(0 + i)*ldc + (4 + j)]);
+                c256_3 = _mm256_loadu_pd(&C[(1 + i)*ldc + (4 + j)]);
+
+                c256_4 = _mm256_loadu_pd(&C[(2 + i)*ldc + (0 + j)]);
+                c256_5 = _mm256_loadu_pd(&C[(3 + i)*ldc + (0 + j)]);
+                c256_6 = _mm256_loadu_pd(&C[(2 + i)*ldc + (4 + j)]);
+                c256_7 = _mm256_loadu_pd(&C[(3 + i)*ldc + (4 + j)]);
+
+                for (int k_d = 0; k_d < (TILE_F64_K); ++k_d)
+                {
+                    a256_0 = _mm256_set1_pd(ALPHA*A[(0 + i)*lda + (k_d + k)]);
+                    a256_1 = _mm256_set1_pd(ALPHA*A[(1 + i)*lda + (k_d + k)]);
+
+                    a256_2 = _mm256_set1_pd(ALPHA*A[(2 + i)*lda + (k_d + k)]);
+                    a256_3 = _mm256_set1_pd(ALPHA*A[(3 + i)*lda + (k_d + k)]);
+
+                    b256_0 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (0 + j)]);
+                    b256_1 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (4 + j)]);
+
+                    result256 = _mm256_mul_pd(a256_0, b256_0);
+                    c256_0 = _mm256_add_pd(result256, c256_0);
+
+                    result256 = _mm256_mul_pd(a256_1, b256_0);
+                    c256_1 = _mm256_add_pd(result256, c256_1);
+
+                    result256 = _mm256_mul_pd(a256_0, b256_1);
+                    c256_2 = _mm256_add_pd(result256, c256_2);
+
+                    result256 = _mm256_mul_pd(a256_1, b256_1);
+                    c256_3 = _mm256_add_pd(result256, c256_3);
+
+                    result256 = _mm256_mul_pd(a256_2, b256_0);
+                    c256_4 = _mm256_add_pd(result256, c256_4);
+
+                    result256 = _mm256_mul_pd(a256_3, b256_0);
+                    c256_5 = _mm256_add_pd(result256, c256_5);
+
+                    result256 = _mm256_mul_pd(a256_2, b256_1);
+                    c256_6 = _mm256_add_pd(result256, c256_6);
+
+                    result256 = _mm256_mul_pd(a256_3, b256_1);
+                    c256_7 = _mm256_add_pd(result256, c256_7);
+                }
+                _mm256_storeu_pd(&C[(0 + i)*ldc + (0 + j)], c256_0);
+                _mm256_storeu_pd(&C[(1 + i)*ldc + (0 + j)], c256_1);
+                _mm256_storeu_pd(&C[(0 + i)*ldc + (4 + j)], c256_2);
+                _mm256_storeu_pd(&C[(1 + i)*ldc + (4 + j)], c256_3);
+
+                _mm256_storeu_pd(&C[(2 + i)*ldc + (0 + j)], c256_4);
+                _mm256_storeu_pd(&C[(3 + i)*ldc + (0 + j)], c256_5);
+                _mm256_storeu_pd(&C[(2 + i)*ldc + (4 + j)], c256_6);
+                _mm256_storeu_pd(&C[(3 + i)*ldc + (4 + j)], c256_7);
+            }
+
+            for (int j = (N / TILE_F64_N)*TILE_F64_N; j < N; ++j)
+            {
+                for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
+                {
+                    for (int k_d = k; k_d < (k + TILE_F64_K); ++k_d)
+                    {
+                        double A_PART = ALPHA*A[i_d*lda + k_d];
+                        C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                    }
+                }
+            }
+        }
+
+        for (int k = (K / TILE_F64_K)*TILE_F64_K; k < K; ++k)
+        {
+            for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
+            {
+                double A_PART = ALPHA*A[i_d*lda + k];
+                for (int j = 0; j < N; ++j)
+                {
+                    C[i_d*ldc + j] += A_PART*B[k*ldb + j];
+                }
+            }
+        }
+    }
+
+    for (int i = (M / TILE_F64_M)*TILE_F64_M; i < M; ++i)
+    {
+        for (int k = 0; k < K; ++k)
+        {
+            double A_PART = ALPHA*A[i*lda + k];
             for (int j = 0; j < N; ++j)
             {
                 C[i*ldc + j] += A_PART*B[k*ldb + j];
@@ -1162,11 +1619,11 @@ void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const float &
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-    for (int i = 0; i < (M / TILE_M)*TILE_M; i += TILE_M)
+    for (int i = 0; i < (M / TILE_F32_M)*TILE_F32_M; i += TILE_F32_M)
     {
-        for (int k = 0; k < (K / TILE_K)*TILE_K; k += TILE_K)
+        for (int k = 0; k < (K / TILE_F32_K)*TILE_F32_K; k += TILE_F32_K)
         {
-            for (int j = 0; j < (N / TILE_N)*TILE_N; j += TILE_N)
+            for (int j = 0; j < (N / TILE_F32_N)*TILE_F32_N; j += TILE_F32_N)
             {
 
                 __m256 result256;
@@ -1191,7 +1648,7 @@ void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const float &
                 c256_6 = _mm256_loadu_ps(&C[(2 + i)*ldc + (8 + j)]);
                 c256_7 = _mm256_loadu_ps(&C[(3 + i)*ldc + (8 + j)]);
 
-                for (int k_d = 0; k_d < (TILE_K); ++k_d)
+                for (int k_d = 0; k_d < (TILE_F32_K); ++k_d)
                 {
                     a256_0 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (0 + i)]);
                     a256_1 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (1 + i)]);
@@ -1237,11 +1694,11 @@ void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const float &
                 _mm256_storeu_ps(&C[(3 + i)*ldc + (8 + j)], c256_7);
             }
 
-            for (int j = (N / TILE_N)*TILE_N; j < N; ++j)
+            for (int j = (N / TILE_F32_N)*TILE_F32_N; j < N; ++j)
             {
-                for (int i_d = i; i_d < (i + TILE_M); ++i_d)
+                for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
                 {
-                    for (int k_d = k; k_d < (k + TILE_K); ++k_d)
+                    for (int k_d = k; k_d < (k + TILE_F32_K); ++k_d)
                     {
                         float A_PART = ALPHA*A[k_d*lda + i_d];
                         C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
@@ -1250,9 +1707,9 @@ void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const float &
             }
         }
 
-        for (int k = (K / TILE_K)*TILE_K; k < K; ++k)
+        for (int k = (K / TILE_F32_K)*TILE_F32_K; k < K; ++k)
         {
-            for (int i_d = i; i_d < (i + TILE_M); ++i_d)
+            for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
             {
                 float A_PART = ALPHA*A[k*lda + i_d];
                 for (int j = 0; j < N; ++j)
@@ -1263,11 +1720,147 @@ void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const float &
         }
     }
 
-    for (int i = (M / TILE_M)*TILE_M; i < M; ++i)
+    for (int i = (M / TILE_F32_M)*TILE_F32_M; i < M; ++i)
     {
         for (int k = 0; k < K; ++k)
         {
             float A_PART = ALPHA*A[k*lda + i];
+            for (int j = 0; j < N; ++j)
+            {
+                C[i*ldc + j] += A_PART*B[k*ldb + j];
+            }
+        }
+    }
+#endif
+
+#ifdef USE_ARM
+    (void)M;
+    (void)N;
+    (void)K;
+    (void)ALPHA;
+    (void)A;
+    (void)lda;
+    (void)B;
+    (void)ldb;
+    (void)C;
+    (void)ldc;
+    throw Exception(1, "TODO: for arm", __FILE__, __LINE__, __FUNCTION__);
+#endif
+}
+
+void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc)
+{
+#ifdef USE_X86
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+    for (int i = 0; i < (M / TILE_F64_M)*TILE_F64_M; i += TILE_F64_M)
+    {
+        for (int k = 0; k < (K / TILE_F64_K)*TILE_F64_K; k += TILE_F64_K)
+        {
+            for (int j = 0; j < (N / TILE_F64_N)*TILE_F64_N; j += TILE_F64_N)
+            {
+
+                __m256d result256;
+                __m256d a256_0, b256_0;    
+
+                __m256d a256_1, b256_1;    
+
+                __m256d a256_2;
+
+                __m256d a256_3;
+
+                __m256d c256_0, c256_1, c256_2, c256_3;
+                __m256d c256_4, c256_5, c256_6, c256_7;
+
+                c256_0 = _mm256_loadu_pd(&C[(0 + i)*ldc + (0 + j)]);
+                c256_1 = _mm256_loadu_pd(&C[(1 + i)*ldc + (0 + j)]);
+                c256_2 = _mm256_loadu_pd(&C[(0 + i)*ldc + (4 + j)]);
+                c256_3 = _mm256_loadu_pd(&C[(1 + i)*ldc + (4 + j)]);
+
+                c256_4 = _mm256_loadu_pd(&C[(2 + i)*ldc + (0 + j)]);
+                c256_5 = _mm256_loadu_pd(&C[(3 + i)*ldc + (0 + j)]);
+                c256_6 = _mm256_loadu_pd(&C[(2 + i)*ldc + (4 + j)]);
+                c256_7 = _mm256_loadu_pd(&C[(3 + i)*ldc + (4 + j)]);
+
+                for (int k_d = 0; k_d < (TILE_F64_K); ++k_d)
+                {
+                    a256_0 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (0 + i)]);
+                    a256_1 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (1 + i)]);
+
+                    a256_2 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (2 + i)]);
+                    a256_3 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (3 + i)]);
+
+                    b256_0 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (0 + j)]);
+                    b256_1 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (4 + j)]);
+
+                    result256 = _mm256_mul_pd(a256_0, b256_0);
+                    c256_0 = _mm256_add_pd(result256, c256_0);
+
+                    result256 = _mm256_mul_pd(a256_1, b256_0);
+                    c256_1 = _mm256_add_pd(result256, c256_1);
+
+                    result256 = _mm256_mul_pd(a256_0, b256_1);
+                    c256_2 = _mm256_add_pd(result256, c256_2);
+
+                    result256 = _mm256_mul_pd(a256_1, b256_1);
+                    c256_3 = _mm256_add_pd(result256, c256_3);
+
+                    result256 = _mm256_mul_pd(a256_2, b256_0);
+                    c256_4 = _mm256_add_pd(result256, c256_4);
+
+                    result256 = _mm256_mul_pd(a256_3, b256_0);
+                    c256_5 = _mm256_add_pd(result256, c256_5);
+
+                    result256 = _mm256_mul_pd(a256_2, b256_1);
+                    c256_6 = _mm256_add_pd(result256, c256_6);
+
+                    result256 = _mm256_mul_pd(a256_3, b256_1);
+                    c256_7 = _mm256_add_pd(result256, c256_7);
+                }
+                _mm256_storeu_pd(&C[(0 + i)*ldc + (0 + j)], c256_0);
+                _mm256_storeu_pd(&C[(1 + i)*ldc + (0 + j)], c256_1);
+                _mm256_storeu_pd(&C[(0 + i)*ldc + (4 + j)], c256_2);
+                _mm256_storeu_pd(&C[(1 + i)*ldc + (4 + j)], c256_3);
+
+                _mm256_storeu_pd(&C[(2 + i)*ldc + (0 + j)], c256_4);
+                _mm256_storeu_pd(&C[(3 + i)*ldc + (0 + j)], c256_5);
+                _mm256_storeu_pd(&C[(2 + i)*ldc + (4 + j)], c256_6);
+                _mm256_storeu_pd(&C[(3 + i)*ldc + (4 + j)], c256_7);
+            }
+
+            for (int j = (N / TILE_F64_N)*TILE_F64_N; j < N; ++j)
+            {
+                for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
+                {
+                    for (int k_d = k; k_d < (k + TILE_F64_K); ++k_d)
+                    {
+                        double A_PART = ALPHA*A[k_d*lda + i_d];
+                        C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                    }
+                }
+            }
+        }
+
+        for (int k = (K / TILE_F64_K)*TILE_F64_K; k < K; ++k)
+        {
+            for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
+            {
+                double A_PART = ALPHA*A[k*lda + i_d];
+                for (int j = 0; j < N; ++j)
+                {
+                    C[i_d*ldc + j] += A_PART*B[k*ldb + j];
+                }
+            }
+        }
+    }
+
+    for (int i = (M / TILE_F64_M)*TILE_F64_M; i < M; ++i)
+    {
+        for (int k = 0; k < K; ++k)
+        {
+            double A_PART = ALPHA*A[k*lda + i];
             for (int j = 0; j < N; ++j)
             {
                 C[i*ldc + j] += A_PART*B[k*ldb + j];

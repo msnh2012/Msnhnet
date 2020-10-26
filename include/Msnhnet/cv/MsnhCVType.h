@@ -9,10 +9,13 @@ enum MatType
 {
     MAT_GRAY_U8,
     MAT_GRAY_F32,
+    MAT_GRAY_F64,
     MAT_RGB_U8,
     MAT_RGB_F32,
+    MAT_RGB_F64,
     MAT_RGBA_U8,
     MAT_RGBA_F32,
+    MAT_RGBA_F64
 };
 
 enum SaveImageType
@@ -37,8 +40,12 @@ enum CvtColorType
 
 enum CvtDataType
 {
-    CVT_DATA_U8_2_F32,
-    CVT_DATA_F32_2_U8
+    CVT_DATA_TO_F64_DIRECTLY,
+    CVT_DATA_TO_F32_DIRECTLY,
+    CVT_DATA_TO_U8_DIRECTLY,
+    CVT_DATA_TO_F64,
+    CVT_DATA_TO_F32,
+    CVT_DATA_TO_U8
 };
 
 enum ResizeType
@@ -56,6 +63,18 @@ union MatData
     uint32_t    *u32;
     int32_t     *i32;
     float       *f32;
+    double      *f64;
+};
+
+union MatVal
+{
+    uint8_t     u8 = 0;
+    int8_t      i8 ;
+    uint16_t    u16;
+    int16_t     i16;
+    uint32_t    u32;
+    int32_t     i32;
+    float       f32;
 };
 
 struct Vec2U8
@@ -404,6 +423,16 @@ public:
          };
 };
 
+template<> class DataType<double>
+{
+public:
+    enum {
+           fmt      = (int)'d',
+           array    = 1,
+           step     = sizeof(double)
+         };
+};
+
 template<> class DataType<Vec3U8>
 {
 public:
@@ -424,6 +453,16 @@ public:
          };
 };
 
+template<> class DataType<Vec3F64>
+{
+public:
+    enum {
+           fmt      = (int)'d',
+           array    = 3,
+           step     = sizeof(double)*3
+         };
+};
+
 template<> class DataType<Vec4U8>
 {
 public:
@@ -441,6 +480,16 @@ public:
            fmt      = (int)'f',
            array    = 4,
            step     = sizeof(float)*4
+         };
+};
+
+template<> class DataType<Vec4F64>
+{
+public:
+    enum {
+           fmt      = (int)'d',
+           array    = 4,
+           step     = sizeof(double)*4
          };
 };
 
