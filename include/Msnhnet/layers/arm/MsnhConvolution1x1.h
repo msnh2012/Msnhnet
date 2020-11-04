@@ -10,7 +10,9 @@ class MsnhNet_API ConvolutionalLayerArm1x1
 public:
     //bottom: src, inWidth, inHeight, inChannel
     //top: dest, outWidth, outHeight, outChannel
-    static void conv1x1Neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
+    static void conv1x1s1Neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
+                                 float* &dest, const int &outWidth, const int &outHeight, const int &outChannel);
+    static void conv1x1s2Neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                                  float* &dest, const int &outWidth, const int &outHeight, const int &outChannel);
 };
 
