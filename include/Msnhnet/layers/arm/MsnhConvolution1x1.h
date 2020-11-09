@@ -14,6 +14,10 @@ public:
                                  float* &dest, const int &outWidth, const int &outHeight, const int &outChannel);
     static void conv1x1s2Neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                                  float* &dest, const int &outWidth, const int &outHeight, const int &outChannel);
+    static void conv1x1s1SgemmTransformKenel(float *const &kernel, float* &dest, const int &inChannel, const int &outChannel);
+    
+    static void conv1x1s1SgemmNeon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
+                                 float* &dest, const int &outWidth, const int &outHeight, const int &outChannel);
 };
 
 }

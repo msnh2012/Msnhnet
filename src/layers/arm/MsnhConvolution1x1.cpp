@@ -549,6 +549,67 @@ namespace Msnhnet
                                  float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
         
     }    
+
+    // pack 4x4
+    // shape[c, h, w]: [outChannel / 4 + outChannel %4， 4 * 4， inChannel / 4 + inChannel%4]
+    void ConvolutionalLayerArm1x1::conv1x1s1SgemmTransformKenel(float *const &kernel, float* &dest, const int &inChannel, const int &outChannel){
+        int c = 0;
+
+        int Stride = 4 * 4 * (inChannel / 4 + inChannel%4);
+
+        for(; c + 3 < outChannel; c += 4){
+            const float* k0 = kernel + c * inChannel;
+            const float* k1 = kernel + (c + 1) * inChannel;
+            const float* k2 = kernel + (c + 2) * inChannel;
+            const float* k3 = kernel + (c + 3) * inChannel;
+
+            float* destptr = dest + (c / 4) * Stride;
+
+            for(int i = 0; i < inChannel; i++){
+
+                destptr[0] = k0[0];
+                destptr[1] = k1[0];
+                destptr[2] = k2[0];
+                destptr[3] = k3[0];
+
+                destptr += 4;
+
+                k0 += 1;
+                k1 += 1;
+                k2 += 1;
+                k3 += 1;
+            }
+        }
+
+        for(; c < outChannel; c++){
+            const float* k0 = kernel + c * inChannel;
+
+            float* destptr = dest + (c / 4 + c % 4) * Stride;
+
+            for(int i = 0; i < inChannel; i++){
+                destptr[0] = k0[0];
+                destptr += 4;
+                k0 += 1;
+            }
+        }
+    }
+
+    // pack 8x4
+    // shape[c, h, w]: [outSize / 8 + (outSize % 8) / 4 + outSize % 4, 8*4, inChannel/4+inChannel%4]
+    void ConvolutionalLayerArm1x1::conv1x1s1SgemmNeon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
+                                 float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
+        int outSize = outHeight * outWidth;
+
+        int nnSize = outSize >> 3;
+        int remainnnSize = nnSize << 3;
+
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i = 0; i < nnSize; i++){
+            
+        }
+    }
 }
 
 #endif
