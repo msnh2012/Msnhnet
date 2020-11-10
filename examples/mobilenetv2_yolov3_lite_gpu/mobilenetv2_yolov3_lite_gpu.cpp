@@ -64,13 +64,11 @@ void mobilenetYolov3LiteGPUMsnhCV(const std::string& msnhnetPath, const std::str
 
 		Msnhnet::Mat org(imgPath);
 		Msnhnet::CVUtil::drawYoloBox(org, labels, result, inSize);
-		org.saveImage("mobilenet_yolov3_lite_gpu.jpg");
-		system("mobilenet_yolov3_lite_gpu.jpg");
 
-		#ifdef _WIN32
-        system("mobilenet_yolov3_lite_gpu.jpg");
+        #ifdef USE_MSNHCV_GUI
+        Msnhnet::Gui::imShow("mobilenet_yolov3_lite_gpu",org);
         #else
-        std::cout<<"result pic has been saved at /[App Dir]/mobilenet_yolov3_lite_gpu.jpg"<<std::endl;
+        org.saveImage("mobilenet_yolov3_lite_gpu.jpg");
         #endif
 	}
 	catch (Msnhnet::Exception ex)

@@ -94,13 +94,13 @@ void unetMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath, 
 
 		if (mat.getChannel() == 1)
 			Msnhnet::MatOp::cvtColor(mat, mat, Msnhnet::CVT_GRAY2RGB);
-
+            
         mat = mat + mask;
-        mat.saveImage("unet_gpu.jpg");
-		#ifdef _WIN32
-        system("unet_gpu.jpg");
+
+        #ifdef USE_MSNHCV_GUI
+        Msnhnet::Gui::imShow("unet_gpu",mat);
         #else
-        std::cout<<"result pic has been saved at /[App Dir]/unet_gpu.jpg"<<std::endl;
+        mat.saveImage("unet_gpu.jpg");
         #endif
     }
     catch (Msnhnet::Exception ex)

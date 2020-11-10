@@ -63,8 +63,12 @@ void mobilenetYolov3NanoGPUMsnhCV(const std::string& msnhnetPath, const std::str
 
 		Msnhnet::Mat org(imgPath);
 		Msnhnet::CVUtil::drawYoloBox(org, labels, result, inSize);
-		org.saveImage("mobilenet_yolov3_nano_gpu.jpg");
-		system("mobilenet_yolov3_nano_gpu.jpg");
+
+		#ifdef USE_MSNHCV_GUI
+        Msnhnet::Gui::imShow("mobilenet_yolov3_nano_gpu",org);
+        #else
+        org.saveImage("mobilenet_yolov3_nano_gpu.jpg");
+        #endif
 	}
 	catch (Msnhnet::Exception ex)
 	{

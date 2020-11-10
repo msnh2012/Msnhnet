@@ -75,14 +75,15 @@ void fcnsMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath, 
         Msnhnet::MatOp::resize(mask,mask,{mat.getWidth(),mat.getHeight()});
         std::cout<<msnhNet.getTimeDetail()<<std::endl;
         mat = mat + mask;
+
+        #ifdef USE_MSNHCV_GUI
+        Msnhnet::Gui::imShow("fcns",mat);
+        Msnhnet::Gui::imShow("fcns_mask",mask);
+        #else
         mat.saveImage("fcns.jpg");
 		mask.saveImage("fcns_mask.jpg");
-        #ifdef _WIN32
-        system("fcns.jpg");
-        #else
-        std::cout<<"result pic has been saved at /[App Dir]/fcns.jpg"<<std::endl;
         #endif
-
+        
     }
     catch (Msnhnet::Exception ex)
     {

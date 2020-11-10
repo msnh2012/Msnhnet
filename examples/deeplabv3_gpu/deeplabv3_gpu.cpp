@@ -88,13 +88,12 @@ void deeplabv3GPUMsnhCV(const std::string& msnhnetPath, const std::string& msnhb
             Msnhnet::MatOp::cvtColor(mat, mat, Msnhnet::CVT_GRAY2RGB);
 
         mat = mat + mask;
-        mat.saveImage("deeplabv3_gpu.jpg");
-        #ifdef _WIN32
-        system("deeplabv3_gpu.jpg");
+        
+        #ifdef USE_MSNHCV_GUI
+        Msnhnet::Gui::imShow("deeplabv3_gpu",mat);
         #else
-        std::cout<<"result pic has been saved at /[App Dir]/deeplabv3_gpu.jpg"<<std::endl;
+        mat.saveImage("deeplabv3_gpu.jpg");
         #endif
-
     }
     catch (Msnhnet::Exception ex)
     {

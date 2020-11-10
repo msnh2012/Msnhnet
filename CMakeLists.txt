@@ -1,5 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.15) # cuda
 
+# jetson rum cmake in terminal
 project(Msnhnet
     LANGUAGES CXX C
     VERSION 1.0)
@@ -18,9 +19,8 @@ option(BUILD_EXAMPLES       "Build examples"            ON )
 option(BUILD_USE_OPENCV     "Build with Opencv"         OFF)
 option(BUILD_VIEWER         "Build MsnhnetViewer"       OFF)
 option(BUILD_USE_GPU        "Use Gpu"                   OFF)
-if(BUILD_USE_GPU MATCHES ON)
-    option(BUILD_USE_CUDNN      "Use cuDnn"                 OFF)
-endif()
+option(BUILD_USE_CUDNN      "Use cuDnn"                 OFF)
+option(BUILD_USE_MSNHCV_GUI "Use msnhCV GUI"            ON)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_Release} -O3")
@@ -68,6 +68,35 @@ if(ENABLE_OPEN_BLAS MATCHES ON)
     endif()
 else()
     set(USE_OPEN_BLAS_MACRO "")
+endif()
+
+if(BUILD_USE_MSNHCV_GUI MATCHES ON)
+    add_definitions(-DUSE_MSNHCV_GUI)
+    set(USE_MSNHCV_GUI_MACRO "#define USE_MSNHCV_GUI\n") #===============
+    message(STATUS "Use msnhCV GUI")
+    find_package(glfw3 REQUIRED)
+    find_package(OpenGL REQUIRED)
+    # CMAKE_PREFIX_PATH "your path"
+    find_package(GLEW REQUIRED)
+    set(MSNHCV_GUI_SRC
+        src/3rdparty/imgui/ImCurveEdit.cpp
+        src/3rdparty/imgui/ImGradient.cpp
+        src/3rdparty/imgui/ImGuizmo.cpp
+        src/3rdparty/imgui/ImSequencer.cpp
+        src/3rdparty/imgui/imgui.cpp
+        src/3rdparty/imgui/imgui_demo.cpp
+        src/3rdparty/imgui/imgui_draw.cpp
+        src/3rdparty/imgui/imgui_impl_glfw.cpp
+        src/3rdparty/imgui/imgui_impl_opengl3.cpp
+        src/3rdparty/imgui/imgui_widgets.cpp
+        src/3rdparty/imgui/imnodes.cpp
+        src/3rdparty/imgui/implot.cpp
+        src/3rdparty/imgui/implot_demo.cpp
+        src/3rdparty/imgui/implot_items.cpp
+        )
+else()
+    set(USE_MSNHCV_GUI_MACRO "")
+    set(MSNHCV_GUI_SRC "")
 endif()
 
 set(SRCS
@@ -171,12 +200,14 @@ set(SRCS
     src/3rdparty/yaml_cpp/stringsource.h
     src/3rdparty/yaml_cpp/tag.h
     src/3rdparty/yaml_cpp/token.h
-    src/cv/MsnhCVDraw.cpp
+    src/cv/MsnhCVDraw.cpp 
+    src/cv/MsnhCVFilters.cpp 
     src/cv/MsnhCVFont.cpp
-    src/cv/MsnhCVMat.cpp
-    src/cv/MsnhCVMatOp.cpp
-    src/cv/stb/stb_image.h
-    src/cv/stb/stb_image_write.h
+    src/cv/MsnhCVGeometry.cpp
+    src/cv/MsnhCVGui.cpp
+    src/cv/MsnhCVMat.cpp 
+    src/cv/MsnhCVMatOp.cpp 
+    src/cv/MsnhCVVideo.cpp
     src/utils/MsnhCVUtil.cpp
     )
 
@@ -326,6 +357,7 @@ target_sources(${PROJECT_NAME}
     PRIVATE
     ${SRCS}
     ${CXX_CUDA_SRCS}
+    ${MSNHCV_GUI_SRC}
     )
 
 #openblas
@@ -333,28 +365,33 @@ if(ENABLE_OPEN_BLAS MATCHES ON)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenBLAS_LIBRARIES})
 endif()
 
-#link 3rdparty libs
+# dshow
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC gdi32 ole32 strmiids oleaut32 user32 shlwapi)
+endif()
+
+# opengl
+if(BUILD_USE_MSNHCV_GUI MATCHES ON)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${GLEW_LIBRARIES} glfw ${OPENGL_LIBRARIES})
+endif()
+
+# opencv
 if(BUILD_USE_OPENCV MATCHES ON)
-    if(BUILD_USE_GPU MATCHES ON)
-        if(BUILD_USE_CUDNN MATCHES ON)
-            target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} PRIVATE ${CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
-        else()
-            target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} PRIVATE ${CUBLAS_LIBRARIES})
-        endif()
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
+endif()
+
+
+if(BUILD_USE_GPU MATCHES ON)
+    if(BUILD_USE_CUDNN MATCHES ON)
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} PRIVATE ${CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
     else()
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} ${OpenCV_LIBS} )
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} PRIVATE ${CUBLAS_LIBRARIES})
     endif()
 else()
-    if(BUILD_USE_GPU MATCHES ON)
-        if(BUILD_USE_CUDNN MATCHES ON)
-            target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} PRIVATE ${CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
-        else()
-            target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} PRIVATE ${CUBLAS_LIBRARIES})
-        endif()
-    else()
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB})
-    endif()
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB})
 endif()
+
 
 if(BUILD_EXAMPLES MATCHES ON)
     add_subdirectory(examples)
@@ -407,7 +444,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     )
 
 # Create cfg macro head file
-file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_OPENCV_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_GPU_MACRO}${USE_CUDNN_MACRO}#endif")
+file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_OPENCV_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_GPU_MACRO}${USE_CUDNN_MACRO}${USE_MSNHCV_GUI_MACRO}#endif")
 
 # Install macro head file
 install(FILES MsnhnetTmp/MsnhnetMacro.h

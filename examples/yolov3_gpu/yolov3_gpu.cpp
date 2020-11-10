@@ -64,11 +64,11 @@ void yolov3GPUMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinP
 
         Msnhnet::Mat org(imgPath);
         Msnhnet::CVUtil::drawYoloBox(org,labels,result,inSize);
-        org.saveImage("yolov3_gpu.jpg");
-		#ifdef _WIN32
-        system("yolov3_gpu.jpg");
+
+        #ifdef USE_MSNHCV_GUI
+        Msnhnet::Gui::imShow("yolov3_gpu",org);
         #else
-        std::cout<<"result pic has been saved at /[App Dir]/yolov3_gpu.jpg"<<std::endl;
+        org.saveImage("yolov3_gpu.jpg");
         #endif
     }
     catch (Msnhnet::Exception ex)
