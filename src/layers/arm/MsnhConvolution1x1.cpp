@@ -599,16 +599,167 @@ namespace Msnhnet
     void ConvolutionalLayerArm1x1::conv1x1s1SgemmNeon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                                  float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
         int outSize = outHeight * outWidth;
+        // transformed kernel
+        int kernelSize = 4 * 4 * (inChannel / 4 + inChannel%4);
 
+        // pack input start
         int nnSize = outSize >> 3;
-        int remainnnSize = nnSize << 3;
+        int remainSize = nnSize << 3;
+
+        int src_tm_channel = outSize / 8 + (outSize % 8) / 4 + outSize % 4;
+        int src_tm_h = 8 * 4;
+        int src_tm_w = inChannel/4+inChannel%4;
+        int src_tm_size = src_tm_h * src_tm_w;
+        float *src_tm = new float[src_tm_channel * src_tm_size];
 
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
         for(int i = 0; i < nnSize; i++){
-            
+            int newi = i << 3;
+            const float* srcptr = src + newi;
+
+            float *src_tm_ptr = src_tm + (newi / 8) * src_tm_size;
+
+            for(int q = 0; q < inChannel; q++){
+
+                src_tm_ptr[0] = srcptr[0];
+                src_tm_ptr[1] = srcptr[1];
+                src_tm_ptr[2] = srcptr[2];
+                src_tm_ptr[3] = srcptr[3];
+                src_tm_ptr[4] = srcptr[4];
+                src_tm_ptr[5] = srcptr[5];
+                src_tm_ptr[6] = srcptr[6];
+                src_tm_ptr[7] = srcptr[7];
+
+                src_tm_ptr += 8;
+                srcptr += inHeight * inWidth;
+            }
+
         }
+
+        nnSize = (outSize - remainSize) >> 2;
+
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i = 0; i < nnSize; i++){
+            int newi = remainSize + i * 4;
+
+            const float* srcptr = src + newi;
+
+            float *src_tm_ptr = src_tm + (newi / 8 + (newi % 8) / 4) * src_tm_size;
+
+            for(int q = 0; q < inChannel; q++){
+
+                src_tm_ptr[0] = srcptr[0];
+                src_tm_ptr[1] = srcptr[1];
+                src_tm_ptr[2] = srcptr[2];
+                src_tm_ptr[3] = srcptr[3];
+
+                src_tm_ptr += 4;
+                srcptr += inHeight * inWidth;
+            }
+        }
+
+        remainSize += nnSize << 2;
+
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+
+        for(int i = remainSize; i < outSize; i++){
+            int newi = i;
+
+            const float* srcptr = src + newi;
+
+            float *src_tm_ptr = src_tm + (newi / 8 + (newi % 8) / 4 + newi % 4) * src_tm_size;
+
+            for(int q = 0; q < inChannel; q++){
+
+                src_tm_ptr[0] = srcptr[0];
+
+                src_tm_ptr += 1;
+                srcptr += inHeight * inWidth;
+            }
+        }
+
+        // pack input end
+
+        int nnOutChannel = outChannel;
+        int remainOutChannel = 0;
+
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int cc = 0; cc < nnOutChannel; cc++){
+            int c = cc << 2;
+
+            float *destptr0 = dest + c * outSize;
+            float *destptr1 = dest + (c + 1) * outSize;
+            float *destptr2 = dest + (c + 2) * outSize;
+            float *destptr3 = dest + (c + 3) * outSize;
+
+            int i = 0;
+
+            for(; i + 7 < outSize; i += 8){
+                const float *src_tm_ptr = src_tm + (i / 8) * src_tm_size;
+
+                const float *kernel0 = kernel + (i / 4) *  kernelSize;
+
+#if USE_ARM
+
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                asm volatile(
+                    
+                );
+#endif
+
+#else
+                float sum0_0 = 0.f;
+                float sum0_1 = 0.f;
+                float sum0_2 = 0.f;
+                float sum0_3 = 0.f;
+                float sum0_4 = 0.f;
+                float sum0_5 = 0.f;
+                float sum0_6 = 0.f;
+                float sum0_7 = 0.f;
+
+                float sum1_0 = 0.f;
+                float sum1_1 = 0.f;
+                float sum1_2 = 0.f;
+                float sum1_3 = 0.f;
+                float sum1_4 = 0.f;
+                float sum1_5 = 0.f;
+                float sum1_6 = 0.f;
+                float sum1_7 = 0.f;
+
+                float sum2_0 = 0.f;
+                float sum2_1 = 0.f;
+                float sum2_2 = 0.f;
+                float sum2_3 = 0.f;
+                float sum2_4 = 0.f;
+                float sum2_5 = 0.f;
+                float sum2_6 = 0.f;
+                float sum2_7 = 0.f;
+
+                float sum3_0 = 0.f;
+                float sum3_1 = 0.f;
+                float sum3_2 = 0.f;
+                float sum3_3 = 0.f;
+                float sum3_4 = 0.f;
+                float sum3_5 = 0.f;
+                float sum3_6 = 0.f;
+                float sum3_7 = 0.f;
+
+                
+#endif
+
+            }
+        }
+
     }
 }
 
