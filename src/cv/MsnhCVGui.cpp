@@ -139,10 +139,10 @@ void Gui::imShow(const std::string &title, Mat &mat)
     }
 
     mutex.lock();
-    if(matTextures.find(title)!=matTextures.end())
-    {
-        glDeleteTextures(1,&matTextures[title]);
-    }
+    // if(matTextures.find(title)!=matTextures.end())
+    // {
+    //     glDeleteTextures(1,&matTextures[title]);
+    // }
     mats[title] = tmpMat;
     matInited[title] = false;
     matTextures[title] = -1;
