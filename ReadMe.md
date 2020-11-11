@@ -125,7 +125,9 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 **Requirements**
   * OpenCV4 (**optional**) https://github.com/opencv/opencv
   * Qt5 (**optional**. for Msnhnet viewer) http://download.qt.io/archive/qt/
-  * Opengl(**optional**. for Msnhnet viewer) 
+  * opengl(**optional**. for MsnhCV GUI) .
+  * glew(**optional**. for MsnhCV GUI) http://glew.sourceforge.net/ .
+  * glfw3(**optional**. for MsnhCV GUI) https://www.glfw.org/.
   * cuda10+ cudnn 7.0+.(**optional**. for GPU)
 
 **Video tutorials(bilibili)**
