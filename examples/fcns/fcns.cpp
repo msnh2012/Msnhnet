@@ -79,6 +79,7 @@ void fcnsMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath, 
         #ifdef USE_MSNHCV_GUI
         Msnhnet::Gui::imShow("fcns",mat);
         Msnhnet::Gui::imShow("fcns_mask",mask);
+        Msnhnet::Gui::wait();
         #else
         mat.saveImage("fcns.jpg");
 		mask.saveImage("fcns_mask.jpg");

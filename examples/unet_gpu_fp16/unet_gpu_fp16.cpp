@@ -101,6 +101,7 @@ void unetMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath, 
 
 		#ifdef USE_MSNHCV_GUI
         Msnhnet::Gui::imShow("unet_gpu_fp16",mat);
+		Msnhnet::Gui::wait();
         #else
         mat.saveImage("unet_gpu_fp16.jpg");
         #endif

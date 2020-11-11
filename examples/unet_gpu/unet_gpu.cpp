@@ -99,6 +99,7 @@ void unetMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath, 
 
         #ifdef USE_MSNHCV_GUI
         Msnhnet::Gui::imShow("unet_gpu",mat);
+        Msnhnet::Gui::wait();
         #else
         mat.saveImage("unet_gpu.jpg");
         #endif

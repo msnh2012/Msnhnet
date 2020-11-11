@@ -48,6 +48,7 @@ void yolov5sMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPat
 
         #ifdef USE_MSNHCV_GUI
         Msnhnet::Gui::imShow("yolov5s",org);
+        Msnhnet::Gui::wait();
         #else
         org.saveImage("yolov5s.jpg");
         #endif
