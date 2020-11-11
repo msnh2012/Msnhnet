@@ -125,6 +125,7 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 **Requirements**
   * OpenCV4 (**optional**) https://github.com/opencv/opencv
   * Qt5 (**optional**. for Msnhnet viewer) http://download.qt.io/archive/qt/
+  * Opengl(**optional**. for Msnhnet viewer) 
   * cuda10+ cudnn 7.0+.(**optional**. for GPU)
 
 **Video tutorials(bilibili)**
@@ -144,16 +145,24 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 2. Config environment. Add "OpenCV_DIR" **(optional)**
 3. Get qt5 and install. http://download.qt.io/ **(optional)**
 4. Add qt5 bin path to environment **(optional)**.
-5. Then use cmake-gui tool and visual studio to make or use vcpkg.
+5. Get glew for MsnhCV Gui.http://glew.sourceforge.net/ **(optional)**.
+6. Get glfw3 for MsnhCV Gui.https://www.glfw.org/ **(optional)**.
+7. Extract glew, add glew path to "CMAKE_PREFIX_PATH" **(optional)**.
+8. Compile gflw3 with cmake, add gflw3 cmake dir to "GLFW_DIR"  **(optional)**.
+9. Then use cmake-gui tool and visual studio to make or use vcpkg.
 
 - Linux(Ubuntu)
 
 ps. If you want to build with Jetson, please uncheck NNPACK, OPENBLAS, NEON.
 
 ```
+
+sudo apt-get install build-essential
 sudo apt-get install qt5-default      #optional
 sudo apt-get install libqt5svg5-dev   #optional
 sudo apt-get install libopencv-dev    #optional
+sudo apt-get install libgl1-mesa-dev libglfw3-dev libglfw3 libglew-dev #optional
+
 
 #config 
 sudo echo /usr/local/lib > /etc/ld.so.conf.d/usrlib.conf
@@ -296,7 +305,8 @@ Msnhnet got ideas and developed based on these projects：
 **3rdparty Libs**
 - [stb_image](https://github.com/nothings/stb)
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp)
-
+- [imGui](https://github.com/ocornut/imgui)
+- [mpeg](https://github.com/phoboslab/pl_mpeg)
 
 **加群交流**</br>
 ![](readme_imgs/qq.png)</br>
