@@ -686,8 +686,8 @@ namespace Msnhnet
 
         // pack input end
 
-        int nnOutChannel = outChannel;
-        int remainOutChannel = 0;
+        int nnOutChannel = outChannel >> 2;
+        int remainOutChannel = nnOutChannel << 2;
 
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
@@ -705,7 +705,7 @@ namespace Msnhnet
             for(; i + 7 < outSize; i += 8){
                 const float *src_tm_ptr = src_tm + (i / 8) * src_tm_size;
 
-                const float *kernel0 = kernel + (i / 4) *  kernelSize;
+                const float *kernel0 = kernel + (c / 4) *  kernelSize;
 
 #if USE_ARM
 
@@ -754,9 +754,351 @@ namespace Msnhnet
                 float sum3_6 = 0.f;
                 float sum3_7 = 0.f;
 
-                
+                for(int q = 0; q < inChannel; q++){
+                    sum0_0 += src_tm_ptr[0] * kernel0[0];
+                    sum0_1 += src_tm_ptr[1] * kernel0[0];
+                    sum0_2 += src_tm_ptr[2] * kernel0[0];
+                    sum0_3 += src_tm_ptr[3] * kernel0[0];
+                    sum0_4 += src_tm_ptr[4] * kernel0[0];
+                    sum0_5 += src_tm_ptr[5] * kernel0[0];
+                    sum0_6 += src_tm_ptr[6] * kernel0[0];
+                    sum0_7 += src_tm_ptr[7] * kernel0[0];
+
+                    sum1_0 += src_tm_ptr[0] * kernel0[1];
+                    sum1_1 += src_tm_ptr[1] * kernel0[1];
+                    sum1_2 += src_tm_ptr[2] * kernel0[1];
+                    sum1_3 += src_tm_ptr[3] * kernel0[1];
+                    sum1_4 += src_tm_ptr[4] * kernel0[1];
+                    sum1_5 += src_tm_ptr[5] * kernel0[1];
+                    sum1_6 += src_tm_ptr[6] * kernel0[1];
+                    sum1_7 += src_tm_ptr[7] * kernel0[1];
+
+                    sum2_0 += src_tm_ptr[0] * kernel0[2];
+                    sum2_1 += src_tm_ptr[1] * kernel0[2];
+                    sum2_2 += src_tm_ptr[2] * kernel0[2];
+                    sum2_3 += src_tm_ptr[3] * kernel0[2];
+                    sum2_4 += src_tm_ptr[4] * kernel0[2];
+                    sum2_5 += src_tm_ptr[5] * kernel0[2];
+                    sum2_6 += src_tm_ptr[6] * kernel0[2];
+                    sum2_7 += src_tm_ptr[7] * kernel0[2];
+
+                    sum3_0 += src_tm_ptr[0] * kernel0[3];
+                    sum3_1 += src_tm_ptr[1] * kernel0[3];
+                    sum3_2 += src_tm_ptr[2] * kernel0[3];
+                    sum3_3 += src_tm_ptr[3] * kernel0[3];
+                    sum3_4 += src_tm_ptr[4] * kernel0[3];
+                    sum3_5 += src_tm_ptr[5] * kernel0[3];
+                    sum3_6 += src_tm_ptr[6] * kernel0[3];
+                    sum3_7 += src_tm_ptr[7] * kernel0[3];
+
+                    src_tm_ptr += 8;
+                    kernel0 += 4;
+                }    
+
+                destptr0[0] = sum0_0;
+                destptr0[1] = sum0_1;
+                destptr0[2] = sum0_2;
+                destptr0[3] = sum0_3;
+                destptr0[4] = sum0_4;
+                destptr0[5] = sum0_5;
+                destptr0[6] = sum0_6;
+                destptr0[7] = sum0_7;
+
+                destptr1[0] = sum1_0;
+                destptr1[1] = sum1_1;
+                destptr1[2] = sum1_2;
+                destptr1[3] = sum1_3;
+                destptr1[4] = sum1_4;
+                destptr1[5] = sum1_5;
+                destptr1[6] = sum1_6;
+                destptr1[7] = sum1_7;
+
+                destptr2[0] = sum2_0;
+                destptr2[1] = sum2_1;
+                destptr2[2] = sum2_2;
+                destptr2[3] = sum2_3;
+                destptr2[4] = sum2_4;
+                destptr2[5] = sum2_5;
+                destptr2[6] = sum2_6;
+                destptr2[7] = sum2_7;
+
+                destptr3[0] = sum3_0;
+                destptr3[1] = sum3_1;
+                destptr3[2] = sum3_2;
+                destptr3[3] = sum3_3;
+                destptr3[4] = sum3_4;
+                destptr3[5] = sum3_5;
+                destptr3[6] = sum3_6;
+                destptr3[7] = sum3_7;
+
+                destptr0 += 8;
+                destptr1 += 8;
+                destptr2 += 8;
+                destptr3 += 8;
 #endif
 
+            }
+
+            for(; i + 3 < outSize; i += 4){
+                const float *src_tm_ptr = src_tm + ((i / 8) + (i % 8) / 4) * src_tm_size;
+                const float *kernel0 = kernel + (c / 4) *  kernelSize;
+
+#if USE_ARM
+
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                asm volatile(
+                    
+                );
+#endif
+
+#else
+                float sum0_0 = 0.f;
+                float sum0_1 = 0.f;
+                float sum0_2 = 0.f;
+                float sum0_3 = 0.f;
+
+                float sum1_0 = 0.f;
+                float sum1_1 = 0.f;
+                float sum1_2 = 0.f;
+                float sum1_3 = 0.f;
+
+                float sum2_0 = 0.f;
+                float sum2_1 = 0.f;
+                float sum2_2 = 0.f;
+                float sum2_3 = 0.f;
+
+                float sum3_0 = 0.f;
+                float sum3_1 = 0.f;
+                float sum3_2 = 0.f;
+                float sum3_3 = 0.f;
+
+                for(int q = 0; q < inChannel; q++){
+                    sum0_0 += src_tm_ptr[0] * kernel0[0];
+                    sum0_1 += src_tm_ptr[1] * kernel0[0];
+                    sum0_2 += src_tm_ptr[2] * kernel0[0];
+                    sum0_3 += src_tm_ptr[3] * kernel0[0];
+
+                    sum1_0 += src_tm_ptr[0] * kernel0[1];
+                    sum1_1 += src_tm_ptr[1] * kernel0[1];
+                    sum1_2 += src_tm_ptr[2] * kernel0[1];
+                    sum1_3 += src_tm_ptr[3] * kernel0[1];
+
+                    sum2_0 += src_tm_ptr[0] * kernel0[2];
+                    sum2_1 += src_tm_ptr[1] * kernel0[2];
+                    sum2_2 += src_tm_ptr[2] * kernel0[2];
+                    sum2_3 += src_tm_ptr[3] * kernel0[2];
+
+                    sum3_0 += src_tm_ptr[0] * kernel0[3];
+                    sum3_1 += src_tm_ptr[1] * kernel0[3];
+                    sum3_2 += src_tm_ptr[2] * kernel0[3];
+                    sum3_3 += src_tm_ptr[3] * kernel0[3];
+
+                    src_tm_ptr += 4；
+                    kernel0 += 4;
+                }
+
+                destptr0[0] = sum0_0;
+                destptr0[1] = sum0_1;
+                destptr0[2] = sum0_2;
+                destptr0[3] = sum0_3;
+
+                destptr1[0] = sum1_0;
+                destptr1[1] = sum1_1;
+                destptr1[2] = sum1_2;
+                destptr1[3] = sum1_3;
+
+                destptr2[0] = sum2_0;
+                destptr2[1] = sum2_1;
+                destptr2[2] = sum2_2;
+                destptr2[3] = sum2_3;
+
+                destptr3[0] = sum3_0;
+                destptr3[1] = sum3_1;
+                destptr3[2] = sum3_2;
+                destptr3[3] = sum3_3;
+
+                destptr0 += 4;
+                destptr1 += 4;
+                destptr2 += 4;
+                destptr3 += 4;
+#endif
+            }
+
+            for(; i < outSize; i++){
+                const float *src_tm_ptr = src_tm + ((i / 8) + (i % 8) / 4 + i % 4) * src_tm_size;
+                const float *kernel0 = kernel + (c / 4) *  kernelSize;
+
+#if USE_ARM
+
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                asm volatile(
+                    
+                );
+#endif
+
+#else
+                float sum0 = 0.f;
+                float sum1 = 0.f;
+                float sum2 = 0.f;
+                float sum3 = 0.f;
+
+                for(int q = 0; q < inChannel; q++){
+                    sum0 += src_tm_ptr[0] * kernel0[0];
+                    sum1 += src_tm_ptr[0] * kernel0[1];
+                    sum2 += src_tm_ptr[0] * kernel0[2];
+                    sum3 += src_tm_ptr[0] * kernel0[3];
+
+                    src_tm_ptr++;
+                    kernel0 += 4;
+                }
+
+                destptr0[0] = sum0;
+                destptr1[0] = sum1;
+                destptr2[0] = sum2;
+                destptr3[0] = sum3;
+
+                destptr0 ++;
+                destptr1 ++;
+                destptr2 ++;
+                destptr3 ++;
+#endif
+            }
+
+        }
+
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif    
+        for(int cc = remainOutChannel; cc < outChannel; cc++){
+            int c = cc;
+            float *destptr0 = dest + c * outSize;
+
+            int i = 0;
+            for(; i + 7 < outSize; i += 8){
+                const float *src_tm_ptr = src_tm + (i / 8) * src_tm_size;
+
+                const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
+
+#if USE_ARM
+
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                asm volatile(
+                    
+                );
+#endif
+
+#else
+                float sum0 = 0.f;
+                float sum1 = 0.f;
+                float sum2 = 0.f;
+                float sum3 = 0.f;
+                float sum4 = 0.f;
+                float sum5 = 0.f;
+                float sum6 = 0.f;
+                float sum7 = 0.f;
+
+                for(int q = 0; q < inChannel; q++){
+                    sum0 += src_tm_ptr[0] * kernel0[0];
+                    sum1 += src_tm_ptr[1] * kernel0[0];
+                    sum2 += src_tm_ptr[2] * kernel0[0];
+                    sum3 += src_tm_ptr[3] * kernel0[0];
+                    sum4 += src_tm_ptr[4] * kernel0[0];
+                    sum5 += src_tm_ptr[5] * kernel0[0];
+                    sum6 += src_tm_ptr[6] * kernel0[0];
+                    sum7 += src_tm_ptr[7] * kernel0[0];
+
+                    src_tm_ptr += 8;
+                    kernel0++;
+                }
+
+                destptr0[0] = sum0;
+                destptr0[1] = sum1;
+                destptr0[2] = sum2;
+                destptr0[3] = sum3;
+                destptr0[4] = sum4;
+                destptr0[5] = sum5;
+                destptr0[6] = sum6;
+                destptr0[7] = sum7;
+
+                destptr0 += 8;
+#endif
+            }
+
+            for(; i + 3 < outSize; i += 4){
+                const float *src_tm_ptr = src_tm + (i / 8 + (i % 8) / 4) * src_tm_size;
+
+                const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
+            
+#if USE_ARM
+
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                asm volatile(
+                    
+                );
+#endif
+
+#else
+                float sum0 = 0.f;
+                float sum1 = 0.f;
+                float sum2 = 0.f;
+                float sum3 = 0.f;
+
+                for(int q = 0; q < inChannel; q++){
+                    sum0 += src_tm_ptr[0] * kernel0[0];
+                    sum1 += src_tm_ptr[1] * kernel0[0];
+                    sum2 += src_tm_ptr[2] * kernel0[0];
+                    sum3 += src_tm_ptr[3] * kernel0[0];
+
+                    src_tm_ptr += 4;
+                    kernel0++;
+                }
+
+                destptr0[0] = sum0;
+                destptr0[1] = sum1;
+                destptr0[2] = sum2;
+                destptr0[3] = sum3;
+
+                destptr0 += 4;
+#endif
+            }
+
+            for(; i < outSize; i++){
+                const float *src_tm_ptr = src_tm + (i / 8 + (i % 8) / 4 + i % 4) * src_tm_size;
+
+                const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
+
+#if USE_ARM
+
+#if __aarch64__
+                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+#else
+                asm volatile(
+                    
+                );
+#endif
+
+#else
+                float sum0 = 0.f;
+
+                for(int q = 0; q < inChannel; q++){
+                    sum0 += src_tm_ptr[0] * kernel0[0];
+                    
+                    src_tm_ptr++;
+                    kernel0++;
+                }   
+
+                destptr0[0] = sum0;
+
+                destptr0++;
+#endif
             }
         }
 
