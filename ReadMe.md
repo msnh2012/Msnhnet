@@ -23,7 +23,8 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 - OS supported: Windows, Linux(Ubuntu checked) and Mac os(unchecked).
 - CPU supported: Intel X86, AMD(unchecked) and ARM(checked: armv7 armv8 arrch64).
 - x86 avx2 supported.(Working....)
-- arm neon supported.(Working....)。
+- arm neon supported.(Working....)
+- A cv lib like opencv is supported for msnhnet.(MsnhCV) 
 - conv2d 3x3s1 3x3s2 winograd3x3s1 is supported(**Arm**)
 - Keras to Msnhnet is supported. (Keras 2 and tensorflow 1.x)
 - GPU cuda supported.(Checked GTX1080Ti, Jetson NX)

@@ -24,6 +24,7 @@
 - 支持目前主流的cpu芯片, Intel X86,AMD(未测试) 和ARM.
 - 支持x86结构avx2加速(持续优化中)。
 - 支持arm结构neon加速(持续优化中)。
+- 自带一套cv库，类似Opencv.
 - conv2d 3x3s1 3x3s2 winograd3x3s1支持(**Arm**)
 - GPU cuda支持. (测试过的显卡 GTX1080Ti, Jetson NX)
 - GPU cudnn支持. (测试过的显卡 GTX1080Ti, Jetson NX)
