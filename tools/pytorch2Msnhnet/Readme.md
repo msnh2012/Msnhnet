@@ -48,7 +48,7 @@ Alpha version, maybe have some bugs. Only official op is supported, customized o
 - translate pytorch to msnhnet and msnhbin.
     ```def trans(net, inputVar, msnhnet_path, msnhbin_path)```
 ## Example:
-```
+```# Pytorch2msnhnet
 import torch
 import torch.nn as nn
 from torchvision.models import resnet18
