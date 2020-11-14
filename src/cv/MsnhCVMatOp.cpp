@@ -6,7 +6,7 @@ void MatOp::getROI(Mat &src, Mat &dst, const Vec2I32 &p1, const Vec2I32 &p2)
 {
     if(src.isEmpty())
     {
-        throw Exception(1,"[CV]: img empty", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: img empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int32_t width   = std::abs(p1.x1 - p2.x1);
@@ -22,7 +22,7 @@ void MatOp::getROI(Mat &src, Mat &dst, const Vec2I32 &p1, const Vec2I32 &p2)
             p2.x1 < 0 || p2.x2 < 0 || p2.x1 >= src.getWidth() || p2.x2>= src.getHeight()
             )
     {
-        throw Exception(1,"[CV]: roi point pos out of memory", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: roi point pos out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
 #ifdef USE_OMP
@@ -46,17 +46,17 @@ void MatOp::setROI(Mat &srcDst, Mat &roi, const Vec2I32 &pos)
 {
     if(srcDst.isEmpty())
     {
-        throw Exception(1,"[CV]: img empty", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: img empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(roi.isEmpty())
     {
-        throw Exception(1,"[CV]: roi empty", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: roi empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(srcDst.getMatType() != roi.getMatType())
     {
-        throw Exception(1,"[CV]: roi mat type doesn't match src", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: roi mat type doesn't match src! \n", __FILE__, __LINE__, __FUNCTION__);
     }
     int roiWidth    = roi.getWidth();
     int roiHeight   = roi.getHeight();
@@ -87,7 +87,7 @@ void MatOp::cvtColor(Mat &src, Mat &dst, const CvtColorType &cvtType)
 {
     if(src.isEmpty())
     {
-        throw Exception(1,"[CV]: img empty", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: img empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     switch (cvtType)
@@ -121,7 +121,7 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
 {
     if(src.isEmpty())
     {
-        throw Exception(1,"[CV]: img empty", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: img empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int srcWidth    = src.getWidth();
@@ -239,6 +239,36 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
             }
         }
             break;
+        case MAT_GRAY_F64:
+        {
+            double* srcF64 = src.getData().f64;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < outSize.x2; ++i)
+            {
+                double srcIdxH = (i+0.5)*fy-0.5;
+                srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                int srcIdxH0  = static_cast<int>(srcIdxH);
+                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                for (int j = 0; j < outSize.x1; ++j)
+                {
+                    double srcIdxW = (j+0.5)*fx-0.5;
+                    srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                    int srcIdxW0  = static_cast<int>(srcIdxW);
+                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                    matData.f64[i*outSize.x1+j]  = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)])+
+
+                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)]);
+
+                }
+            }
+        }
+            break;
         case MAT_RGB_U8:
         {
             uint8_t* srcU8 = src.getData().u8;
@@ -313,6 +343,44 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
                     matData.f32[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
 
                             (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+
+                }
+            }
+        }
+            break;
+        case MAT_RGB_F64:
+        {
+            double* srcF64 = src.getData().f64;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < outSize.x2; ++i)
+            {
+                double srcIdxH = (i+0.5)*fy-0.5;
+                srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                int srcIdxH0  = static_cast<int>(srcIdxH);
+                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                for (int j = 0; j < outSize.x1; ++j)
+                {
+                    double srcIdxW = (j+0.5)*fx-0.5;
+                    srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                    int srcIdxW0  = static_cast<int>(srcIdxW);
+                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                    matData.f64[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+
+                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
+
+                    matData.f64[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+
+                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
+
+                    matData.f64[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
 
                 }
             }
@@ -405,7 +473,49 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
                 }
             }
         }
-        break;
+            break;
+        case MAT_RGBA_F64:
+        {
+            double* srcF64 = src.getData().f64;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < outSize.x2; ++i)
+            {
+                double srcIdxH = (i+0.5)*fy-0.5;
+                srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                int srcIdxH0  = static_cast<int>(srcIdxH);
+                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                for (int j = 0; j < outSize.x1; ++j)
+                {
+                    double srcIdxW = (j+0.5)*fx-0.5;
+                    srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                    int srcIdxW0  = static_cast<int>(srcIdxW);
+                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                    matData.f64[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+
+                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
+
+                    matData.f64[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+
+                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
+
+                    matData.f64[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+
+                    matData.f64[srcStep*(i*outSize.x1+j)+3] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+3])+
+
+                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+3]);
+
+                }
+            }
+        }
+            break;
         }
         dst.release();
         dst.setChannel(channel);
@@ -415,16 +525,178 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         dst.setStep(srcStep);
         dst.setU8Ptr(matData.u8);
     }
-    break;
+        break;
     }
+}
+
+void MatOp::flip(Mat &mat, const FlipMode &flipMode)
+{
+    if(flipMode == FLIP_H)
+    {
+        flipH(mat);
+    }
+    else if(flipMode == FLIP_V)
+    {
+        flipV(mat);
+    }
+}
+
+double MatOp::norm(Mat &mat1, Mat &mat2, const NormType &normType)
+{
+    if(!checkMatsProps(mat1,mat2))
+    {
+        throw Exception(1,"[MatOp]: mat1 props and mat2 props must be same ! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(mat1.isU8Mat())
+    {
+        mat1.convertTo(mat1, CVT_DATA_TO_F32_DIRECTLY);
+        mat2.convertTo(mat2, CVT_DATA_TO_F32_DIRECTLY);
+    }
+
+    mat1 = mat1-mat2;
+
+    return norm(mat1,normType);
+}
+
+double MatOp::norm(Mat &mat, const NormType &normType)
+{
+    if(mat.isU8Mat())
+    {
+        mat.convertTo(mat, CVT_DATA_TO_F32_DIRECTLY);
+    }
+
+    double final = 0;
+
+    if(normType==NORM_L1)
+    {
+        if(mat.isF32Mat())
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+            for (int i = 0; i < mat.getDataNum(); ++i)
+            {
+                final += std::abs(mat.getFloat32()[i]);
+            }
+        }
+        else if(mat.isF64Mat())
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+            for (int i = 0; i < mat.getDataNum(); ++i)
+            {
+                final += std::abs(mat.getFloat64()[i]);
+            }
+        }
+        return final;
+    }
+    else if(normType==NORM_L2 || normType==NORM_L2_SQR)
+    {
+        if(mat.isF32Mat())
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+            for (int i = 0; i < mat.getDataNum(); ++i)
+            {
+                float v = mat.getFloat32()[i];
+                final += v*v;
+            }
+        }
+        else if(mat.isF64Mat())
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+            for (int i = 0; i < mat.getDataNum(); ++i)
+            {
+                double v = mat.getFloat64()[i];
+                final += v*v;
+            }
+        }
+
+        if(normType==NORM_L2_SQR)
+        {
+            return final;
+        }
+        else if(normType==NORM_L2)
+        {
+            return  std::sqrt(final);
+        }
+    }
+    else if(normType==NORM_INF)
+    {
+#ifdef USE_OMP
+        std::vector<double> tmpMax(OMP_THREAD,0);
+#endif
+        if(mat.isF32Mat())
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < mat.getDataNum(); ++i)
+            {
+                double v = std::abs(mat.getFloat32()[i]);
+    #ifdef USE_OMP
+                if(v>tmpMax[omp_get_thread_num()])
+                {
+                    tmpMax[omp_get_thread_num()] = v;
+                }
+    #else
+                if(v>tmpMax[omp_get_thread_num()])
+                {
+                    final = v;
+                }
+    #endif
+            }
+        }
+        else if(mat.isF64Mat())
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < mat.getDataNum(); ++i)
+            {
+                double v = std::abs(mat.getFloat64()[i]);
+    #ifdef USE_OMP
+                if(v>tmpMax[omp_get_thread_num()])
+                {
+                    tmpMax[omp_get_thread_num()] = v;
+                }
+    #else
+                if(v>tmpMax[omp_get_thread_num()])
+                {
+                    final = v;
+                }
+    #endif
+            }
+        }
+#ifdef USE_OMP
+        return  *std::max_element(tmpMax.begin(), tmpMax.end());
+#else
+        return final;
+#endif
+    }
+}
+
+bool MatOp::checkMatsProps(Mat &mat1, Mat &mat2)
+{
+    if(mat1.getMatType()!=mat2.getMatType() || mat1.getWidth()!=mat2.getWidth() || mat1.getHeight()!=mat2.getHeight())
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void MatOp::RGB2BGR(const Mat &src, Mat &dst)
 {
 
-    if(src.getMatType() == MAT_GRAY_F32 || src.getMatType() == MAT_GRAY_U8)
+    if(src.getMatType() == MAT_GRAY_F32 || src.getMatType() == MAT_GRAY_U8 || src.getMatType() == MAT_GRAY_F64)
     {
-        throw Exception(1,"[CV]: RGB2BGR is not supported with single channel ", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: RGB2BGR is not supported with single channel! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     dst=src;
@@ -464,6 +736,21 @@ void MatOp::RGB2BGR(const Mat &src, Mat &dst)
             }
         }
         break;
+    case MAT_RGB_F64:
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < height; ++i)
+        {
+            for (int j = 0; j < width; ++j)
+            {
+                int pos = 3*(i*width+j);
+                double tmp = dst.getData().f64[pos+0];
+                dst.getData().f64[pos+0] = dst.getData().f64[pos+2];
+                dst.getData().f64[pos+2] = tmp;
+            }
+        }
+        break;
     case MAT_RGBA_U8:
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
@@ -494,14 +781,29 @@ void MatOp::RGB2BGR(const Mat &src, Mat &dst)
             }
         }
         break;
+    case MAT_RGBA_F64:
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < height; ++i)
+        {
+            for (int j = 0; j < width; ++j)
+            {
+                int pos = 4*(i*width+j);
+                double tmp = dst.getData().f64[pos+0];
+                dst.getData().f64[pos+0] = dst.getData().f64[pos+2];
+                dst.getData().f64[pos+2] = tmp;
+            }
+        }
+        break;
     }
 }
 
 void MatOp::RGB2GRAY(Mat &src, Mat &dst)
 {
-    if(src.getMatType() != MAT_RGB_F32 && src.getMatType() != MAT_RGB_U8)
+    if(src.getMatType() != MAT_RGB_F32 && src.getMatType() != MAT_RGB_U8 && src.getMatType() != MAT_RGB_F64)
     {
-        throw Exception(1,"[CV]: RGB2GRAY src needs 3 channels ", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: RGB2GRAY src needs 3 channels! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int width   = src.getWidth();
@@ -566,14 +868,43 @@ void MatOp::RGB2GRAY(Mat &src, Mat &dst)
         dst.setHeight(height);
         dst.setU8Ptr(dstData.u8);
     }
+    else if(src.getMatType() == MAT_RGB_F64)
+    {
+        const double B = 0.114;
+        const double G = 0.587;
+        const double R = 1 - B - G;
+
+        dstData.u8 = new uint8_t[width*height*8]();
+
+        double* srcF64 = src.getData().f64;
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < height; ++i)
+        {
+            for (int j = 0; j < width; ++j)
+            {
+                int pos = i*width+j;
+                dstData.f64[pos] = (R*srcF64[3*pos+0]+G*srcF64[3*pos+1]+B*srcF64[3*pos+2]);
+            }
+        }
+        dst.release();
+        dst.setChannel(1);
+        dst.setMatType(MAT_GRAY_F64);
+        dst.setStep(8);
+        dst.setWidth(width);
+        dst.setHeight(height);
+        dst.setU8Ptr(dstData.u8);
+    }
 
 }
 
 void MatOp::RGBA2GRAY(Mat &src, Mat &dst)
 {
-    if(src.getMatType() != MAT_RGBA_F32 && src.getMatType() != MAT_RGBA_U8)
+    if(src.getMatType() != MAT_RGBA_F32 && src.getMatType() != MAT_RGBA_U8  && src.getMatType() != MAT_RGBA_F64)
     {
-        throw Exception(1,"[CV]: RGBA2GRAY src needs 4 channels ", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: RGBA2GRAY src needs 4 channels! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int width   = src.getWidth();
@@ -636,13 +967,41 @@ void MatOp::RGBA2GRAY(Mat &src, Mat &dst)
         dst.setHeight(height);
         dst.setU8Ptr(dstData.u8);
     }
+    else if(src.getMatType() == MAT_RGBA_F64)
+    {
+        const double B = 0.114f;
+        const double G = 0.587f;
+        const double R = 1.f - B - G;
+
+        dstData.u8 = new uint8_t[width*height*8]();
+        double* srcF64 = src.getData().f64;
+
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < height; ++i)
+        {
+            for (int j = 0; j < width; ++j)
+            {
+                int pos = i*width+j;
+                dstData.f64[pos] = (R*srcF64[4*pos+0]+G*srcF64[4*pos+1]+B*srcF64[4*pos+2]);
+            }
+        }
+        dst.release();
+        dst.setChannel(1);
+        dst.setMatType(MAT_GRAY_F64);
+        dst.setStep(8);
+        dst.setWidth(width);
+        dst.setHeight(height);
+        dst.setU8Ptr(dstData.u8);
+    }
 }
 
 void MatOp::GRAY2RGB(Mat &src, Mat &dst)
 {
-    if(src.getMatType() != MAT_GRAY_F32 && src.getMatType() != MAT_GRAY_U8)
+    if(src.getMatType() != MAT_GRAY_F32 && src.getMatType() != MAT_GRAY_U8 && src.getMatType() != MAT_GRAY_F64)
     {
-        throw Exception(1,"[CV]: GRAY2RGB src needs 1 channel ", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: GRAY2RGB src needs 1 channel! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int width   = src.getWidth();
@@ -699,13 +1058,38 @@ void MatOp::GRAY2RGB(Mat &src, Mat &dst)
         dst.setHeight(height);
         dst.setU8Ptr(dstData.u8);
     }
+    else if(src.getMatType() == MAT_GRAY_F64)
+    {
+        dstData.u8 = new uint8_t[width*height*24]();
+        double* srcF64 = src.getData().f64;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < height; ++i)
+        {
+            for (int j = 0; j < width; ++j)
+            {
+                int pos = (i*width+j);
+                dstData.f64[pos*3+0] = srcF64[pos];
+                dstData.f64[pos*3+1] = srcF64[pos];
+                dstData.f64[pos*3+2] = srcF64[pos];
+            }
+        }
+        dst.release();
+        dst.setChannel(3);
+        dst.setMatType(MAT_RGB_F64);
+        dst.setStep(24);
+        dst.setWidth(width);
+        dst.setHeight(height);
+        dst.setU8Ptr(dstData.u8);
+    }
 }
 
 void MatOp::GRAY2RGBA(Mat &src, Mat &dst)
 {
-    if(src.getMatType() != MAT_GRAY_F32 && src.getMatType() != MAT_GRAY_U8)
+    if(src.getMatType() != MAT_GRAY_F32 && src.getMatType() != MAT_GRAY_U8 && src.getMatType() != MAT_GRAY_F64)
     {
-        throw Exception(1,"[CV]: GRAY2RGBA src needs 1 channel ", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: GRAY2RGBA src needs 1 channel! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int width   = src.getWidth();
@@ -764,13 +1148,39 @@ void MatOp::GRAY2RGBA(Mat &src, Mat &dst)
         dst.setHeight(height);
         dst.setU8Ptr(dstData.u8);
     }
+    else if(src.getMatType() == MAT_GRAY_F64)
+    {
+        dstData.u8 = new uint8_t[width*height*32]();
+        double* srcF64 = src.getData().f64;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < height; ++i)
+        {
+            for (int j = 0; j < width; ++j)
+            {
+                int pos = (i*width+j);
+                dstData.f64[pos*4+0] = srcF64[pos];
+                dstData.f64[pos*4+1] = srcF64[pos];
+                dstData.f64[pos*4+2] = srcF64[pos];
+                dstData.f64[pos*4+3] = 1.f;
+            }
+        }
+        dst.release();
+        dst.setChannel(4);
+        dst.setMatType(MAT_RGBA_F64);
+        dst.setStep(32);
+        dst.setWidth(width);
+        dst.setHeight(height);
+        dst.setU8Ptr(dstData.u8);
+    }
 }
 
 void MatOp::RGB2RGBA(Mat &src, Mat &dst)
 {
-    if(src.getMatType() != MAT_RGB_F32 && src.getMatType() != MAT_RGB_U8)
+    if(src.getMatType() != MAT_RGB_F32 && src.getMatType() != MAT_RGB_U8 && src.getMatType() != MAT_RGB_F64)
     {
-        throw Exception(1,"[CV]: RGB2RGBA src needs 3 channels ", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: RGB2RGBA src needs 3 channels! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int width   = src.getWidth();
@@ -829,13 +1239,39 @@ void MatOp::RGB2RGBA(Mat &src, Mat &dst)
         dst.setHeight(height);
         dst.setU8Ptr(dstData.u8);
     }
+    else if(src.getMatType() == MAT_RGB_F64)
+    {
+        dstData.u8 = new uint8_t[width*height*32]();
+        double* srcF64 = src.getData().f64;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < height; ++i)
+        {
+            for (int j = 0; j < width; ++j)
+            {
+                int pos = (i*width+j);
+                dstData.f64[pos*4+0] = srcF64[3*pos+0];
+                dstData.f64[pos*4+1] = srcF64[3*pos+1];
+                dstData.f64[pos*4+2] = srcF64[3*pos+2];
+                dstData.f64[pos*4+3] = 1.f;
+            }
+        }
+        dst.release();
+        dst.setChannel(4);
+        dst.setMatType(MAT_RGBA_F64);
+        dst.setStep(32);
+        dst.setWidth(width);
+        dst.setHeight(height);
+        dst.setU8Ptr(dstData.u8);
+    }
 }
 
 void MatOp::RGBA2RGB(Mat &src, Mat &dst)
 {
-    if(src.getMatType() != MAT_RGBA_F32 && src.getMatType() != MAT_RGBA_U8)
+    if(src.getMatType() != MAT_RGBA_F32 && src.getMatType() != MAT_RGBA_U8 && src.getMatType() != MAT_RGBA_F64)
     {
-        throw Exception(1,"[CV]: RGBA2RGB src needs 4 channels ", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[MatOp]: RGBA2RGB src needs 4 channels! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int width   = src.getWidth();
@@ -891,6 +1327,186 @@ void MatOp::RGBA2RGB(Mat &src, Mat &dst)
         dst.setWidth(width);
         dst.setHeight(height);
         dst.setU8Ptr(dstData.u8);
+    }
+    else if(src.getMatType() == MAT_RGBA_F64)
+    {
+        dstData.u8 = new uint8_t[width*height*24]();
+        double* srcF64 = src.getData().f64;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < height; ++i)
+        {
+            for (int j = 0; j < width; ++j)
+            {
+                int pos = (i*width+j);
+                dstData.f64[pos*3+0] = srcF64[pos*4+0];
+                dstData.f64[pos*3+1] = srcF64[pos*4+1];
+                dstData.f64[pos*3+2] = srcF64[pos*4+2];
+            }
+        }
+        dst.release();
+        dst.setChannel(3);
+        dst.setMatType(MAT_RGB_F64);
+        dst.setStep(24);
+        dst.setWidth(width);
+        dst.setHeight(height);
+        dst.setU8Ptr(dstData.u8);
+    }
+}
+
+void MatOp::flipV(Mat &mat)
+{
+    unsigned int line = mat.getWidth()*mat.getChannel();
+#ifndef USE_OMP
+    uint8_t* tmpLine = new uint8_t[line]();
+#endif
+
+#ifdef USE_OMP
+    std::vector<uint8_t*> tmpData;
+    for(int i=0;i<OMP_THREAD;i++)
+    {
+        tmpData.push_back(new uint8_t[line]());
+    }
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+    for(int i=0; i<mat.getHeight()/2;i++)
+    {
+#ifdef USE_OMP
+        uint8_t* tmpLine = tmpData[omp_get_thread_num()];
+#endif
+        memcpy(tmpLine,mat.getData().u8 + line*i, line);
+        memcpy(mat.getData().u8+line*i, mat.getData().u8+line*(mat.getHeight()-i-1),line);
+        memcpy(mat.getData().u8+line*(mat.getHeight()-i-1),tmpLine, line);
+    }
+#ifdef USE_OMP
+    for(int i=0;i<OMP_THREAD;i++)
+    {
+        delete [] tmpData[i];
+        tmpData[i] = nullptr;
+    }
+#endif
+}
+
+void MatOp::flipH(Mat &mat)
+{
+    if(mat.isU8Mat())
+    {
+        int n = mat.getChannel();
+        uint32_t line   = mat.getWidth()*n;
+        uint32_t width  = mat.getWidth();
+
+#ifndef USE_OMP
+        uint8_t* tmp = new uint8_t[n]();
+#endif
+
+#ifdef USE_OMP
+        std::vector<uint8_t*> tmpData;
+        for(int i=0;i<OMP_THREAD;i++)
+        {
+            tmpData.push_back(new uint8_t[n]());
+        }
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i =0; i< mat.getHeight();i++)
+        {
+            for(int j=0; j<mat.getWidth()/2;j++)
+            {
+#ifdef USE_OMP
+                uint8_t* tmp = tmpData[omp_get_thread_num()];
+#endif
+                memcpy(tmp,(mat.getData().u8+i*line + j*n),n);
+                memcpy((mat.getData().u8+i*line + j*n),(mat.getData().u8+i*line + (width-j-1)*n),n);
+                memcpy((mat.getData().u8+i*line + (width-j-1)*n),tmp,n);
+            }
+        }
+
+#ifdef USE_OMP
+        for(int i=0;i<OMP_THREAD;i++)
+        {
+            delete[] tmpData[i];
+            tmpData[i] = nullptr;
+        }
+#endif
+
+    }
+    else if(mat.isF32Mat())
+    {
+        int n = mat.getChannel();
+        uint32_t line   = mat.getWidth()*n;
+        uint32_t width  = mat.getWidth();
+
+#ifndef USE_OMP
+        float* tmp = new float[n]();
+#endif
+
+#ifdef USE_OMP
+        std::vector<float*> tmpData;
+        for(int i=0;i<OMP_THREAD;i++)
+        {
+            tmpData.push_back(new float[n]());
+        }
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i =0; i< mat.getHeight();i++)
+        {
+            for(int j=0; j<mat.getWidth()/2;j++)
+            {
+#ifdef USE_OMP
+                float* tmp = tmpData[omp_get_thread_num()];
+#endif
+                memcpy(tmp,(mat.getData().f32+i*line + j*n),n);
+                memcpy((mat.getData().f32+i*line + j*n),(mat.getData().f32+i*line + (width-j-1)*n),n);
+                memcpy((mat.getData().f32+i*line + (width-j-1)*n),tmp,n);
+            }
+        }
+
+#ifdef USE_OMP
+        for(int i=0;i<OMP_THREAD;i++)
+        {
+            delete[] tmpData[i];
+            tmpData[i] = nullptr;
+        }
+#endif
+    }
+    else if(mat.isF64Mat())
+    {
+        int n = mat.getChannel();
+        uint32_t line   = mat.getWidth()*n;
+        uint32_t width  = mat.getWidth();
+
+#ifndef USE_OMP
+        double* tmp = new double[n]();
+#endif
+
+#ifdef USE_OMP
+        std::vector<double*> tmpData;
+        for(int i=0;i<OMP_THREAD;i++)
+        {
+            tmpData.push_back(new double[n]());
+        }
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i =0; i< mat.getHeight();i++)
+        {
+            for(int j=0; j<mat.getWidth()/2;j++)
+            {
+#ifdef USE_OMP
+                double* tmp = tmpData[omp_get_thread_num()];
+#endif
+                memcpy(tmp,(mat.getData().f64+i*line + j*n),n);
+                memcpy((mat.getData().f64+i*line + j*n),(mat.getData().f64+i*line + (width-j-1)*n),n);
+                memcpy((mat.getData().f64+i*line + (width-j)*n-1),tmp,n);
+            }
+        }
+
+#ifdef USE_OMP
+        for(int i=0;i<OMP_THREAD;i++)
+        {
+            delete[] tmpData[i];
+            tmpData[i] = nullptr;
+        }
+#endif
     }
 }
 

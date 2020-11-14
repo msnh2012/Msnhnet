@@ -113,6 +113,90 @@ public:
     }
 
     template<typename T>
+    static void saveVector(std::vector<std::vector<T>>& v,const char* path,const char* format)
+    {
+        if(std::is_same<T,char>::value||
+           std::is_same<T,unsigned char>::value||
+           std::is_same<T,int>::value||
+           std::is_same<T,unsigned int>::value||
+           std::is_same<T,float>::value||
+           std::is_same<T,double>::value||
+           std::is_same<T,long>::value||
+           std::is_same<T,unsigned long>::value||
+           std::is_same<T,long long>::value||
+           std::is_same<T,unsigned long long>::value||
+           std::is_same<T,short>::value||
+           std::is_same<T,unsigned short>::value||
+           std::is_same<T,int8_t>::value||
+           std::is_same<T,uint8_t>::value||
+           std::is_same<T,int16_t>::value||
+           std::is_same<T,uint16_t>::value||
+           std::is_same<T,int32_t>::value||
+           std::is_same<T,uint32_t>::value||
+           std::is_same<T,int64_t>::value||
+           std::is_same<T,uint64_t>::value||
+           std::is_same<T,float_t>::value||
+           std::is_same<T,double_t>::value)
+        {
+
+        }
+        else
+        {
+            throw Exception(1, "Type not support .", __FILE__,__LINE__, __FUNCTION__);
+        }
+        std::ofstream outfile(path,std::ios::trunc);
+
+        if(!outfile)
+        {
+            throw Exception(1, "File open err.", __FILE__,__LINE__, __FUNCTION__);
+        }
+
+        for (int i = 0; i < v[0].size(); ++i)
+        {
+
+                if(std::is_same<T,char>::value||std::is_same<T,int8_t>::value)
+                {
+                    for (int j = 0; j < v.size(); ++j)
+                    {
+                        if(v[j].size()<=i)
+                        {
+                            continue;
+                        }
+                        outfile<<static_cast<int>(v[j][i])<<",";
+                    }
+                    outfile<<format;
+                }
+                else if(std::is_same<T,unsigned char>::value||std::is_same<T,uint8_t>::value)
+                {
+                    for (int j = 0; j < v.size(); ++j)
+                    {
+                        if(v[j].size()<=i)
+                        {
+                            continue;
+                        }
+                        outfile<<static_cast<unsigned int>(v[j][i])<<",";
+                    }
+                    outfile<<format;
+                }
+                else
+                {
+                    for (int j = 0; j < v.size(); ++j)
+                    {
+                        if(v[j].size()<=i)
+                        {
+                            continue;
+                        }
+                        outfile<<(v[j][i])<<",";
+                    }
+                    outfile<<format;
+                }
+        }
+
+        outfile.flush();
+        outfile.close();
+    }
+
+    template<typename T>
     static void readVector(std::vector<T>& v,const char* path,const char* format)
     {
         if(std::is_same<T,char>::value||

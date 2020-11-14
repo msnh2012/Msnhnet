@@ -2,6 +2,7 @@
 #define MSNHCVOP_H
 
 #include <Msnhnet/cv/MsnhCVMat.h>
+#include <Msnhnet/utils/MsnhTimeUtil.h>
 
 namespace Msnhnet
 {
@@ -43,10 +44,21 @@ public:
             {
                 memcpy(tmpMat.getData().f32+(finalWidth*(i+top)+left)*array, src.getData().f32+(srcWidth*i)*array, array*srcWidth*4);
             }
+            else if(fmt == 'd')
+            {
+                memcpy(tmpMat.getData().f64+(finalWidth*(i+top)+left)*array, src.getData().f64+(srcWidth*i)*array, array*srcWidth*8);
+            }
         }
 
         dst = tmpMat;
     }
+
+    static void flip(Mat &mat, const FlipMode &flipMode=FLIP_V);
+
+    static double norm(Mat &mat1, Mat &mat2, const NormType& normType = NORM_L2);
+    static double norm(Mat &mat, const NormType& normType = NORM_L2);
+
+    static bool checkMatsProps(Mat &mat1, Mat &mat2);
 
 private:
     static void RGB2BGR(const Mat &src, Mat &dst);
@@ -56,6 +68,8 @@ private:
     static void GRAY2RGBA(Mat &src, Mat &dst);
     static void RGB2RGBA(Mat &src, Mat &dst);
     static void RGBA2RGB(Mat &src, Mat &dst);
+    static void flipV(Mat &mat);
+    static void flipH(Mat &mat);
 };
 
 }

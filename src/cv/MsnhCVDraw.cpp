@@ -775,7 +775,7 @@ void Draw::drawFont(Mat &mat, const std::string &content, const Vec2I32 &pos, co
 
         if(it==Font::fontLib.end())
         {
-            throw Exception(1, "[CV]: contains unsupported char!",__FILE__,__LINE__,__FUNCTION__);
+            throw Exception(1, "[Draw]: contains unsupported char! \n",__FILE__,__LINE__,__FUNCTION__);
         }
 
         std::vector<uint8_t> font = Font::fontLib[ch];
@@ -833,12 +833,12 @@ void Draw::checkMat(Mat &mat)
 
     if(srcMatType != MatType::MAT_GRAY_U8 && srcMatType != MatType::MAT_RGB_U8 && srcMatType != MatType::MAT_RGBA_U8)
     {
-        throw Exception(1,"[CV]: draw functions only support for uint8_t mat!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Draw]: draw functions only support for uint8_t mat! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(mat.isEmpty())
     {
-        throw Exception(1,"[CV]: mat Empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Draw]: mat Empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 }
 }

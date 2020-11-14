@@ -24,6 +24,7 @@
 - 支持目前主流的cpu芯片, Intel X86,AMD(未测试) 和ARM.
 - 支持x86结构avx2加速(持续优化中)。
 - 支持arm结构neon加速(持续优化中)。
+- 自带一套cv库，类似Opencv.
 - conv2d 3x3s1 3x3s2 winograd3x3s1支持(**Arm**)
 - GPU cuda支持. (测试过的显卡 GTX1080Ti, Jetson NX)
 - GPU cudnn支持. (测试过的显卡 GTX1080Ti, Jetson NX)
@@ -124,6 +125,9 @@
 **依赖**
   * OpenCV4 (**可选**.) [https://github.com/opencv/opencv](https://github.com/opencv/opencv)
   * Qt5 (**可选**. 编译Msnhnet viewer时使用) [http://download.qt.io/archive/qt/](http://download.qt.io/archive/qt/)
+  * opengl(**可选**. 编译 MsnhCV GUI 时用) .
+  * glew(**可选**. 编译 MsnhCV GUI 时用) http://glew.sourceforge.net/ .
+  * glfw3(**可选**. 编译 MsnhCV GUI 时用) https://www.glfw.org/.
   * Cuda10+, Cudnn7.0+. (**可选**)
 
 **视频教程(B站)**
@@ -143,14 +147,21 @@
     - 2.在环境变量中添加"OpenCV_DIR", 并设置变量内容为每个库的CMake目录 **(可选)**.
     - 3.下载安装Qt5 **(可选)**.
     - 4.把Qt5的bin目录添加环境变量Path **(可选)**.
-    - 5.最后使用CMake GUI工具配置Msnhnet然后使用Visual Studio编译安装.
+    - 5.下载glew(win32). http://glew.sourceforge.net/ **(可选)**.
+    - 6.下载glfw3(源码).https://www.glfw.org/ **(可选)**.
+    - 7.解压glew,添加glew目录到系统环境变量"CMAKE_PREFIX_PATH" **(可选)**.
+    - 8.使用cmake编译glfw3, 添加glfw3的cmake文件夹路径到系统环境变量"GLFW_DIR"  **(可选)**.
+    - 9.最后使用CMake GUI工具配置Msnhnet然后使用Visual Studio编译安装.
 
 - **Linux(Ubuntu )**
-   **注意: 构建NX的GPU版本取消勾选NNPACK NEON OPENBLAS.**
+   **注意: 构建NX的GPU版本取消勾选NEON OPENBLAS.**
   ```
-  sudo apt-get install qt5-default      #optional
-  sudo apt-get install libqt5svg5-dev   #optional
-  sudo apt-get install libopencv-dev    #optional
+  sudo apt-get install build-essential
+  sudo apt-get install qt5-default      #可选
+  sudo apt-get install libqt5svg5-dev   #可选
+  sudo apt-get install libopencv-dev    #可选
+  sudo apt-get install libgl1-mesa-dev libglfw3-dev libglfw3 libglew-dev #可选
+
 
   #config 
   sudo echo /usr/local/lib > /etc/ld.so.conf.d/usrlib.conf
@@ -218,9 +229,11 @@ Msnhnet参考了以下框架:
 - [NCNN](https://github.com/Tencent/ncnn)
 - [ACL](https://github.com/ARM-software/ComputeLibrary)
 
-**第三放库**
+**第三方库**
 - [stb_image](https://github.com/nothings/stb)
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp)
+- [imGui](https://github.com/ocornut/imgui)
+- [mpeg](https://github.com/phoboslab/pl_mpeg)
 
 **加群交流**</br>
 ![](readme_imgs/qq.png)</br>

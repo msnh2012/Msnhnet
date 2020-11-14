@@ -71,10 +71,23 @@ public:
                         float *const &C, const int &ldc,
                         const bool &supportAvxAndFma);
 
+    static void cpuGemm(const int &TA,   const int &TB, const int &M, const int &N, const int &K, const double &ALPHA,
+                        double *const &A, const int &lda,
+                        double *const &B, const int &ldb,
+                        const float &BETA,
+                        double *const &C, const int &ldc,
+                        const bool &supportAvxAndFma);
+
     static void cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPHA,
                           float *const &A, const int &lda,
                           float *const &B, const int &ldb,
                           float *const &C, const int &ldc,
+                          const bool &supportAvxAndFma);
+
+    static void cpuGemmNN(const int &M, const int &N, const int &K, const double &ALPHA,
+                          double *const &A, const int &lda,
+                          double *const &B, const int &ldb,
+                          double *const &C, const int &ldc,
                           const bool &supportAvxAndFma);
 
     static void cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPHA,
@@ -83,10 +96,22 @@ public:
                           float *const &C, const int &ldc,
                           const bool &supportAvxAndFma);
 
+    static void cpuGemmTN(const int &M, const int &N, const int &K, const double &ALPHA,
+                          double *const &A, const int &lda,
+                          double *const &B, const int &ldb,
+                          double *const &C, const int &ldc,
+                          const bool &supportAvxAndFma);
+
     static void cpuGemmNT(const int &M, const int &N, const int &K, const float &ALPHA,
                           float *const &A, const int &lda,
                           float *const &B, const int &ldb,
                           float *const &C, const int &ldc,
+                          const bool &supportAvxAndFma);
+
+    static void cpuGemmNT(const int &M, const int &N, const int &K, const double &ALPHA,
+                          double *const &A, const int &lda,
+                          double *const &B, const int &ldb,
+                          double *const &C, const int &ldc,
                           const bool &supportAvxAndFma);
 
     static void cpuGemmTT(const int &M, const int &N, const int &K, const float &ALPHA,
@@ -95,23 +120,45 @@ public:
                           float *const &C, const int &ldc,
                           const bool &supportAvxAndFma);
 
+    static void cpuGemmTT(const int &M, const int &N, const int &K, const double &ALPHA,
+                          double *const &A, const int &lda,
+                          double *const &B, const int &ldb,
+                          double *const &C, const int &ldc,
+                          const bool &supportAvxAndFma);
+
     static void cpuFastADotB(const int &n, float *const &A, float *const& B, float *const &C);
 
-#define TILE_M 4  
+#define TILE_F32_M 4  
 
-#define TILE_N 16 
+#define TILE_F32_N 16 
 
-#define TILE_K 16 
+#define TILE_F32_K 16 
+
+#define TILE_F64_M 4  
+
+#define TILE_F64_N 8 
+
+#define TILE_F64_K 16 
 
     static void cpuGemmNNFast(const int &M, const int &N, const int &K, const float &ALPHA,
                               float *const &A, const int &lda,
                               float *const &B, const int &ldb,
                               float *const &C, const int &ldc);
 
+    static void cpuGemmNNFast(const int &M, const int &N, const int &K, const double &ALPHA,
+                              double *const &A, const int &lda,
+                              double *const &B, const int &ldb,
+                              double *const &C, const int &ldc);
+
     static void cpuGemmTNFast(const int &M, const int &N, const int &K, const float &ALPHA,
                               float *const &A, const int &lda,
                               float *const &B, const int &ldb,
                               float *const &C, const int &ldc);
+
+    static void cpuGemmTNFast(const int &M, const int &N, const int &K, const double &ALPHA,
+                              double *const &A, const int &lda,
+                              double *const &B, const int &ldb,
+                              double *const &C, const int &ldc);
 
     static void swapVal(uint32_t &a0, uint32_t&a1, int &j, unsigned &m);
 
