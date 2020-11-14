@@ -310,6 +310,18 @@ def _relu(raw, inData, inplace=False):
         msnhnet.buildActivation(str(x._cdata),"relu")
     return x
 
+def _prelu(raw, inData, inplace=False):
+    x = raw(inData,False)
+
+    if Hook.hookInited :
+        log( "prelu-i" , inData._cdata)
+        ccc.append(x)
+        log( "prelu-o" , x._cdata)
+
+        msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
+        msnhnet.buildActivation(str(x._cdata),"prelu")
+    return x
+
 def _relu6(raw, inData, inplace=False):
     x = raw(inData,False)
 
@@ -1109,6 +1121,7 @@ F.elu           =   Hook(F.elu,_elu)
 F.selu          =   Hook(F.selu,_selu)
 F.relu          =   Hook(F.relu,_relu)
 F.relu6         =   Hook(F.relu6,_relu6)
+F.prelu         =   Hook(F.prelu,_prelu)
 F.leaky_relu    =   Hook(F.leaky_relu,_leaky_relu)
 F.tanh          =   Hook(F.tanh,_tanh)
 F.softmax       =   Hook(F.softmax,_softmax)
