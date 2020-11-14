@@ -67,6 +67,7 @@ void mobilenetYolov3LiteGPUMsnhCV(const std::string& msnhnetPath, const std::str
 
         #ifdef USE_MSNHCV_GUI
         Msnhnet::Gui::imShow("mobilenet_yolov3_lite_gpu",org);
+		Msnhnet::Gui::wait();
         #else
         org.saveImage("mobilenet_yolov3_lite_gpu.jpg");
         #endif

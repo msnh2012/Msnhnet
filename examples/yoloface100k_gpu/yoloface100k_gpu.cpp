@@ -67,6 +67,7 @@ void yoloface100kGPUMsnhCV(const std::string& msnhnetPath, const std::string& ms
 
 		#ifdef USE_MSNHCV_GUI
         Msnhnet::Gui::imShow("yoloface100k_gpu",org);
+		Msnhnet::Gui::wait();
         #else
         org.saveImage("yoloface100k_gpu.jpg");
         #endif

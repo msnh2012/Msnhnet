@@ -67,6 +67,7 @@ void yolov3GPUMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinP
 
         #ifdef USE_MSNHCV_GUI
         Msnhnet::Gui::imShow("yolov3_gpu",org);
+        Msnhnet::Gui::wait();
         #else
         org.saveImage("yolov3_gpu.jpg");
         #endif

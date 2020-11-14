@@ -1,7 +1,7 @@
 ﻿#include "Msnhnet/cv/MsnhCVVideo.h"
 
 #define PL_MPEG_IMPLEMENTATION
-#include "../3rdparty/pl_mpeg/pl_mpeg.h"
+#include "../3rdparty/mpeg/pl_mpeg.h"
 
 #include "../3rdparty/stb/stb_image_write.h"
 

@@ -91,6 +91,7 @@ void deeplabv3GPUMsnhCV(const std::string& msnhnetPath, const std::string& msnhb
         
         #ifdef USE_MSNHCV_GUI
         Msnhnet::Gui::imShow("deeplabv3_gpu",mat);
+        Msnhnet::Gui::wait();
         #else
         mat.saveImage("deeplabv3_gpu.jpg");
         #endif
