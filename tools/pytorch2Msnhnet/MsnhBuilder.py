@@ -78,6 +78,9 @@ class Msnhnet:
         if activation == "relu":
             self.net = self.net + "  activation: relu\n"
             return
+        if activation == "prelu":
+            self.net = self.net + "  activation: prelu\n"
+            return
         if activation == "relu6":
             self.net = self.net + "  activation: relu6\n"    
             return
