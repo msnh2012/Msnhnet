@@ -28,6 +28,58 @@ SOURCES += \
     MsnhViewerScene.cpp \
     MsnhViewerThemeManager.cpp \
     MsnhViewerView.cpp \
+    ../src/3rdparty/yaml_cpp/binary.cpp\
+    ../src/3rdparty/yaml_cpp/contrib/graphbuilder.cpp\
+    ../src/3rdparty/yaml_cpp/contrib/graphbuilderadapter.cpp\
+    ../src/3rdparty/yaml_cpp/convert.cpp\
+    ../src/3rdparty/yaml_cpp/directives.cpp\
+    ../src/3rdparty/yaml_cpp/emit.cpp\
+    ../src/3rdparty/yaml_cpp/emitfromevents.cpp\
+    ../src/3rdparty/yaml_cpp/emitter.cpp\
+    ../src/3rdparty/yaml_cpp/emitterstate.cpp\
+    ../src/3rdparty/yaml_cpp/emitterutils.cpp\
+    ../src/3rdparty/yaml_cpp/exceptions.cpp\
+    ../src/3rdparty/yaml_cpp/exp.cpp\
+    ../src/3rdparty/yaml_cpp/memory.cpp\
+    ../src/3rdparty/yaml_cpp/node.cpp\
+    ../src/3rdparty/yaml_cpp/node_data.cpp\
+    ../src/3rdparty/yaml_cpp/nodebuilder.cpp\
+    ../src/3rdparty/yaml_cpp/nodeevents.cpp\
+    ../src/3rdparty/yaml_cpp/null.cpp\
+    ../src/3rdparty/yaml_cpp/ostream_wrapper.cpp\
+    ../src/3rdparty/yaml_cpp/parse.cpp\
+    ../src/3rdparty/yaml_cpp/parser.cpp\
+    ../src/3rdparty/yaml_cpp/regex_yaml.cpp\
+    ../src/3rdparty/yaml_cpp/scanner.cpp\
+    ../src/3rdparty/yaml_cpp/scanscalar.cpp\
+    ../src/3rdparty/yaml_cpp/scantag.cpp\
+    ../src/3rdparty/yaml_cpp/scantoken.cpp\
+    ../src/3rdparty/yaml_cpp/simplekey.cpp\
+    ../src/3rdparty/yaml_cpp/singledocparser.cpp\
+    ../src/3rdparty/yaml_cpp/stream.cpp\
+    ../src/3rdparty/yaml_cpp/tag.cpp\
+    ../src/3rdparty/yaml_cpp/collectionstack.h\
+    ../src/3rdparty/yaml_cpp/contrib/graphbuilderadapter.h\
+    ../src/3rdparty/yaml_cpp/directives.h\
+    ../src/3rdparty/yaml_cpp/emitterstate.h\
+    ../src/3rdparty/yaml_cpp/emitterutils.h\
+    ../src/3rdparty/yaml_cpp/exp.h\
+    ../src/3rdparty/yaml_cpp/indentation.h\
+    ../src/3rdparty/yaml_cpp/nodebuilder.h\
+    ../src/3rdparty/yaml_cpp/nodeevents.h\
+    ../src/3rdparty/yaml_cpp/ptr_vector.h\
+    ../src/3rdparty/yaml_cpp/regex_yaml.h\
+    ../src/3rdparty/yaml_cpp/regeximpl.h\
+    ../src/3rdparty/yaml_cpp/scanner.h\
+    ../src/3rdparty/yaml_cpp/scanscalar.h\
+    ../src/3rdparty/yaml_cpp/scantag.h\
+    ../src/3rdparty/yaml_cpp/setting.h\
+    ../src/3rdparty/yaml_cpp/singledocparser.h\
+    ../src/3rdparty/yaml_cpp/stream.h\
+    ../src/3rdparty/yaml_cpp/streamcharsource.h\
+    ../src/3rdparty/yaml_cpp/stringsource.h\
+    ../src/3rdparty/yaml_cpp/tag.h\
+    ../src/3rdparty/yaml_cpp/token.h\
     ../src/layers/MsnhActivationsAvx.cpp \
     ../src/layers/MsnhActivationsNeon.cpp \
     ../src/core/MsnhBlas.cpp \
@@ -98,13 +150,3 @@ RESOURCES += \
 
 DEFINES +=  USE_OMP
 DEFINES +=  USE_X86
-
-CONFIG(debug,debug|release){                                                #debug模式
-LIBS         += D:/libs/yaml/lib/libyaml-cppmdd.lib
-}
-
-CONFIG(release,debug|release){                                              #release模式
-LIBS         +=  D:/libs/yaml/lib/libyaml-cppmd.lib
-}
-
-DISTFILES +=
