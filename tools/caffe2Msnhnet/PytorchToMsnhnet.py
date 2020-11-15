@@ -14,6 +14,10 @@ ccc = []
 index   = 0
 m_weights = []
 
+class Save:
+    saveOut = False
+    idx = 0
+
 class Hook(object):
     hookInited = False
     def __init__(self,raw,replace,**kwargs):
@@ -30,10 +34,20 @@ class Hook(object):
 def log(*args):
     print(*args)
 
+def saveOutput(x):
+    try:
+        np.savetxt(str(Save.idx)+".txt",x.numpy().flatten())
+    except:
+        np.savetxt(str(Save.idx)+".txt",x.detach().numpy().flatten())
+    Save.idx = Save.idx + 1
+
 
 def _conv2d(raw,inData, weight, bias=None, stride=1, padding=0, dilation=1, groups=1):
     
     x=raw(inData,weight,bias,stride,padding,dilation,groups)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "conv2d-i" , inData._cdata)
@@ -69,6 +83,8 @@ def _max_pool2d(raw,inData, kernel_size, stride=None, padding=0, dilation=1,
     
     x = raw(inData, kernel_size, stride, padding, dilation,ceil_mode, return_indices)
 
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "max2d-i" , inData._cdata)
@@ -85,6 +101,9 @@ def _avg_pool2d(raw,inData, kernel_size, stride = None, padding = 0, ceil_mode =
     
     x = raw(inData, kernel_size, stride, padding, ceil_mode, count_include_pad)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "avg2d-i" , inData._cdata)
         ccc.append(x)
@@ -99,6 +118,9 @@ def _avg_pool2d(raw,inData, kernel_size, stride = None, padding = 0, ceil_mode =
 def _adaptive_avg_pool2d(raw, inData, output_size):
     
     x = raw(inData, output_size)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "adaptAvg2d-i" , inData._cdata)
@@ -120,6 +142,9 @@ def _adaptive_avg_pool2d(raw, inData, output_size):
 
 def _linear(raw,inData, weight, bias=None):
     x=raw(inData,weight,bias)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "fc-i" , inData._cdata)
@@ -151,6 +176,9 @@ def _linear(raw,inData, weight, bias=None):
 def _flatten(raw,*args):
     x=raw(*args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "flatten-i" , args[0]._cdata)
         ccc.append(x)
@@ -174,6 +202,9 @@ def _cat(raw,inputs, dim=0):
     
     x=raw(inputs, dim)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :   
         ccc.append(x)
         log( "cat-o" , x._cdata) 
@@ -186,6 +217,9 @@ def _cat(raw,inputs, dim=0):
 
 def _dropout(raw,*args):
     x=raw(*args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :  
         log( "dropout-i" , args[0]._cdata)
@@ -203,6 +237,9 @@ def _dropout(raw,*args):
 def _batch_norm(raw,inData, running_mean, running_var, weight=None, bias=None,
                training=False, momentum=0.1, eps=1e-5):  
     x = raw(inData, running_mean, running_var, weight, bias, training, momentum, eps)
+    
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited : 
         log( "bn-i" , inData._cdata)
@@ -233,6 +270,9 @@ def _interpolate(raw, inData,size=None, scale_factor=None, mode='nearest', align
     # for nearest _interpolate
 
     x = raw(inData,size , scale_factor ,mode, align_corners)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "upsample-i" , inData._cdata)
@@ -292,6 +332,9 @@ def _interpolate(raw, inData,size=None, scale_factor=None, mode='nearest', align
 def _softmax(raw, inData, dim=None, _stacklevel=3):
     x=raw(inData, dim=dim)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "softmax-i" , inData._cdata)
         ccc.append(x)
@@ -307,6 +350,9 @@ def _softmax(raw, inData, dim=None, _stacklevel=3):
 def _elu(raw, inData, inplace=False):
     x = raw(inData,False)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "elu-i" , inData._cdata)
         ccc.append(x)
@@ -318,6 +364,9 @@ def _elu(raw, inData, inplace=False):
 
 def _selu(raw, inData, inplace=False):
     x = raw(inData,False)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "selu-i" , inData._cdata)
@@ -331,6 +380,9 @@ def _selu(raw, inData, inplace=False):
 def _relu(raw, inData, inplace=False):
     x = raw(inData,False)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "relu-i" , inData._cdata)
         ccc.append(x)
@@ -342,6 +394,9 @@ def _relu(raw, inData, inplace=False):
 
 def _prelu(raw, inData, weight):
     x = raw(inData,weight)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "prelu-i" , inData._cdata)
@@ -362,6 +417,9 @@ def _prelu(raw, inData, weight):
 def _relu6(raw, inData, inplace=False):
     x = raw(inData,False)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "relu6-i" , inData._cdata)
         ccc.append(x)
@@ -373,6 +431,9 @@ def _relu6(raw, inData, inplace=False):
 
 def _leaky_relu(raw, inData, negative_slope=0.01, inplace=False):
     x = raw(inData, negative_slope,inplace)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "leaky-i" , inData._cdata)
@@ -386,6 +447,9 @@ def _leaky_relu(raw, inData, negative_slope=0.01, inplace=False):
 def _tanh(raw, inData):
     x = raw(inData)  
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "tanh-i" , inData._cdata)
         ccc.append(x)
@@ -397,6 +461,9 @@ def _tanh(raw, inData):
 
 def _sigmoid(raw, inData):
     x = raw(inData)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "sigmoid-i" , inData._cdata)
@@ -410,6 +477,9 @@ def _sigmoid(raw, inData):
 def _softplus(raw, inData, thresh):
     x = raw(inData,thresh)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "softplus-i" , inData._cdata)
         ccc.append(x)
@@ -421,6 +491,10 @@ def _softplus(raw, inData, thresh):
 
 def _hardswish(raw, inData):
     x = raw(inData)
+
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "hardswish-i" , inData._cdata)
         ccc.append(x)
@@ -433,6 +507,9 @@ def _hardswish(raw, inData):
 # =====  Variable op ======
 def _add(inData, *args):
     x = raw__add__(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "add-i1" , inData._cdata)
@@ -463,6 +540,9 @@ def _add(inData, *args):
 def _iadd(inData, *args):
     x = raw__iadd__(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "iadd-i1" , inData._cdata)
         log( "iadd-i2" , args[0]._cdata)
@@ -491,6 +571,9 @@ def _iadd(inData, *args):
 
 def _sub(inData, *args):
     x = raw__sub__(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "sub-i1" , inData._cdata)
@@ -523,6 +606,9 @@ def _sub(inData, *args):
 def _isub(inData, *args):
     x = raw__isub__(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "isub-i1" , inData._cdata)
         log( "isub-i2" , args[0]._cdata)
@@ -554,6 +640,9 @@ def _isub(inData, *args):
 def _mul(inData, *args):
     x = raw__mul__(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "mul-i1" , inData._cdata)
         log( "mul-i2" , args[0]._cdata)
@@ -582,6 +671,9 @@ def _mul(inData, *args):
 
 def _imul(inData, *args):
     x = raw__imul__(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "imul-i1" , inData._cdata)
@@ -612,6 +704,9 @@ def _imul(inData, *args):
 def _permute(inData, *args):
     x = raw__permute__(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "permute-i" , inData._cdata)
         ccc.append(x)
@@ -629,6 +724,9 @@ def _permute(inData, *args):
     
 def _mean(inData, *args,**kwargs):
     x=raw_mean(inData, *args,**kwargs)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "mean-i" , inData._cdata)
@@ -651,6 +749,9 @@ def _mean(inData, *args,**kwargs):
 def _sum(inData, *args):
     x = raw__sum__(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "sum-i" , inData._cdata)
         ccc.append(x)
@@ -665,6 +766,9 @@ def _sum(inData, *args):
 
 def _div(raw,inputs, inputs2):
     x=raw(inputs, inputs2)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "div-i1" , inputs._cdata)
@@ -697,6 +801,9 @@ def _div(raw,inputs, inputs2):
 def _pow(inData, *args):
     x = raw__pow__(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "pow-i" , inData._cdata)
         constVal = args[0]
@@ -710,6 +817,9 @@ def _pow(inData, *args):
 def _sqrt(inData, *args):
     x = raw__sqrt__(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "sqrt-i" , inData._cdata)
         ccc.append(x)
@@ -721,6 +831,9 @@ def _sqrt(inData, *args):
 
 def _abs(raw, inData, *args):
     x = raw(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "abs-i" , inData._cdata)
@@ -734,6 +847,9 @@ def _abs(raw, inData, *args):
 def _acos(raw, inData, *args):
     x = raw(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "acos-i" , inData._cdata)
         ccc.append(x)
@@ -745,6 +861,9 @@ def _acos(raw, inData, *args):
 
 def _asin(raw, inData, *args):
     x = raw(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "asin-i" , inData._cdata)
@@ -758,6 +877,9 @@ def _asin(raw, inData, *args):
 def _atan(raw, inData, *args):
     x = raw(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "atan-i" , inData._cdata)
         ccc.append(x)
@@ -769,6 +891,9 @@ def _atan(raw, inData, *args):
 
 def _cos(raw, inData, *args):
     x = raw(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "cos-i" , inData._cdata)
@@ -782,6 +907,9 @@ def _cos(raw, inData, *args):
 def _cosh(raw, inData, *args):
     x = raw(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "cosh-i" , inData._cdata)
         ccc.append(x)
@@ -793,6 +921,9 @@ def _cosh(raw, inData, *args):
 
 def _sin(raw, inData, *args):
     x = raw(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "sin-i" , inData._cdata)
@@ -806,6 +937,9 @@ def _sin(raw, inData, *args):
 def _sinh(raw, inData, *args):
     x = raw__sinh__(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "sinh-i" , inData._cdata)
         ccc.append(x)
@@ -817,6 +951,9 @@ def _sinh(raw, inData, *args):
 
 def _tan(raw, inData, *args):
     x = raw(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "tan-i" , inData._cdata)
@@ -830,6 +967,9 @@ def _tan(raw, inData, *args):
 def _exp(raw, inData, *args):
     x = raw(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "exp-i" , inData._cdata)
         ccc.append(x)
@@ -841,6 +981,9 @@ def _exp(raw, inData, *args):
 
 def _log(raw, inData, *args):  
     x = raw(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "log-i" , inData._cdata)
@@ -854,6 +997,9 @@ def _log(raw, inData, *args):
 def _log10(raw, inData, *args):
     x = raw(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "log10-i" , inData._cdata)
         ccc.append(x)
@@ -865,6 +1011,9 @@ def _log10(raw, inData, *args):
 
 def _contiguous(inData, *args):
     x = raw__contiguous__(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "contiguous-i" , inData._cdata)
@@ -881,6 +1030,9 @@ def _contiguous(inData, *args):
 
 def _view(inData, *args):
     x=raw_view(inData, *args)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "view-i" , inData._cdata)
@@ -989,6 +1141,9 @@ def _view(inData, *args):
 def _reshape(inData, *args):
     x=raw_reshape(inData, *args)
 
+    if Save.saveOut :
+        saveOutput(x)
+
     if Hook.hookInited :
         log( "reshape-i" , inData._cdata)
         ccc.append(x)
@@ -1096,6 +1251,9 @@ def _reshape(inData, *args):
 
 def _pad(raw,inData,pad,mode="constant",value=0):
     x=raw(inData,pad,mode,value)
+
+    if Save.saveOut :
+        saveOutput(x)
 
     if Hook.hookInited :
         log( "pad-i" , inData._cdata)
@@ -1206,7 +1364,8 @@ for t in [torch.Tensor]:
     raw__expand_as__ = t.expand_as
     t.expand_as = _expand_as
 
-def trans(net, inputVar, msnhnet_path, msnhbin_path):
+def trans(net, inputVar, msnhnet_path, msnhbin_path, _saveOut=False):
+    Save.saveOut = _saveOut
     Hook.hookInited = True
     msnhnet.buildConfig(str(id(inputVar)), inputVar.size())
     net.forward(inputVar)
