@@ -44,10 +44,16 @@ def _conv2d(raw,inData, weight, bias=None, stride=1, padding=0, dilation=1, grou
         if bias is None:
             useBias = False
         
-        m_weights.extend(weight.numpy().flatten().tolist())
+        try:
+            m_weights.extend(weight.numpy().flatten().tolist())
+        except:
+            m_weights.extend(weight.detach().numpy().flatten().tolist())
 
         if useBias :
-            m_weights.extend(bias.numpy().flatten().tolist())
+            try:
+                m_weights.extend(bias.numpy().flatten().tolist())
+            except:
+                m_weights.extend(bias.detach().numpy().flatten().tolist())
 
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildConv2d(str(x._cdata), x.size()[1], weight.size()[2], weight.size()[3], 
@@ -120,10 +126,16 @@ def _linear(raw,inData, weight, bias=None):
         if bias is None:
             useBias = False
         
-        m_weights.extend(weight.numpy().flatten().tolist())
+        try:
+            m_weights.extend(weight.numpy().flatten().tolist())
+        except:
+            m_weights.extend(weight.detach().numpy().flatten().tolist())
 
         if useBias :
-            m_weights.extend(bias.numpy().flatten().tolist())
+            try:
+                m_weights.extend(bias.numpy().flatten().tolist())
+            except:
+                m_weights.extend(bias.detach().numpy().flatten().tolist())
         
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildConnect(str(x._cdata), x.size()[1], useBias)
@@ -190,10 +202,16 @@ def _batch_norm(raw,inData, running_mean, running_var, weight=None, bias=None,
         ccc.append(x)
         log( "bn-o" , x._cdata)
 
-        m_weights.extend(weight.numpy().flatten().tolist())
-        m_weights.extend(bias.numpy().flatten().tolist())
-        m_weights.extend(running_mean.numpy().flatten().tolist())
-        m_weights.extend(running_var.numpy().flatten().tolist())
+        try:
+            m_weights.extend(weight.numpy().flatten().tolist())
+            m_weights.extend(bias.numpy().flatten().tolist())
+            m_weights.extend(running_mean.numpy().flatten().tolist())
+            m_weights.extend(running_var.numpy().flatten().tolist())
+        except:
+            m_weights.extend(weight.detach().numpy().flatten().tolist())
+            m_weights.extend(bias.detach().numpy().flatten().tolist())
+            m_weights.extend(running_mean.detach().numpy().flatten().tolist())
+            m_weights.extend(running_var.detach().numpy().flatten().tolist())
 
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildBatchNorm(str(x._cdata),eps)
@@ -310,13 +328,18 @@ def _relu(raw, inData, inplace=False):
         msnhnet.buildActivation(str(x._cdata),"relu")
     return x
 
-def _prelu(raw, inData, inplace=False):
-    x = raw(inData,False)
+def _prelu(raw, inData, weight):
+    x = raw(inData,weight)
 
     if Hook.hookInited :
         log( "prelu-i" , inData._cdata)
         ccc.append(x)
         log( "prelu-o" , x._cdata)
+
+        try:
+            m_weights.extend(weight.numpy().flatten().tolist())
+        except:
+            m_weights.extend(weight.detach().numpy().flatten().tolist())
 
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildActivation(str(x._cdata),"prelu")
