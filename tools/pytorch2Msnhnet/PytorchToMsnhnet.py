@@ -18,7 +18,7 @@ def minVersion(version):
     curVer = torch.__version__
     splits = curVer.split("+")
     vers = splits[0].split(".")
-    ver = int(ver[0])*100+int(ver[1])*10+int(ver[2])
+    ver = int(vers[0])*100+int(vers[1])*10+int(vers[2])
     if version > ver :
         return True
     else:
