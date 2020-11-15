@@ -64,6 +64,58 @@ set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ressources/resources.qrc
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/binary.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/contrib/graphbuilder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/contrib/graphbuilderadapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/convert.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/directives.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/emit.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/emitfromevents.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/emitter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/emitterstate.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/emitterutils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/exceptions.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/exp.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/memory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/node.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/node_data.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/nodebuilder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/nodeevents.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/null.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/ostream_wrapper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/parse.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/parser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/regex_yaml.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/scanner.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/scanscalar.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/scantag.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/scantoken.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/simplekey.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/singledocparser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/stream.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/tag.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/collectionstack.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/contrib/graphbuilderadapter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/directives.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/emitterstate.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/emitterutils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/exp.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/indentation.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/nodebuilder.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/nodeevents.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/ptr_vector.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/regex_yaml.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/regeximpl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/scanner.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/scanscalar.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/scantag.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/setting.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/singledocparser.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/stream.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/streamcharsource.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/stringsource.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/tag.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/3rdparty/yaml_cpp/token.h
     )
 
 add_executable(MsnhnetViewer ${SRCS})
@@ -72,7 +124,6 @@ target_include_directories(MsnhnetViewer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../
 target_link_libraries(MsnhnetViewer Qt5::Widgets)
 target_link_libraries(MsnhnetViewer Qt5::Svg)
 target_link_libraries(MsnhnetViewer Qt5::PrintSupport)
-target_link_libraries(MsnhnetViewer yaml-cpp)
 target_link_libraries(MsnhnetViewer ${OMP_LIB})
 install(TARGETS MsnhnetViewer
     RUNTIME DESTINATION bin)

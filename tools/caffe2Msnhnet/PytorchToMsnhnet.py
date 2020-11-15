@@ -49,11 +49,15 @@ def _conv2d(raw,inData, weight, bias=None, stride=1, padding=0, dilation=1, grou
         except:
             m_weights.extend(weight.detach().numpy().flatten().tolist())
 
+        print("weights: ",len(weight.detach().numpy().flatten().tolist()))
+
         if useBias :
             try:
                 m_weights.extend(bias.numpy().flatten().tolist())
             except:
                 m_weights.extend(bias.detach().numpy().flatten().tolist())
+            
+            print("bias: ",len(bias.detach().numpy().flatten().tolist()))
 
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildConv2d(str(x._cdata), x.size()[1], weight.size()[2], weight.size()[3], 
@@ -131,11 +135,14 @@ def _linear(raw,inData, weight, bias=None):
         except:
             m_weights.extend(weight.detach().numpy().flatten().tolist())
 
+        print("weights: ",len(weight.detach().numpy().flatten().tolist()))
+
         if useBias :
             try:
                 m_weights.extend(bias.numpy().flatten().tolist())
             except:
                 m_weights.extend(bias.detach().numpy().flatten().tolist())
+            print("bias: ",len(bias.detach().numpy().flatten().tolist()))
         
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildConnect(str(x._cdata), x.size()[1], useBias)
@@ -212,6 +219,11 @@ def _batch_norm(raw,inData, running_mean, running_var, weight=None, bias=None,
             m_weights.extend(bias.detach().numpy().flatten().tolist())
             m_weights.extend(running_mean.detach().numpy().flatten().tolist())
             m_weights.extend(running_var.detach().numpy().flatten().tolist())
+
+        print("weight: ",len(weight.detach().numpy().flatten().tolist()))
+        print("bias: ",len(bias.detach().numpy().flatten().tolist()))
+        print("running_mean: ",len(running_mean.detach().numpy().flatten().tolist()))
+        print("running_var: ",len(running_var.detach().numpy().flatten().tolist()))
 
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildBatchNorm(str(x._cdata),eps)
@@ -340,6 +352,8 @@ def _prelu(raw, inData, weight):
             m_weights.extend(weight.numpy().flatten().tolist())
         except:
             m_weights.extend(weight.detach().numpy().flatten().tolist())
+        
+        print("weight: ",len(weight.detach().numpy().flatten().tolist()))
 
         msnhnet.checkInput(inData,sys._getframe().f_code.co_name)
         msnhnet.buildActivation(str(x._cdata),"prelu")
@@ -1203,4 +1217,5 @@ def trans(net, inputVar, msnhnet_path, msnhbin_path):
     with open(msnhbin_path,"wb") as f:
         for i in m_weights :
             f.write(pack('f',i))
+    print("convert all weights num: ",len(m_weights))
     Hook.hookInited = False
