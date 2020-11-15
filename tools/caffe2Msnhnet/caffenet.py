@@ -1,6 +1,5 @@
-#coding=utf-8
-# origin code from https://github.com/UltronAI/pytorch-caffe/tree/master/caffe2pytorch
-# update by MsnhNet BBuf
+# origin code from https://github.com/UltronAI/pytorch-caffe
+# Updated by BBuf
 import random
 import numpy as np
 import math
@@ -205,6 +204,14 @@ class Softmax(nn.Module):
         x = x.view(*orig_size)
         return x
 
+class SoftmaxWithLoss(nn.CrossEntropyLoss):
+    def __init__(self):
+        super(SoftmaxWithLoss, self).__init__()
+    def __repr__(self):
+        return 'SoftmaxWithLoss()'
+    def forward(self, input, targets):
+        targets = targets.long()
+        return nn.CrossEntropyLoss.forward(self, input, targets)
 
 
 class Normalize(nn.Module):
@@ -240,6 +247,87 @@ class Flatten(nn.Module):
             left_size = x.size(i) * left_size
         return x.view(left_size, -1).contiguous()
 
+
+class Accuracy(nn.Module):
+    def __init__(self):
+        super(Accuracy, self).__init__()
+    def __repr__(self):
+        return 'Accuracy()'
+    def forward(self, output, label):
+        max_vals, max_ids = output.data.max(1)
+        n_correct = (max_ids.view(-1).float() == label.data).sum()
+        batchsize = output.data.size(0)
+        accuracy = float(n_correct)/batchsize
+        print('accuracy = %f', accuracy)
+        accuracy = output.data.new().resize_(1).fill_(accuracy)
+        return Variable(accuracy)
+
+class PriorBox(nn.Module):
+    """Compute priorbox coordinates in center-offset form for each source
+    feature map.
+    Note:
+    This 'layer' has changed between versions of the original SSD
+    paper, so we include both versions, but note v2 is the most tested and most
+    recent version of the paper.
+    """
+    def __init__(self, min_size, max_size, aspects, clip, flip, step, offset, variances):
+        super(PriorBox, self).__init__()
+        self.min_size = min_size
+        self.max_size = max_size
+        self.aspects = aspects
+        self.clip = clip
+        self.flip = flip
+        self.step = step
+        self.offset = offset
+        self.variances = variances
+
+    def __repr__(self):
+        return 'PriorBox(min_size=%f, max_size=%f, clip=%d, step=%d, offset=%f, variances=%s)' % (self.min_size, self.max_size, self.clip, self.step, self.offset, self.variances)
+        
+    def forward(self, feature, image):
+        mean = []
+        #assert(feature.size(2) == feature.size(3))
+        #assert(image.size(2) == image.size(3))
+        feature_height = feature.size(2)
+        feature_width = feature.size(3)
+        image_height = image.size(2)
+        image_width = image.size(3)
+        #for i, j in product(range(feature_height), repeat=2):
+        for j in range(feature_height):
+            for i in range(feature_width):
+                # unit center x,y
+                cx = (i + self.offset) * self.step / image_width
+                cy = (j + self.offset) * self.step / image_height
+                mw = float(self.min_size)/image_width
+                mh = float(self.min_size)/image_height
+                mean += [cx-mw/2.0, cy-mh/2.0, cx+mw/2.0, cy+mh/2.0]
+
+                if self.max_size > self.min_size:
+                    ww = math.sqrt(mw * float(self.max_size)/image_width)
+                    hh = math.sqrt(mh * float(self.max_size)/image_height)
+                    mean += [cx-ww/2.0, cy-hh/2.0, cx+ww/2.0, cy+hh/2.0]
+                    for aspect in self.aspects:
+                        ww = mw * math.sqrt(aspect)
+                        hh = mh / math.sqrt(aspect)
+                        mean += [cx-ww/2.0, cy-hh/2.0, cx+ww/2.0, cy+hh/2.0]
+                        if self.flip:
+                            ww = mw / math.sqrt(aspect)
+                            hh = mh * math.sqrt(aspect)
+                            mean += [cx-ww/2.0, cy-hh/2.0, cx+ww/2.0, cy+hh/2.0]
+
+        # back to torch land
+        output1 = torch.Tensor(mean).view(-1, 4)
+        output2 = torch.FloatTensor(self.variances).view(1,4).expand_as(output1)
+        if self.clip:
+            output1.clamp_(max=1, min=0)
+        output1 = output1.view(1,1,-1)
+        output2 = output2.contiguous().view(1,1,-1)
+        output = torch.cat([output1, output2], 1)
+        if feature.data.is_cuda:
+            device_id = feature.data.get_device()
+            return Variable(output.cuda(device_id))
+        else:
+            return Variable(output)
 
 class CaffeNet(nn.Module):
     def __init__(self, protofile, width=None, height=None, channels=None, omit_data_layer=False, phase='TEST'):
@@ -711,6 +799,15 @@ class CaffeNet(nn.Module):
                 blob_width[tname] = blob_width[bname]
                 blob_height[tname] = blob_height[bname]
                 i = i + 1
+            elif ltype == 'LRN':
+                local_size = int(layer['lrn_param']['local_size'])
+                alpha = float(layer['lrn_param']['alpha'])
+                beta = float(layer['lrn_param']['beta'])
+                models[lname] = LRN(local_size, alpha, beta)
+                blob_channels[tname] = blob_channels[bname]
+                blob_width[tname] = blob_width[bname]
+                blob_height[tname] = blob_height[bname]
+                i = i + 1
             elif ltype == 'Permute':
                 orders = layer['permute_param']['order']
                 order0 = int(orders[0])
@@ -765,6 +862,19 @@ class CaffeNet(nn.Module):
                     blob_height[tname] = 0
                     for bn in bname:
                         blob_height[tname] += blob_height[bn]
+                i = i + 1
+            elif ltype == 'MultiBoxLoss':
+                num_classes = int(layer['multibox_loss_param']['num_classes'])
+                overlap_threshold = float(layer['multibox_loss_param']['overlap_threshold'])
+                prior_for_matching = layer['multibox_loss_param']['use_prior_for_matching'] == 'true'
+                bkg_label = int(layer['multibox_loss_param']['background_label_id'])
+                neg_mining = True
+                neg_pos = float(layer['multibox_loss_param']['neg_pos_ratio'])
+                neg_overlap = float(layer['multibox_loss_param']['neg_overlap'])
+                models[lname] = MultiBoxLoss(num_classes, overlap_threshold, prior_for_matching, bkg_label, neg_mining, neg_pos, neg_overlap, use_gpu=True)
+                blob_channels[tname] = 1
+                blob_width[tname] = 1
+                blob_height[tname] = 1
                 i = i + 1
             elif ltype == 'Crop':
                 axis = int(layer['crop_param']['axis'])

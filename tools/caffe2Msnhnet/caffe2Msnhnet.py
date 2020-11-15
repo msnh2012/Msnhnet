@@ -15,15 +15,15 @@ parser = argparse.ArgumentParser(description='Convert Caffe model to MsnhNet mod
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--model', type=str, default=None)
 parser.add_argument('--weights', type=str, default=None)
-parser.add_argument('--height', type=str, default=None)
-parser.add_argument('--width', type=str, default=None)
-parser.add_argument('--channels', type=str, default=None)
+parser.add_argument('--height', type=int, default=None)
+parser.add_argument('--width', type=int, default=None)
+parser.add_argument('--channels', type=int, default=None)
 
 args = parser.parse_args()
 
 model_def = args.model
 model_weights = args.weights
-model_name = model_weights.split('/')[-1].split('.')[0]
+name = model_weights.split('/')[-1].split('.')[0]
 width = args.width
 height = args.height
 channels = args.channels
@@ -36,6 +36,10 @@ net.eval()
 
 input=torch.ones([1,channels,height,width])
 
-trans(net, input,"model_name.msnhnet","model_name.msnhbin")
+model_name = name + ".msnhnet"
+
+model_bin = name + ".msnhbin"
+
+trans(net, input,model_name,model_bin)
 
 
