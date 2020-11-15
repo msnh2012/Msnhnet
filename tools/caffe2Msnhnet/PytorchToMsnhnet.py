@@ -14,16 +14,6 @@ ccc = []
 index   = 0
 m_weights = []
 
-def minVersion(version):
-    curVer = torch.__version__
-    splits = curVer.split("+")
-    vers = splits[0].split(".")
-    ver = int(vers[0])*100+int(vers[1])*10+int(vers[2])
-    if version > ver :
-        return True
-    else:
-        return False
-
 class Hook(object):
     hookInited = False
     def __init__(self,raw,replace,**kwargs):
@@ -1138,8 +1128,11 @@ F.softmax       =   Hook(F.softmax,_softmax)
 F.sigmoid       =   Hook(F.sigmoid,_sigmoid)
 F.softplus      =   Hook(F.softplus,_softplus)
 
-if(minVersion(160)):
+try:
     F.hardswish     =   Hook(F.hardswish,_hardswish)
+except:
+    print("hardwish not supported. Your pytorch version: ",torch.__version__,", needed min: 1.6.0")
+    pass
 
 # =====  Variable op ======
 for t in [torch.Tensor]:
