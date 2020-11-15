@@ -14,6 +14,16 @@ ccc = []
 index   = 0
 m_weights = []
 
+def minVersion(version):
+    curVer = torch.__version__
+    splits = curVer.split("+")
+    vers = splits[0].split(".")
+    ver = int(ver[0])*100+int(ver[1])*10+int(ver[2])
+    if version > ver :
+        return True
+    else:
+        return False
+
 class Hook(object):
     hookInited = False
     def __init__(self,raw,replace,**kwargs):
@@ -1127,7 +1137,9 @@ F.tanh          =   Hook(F.tanh,_tanh)
 F.softmax       =   Hook(F.softmax,_softmax)
 F.sigmoid       =   Hook(F.sigmoid,_sigmoid)
 F.softplus      =   Hook(F.softplus,_softplus)
-F.hardswish     =   Hook(F.hardswish,_hardswish)
+
+if(minVersion(160)):
+    F.hardswish     =   Hook(F.hardswish,_hardswish)
 
 # =====  Variable op ======
 for t in [torch.Tensor]:
