@@ -3,46 +3,46 @@
 Alpha version, maybe have some bugs. Only official op is supported, customized op may have some bugs.
 
 ## Supported OP
--  conv2d
--  max_pool2d
--  avg_pool2d
--  adaptive_avg_pool2d
--  linear
--  flatten
--  dropout
--  batch_norm
--  interpolate(nearest, bilinear)
--  cat   
--  elu
--  selu
--  relu
--  relu6
--  leaky_relu
--  tanh
--  softmax
--  sigmoid
--  softplus
--  abs    
--  acos   
--  asin   
--  atan   
--  cos    
--  cosh   
--  sin    
--  sinh   
--  tan    
--  exp    
--  log    
--  log10  
--  mean
--  permute
--  view
--  contiguous
--  sqrt
--  pow
--  sum
--  pad
--  +|-|x|/|+=|-=|x=|/=|
+- [x] conv2d
+- [x] max_pool2d
+- [x] avg_pool2d
+- [x] adaptive_avg_pool2d
+- [x] linear
+- [x] flatten
+- [x] dropout
+- [x] batch_norm
+- [x] interpolate(nearest, bilinear)
+- [x] cat   
+- [x] elu
+- [x] selu
+- [x] relu
+- [x] relu6
+- [x] leaky_relu
+- [x] tanh
+- [x] softmax
+- [x] sigmoid
+- [x] softplus
+- [x] abs    
+- [x] acos   
+- [x] asin   
+- [x] atan   
+- [x] cos    
+- [x] cosh   
+- [x] sin    
+- [x] sinh   
+- [x] tan    
+- [x] exp    
+- [x] log    
+- [x] log10  
+- [x] mean
+- [x] permute
+- [x] view
+- [x] contiguous
+- [x] sqrt
+- [x] pow
+- [x] sum
+- [x] pad
+- [x] +|-|x|/|+=|-=|x=|/=|
 
 ## API
 - translate pytorch to msnhnet and msnhbin.
