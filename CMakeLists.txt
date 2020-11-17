@@ -122,6 +122,7 @@ set(SRCS
     src/layers/MsnhMaxPoolLayer.cpp
     src/layers/MsnhPaddingLayer.cpp
     src/layers/MsnhPermuteLayer.cpp
+    src/layers/MsnhPixelShuffleLayer.cpp
     src/layers/MsnhViewLayer.cpp
     src/layers/MsnhReductionLayer.cpp
     src/layers/MsnhRes2BlockLayer.cpp
@@ -234,6 +235,7 @@ if(BUILD_USE_GPU MATCHES ON)
         src/layers/cuda/MsnhGlobalAvgPoolLayerGPU.cu
         src/layers/cuda/MsnhPaddingLayerGPU.cu
         src/layers/cuda/MsnhPermuteLayerGPU.cu
+        src/layers/cuda/MsnhPixelShuffleLayerGPU.cu
         src/layers/cuda/MsnhYoloLayerGPU.cu
         src/layers/cuda/MsnhYoloOutLayerGPU.cu
         src/layers/cuda/MsnhSliceLayerGPU.cu
