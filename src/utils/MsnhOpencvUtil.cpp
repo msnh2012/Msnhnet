@@ -82,13 +82,13 @@ std::vector<float> OpencvUtil::getImgDataF32C1(cv::Mat &mat, const cv::Size &siz
     return imgs;
 }
 
-std::vector<float> OpencvUtil::getImgDataF32C3(const std::string &path, const cv::Size &size, const bool &needShuffleRGB)
+std::vector<float> OpencvUtil::getImgDataF32C3(const std::string &path, const cv::Size &size, const bool &halfInit, const bool &needShuffleRGB)
 {
     cv::Mat mat = cv::imread(path.data());
-    return getImgDataF32C3(mat, size, needShuffleRGB);
+    return getImgDataF32C3(mat, size, halfInit, needShuffleRGB);
 }
 
-std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &size, const bool &needShuffleRGB)
+std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &size, const bool &halfInit, const bool &needShuffleRGB)
 {
     if(mat.empty())
     {
@@ -117,7 +117,16 @@ std::vector<float> OpencvUtil::getImgDataF32C3(cv::Mat &mat, const cv::Size &siz
         {
             for (int x = 0; x < width; ++x)
             {
-                imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.data[y*step + x*channel + k] / 255.0f;
+                if(!halfInit)
+                {
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.data[y*step + x*channel + k] / 255.0f;
+
+                }
+                else
+                {
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = (mat.data[y*step + x*channel + k]-127.5f) / 127.5f;
+
+                }
 
             }
         }
@@ -182,13 +191,13 @@ std::vector<float> OpencvUtil::getGoogLenetF32C3(cv::Mat &mat, const cv::Size &s
     return imgs;
 }
 
-std::vector<float> OpencvUtil::getPaddingZeroF32C3(const std::string &path, const cv::Size &size, const bool &needShuffleRGB)
+std::vector<float> OpencvUtil::getPaddingZeroF32C3(const std::string &path, const cv::Size &size, const bool &halfInit, const bool &needShuffleRGB)
 {
     cv::Mat mat = cv::imread(path.data());
-    return getPaddingZeroF32C3(mat, size, needShuffleRGB);
+    return getPaddingZeroF32C3(mat, size,halfInit, needShuffleRGB);
 }
 
-std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size &size, const bool &needShuffleRGB)
+std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size &size, const bool &halfInit, const bool &needShuffleRGB)
 {
     if(mat.empty())
     {
@@ -231,7 +240,11 @@ std::vector<float> OpencvUtil::getPaddingZeroF32C3(cv::Mat &mat, const cv::Size 
         {
             for (int x = 0; x < width; ++x)
             {
-                imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.data[y*step + x*channel + k] / 255.0f;
+                if(!halfInit)
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.data[y*step + x*channel + k] / 255.0f;
+
+                else
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = (mat.data[y*step + x*channel + k]-127.5f) / 127.5f;
 
             }
         }

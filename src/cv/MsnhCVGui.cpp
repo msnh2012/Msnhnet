@@ -139,10 +139,7 @@ void Gui::imShow(const std::string &title, Mat &mat)
     }
 
     mutex.lock();
-    // if(matTextures.find(title)!=matTextures.end())
-    // {
-    //     glDeleteTextures(1,&matTextures[title]);
-    // }
+
     mats[title] = tmpMat;
     matInited[title] = false;
     matTextures[title] = -1;
@@ -299,7 +296,7 @@ void Gui::run()
 
                 ImGui::Begin(init.first.c_str());   
 
-                ImGui::SetWindowSize(ImVec2(width, height));
+                ImGui::SetWindowSize(ImVec2(width+20, height+50));
                 ImGui::Image((void*)(intptr_t)matTextures[init.first], ImVec2(width, height));
 
                 ImGui::End();

@@ -92,7 +92,17 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
         this->_nRollVariance     =   num;
     }
 
-    this->_numWeights            =   static_cast<size_t>(this->_nWeights + this->_nScales + this->_nRollMean + this->_nRollVariance + this->_nBiases);
+    if(activation==ActivationType::PRELU) 
+
+    {
+        this->_nPreluWeights = num;
+    }
+    else
+    {
+        this->_nPreluWeights = 0;
+    }
+
+    this->_numWeights            =   static_cast<size_t>(this->_nWeights + this->_nScales + this->_nRollMean + this->_nRollVariance + this->_nBiases + this->_nPreluWeights);
 
 #ifdef USE_ARM
     selectArmConv();
@@ -290,6 +300,15 @@ ConvolutionalLayer::~ConvolutionalLayer()
     Cuda::freeCuda(_gpuRollVariance);
 
 #endif
+
+    if(this->_activation==ActivationType::PRELU) 
+
+    {
+        releaseArr(this->_preluWeights);
+#ifdef USE_GPU
+        Cuda::freeCuda(this->_gpuPreluWeights);
+#endif
+    }
 }
 
 int ConvolutionalLayer::convOutHeight()
@@ -748,6 +767,11 @@ TempARRCH64:
         Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
                                                 this->_outWidth*this->_outHeight, layerOutput,1);
     }
+    else if(this->_activation == ActivationType::PRELU)
+
+    {
+        Activations::activatePRelu(layerOutput,this->_batch, this->_outChannel,this->_preluWeights, this->_outWidth*this->_outHeight, this->supportAvx);
+    }
     else if(this->_activation == ActivationType::NONE)
     {
 
@@ -1010,6 +1034,11 @@ void ConvolutionalLayer::forwardGPU(NetworkState &netState)
         ActivationsGPU::gpuActivateArrayNormChSoftMax(layerGpuOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
                                                       this->_outWidth*this->_outHeight, layerGpuOutput,1);
     }
+    else if(this->_activation == ActivationType::PRELU) 
+
+    {
+        ActivationsGPU::gpuActivatePRelu(layerGpuOutput,this->_batch, this->_outChannel, this->_gpuPreluWeights, this->_outHeight*this->_outWidth);
+    }
     else if(this->_activation == ActivationType::NONE)
     {
 
@@ -1106,8 +1135,12 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
         }
         else
         {
+            int offset = 0;
+
             this->_weights              = new float[static_cast<size_t>(this->_nWeights)]();
             loadWeights(weights.data(), _nWeights);
+
+            offset += this->_nWeights;
 
 #ifdef USE_ARM
             if(useWinograd3x3S1)
@@ -1148,6 +1181,8 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
                 loadBias(weights.data() + _nWeights + _nScales, _nBiases);
                 loadRollMean(weights.data() + _nWeights + _nScales + _nBiases, _nRollMean);
                 loadRollVariance(weights.data() + _nWeights + _nScales + _nBiases + _nRollMean, _nRollVariance);
+
+                offset = offset + _nScales + _nBiases + _nRollMean + _nRollVariance;
             }
             else
             {
@@ -1155,7 +1190,16 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
                 {
                     this->_biases           = new float[static_cast<size_t>(this->_nBiases)]();
                     loadBias(weights.data() + _nWeights, _nBiases);
+
+                    offset = offset + _nBiases;
                 }
+            }
+
+            if(this->_activation == ActivationType::PRELU) 
+
+            {
+                this->_preluWeights = new float[static_cast<size_t>(this->_nPreluWeights)]();
+                loadPreluWeights(weights.data() + offset, this->_nPreluWeights);
             }
 
 #ifdef USE_GPU
@@ -1173,7 +1217,7 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
                 if(this->_batchNorm)
                 {
                     this->_gpuScales      = Cuda::makeCudaArray(this->_scales, this->_nScales);
-                    this->_gpuBiases     = Cuda::makeCudaArray(this->_biases , this->_nBiases);
+                    this->_gpuBiases      = Cuda::makeCudaArray(this->_biases , this->_nBiases);
                     this->_gpuRollMean    = Cuda::makeCudaArray(this->_rollMean, this->_nRollMean);
                     this->_gpuRollVariance= Cuda::makeCudaArray(this->_rollVariance, this->_nRollVariance);
                 }
@@ -1183,6 +1227,12 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
                     {
                         this->_gpuBiases     = Cuda::makeCudaArray(this->_biases , this->_nBiases);
                     }
+                }
+
+                if(this->_activation == ActivationType::PRELU) 
+
+                {
+                    this->_gpuPreluWeights = Cuda::makeCudaArray(this->_preluWeights, this->_nPreluWeights);
                 }
             }
 
@@ -1194,6 +1244,11 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
                 releaseArr(this->_rollMean    );
                 releaseArr(this->_rollVariance);
                 releaseArr(this->_biases      );
+                if(this->_activation == ActivationType::PRELU) 
+
+                {
+                    releaseArr(this->_preluWeights);
+                }
             }
 
 #endif
@@ -1290,6 +1345,12 @@ void ConvolutionalLayer::saveAllWeights(const int &mainIdx, const int &branchIdx
             Cuda::pullCudaArray(this->_gpuRollMean, this->_rollMean, this->_nRollMean);
             Cuda::pullCudaArray(this->_gpuRollVariance, this->_rollVariance, this->_nRollVariance);
         }
+
+        if(this->_activation == ActivationType::PRELU) 
+
+        {
+            Cuda::pullCudaArray(this->_gpuPreluWeights, this->_preluWeights, this->_nPreluWeights);
+        }
     }
 #endif
 
@@ -1329,6 +1390,18 @@ void ConvolutionalLayer::saveAllWeights(const int &mainIdx, const int &branchIdx
         Msnhnet::IO::saveVector<float>(rollMeanVec,rollMeanName.c_str(),"\n");
         std::string rollVarianceName = "rollVariance"+name;
         Msnhnet::IO::saveVector<float>(rollVarianceVec,rollVarianceName.c_str(),"\n");
+    }
+
+    if(this->_activation==ActivationType::PRELU) 
+
+    {
+        if(this->_preluWeights==nullptr)
+        {
+            throw Exception(1,"Conv weights err.", __FILE__, __LINE__, __FUNCTION__);
+        }
+        std::vector<float> preluWeightsVec(this->_preluWeights,this->_preluWeights+this->_nPreluWeights);
+        std::string preluWeightsName = "preluWeights"+name;
+        Msnhnet::IO::saveVector<float>(preluWeightsVec,preluWeightsName.c_str(),"\n");
     }
 }
 
@@ -1375,6 +1448,16 @@ void ConvolutionalLayer::loadRollVariance(float * const &rollVariance, const int
         throw Exception(1, "load roll variance data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, rollVariance, 1, this->_rollVariance,1);
+}
+
+void ConvolutionalLayer::loadPreluWeights(float * const &weights, const int &len)  
+
+{
+    if(len != this->_nPreluWeights)
+    {
+        throw Exception(1, "load preluWeights data len error",__FILE__,__LINE__, __FUNCTION__);
+    }
+    Blas::cpuCopy(len, weights, 1, this->_preluWeights,1);
 }
 
 float *ConvolutionalLayer::getWeights() const
@@ -1567,15 +1650,20 @@ int ConvolutionalLayer::getBatchNorm() const
     return _batchNorm;
 }
 
+int ConvolutionalLayer::getNPreluWeights() const
+{
+    return _nPreluWeights;
+}
+
 #ifdef USE_ARM
 void ConvolutionalLayer::selectArmConv()
 {
-   useWinograd3x3S1     =   false;
-   useIm2ColSgemm       =   false;
-   use3x3S1             =   false;
-   use3x3S2             =   false;
+    useWinograd3x3S1     =   false;
+    useIm2ColSgemm       =   false;
+    use3x3S1             =   false;
+    use3x3S2             =   false;
 
-/*    if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1 &&
+    /*    if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1 &&
        this->_channel >=16 && this->_outChannel >= 16 && this->_width <= 120 && this->_height <= 120 && this->_paddingX == 0 && this->_paddingY == 0)
     {
         useWinograd3x3S1 = true;

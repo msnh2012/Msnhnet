@@ -28,6 +28,7 @@
 #include "Msnhnet/layers/MsnhYoloLayer.h"
 #include "Msnhnet/layers/MsnhYoloOutLayer.h"
 #include "Msnhnet/layers/MsnhPaddingLayer.h"
+#include "Msnhnet/layers/MsnhPixelShuffLeLayer.h"
 #include "Msnhnet/io/MsnhIO.h"
 #include "Msnhnet/utils/MsnhExport.h"
 

@@ -39,6 +39,7 @@ set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhRouteLayer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhVariableOpLayer.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhPermuteLayer.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhPixelShuffleLayer.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhReductionLayer.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhViewLayer.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhSoftMaxLayer.cpp

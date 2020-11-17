@@ -73,6 +73,16 @@ public:
     int             dim2        =   2;
 };
 
+class MsnhNet_API PixshuffleParams : public BaseParams
+{
+public:
+    PixshuffleParams(bool incIndex) : BaseParams(incIndex)
+    {
+        this->type     = LayerType::PIXEL_SHUFFLE;
+    }
+    int             factor      =   0;
+};
+
 class MsnhNet_API SliceParams : public BaseParams
 {
 public:
@@ -525,6 +535,7 @@ public:
     void parseEmptyParams(EmptyParams *emptyParams, YAML::const_iterator &iter);
     void parseViewParams(ViewParams *viewParams, YAML::const_iterator &iter);
     void parsePermuteParams(PermuteParams *permuteParams, YAML::const_iterator &iter);
+    void parsePixShuffleParams(PixshuffleParams *pixShuffleParams, YAML::const_iterator &iter);
     void parseSliceParams(SliceParams *sliceParams, YAML::const_iterator &iter);
     void parsePaddingParams(PaddingParams *paddingParams, YAML::const_iterator &iter);
     void parseReductionParams(ReductionParams *reductionParams, YAML::const_iterator &iter);

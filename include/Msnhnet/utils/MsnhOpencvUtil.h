@@ -22,14 +22,14 @@ public:
     static std::vector<float> getImgDataF32C1(const std::string &path, const cv::Size &size);
     static std::vector<float> getImgDataF32C1(cv::Mat &mat, const cv::Size &size);
 
-    static std::vector<float> getImgDataF32C3(const std::string &path,  const cv::Size &size, const bool &needShuffleRGB=false);
-    static std::vector<float> getImgDataF32C3(cv::Mat &mat,  const cv::Size &size, const bool &needShuffleRGB=false);
+    static std::vector<float> getImgDataF32C3(const std::string &path,  const cv::Size &size, const bool &halfInit = false, const bool &needShuffleRGB=false);
+    static std::vector<float> getImgDataF32C3(cv::Mat &mat,  const cv::Size &size, const bool &halfInit = false, const bool &needShuffleRGB=false);
 
     static std::vector<float> getGoogLenetF32C3(const std::string &path,  const cv::Size &size, const bool &needShuffleRGB=false);
     static std::vector<float> getGoogLenetF32C3(cv::Mat &mat,  const cv::Size &size, const bool &needShuffleRGB=false);
 
-    static std::vector<float> getPaddingZeroF32C3(const std::string &path,  const cv::Size &size, const bool &needShuffleRGB=true);
-    static std::vector<float> getPaddingZeroF32C3(cv::Mat &mat,  const cv::Size &size, const bool &needShuffleRGB=true);
+    static std::vector<float> getPaddingZeroF32C3(const std::string &path,  const cv::Size &size, const bool &halfInit = false, const bool &needShuffleRGB=true);
+    static std::vector<float> getPaddingZeroF32C3(cv::Mat &mat,  const cv::Size &size, const bool &halfInit = false, const bool &needShuffleRGB=true);
 
     static std::vector<float> getTransformedF32C3(const std::string &path, const cv::Size &size,
                                                    const cv::Scalar &mean, const cv::Scalar &std, const bool &needShuffleRGB=false);

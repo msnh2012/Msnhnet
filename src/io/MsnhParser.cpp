@@ -95,6 +95,10 @@ void Parser::clearParams()
             {
                 delete reinterpret_cast<PermuteParams*>(params[i]);
             }
+            else if(params[i]->type == LayerType::PIXEL_SHUFFLE)
+            {
+                delete reinterpret_cast<PixshuffleParams*>(params[i]);
+            }
             else if(params[i]->type == LayerType::SLICE)
             {
                 delete reinterpret_cast<SliceParams*>(params[i]);
@@ -230,6 +234,19 @@ void Parser::readCfg(const std::string &path)
                 else
                 {
                     throw Exception(1,"[permute] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "pixshf")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    PixshuffleParams *pixshuffleParams = new PixshuffleParams(true);
+                    parsePixShuffleParams(pixshuffleParams, it);
+                    params.push_back(pixshuffleParams);
+                }
+                else
+                {
+                    throw Exception(1,"[pixshf] content error", __FILE__, __LINE__, __FUNCTION__);
                 }
             }
             else if(node == "slice")
@@ -1576,6 +1593,27 @@ void Parser::parsePermuteParams(PermuteParams *permuteParams, YAML::const_iterat
         else
         {
             throw Exception(1, key + " is not supported in [permute]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+}
+
+void Parser::parsePixShuffleParams(PixshuffleParams *pixShuffleParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "factor")
+        {
+            if(!ExString::strToInt(value, pixShuffleParams->factor))
+            {
+                throw Exception(1,"[pixshf] factor can't convert to int", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [pixshf]", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 }

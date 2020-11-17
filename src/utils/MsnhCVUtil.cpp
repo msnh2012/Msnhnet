@@ -82,13 +82,13 @@ std::vector<float> CVUtil::getImgDataF32C1(Mat &mat, const Vec2I32 &size)
     return imgs;
 }
 
-std::vector<float> CVUtil::getImgDataF32C3(const std::string &path, const Vec2I32 &size, const bool &needShuffleRGB)
+std::vector<float> CVUtil::getImgDataF32C3(const std::string &path, const Vec2I32 &size, const bool &halfInit, const bool &needShuffleRGB)
 {
     Mat mat(path);
-    return getImgDataF32C3(mat, size, needShuffleRGB);
+    return getImgDataF32C3(mat, size,halfInit,needShuffleRGB);
 }
 
-std::vector<float> CVUtil::getImgDataF32C3(Mat &mat, const Vec2I32 &size, const bool &needShuffleRGB)
+std::vector<float> CVUtil::getImgDataF32C3(Mat &mat, const Vec2I32 &size, const bool &halfInit, const bool &needShuffleRGB)
 {
     if(mat.isEmpty())
     {
@@ -119,8 +119,16 @@ std::vector<float> CVUtil::getImgDataF32C3(Mat &mat, const Vec2I32 &size, const 
         {
             for (int x = 0; x < width; ++x)
             {
-                imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.getData().u8[y*width*step + x*channel + k] / 255.0f;
+                if(!halfInit)
+                {
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.getData().u8[y*width*step + x*channel + k] / 255.0f;
 
+                }
+                else
+                {
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = (mat.getData().u8[y*width*step + x*channel + k]-127.5f) / 127.5f;
+
+                }
             }
         }
     }
@@ -186,13 +194,13 @@ std::vector<float> CVUtil::getGoogLenetF32C3(Mat &mat, const Vec2I32 &size, cons
     return imgs;
 }
 
-std::vector<float> CVUtil::getPaddingZeroF32C3(const std::string &path, const Vec2I32 &size, const bool &needShuffleRGB)
+std::vector<float> CVUtil::getPaddingZeroF32C3(const std::string &path, const Vec2I32 &size, const float& halfInit, const bool &needShuffleRGB)
 {
     Mat mat(path);
-    return getPaddingZeroF32C3(mat, size, needShuffleRGB);
+    return getPaddingZeroF32C3(mat, size,halfInit, needShuffleRGB);
 }
 
-std::vector<float> CVUtil::getPaddingZeroF32C3(Mat &mat, const Vec2I32 &size, const bool &needShuffleRGB)
+std::vector<float> CVUtil::getPaddingZeroF32C3(Mat &mat, const Vec2I32 &size, const float &halfInit, const bool &needShuffleRGB)
 {
     if(mat.isEmpty())
     {
@@ -238,7 +246,11 @@ std::vector<float> CVUtil::getPaddingZeroF32C3(Mat &mat, const Vec2I32 &size, co
         {
             for (int x = 0; x < width; ++x)
             {
-                imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.getData().u8[y*width*step + x*channel + k] / 255.0f;
+                if(!halfInit)
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = mat.getData().u8[y*width*step + x*channel + k] / 255.0f;
+
+                else
+                    imgs[static_cast<size_t>(k*width*height + y*width + x)] = (mat.getData().u8[y*width*step + x*channel + k]-127.5f) / 127.5f;
 
             }
         }
@@ -362,8 +374,10 @@ std::vector<float> CVUtil::getCaffeModeF32C3(Mat &mat, const Vec2I32 &size, cons
     return imgs;
 }
 
-void CVUtil::drawYoloBox(Mat &mat, std::vector<std::string> &labels, std::vector<std::vector<YoloBox> > &boxs, const Point2I &size, const bool &noPad)
+std::vector<Vec2I32> CVUtil::drawYoloBox(Mat &mat, std::vector<std::string> &labels, std::vector<std::vector<YoloBox> > &boxs, const Point2I &size, const bool &noPad)
 {
+    std::vector<Vec2I32> points;
+
     for (size_t i = 0; i < boxs[0].size(); ++i)
     {
         Msnhnet::YoloBox box;
@@ -428,8 +442,13 @@ void CVUtil::drawYoloBox(Mat &mat, std::vector<std::string> &labels, std::vector
         Vec2I32 p3(static_cast<int>(p3XF+x),static_cast<int>(p3YF+y));
         Vec2I32 p4(static_cast<int>(p4XF+x),static_cast<int>(p4YF+y));
 
+        points.push_back(p1);
+        points.push_back(p3);
+
         Draw::drawRect(mat,p1,p2,p3,p4,CVUtil::colorTable[static_cast<size_t>(box.bestClsIdx)],3);
     }
+
+    return points;
 }
 
 void CVUtil::drawSegMask(const int &channel, const int &wxh, std::vector<float> &inVal, Mat &mask)
