@@ -205,6 +205,14 @@ class Msnhnet:
         self.net = self.net + "  dim1: " + str(int(dim1-1)) + "\n"
         self.net = self.net + "  dim2: " + str(int(dim2-1)) + "\n"
 
+    def buildPixelShuffle(self, name, factor):
+        self.setNameAndIdx(name,self.index)
+        self.net = self.net + "#" + str(self.index) +  "\n"
+        self.index = self.index + 1
+        self.net = self.net + "pixshf:\n"
+        self.net = self.net + "  factor: " + str(int(factor)) + "\n"
+
+
     def buildReduction(self, name, type, axis):
         self.setNameAndIdx(name,self.index)
         self.net = self.net + "#" + str(self.index) +  "\n"

@@ -1269,6 +1269,20 @@ def _pad(raw,inData,pad,mode="constant",value=0):
         msnhnet.buildPadding(str(x._cdata),paddingT,paddingD,paddingL,paddingR)
     return x
 
+def _pixel_shuffle(raw,inData,upscale_factor):
+    x = raw(inData,upscale_factor)
+    if Save.saveOut :
+        saveOutput(x)
+
+    if Hook.hookInited :
+        log( "pixel_shuffle-i" , inData._cdata)
+        ccc.append(x)
+        log( "pixel_shuffle-o" , x._cdata)
+
+        msnhnet.buildPixelShuffle(str(x._cdata),upscale_factor)
+    return x
+
+
 # =====  Variable op not supported ======
 ''' TODO '''
 def _unsqueeze(inData, *args):
@@ -1297,6 +1311,8 @@ F.dropout       =   Hook(F.dropout,_dropout)
 F.batch_norm    =   Hook(F.batch_norm,_batch_norm)
 F.interpolate   =   Hook(F.interpolate,_interpolate)
 F.pad           =   Hook(F.pad,_pad)
+F.pixel_shuffle =   Hook(F.pixel_shuffle,_pixel_shuffle)
+
 torch.abs       =   Hook(torch.abs,_abs)
 torch.acos      =   Hook(torch.acos,_acos)
 torch.asin      =   Hook(torch.asin,_asin)
@@ -1310,6 +1326,7 @@ torch.exp       =   Hook(torch.exp,_exp)
 torch.log       =   Hook(torch.log,_log)
 torch.log10     =   Hook(torch.log10,_log10)
 torch.cat       =   Hook(torch.cat,_cat)
+torch.reshape   =   Hook(torch.reshape,_reshape)
 
 # =====  Activation ======
 F.elu           =   Hook(F.elu,_elu)
