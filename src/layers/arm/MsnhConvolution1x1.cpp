@@ -212,7 +212,7 @@ namespace Msnhnet
                         "w"(k1), // %19
                         "w"(k2), // %20
                         "w"(k3)  // %21
-                        : "cc", "memory", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
+                        : "cc", "memory", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
                     );
                 }
 #endif
@@ -258,10 +258,10 @@ namespace Msnhnet
 #if USE_NEON
                 int nn = out_size >> 3;
                 int remain = out_size & 7;
-                float32x4_t k0 = vld1q_f32(kernel0);
-                float32x4_t k1 = vld1q_f32(kernel1);
-                float32x4_t k2 = vld1q_f32(kernel2);
-                float32x4_t k3 = vld1q_f32(kernel3);
+                float32x4_t k0 = vdupq_n_f32(kernel0[0]);
+                float32x4_t k1 = vdupq_n_f32(kernel1[0]);
+                float32x4_t k2 = vdupq_n_f32(kernel2[0]);
+                float32x4_t k3 = vdupq_n_f32(kernel3[0]);
 #else
                 int remain = out_size;
 #endif
@@ -294,24 +294,24 @@ namespace Msnhnet
                         "vld1.f32   {d12-d15}, [%5]!        \n"
 
                         // float sum0 = *r0 * kernel0[0]
-                        "vmla.f32   q8, q6, %e18[0]         \n"
+                        "vmla.f32   q8, q6, %q12           \n"
                         // float sum0_next = *r0 * kernel0[0]
-                        "vmla.f32   q9, q7, %e18[0]         \n"
+                        "vmla.f32   q9, q7, %q12           \n"
 
                         // float sum1 = *r0 * kernel1[0]
-                        "vmla.f32   q10, q6, %e19[0]        \n"
+                        "vmla.f32   q10, q6, %q13           \n"
                         // float sum1_next = *r0 * kernel1[0]
-                        "vmla.f32   q11, q7, %e19[0]        \n"
+                        "vmla.f32   q11, q7, %q13           \n"
 
                         // float sum2 = *r0 * kernel2[0]
-                        "vmla.f32   q12, q6, %e20[0]        \n"
+                        "vmla.f32   q12, q6, %q14           \n"
                         // float sum2_next = *r0 * kernel2[0]
-                        "vmla.f32   q13, q7, %e20[0]        \n"
+                        "vmla.f32   q13, q7, %q14           \n"
 
                         // float sum3 = *r0 * kernel3[0]
-                        "vmla.f32   q14, q6, %e21[0]        \n"
+                        "vmla.f32   q14, q6, %q15           \n"
                         // float sum3_next = *r0 * kernel3[0]
-                        "vmla.f32   q15, q7, %e21[0]        \n"
+                        "vmla.f32   q15, q7, %q15           \n"
                         
                         // *destptr0 += sum0;
                         "vst1.f32   {d16-d19}, [%1]!        \n"
@@ -331,24 +331,18 @@ namespace Msnhnet
                         "=r"(destptr1), // %2
                         "=r"(destptr2), // %3
                         "=r"(destptr3), // %4
-                        "=r"(r0),      // %5
-                        "=r"(r1),      // %6
-                        "=r"(r2),      // %7
-                        "=r"(r3)       // %8
+                        "=r"(r0)
                         : "0"(nn),
                         "1"(destptr0),
                         "2"(destptr1),
                         "3"(destptr2),
                         "4"(destptr3),
                         "5"(r0),
-                        "6"(r1),
-                        "7"(r2),
-                        "8"(r3),
-                        "w"(k0), // %18
-                        "w"(k1), // %19
-                        "w"(k2), // %20
-                        "w"(k3)  // %21
-                        : "cc", "memory", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
+                        "w"(k0), // %12
+                        "w"(k1), // %13
+                        "w"(k2), // %14
+                        "w"(k3)  // %15
+                        : "cc", "memory", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
                     );
                 }
 #endif
@@ -451,13 +445,13 @@ namespace Msnhnet
                         "bne        0b                  \n"
 
                         : "=r"(nn),     // %0
-                        "=r"(dest0), // %1
+                        "=r"(destptr0), // %1
                         "=r"(r0),     // %2
                         "=r"(r1),     // %3
                         "=r"(r2),     // %4
                         "=r"(r3)      // %5
                         : "0"(nn),
-                        "1"(dest0),
+                        "1"(destptr0),
                         "2"(r0),
                         "3"(r1),
                         "4"(r2),
