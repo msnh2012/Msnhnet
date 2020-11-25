@@ -20,7 +20,24 @@ void AbsValLayerArm::AbsVal(float *const &src, const int &inWidth, const int &in
 
 #if USE_NEON
 #if __aarch64__
-                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+        if(nn > 0){
+            asm volatile(
+                "0:                             \n"
+                "prfm       pldl1keep, [%0, #128]   \n"
+                "ld1        {v0.4s}, [%0], #16  \n"
+                "fabs       v0.4s, v0.4s        \n"
+                "st1        {v0.4s}, [%1], #16  \n"
+                "subs       %w2, %w2, #1        \n"
+                "bne        0b                  \n"
+                : "=r"(srcptr),
+                "=r"(destptr),
+                "=r"(nn)
+                : "0"(srcptr),      // %0
+                "1"(destptr),       // %1
+                "2"(nn)             // %w2
+                : "cc", "memory", "v0"
+            );
+        }
 #else
         if(nn > 0){
             asm volatile(
@@ -68,7 +85,22 @@ void AbsValLayerArm::AbsValInplace(float* src, const int &inWidth, const int &in
 
 #if USE_NEON
 #if __aarch64__
-                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+        if(nn > 0){
+            asm volatile(
+                "0:                             \n"
+                "prfm       pldl1keep, [%0, #128]   \n"
+                "ld1        {v0.4s}, [%0]       \n"
+                "fabs       v0.4s, v0.4s        \n"
+                "st1        {v0.4s}, [%0], #16  \n"
+                "subs       %w1, %w1, #1        \n"
+                "bne        0b                  \n"
+                : "=r"(srcptr),
+                "=r" (nn)
+                : "0"(srcptr),      // %0
+                "1"(nn)             // %w1
+                : "cc", "memory", "v0"
+            );
+        }
 #else
         if(nn > 0){
             asm volatile(

@@ -32,7 +32,23 @@ void ActivationLayerArm::reluActivate(float * &src, const int &inWidth, const in
         #if USE_NEON
             if(nn > 0){
                 #if __aarch64__
-                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+                    asm volatile(
+                        "movi       v0.2d, #0           \n"
+                        "0:                             \n"
+                        "prfm       pldl1keep, [%0, #128]   \n"
+                        "ld1        {v1.4s}, [%0]       \n"
+                        "fmax       v1.4s, v1.4s, v0.4s \n"
+                        "st1        {v1.4s}, [%0], #16       \n"
+                        "subs       %w1, %w1, #1        \n"
+                        "bne        0b                  \n"
+                        
+                        : "=r"(srcPtr), // %0
+                        "=r"(nn)        // %1
+                        : "0"(srcPtr),
+                        "1"(nn)
+                        : "cc", "memory", "v0", "v1"
+                    );
+
                 #else
                     asm volatile(
                     "veor       q1, q0, q0          \n"
@@ -83,7 +99,25 @@ void ActivationLayerArm::relu6Activate(float * &src, const int &inWidth, const i
         #if USE_NEON
             if(nn > 0){
                 #if __aarch64__
-                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+                    asm volatile(
+                        "movi       v0.2d, #0           \n"
+                        "dup        v1.4s, %w4          \n"
+                        "0:                             \n"
+                        "prfm       pldl1keep, [%0, #128]   \n"
+                        "ld1        {v2.4s}, [%0]       \n"
+                        "fmax       v2.4s, v2.4s, v0.4s \n"
+                        "fmin       v2.4s, v2.4s, v1.4s \n"
+                        "st1        {v2.4s}, [%0], #16       \n"
+                        "subs       %w1, %w1, #1        \n"
+                        "bne        0b                  \n"
+
+                        : "=r"(srcPtr),     // %0
+                        "=r"(nn)            // %1
+                        : "0"(srcPtr),
+                        "1"(nn),
+                        "r"(six)            // %w4
+                        : "cc", "memory", "x4", "v0", "v1", "v2", "v3", "v4"
+                    );
                 #else
                     asm volatile(
                     "veor       q1, q0, q0          \n" 
@@ -152,7 +186,27 @@ void ActivationLayerArm::leakyActivate(float * &src, const int &inWidth, const i
         #if USE_NEON
             if(nn > 0){
                 #if __aarch64__
-                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+                    asm volatile(
+                        "movi       v0.2d, #0           \n"
+                        "dup        v1.4s, %w4          \n"
+                        "0:                             \n"
+                        "prfm       pldl1keep, [%0, #128]   \n"
+                        "ld1        {v2.4s}, [%0]       \n"
+
+                        "fcmge      v3.4s, v0.4s, v2.4s     \n"
+                        "fmul       v4.4s, v1.4s, v2.4s     \n"
+                        "bit        v2.16b, v4.16b, v3.16b  \n"
+                        "st1        {v2.4s}, [%0], #16  \n"
+
+                        "subs       %w1, %w1, #1        \n"
+                        "bne        0b                  \n"
+                        : "=r"(srcPtr), // %0
+                        "=r"(nn) // %1
+                        : "0"(srcPtr),
+                        "1"(nn),
+                        "r"(params) // %w4
+                        : "cc", "memory", "v0", "v1", "v2", "v3", "v4"
+                    );
                 #else
                     asm volatile(
                     "veor       q1, q0, q0          \n"

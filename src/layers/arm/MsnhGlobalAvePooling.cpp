@@ -29,11 +29,35 @@ void GlobalAvePoolingLayerArm::pooling(float *const &src, const int &inWidth, co
 #endif
 
 #if USE_NEON
+        if(nn > 0){
 
 #if __aarch64__
-        throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+            asm volatile(
+                "movi       v0.2d, #0           \n"
+
+                "0:                             \n"
+                "prfm       pldl1keep, [%0, #128]   \n"
+                "ld1        {v1.4s}, [%0], #16  \n"
+                "fadd       v0.4s, v1.4s, v0.4s \n"
+
+                "subs       %w1, %w1, #1        \n"
+                "bne        0b                  \n"
+
+                "faddp      v0.4s, v0.4s, v0.4s     \n"
+                "faddp      v0.4s, v0.4s, v0.4s     \n"
+                
+                "fmov       %w2, s0            \n"
+
+                : "=r"(srcptr),     // %0
+                "=r"(nn),           // %1
+                "=r"(sum)           // %2
+                : "0"(srcptr),
+                "1"(nn),
+                "2"(sum)
+                : "cc", "memory", "v0", "v1"
+            );
+
 #else
-        if(nn > 0){
             asm volatile(
                 "veor    q1, q1, q1             \n"
                 "0:                             \n"
@@ -53,8 +77,9 @@ void GlobalAvePoolingLayerArm::pooling(float *const &src, const int &inWidth, co
                 :
                 : "cc", "memory", "q0", "q1", "q2", "q3"
             );
-        }
+        
 #endif
+        }
 
 #endif
         for(; remain > 0; remain--){
