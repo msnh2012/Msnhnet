@@ -76,6 +76,6 @@ endif()
 
 # Determines whether or not cuBLAS was found
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(cuBLAS DEFAULT_MSG CUBLAS_INCLUDE_DIRS CUDA_LIBRARIES CUBLAS_LIBRARIES)
+find_package_handle_standard_args(cuBlas DEFAULT_MSG CUBLAS_INCLUDE_DIRS CUDA_LIBRARIES CUBLAS_LIBRARIES)
 
 # ==================================================================================================

@@ -9,18 +9,18 @@ keras2Msnh(model,"resnet50.msnhnet", "resnet50.msnhbin")
 ```
 **Supported Layers**
 
-- InputLayer
-- Conv2D/Convolution2D
-- DepthwiseConv2D
-- MaxPooling2D
-- AveragePooling2D
-- BatchNormalization
-- LeakyReLU
-- Activation(relu, relu6, leakyReLU, sigmoid, linear)
-- UpSampling2D
-- Concatenate/Merge
-- Add
-- ZeroPadding2D
-- GlobalAveragePooling2D
-- softmax
-- Dense
+- [x] InputLayer
+- [x] Conv2D/Convolution2D
+- [x] DepthwiseConv2D
+- [x] MaxPooling2D
+- [x] AveragePooling2D
+- [x] BatchNormalization
+- [x] LeakyReLU
+- [x] Activation(relu, relu6, leakyReLU, sigmoid, linear)
+- [x] UpSampling2D
+- [x] Concatenate/Merge
+- [x] Add
+- [x] ZeroPadding2D
+- [x] GlobalAveragePooling2D
+- [x] softmax
+- [x] Dense

@@ -44,11 +44,12 @@ void yolov3MsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath
         std::vector<std::vector<Msnhnet::YoloBox>> result = msnhNet.runYolo(img);
         Msnhnet::CVUtil::drawYoloBox(org,labels,result,inSize);
         std::cout<<msnhNet.getTimeDetail()<<std::endl<<std::flush;
-        org.saveImage("yolov3.jpg");
-		#ifdef _WIN32
-        system("yolov3.jpg");
+
+        #ifdef USE_MSNHCV_GUI
+        Msnhnet::Gui::imShow("yolov3",org);
+        Msnhnet::Gui::wait();
         #else
-        std::cout<<"result pic has been saved at /[App Dir]/yolov3.jpg"<<std::endl;
+        org.saveImage("yolov3.jpg");
         #endif
     }
     catch (Msnhnet::Exception ex)

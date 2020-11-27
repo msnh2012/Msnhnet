@@ -198,6 +198,28 @@ void ActivationsGPU::gpuActivateArray(float *const &gpuX, const int &numX, const
     CUDA_CHECK(cudaPeekAtLastError());
 }
 
+__global__ void activateArrayPReluKernel(float *const x, const int numX, const int channels, float *const weights, const int whStep, const ActivationType  actType)
+{
+    int index = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
+    if(index < numX)
+    {
+        int i = index % whStep;
+        index = index / whStep;
+        int c = index % channels;
+        index = index / channels;
+        int b = index;
+        int idx = b*channels*whStep + c*whStep + i;
+        x[idx] = activateKernel(x[idx],actType,weights[c]);
+    }
+}
+
+void ActivationsGPU::gpuActivatePRelu(float *const &gpuX, const int &batch, const int &channels, float *const &gpuWeights, const int &whStep)
+{
+    size_t numX = batch*channels*whStep;
+    activateArrayPReluKernel<<<Cuda::getGrid(numX), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(gpuX, numX, channels, gpuWeights, whStep, ActivationType::LEAKY);
+    CUDA_CHECK(cudaPeekAtLastError());
+}
+
 __global__ void activateArrayNormChKernel(float *const gpuX, const int numX, const int batch, const int channels, const int whStep, float *const gpuOutput)
 {
     int i = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;

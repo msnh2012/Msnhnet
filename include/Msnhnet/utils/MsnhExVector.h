@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <iterator>
+#include <set>
 #include "Msnhnet/utils/MsnhExport.h"
 
 namespace Msnhnet
@@ -71,6 +72,11 @@ public:
 
         return idx;
     }
+
+    template<typename T>
+    inline static void removeRepeat(std::vector<T>& v){    std::set<T> st(v.begin(), v.end());
+                                                           v.assign(st.begin(), st.end());
+                                                        }
 
 };
 }

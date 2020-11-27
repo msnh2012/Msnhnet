@@ -14,6 +14,12 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
     this->_height        =   params.height;
     this->_channel       =   params.channels;
 
+    if(this->_activation == ActivationType::PRELU) 
+
+    {
+        throw Exception(1, "prelu activation is not supported by Res2Block ", __FILE__, __LINE__, __FUNCTION__);
+    }
+
     BaseLayer *layer    =   nullptr;
 
     NetBuildParams  branchBuildParams = params;

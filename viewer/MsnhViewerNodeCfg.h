@@ -216,6 +216,18 @@ public:
         });
         ColorTabel::instance().addColor("Permute",QColor(0xaf2178));
 
+
+
+        NodeCreator::instance().addItem("PixelShuffle",
+        {
+            {"input", "string", AttributeInfo::Type::input},
+            {"factor", "string", AttributeInfo::Type::member},
+            {"inplace", "string", AttributeInfo::Type::member},
+            {"output", "string", AttributeInfo::Type::output},
+        });
+        ColorTabel::instance().addColor("PixelShuffle",QColor(0x5494ff));
+
+
         NodeCreator::instance().addItem("View",
         {
             {"input", "string", AttributeInfo::Type::input},

@@ -58,6 +58,7 @@ public:
     void loadWeights(float *const &weights, const int& len);
     void loadRollMean(float * const &rollMean, const int &len);
     void loadRollVariance(float * const &rollVariance, const int &len);
+    void loadPreluWeights(float *const &weights, const int& len); 
 
     float *getWeights() const;
 
@@ -135,6 +136,8 @@ public:
 
     int getBatchNorm() const;
 
+    int getNPreluWeights() const;
+
 protected:
 
 #ifdef USE_ARM
@@ -159,6 +162,7 @@ protected:
     float       *_scales             =   nullptr;
     float       *_rollMean           =   nullptr;
     float       *_rollVariance       =   nullptr;
+    float       *_preluWeights       =   nullptr;
 
     char        *_cWeights           =   nullptr;
     float       *_binaryInputs       =   nullptr;
@@ -198,6 +202,7 @@ protected:
     float       *_gpuScales          =   nullptr;
     float       *_gpuRollMean        =   nullptr;
     float       *_gpuRollVariance    =   nullptr;
+    float       *_gpuPreluWeights    =   nullptr;
 
 #endif
 
@@ -206,6 +211,7 @@ protected:
 
     int         _useBias             =   1;
 
+    int         _nPreluWeights       =   0;
     int         _nScales             =   0;
     int         _nRollMean           =   0;
     int         _nRollVariance       =   0;
@@ -234,7 +240,6 @@ protected:
     int         _dilationX           =   0;
     int         _dilationY           =   0;
     int         _batchNorm           =   0;
-
 };
 }
 

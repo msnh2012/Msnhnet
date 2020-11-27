@@ -455,6 +455,11 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             PermuteParams *permuteParams            =   reinterpret_cast<PermuteParams*>(_parser->params[i]);
             layer                                   =   new PermuteLayer(params.batch, params.height, params.width, params.channels, permuteParams->dim0, permuteParams->dim1, permuteParams->dim2);
         }
+        else if(_parser->params[i]->type == LayerType::PIXEL_SHUFFLE)
+        {
+            PixshuffleParams *pixshuffleParams      =   reinterpret_cast<PixshuffleParams*>(_parser->params[i]);
+            layer                                   =   new PixelShuffleLayer(params.batch, params.height, params.width, params.channels, pixshuffleParams->factor);
+        }
         else if(_parser->params[i]->type == LayerType::SLICE)
         {
             SliceParams *sliceParams                =   reinterpret_cast<SliceParams*>(_parser->params[i]);
@@ -619,7 +624,7 @@ void NetBuilder::loadWeightsFromMsnhBin(const string &path)
     {
         if(_net->layers[i]->type() == LayerType::CONVOLUTIONAL || _net->layers[i]->type() == LayerType::CONNECTED || _net->layers[i]->type() == LayerType::BATCHNORM ||
                 _net->layers[i]->type() == LayerType::RES_BLOCK   || _net->layers[i]->type() == LayerType::RES_2_BLOCK || _net->layers[i]->type() == LayerType::ADD_BLOCK ||
-                _net->layers[i]->type() == LayerType::CONCAT_BLOCK  || _net->layers[i]->type() == LayerType::DECONVOLUTIONAL)
+                _net->layers[i]->type() == LayerType::CONCAT_BLOCK  || _net->layers[i]->type() == LayerType::DECONVOLUTIONAL || _net->layers[i]->type()==LayerType::ACTIVE)
         {
             size_t nums = _net->layers[i]->getNumWeights();
 
@@ -1103,6 +1108,10 @@ void NetBuilder::clearLayers()
             else if(_net->layers[i]->type() == LayerType::PERMUTE)
             {
                 delete reinterpret_cast<PermuteLayer*>(_net->layers[i]);
+            }
+            else if(_net->layers[i]->type() == LayerType::PIXEL_SHUFFLE)
+            {
+                delete reinterpret_cast<PixelShuffleLayer*>(_net->layers[i]);
             }
             else if(_net->layers[i]->type() == LayerType::VIEW)
             {

@@ -395,6 +395,20 @@ void MainWindow::on_actionOpen_triggered()
             node->attributes()[5]->setData(output );
         }
 
+        if(layerName == "PixelShuffle")
+        {
+            Msnhnet::PixelShuffleLayer *layer = reinterpret_cast<Msnhnet::PixelShuffleLayer *>(builder.getNet()->layers[i]);
+            QString input       = QString("%1*%2 *%3").arg(layer->getWidth()).arg(layer->getHeight()).arg(layer->getChannel());
+            QString factor      = QString::number(layer->getFactor());
+            QString inplace     = QString("%1").arg(layer->getMemReUse());
+            QString output      = QString("%1*%2*%3").arg(layer->getOutWidth()).arg(layer->getOutHeight()).arg(layer->getOutChannel());
+
+            node->attributes()[0]->setData(input  );
+            node->attributes()[1]->setData(factor );
+            node->attributes()[2]->setData(inplace);
+            node->attributes()[3]->setData(output );
+        }
+
         if(layerName == "View")
         {
             Msnhnet::ViewLayer *layer = reinterpret_cast<Msnhnet::ViewLayer *>(builder.getNet()->layers[i]);

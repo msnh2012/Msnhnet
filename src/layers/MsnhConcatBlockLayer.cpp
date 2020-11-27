@@ -13,6 +13,12 @@ ConcatBlockLayer::ConcatBlockLayer(const int &batch, NetBuildParams &params, std
     this->_height        =   params.height;
     this->_channel       =   params.channels;
 
+    if(this->_activation == ActivationType::PRELU) 
+
+    {
+        throw Exception(1, "prelu activation is not supported by ConcatBlock ", __FILE__, __LINE__, __FUNCTION__);
+    }
+
     BaseLayer *layer    =   nullptr;
 
     NetBuildParams  branchBuildParams = params;

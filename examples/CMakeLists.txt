@@ -7,7 +7,11 @@
 
     add_subdirectory(yolov3tiny)
 
+    add_subdirectory(landmark106)
+
     if(BUILD_USE_OPENCV MATCHES ON)
+        add_subdirectory(yolov3tiny_video)
+    elseif(BUILD_USE_MSNHCV_GUI MATCHES ON)
         add_subdirectory(yolov3tiny_video)
     endif()
 
@@ -31,6 +35,8 @@ if(BUILD_USE_GPU MATCHES ON)
     add_subdirectory(yolov3tiny_gpu)
 
     if(BUILD_USE_OPENCV MATCHES ON)
+        add_subdirectory(yolov3tiny_video_gpu)
+    elseif(BUILD_USE_MSNHCV_GUI MATCHES ON)
         add_subdirectory(yolov3tiny_video_gpu)
     endif()
 

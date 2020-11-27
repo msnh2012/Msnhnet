@@ -12,6 +12,7 @@ ActivationType Activations::getActivation(const std::string &msg)
     if (msg=="normalize_channels_softmax_maxval") return NORM_CHAN_SOFTMAX_MAXVAL;
     if (msg=="loggy") return LOGGY;
     if (msg=="relu") return RELU;
+    if (msg=="prelu") return PRELU;
     if (msg=="relu6") return RELU6;
     if (msg=="elu") return ELU;
     if (msg=="selu") return SELU;
@@ -39,6 +40,7 @@ string Activations::getActivationStr(const ActivationType &type)
     if (type==NORM_CHAN_SOFTMAX_MAXVAL) return "ncsm";
     if (type==LOGGY) return "loggy";
     if (type==RELU) return "relu";
+    if (type==PRELU) return "prelu";
     if (type==RELU6) return "relu6";
     if (type==ELU) return "elu";
     if (type==SELU) return "selu";
@@ -250,6 +252,90 @@ void Activations::activateArray(float *const &x, const int &numX, const Activati
         {
             x[i] = activate(x[i],actType, param);
         }
+#endif
+#endif
+}
+
+void Activations::activatePRelu(float * const &x, const int &batch, const int &channels, float * const &weights, const int &whStep, const bool &useAVX)
+{
+#ifdef USE_X86
+    if(!useAVX)
+    {
+        int wh8 = whStep/8;
+
+        for (int i = 0; i < batch; ++i)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int c = 0; c < channels; ++c)
+            {
+                for (int k = 0; k < wh8 ; ++k)
+                {
+                    ActivationsAvx::activateAvx8(x + i*channels*whStep + c*whStep + k*8 ,ActivationType::LEAKY, weights[c]);
+                }
+
+                for (int k = wh8*8; k < whStep; ++k)
+                {
+                    x[i*channels*whStep + c*whStep + k] = activate(x[i*channels*whStep + c*whStep + k], ActivationType::LEAKY, weights[c]);
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < batch; ++i)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int c = 0; c < channels; ++c)
+            {
+                for (int k = 0; k < whStep; ++k)
+                {
+                    x[i*channels*whStep + c*whStep + k] = activate(x[i*channels*whStep + c*whStep + k], ActivationType::LEAKY, weights[c]);
+                }
+            }
+        }
+    }
+#endif
+
+#ifdef USE_ARM
+#ifdef USE_NEON
+    int wh4 = whStep/4;
+
+    for (int i = 0; i < batch; ++i)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int c = 0; c < channels; ++c)
+        {
+            for (int k = 0; k < wh4 ; ++k)
+            {
+                ActivationsNeon::activateNeon4(x + i*channels*whStep + c*whStep + k*4 ,ActivationType::LEAKY, weights[c]);
+            }
+
+            for (int k = wh4*4; k < whStep; ++k)
+            {
+                x[i*channels*whStep + c*whStep + k] = activate(x[i*channels*whStep + c*whStep + k], ActivationType::LEAKY, weights[c]);
+            }
+        }
+    }
+#else
+    for (int i = 0; i < batch; ++i)
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int c = 0; c < channels; ++c)
+        {
+            for (int k = 0; k < whStep; ++k)
+            {
+                x[i*channels*whStep + c*whStep + k] = activate(x[i*channels*whStep + c*whStep + k], ActivationType::LEAKY, weights[c]);
+            }
+        }
+    }
 #endif
 #endif
 }

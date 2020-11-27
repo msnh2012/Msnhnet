@@ -40,6 +40,8 @@ public:
 
     void loadRollVariance(float *const &rollVariance, const int& len);
 
+    void loadPreluWeights(float *const &weights, const int& len); 
+
     float *getWeights() const;
 
     float *getBiases() const;
@@ -80,6 +82,7 @@ protected:
     float       *_scales             =   nullptr;
     float       *_rollMean           =   nullptr;
     float       *_rollVariance       =   nullptr;
+    float       *_preluWeights       =   nullptr;
 
     int         _useBias             =   0;
 
@@ -90,6 +93,7 @@ protected:
     float       *_gpuScales          =   nullptr;
     float       *_gpuRollMean        =   nullptr;
     float       *_gpuRollVariance    =   nullptr;
+    float       *_gpuPreluWeights    =   nullptr;
 #endif
 
     int         _nBiases             =   0;
@@ -97,6 +101,7 @@ protected:
     int         _nScales             =   0;
     int         _nRollMean           =   0;
     int         _nRollVariance       =   0;
+    int         _nPreluWeights       =   0;
 
     int         _kSize               =   0;
     int         _stride              =   0;
@@ -108,6 +113,7 @@ protected:
 
     int         _totalBatch          =   0;
     float       _bnEps               =   0.00001f;
+
 };
 }
 

@@ -2,10 +2,10 @@
 #include "Msnhnet/cv/MsnhCVMat.h"
 
 #define  STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
+#include "../3rdparty/stb/stb_image.h"
 
 #define  STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb/stb_image_write.h"
+#include "../3rdparty/stb/stb_image_write.h"
 
 #include "Msnhnet/core/MsnhGemm.h"
 
@@ -148,7 +148,7 @@ void Mat::checkPixelType(const int &array, const int &fmt)
 {
     if(fmt!='b' && fmt!='f' && fmt!='d' )
     {
-        throw Exception(1,"[CV]: data type is not supported", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: data type is not supported! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     switch (this->_matType)
@@ -156,55 +156,55 @@ void Mat::checkPixelType(const int &array, const int &fmt)
     case MatType::MAT_GRAY_U8:
         if(fmt!='b'||array!=1)
         {
-            throw Exception(1,"[CV]: pixel type must be uint8_t", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: pixel type must be uint8_t! \n", __FILE__, __LINE__, __FUNCTION__);
         }
         break;
     case MatType::MAT_GRAY_F32:
         if(fmt!='f'||array!=1)
         {
-            throw Exception(1,"[CV]: pixel type must be float", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: pixel type must be float! \n", __FILE__, __LINE__, __FUNCTION__);
         }
         break;
     case MatType::MAT_GRAY_F64:
         if(fmt!='d'||array!=1)
         {
-            throw Exception(1,"[CV]: pixel type must be double", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: pixel type must be double! \n", __FILE__, __LINE__, __FUNCTION__);
         }
         break;
     case MatType::MAT_RGB_U8:
         if(fmt!='b'||array!=3)
         {
-            throw Exception(1,"[CV]: pixel type must be Vec3U8", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: pixel type must be Vec3U8! \n", __FILE__, __LINE__, __FUNCTION__);
         }
         break;
     case MatType::MAT_RGB_F32:
         if(fmt!='f'||array!=3)
         {
-            throw Exception(1,"[CV]: pixel type must be Vec3F32", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: pixel type must be Vec3F32! \n", __FILE__, __LINE__, __FUNCTION__);
         }
         break;
     case MatType::MAT_RGB_F64:
         if(fmt!='d'||array!=3)
         {
-            throw Exception(1,"[CV]: pixel type must be Vec3F64", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: pixel type must be Vec3F64! \n", __FILE__, __LINE__, __FUNCTION__);
         }
         break;
     case MatType::MAT_RGBA_U8:
         if(fmt!='b'||array!=4)
         {
-            throw Exception(1,"[CV]: pixel type must be Vec4U8", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: pixel type must be Vec4U8! \n", __FILE__, __LINE__, __FUNCTION__);
         }
         break;
     case MatType::MAT_RGBA_F32:
         if(fmt!='f'||array!=4)
         {
-            throw Exception(1,"[CV]: pixel type must be Vec4F32", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: pixel type must be Vec4F32! \n", __FILE__, __LINE__, __FUNCTION__);
         }
         break;
     case MatType::MAT_RGBA_F64:
         if(fmt!='f'||array!=4)
         {
-            throw Exception(1,"[CV]: pixel type must be Vec4F64", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: pixel type must be Vec4F64! \n", __FILE__, __LINE__, __FUNCTION__);
         }
         break;
     }
@@ -217,7 +217,7 @@ void Mat::readImage(const std::string &path)
 
     if(this->_data.u8==nullptr)
     {
-        throw Exception(1,"[CV]: img empty, maybe path error!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: img empty, maybe path error! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(this->_channel == 1)
@@ -241,7 +241,7 @@ void Mat::saveImage(const std::string &path, const SaveImageType &saveImageType,
 {
     if(this->isEmpty())
     {
-        throw Exception(1,"[CV]: img empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: img empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     float* f32Val  = nullptr;
@@ -281,7 +281,7 @@ void Mat::saveImage(const std::string &path, const SaveImageType &saveImageType,
         ret = stbi_write_bmp(path.c_str(), this->_width, this->_height,this->_channel,u8Val);
         break;
     case SaveImageType::MAT_SAVE_JPG:
-        ret = stbi_write_jpg(path.c_str(), this->_width, this->_height,this->_channel,u8Val, quality);
+        ret = stbi_write_jpg(path.c_str(), this->_width, this->_height,this->_channel,u8Val,quality);
         break;
     case SaveImageType::MAT_SAVE_PNG:
         ret = stbi_write_png(path.c_str(), this->_width, this->_height,this->_channel,u8Val,0);
@@ -296,7 +296,7 @@ void Mat::saveImage(const std::string &path, const SaveImageType &saveImageType,
 
     if(ret<1)
     {
-        throw Exception(1,"[CV]: save image error!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: save image error! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
 }
@@ -305,7 +305,7 @@ void Mat::saveImage(const std::string &path, const int &quality)
 {
     if(this->isEmpty())
     {
-        throw Exception(1,"[CV]: img empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: img empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
     std::vector<std::string> splits;
     std::string tmpPath = path;
@@ -333,7 +333,60 @@ void Mat::saveImage(const std::string &path, const int &quality)
     }
     else
     {
-        throw Exception(1,"[CV]: unknown image type : "  + imgType, __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: unknown image type : "  + imgType + "! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+}
+
+std::vector<char> Mat::encodeToMemory(const MatEncodeType &encodeType, const int &jpgQuality)
+{
+    if(this->isEmpty())
+    {
+        throw Exception(1, "[Mat]: Mat empty! \n",__FILE__,__LINE__,__FUNCTION__);
+    }
+    Msnhnet::Mat mat = *this;
+
+    if(!mat.isU8Mat())
+    {
+        mat.convertTo(mat, CVT_DATA_TO_U8);
+    }
+
+    std::vector<char> picData;
+    if(encodeType== MAT_ENCODE_JPG)
+    {
+        stbi_write_jpg_to_func(bufferFromCallback,&picData, mat.getWidth(), mat.getHeight(), mat.getChannel() ,mat.getData().u8,jpgQuality);
+    }
+    else if(encodeType== MAT_ENCODE_PNG)
+    {
+        stbi_write_png_to_func(bufferFromCallback,&picData, mat.getWidth(), mat.getHeight(), mat.getChannel() ,mat.getData().u8,0);
+    }
+
+    return picData;
+}
+
+void Mat::decodeFromMemory(char *data, const size_t &dataLen)
+{
+    release();
+    this->_data.u8 = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(data), dataLen, &this->_width, &this->_height, &this->_channel,0);
+
+    if(this->_data.u8==nullptr)
+    {
+        throw Exception(1,"[Mat]: Decode from memory error! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(this->_channel == 1)
+    {
+        this->_matType  = MatType::MAT_GRAY_U8;
+        this->_step     = this->_channel;
+    }
+    else if(this->_channel == 3)
+    {
+        this->_matType  = MatType::MAT_RGB_U8;
+        this->_step     = this->_channel;
+    }
+    else if(this->_channel == 4)
+    {
+        this->_matType  = MatType::MAT_RGBA_U8;
+        this->_step     = this->_channel;
     }
 }
 
@@ -397,7 +450,7 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
 {
     if(this->isEmpty())
     {
-        throw Exception(1,"[CV]: img empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: img empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     switch (cvtDataType)
@@ -1067,6 +1120,21 @@ void Mat::setU8Ptr(uint8_t * const &ptr)
     this->_data.u8 = ptr;
 }
 
+uint8_t *Mat::getBytes()
+{
+    return this->_data.u8;
+}
+
+float *Mat::getFloat32()
+{
+    return this->_data.f32;
+}
+
+double *Mat::getFloat64()
+{
+    return this->_data.f64;
+}
+
 bool Mat::isEmpty() const
 {
     if(this->_data.u8==nullptr||this->_height==0||this->_width==0)
@@ -1098,7 +1166,7 @@ Mat Mat::eye(const int &num, const MatType &matType)
 {
     if(matType != MAT_GRAY_U8 && matType != MAT_GRAY_F32 && matType != MAT_GRAY_F64)
     {
-        throw Exception(1,"[CV]: Only one channel is supported!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Only one channel is supported! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmp(num,num, matType);
@@ -1142,7 +1210,7 @@ Mat Mat::dense(const int &width, const int &height, const MatType &matType, cons
 {
     if(matType != MAT_GRAY_U8 && matType != MAT_GRAY_F32 && matType != MAT_GRAY_F64)
     {
-        throw Exception(1,"[CV]: Only one channel is supported!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Only one channel is supported! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmp(width,height, matType);
@@ -1193,7 +1261,7 @@ Mat Mat::diag(const int &num, const MatType &matType, const float &val)
 {
     if(matType != MAT_GRAY_U8 && matType != MAT_GRAY_F32 && matType != MAT_GRAY_F64)
     {
-        throw Exception(1,"[CV]: Only one channel is supported!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Only one channel is supported! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmp(num,num, matType);
@@ -1236,7 +1304,7 @@ Mat Mat::random(const int &width, const int &height, const MatType &matType)
 {
     if(matType != MAT_GRAY_U8 && matType != MAT_GRAY_F32 && matType != MAT_GRAY_F64)
     {
-        throw Exception(1,"[CV]: Only one channel is supported!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Only one channel is supported! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmp(width,height, matType);
@@ -1281,7 +1349,7 @@ Mat Mat::randomDiag(const int &num, const MatType &matType)
 {
     if(matType != MAT_GRAY_U8 && matType != MAT_GRAY_F32 && matType != MAT_GRAY_F64)
     {
-        throw Exception(1,"[CV]: Only one channel is supported!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Only one channel is supported! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmp(num,num, matType);
@@ -1316,12 +1384,12 @@ Mat Mat::transpose()
 {
     if(this->isEmpty())
     {
-        throw Exception(1,"[CV]: Mat empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(!this->isOneChannel())
     {
-        throw Exception(1,"[CV]: Only one channel is supported!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Only one channel is supported! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat(this->_height,this->_width,this->_matType);
@@ -1372,12 +1440,12 @@ double Mat::det()
 {
     if(this->_matType != MAT_GRAY_F32 && this->_matType != MAT_GRAY_F64)
     {
-        throw Exception(1,"[CV]: Only one channel F32 and F64 Mat is supported!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Only one channel F32 and F64 Mat is supported! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(this->_height!=this->_width)
     {
-        throw Exception(1,"[CV]: Height must equal width!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Height must equal width! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     double val = 0;
@@ -1520,16 +1588,16 @@ double Mat::det()
     return val;
 }
 
-Mat Mat::invert()
+std::vector<Mat> Mat::LUDecomp(bool outLU)
 {
     if(this->_matType != MAT_GRAY_F32 && this->_matType != MAT_GRAY_F64)
     {
-        throw Exception(1,"[CV]: Only one channel F32/F64 Mat is supported!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Only one channel F32/F64 Mat is supported! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(this->_height!=this->_width)
     {
-        throw Exception(1,"[CV]: Height must equal width!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Height must equal width! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat A = *this;
@@ -1554,7 +1622,7 @@ Mat Mat::invert()
             }
 
             if( std::abs(A.getData().f32[k*m + i]) < std::numeric_limits<float>::epsilon() )
-                throw Exception(1,"[CV]: det=0, no invert mat!", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[Mat]: det=0, no invert mat! \n", __FILE__, __LINE__, __FUNCTION__);
 
             if( k != i )
             {
@@ -1563,9 +1631,12 @@ Mat Mat::invert()
                     std::swap(A.getData().f32[i*m + j], A.getData().f32[k*m + j]);
                 }
 
-                for(int j = 0; j < m; j++ )
+                if(!outLU)
                 {
-                    std::swap(B.getData().f32[i*m + j], B.getData().f32[k*m + j]);
+                    for(int j = 0; j < m; j++ )
+                    {
+                        std::swap(B.getData().f32[i*m + j], B.getData().f32[k*m + j]);
+                    }
                 }
 
             }
@@ -1576,31 +1647,50 @@ Mat Mat::invert()
             {
                 float alpha = A.getData().f32[j*m + i]*d;
 
-                for( k = i+1; k < m; k++ )
+                if(!outLU)
                 {
-                    A.getData().f32[j*m + k] += alpha*A.getData().f32[i*m + k];
+
+                    for( k = i+1; k < m; k++ )
+                    {
+                        A.getData().f32[j*m + k] += alpha*A.getData().f32[i*m + k];
+                    }
+
+                    for( k = 0; k < m; k++ )
+                    {
+                        B.getData().f32[j*m + k] += alpha*B.getData().f32[i*m + k];
+                    }
+                }
+                else
+                {
+
+                    for( k = i; k < m; k++ )
+                    {
+                        if(k < j)
+                            B.getData().f32[j*m + k] = -d*A.getData().f32[j*m + k];
+                        A.getData().f32[j*m + k] += alpha*A.getData().f32[i*m + k];
+                    }
+
                 }
 
-                for( k = 0; k < m; k++ )
-                {
-                    B.getData().f32[j*m + k] += alpha*B.getData().f32[i*m + k];
-                }
             }
-
-            A.getData().f32[i*m + i] = -d; 
+            if(!outLU)
+                A.getData().f32[i*m + i] = -d; 
 
         }
 
-        for(int i = m-1; i >= 0; i-- )
+        if(!outLU)
         {
-            for(int j = 0; j < m; j++ )
+            for(int i = m-1; i >= 0; i-- )
             {
-                float s = B.getData().f32[i*m + j];
-                for( k = i+1; k < m; k++ )
+                for(int j = 0; j < m; j++ )
                 {
-                    s -= A.getData().f32[i*m + k]*B.getData().f32[k*m + j];
+                    float s = B.getData().f32[i*m + j];
+                    for( k = i+1; k < m; k++ )
+                    {
+                        s -= A.getData().f32[i*m + k]*B.getData().f32[k*m + j];
+                    }
+                    B.getData().f32[i*m + j] = s*A.getData().f32[i*m + i];
                 }
-                B.getData().f32[i*m + j] = s*A.getData().f32[i*m + i];
             }
         }
     }
@@ -1621,7 +1711,7 @@ Mat Mat::invert()
             }
 
             if( std::abs(A.getData().f64[k*m + i]) < std::numeric_limits<double>::epsilon() )
-                throw Exception(1,"[CV]: det=0, no invert mat!", __FILE__, __LINE__, __FUNCTION__);
+                throw Exception(1,"[Mat]: det=0, no invert mat! \n", __FILE__, __LINE__, __FUNCTION__);
 
             if( k != i )
             {
@@ -1630,9 +1720,12 @@ Mat Mat::invert()
                     std::swap(A.getData().f64[i*m + j], A.getData().f64[k*m + j]);
                 }
 
-                for(int j = 0; j < m; j++ )
+                if(!outLU)
                 {
-                    std::swap(B.getData().f64[i*m + j], B.getData().f64[k*m + j]);
+                    for(int j = 0; j < m; j++ )
+                    {
+                        std::swap(B.getData().f64[i*m + j], B.getData().f64[k*m + j]);
+                    }
                 }
 
             }
@@ -1643,36 +1736,161 @@ Mat Mat::invert()
             {
                 double alpha = A.getData().f64[j*m + i]*d;
 
-                for( k = i+1; k < m; k++ )
+                if(!outLU)
                 {
-                    A.getData().f64[j*m + k] += alpha*A.getData().f64[i*m + k];
+
+                    for( k = i+1; k < m; k++ )
+                    {
+                        A.getData().f64[j*m + k] += alpha*A.getData().f64[i*m + k];
+                    }
+
+                    for( k = 0; k < m; k++ )
+                    {
+                        B.getData().f64[j*m + k] += alpha*B.getData().f64[i*m + k];
+                    }
+                }
+                else
+                {
+
+                    for( k = i; k < m; k++ )
+                    {
+                        if(k < j)
+                            B.getData().f64[j*m + k] = -d*A.getData().f64[j*m + k];
+                        A.getData().f64[j*m + k] += alpha*A.getData().f64[i*m + k];
+                    }
                 }
 
-                for( k = 0; k < m; k++ )
-                {
-                    B.getData().f64[j*m + k] += alpha*B.getData().f64[i*m + k];
-                }
             }
-
-            A.getData().f64[i*m + i] = -d; 
+            if(!outLU)
+                A.getData().f64[i*m + i] = -d; 
 
         }
 
-        for(int i = m-1; i >= 0; i-- )
+        if(!outLU)
         {
-            for(int j = 0; j < m; j++ )
+            for(int i = m-1; i >= 0; i-- )
             {
-                double s = B.getData().f64[i*m + j];
-                for( k = i+1; k < m; k++ )
+                for(int j = 0; j < m; j++ )
                 {
-                    s -= A.getData().f64[i*m + k]*B.getData().f64[k*m + j];
+                    double s = B.getData().f64[i*m + j];
+                    for( k = i+1; k < m; k++ )
+                    {
+                        s -= A.getData().f64[i*m + k]*B.getData().f64[k*m + j];
+                    }
+                    B.getData().f64[i*m + j] = s*A.getData().f64[i*m + i];
                 }
-                B.getData().f64[i*m + j] = s*A.getData().f64[i*m + i];
             }
         }
     }
 
-    return B;
+    if(outLU)
+    {
+        std::vector<Mat> tmpMatVec{B,A};
+        return tmpMatVec;
+    }
+    else
+    {
+        std::vector<Mat> tmpMatVec{B};
+        return tmpMatVec;
+    }
+}
+
+std::vector<Mat> Mat::CholeskyDeComp(bool outChols)
+{
+    if(this->_matType != MAT_GRAY_F32 && this->_matType != MAT_GRAY_F64)
+    {
+        throw Exception(1,"[Mat]: Only one channel F32/F64 Mat is supported! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(this->_height!=this->_width)
+    {
+        throw Exception(1,"[Mat]: Height must equal width! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    Mat A = *this;
+    int m = A.getWidth();
+
+    if(this->_matType == MAT_GRAY_F32)
+    {
+        float s = 0;
+        for(int i = 0; i < m; i++ )
+        {
+
+            for(int j = 0; j < i; j++ )
+            {
+                s = A.getData().f32[j*m + i];
+                for(int k = 0; k < j; k++ )
+                {
+                    s -= A.getData().f32[i*m + k]*A.getData().f32[j*m + k];
+                }
+                A.getData().f32[i*m + j] = s/A.getData().f32[j*m + j];
+            }
+
+            s = A.getData().f32[i*m + i];
+            for(int k = 0; k < i; k++ )
+            {
+                float t =A.getData().f32[i*m + k];
+                s -= t*t;
+            }
+            if( s < std::numeric_limits<float>::epsilon() )
+                throw Exception(1,"[Mat]: Not a good matrix for cholesky! \n", __FILE__, __LINE__, __FUNCTION__);
+            A.getData().f32[i*m + i] = std::sqrt(s);
+        }
+    }
+    else
+    {
+        double s = 0;
+        for(int i = 0; i < m; i++ )
+        {
+
+            for(int j = 0; j < i; j++ )
+            {
+                s = A.getData().f64[j*m + i];
+                for(int k = 0; k < j; k++ )
+                {
+                    s -= A.getData().f64[i*m + k]*A.getData().f64[j*m + k];
+                }
+                A.getData().f64[i*m + j] = s/A.getData().f64[j*m + j];
+            }
+
+            s = A.getData().f64[i*m + i];
+            for(int k = 0; k < i; k++ )
+            {
+                double t =A.getData().f64[i*m + k];
+                s -= t*t;
+            }
+            if( s < std::numeric_limits<double>::epsilon() )
+                throw Exception(1,"[Mat]: Not a good matrix for cholesky! \n", __FILE__, __LINE__, __FUNCTION__);
+            A.getData().f64[i*m + i] = std::sqrt(s);
+        }
+    }
+
+    std::vector<Mat> tmpMatVec{A,A.transpose()};
+    return tmpMatVec;
+}
+
+Mat Mat::invert(const DecompType &decompType)
+{
+    if(this->_matType != MAT_GRAY_F32 && this->_matType != MAT_GRAY_F64)
+    {
+        throw Exception(1,"[Mat]: Only one channel F32/F64 Mat is supported! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(this->_height!=this->_width)
+    {
+        throw Exception(1,"[Mat]: Height must equal width! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    switch (decompType)
+    {
+    case DECOMP_LU:
+        return LUDecomp(false)[0];
+        break;
+    case DECOMP_CHOLESKY:
+        throw Exception(1,"[Mat]: Not supported yet!", __FILE__, __LINE__, __FUNCTION__);
+        break;
+    }
+
 }
 
 void Mat::printMat()
@@ -1807,11 +2025,6 @@ Mat Mat::sub(const Mat &A, const Mat &B)
     return A-B;
 }
 
-Mat Mat::dot(const Mat &A, const Mat &B)
-{
-    return A*B;
-}
-
 Mat Mat::div(const Mat &A, const Mat &B)
 {
     return A/B;
@@ -1819,58 +2032,19 @@ Mat Mat::div(const Mat &A, const Mat &B)
 
 Mat Mat::mul(const Mat &A, const Mat &B)
 {
-    if(A.isEmpty())
-    {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
-    }
-
-    if(B.isEmpty())
-    {
-        throw Exception(1,"[CV]: Mat B is empty!", __FILE__, __LINE__, __FUNCTION__);
-    }
-
-    if(A.getWidth() != B.getHeight())
-    {
-        throw Exception(1,"[CV]: Mat A'W != B'H !", __FILE__, __LINE__, __FUNCTION__);
-    }
-
-    if(A.getMatType() != B.getMatType() || A.getChannel() != B.getChannel() || A.getStep() != B.getStep())
-    {
-        throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
-    }
-
-    if(!A.isF32Mat() && !A.isF64Mat() && !A.isOneChannel())
-    {
-        throw Exception(1,"[CV]: mat must be f32/f64 1 channel mat!", __FILE__, __LINE__, __FUNCTION__);
-    }
-
-    SimdInfo simdInfo;
-
-    if(A.isF32Mat())
-    {
-
-        Mat C(B.getWidth(),A.getHeight(),MatType::MAT_GRAY_F32);
-        Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f32,A.getWidth(),B.getData().f32,B.getWidth(),1,C.getData().f32,C.getWidth(), simdInfo.getSupportAVX2());
-        return C;
-    }
-    else
-    {
-        Mat C(B.getWidth(),A.getHeight(),MatType::MAT_GRAY_F64);
-        Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f64,A.getWidth(),B.getData().f64,B.getWidth(),1,C.getData().f64,C.getWidth(), simdInfo.getSupportAVX2());
-        return C;
-    }
+    return A*B;
 }
 
-Mat operator +(const Mat &A, const Mat &B)
+Mat Mat::dot(const Mat &A, const Mat &B)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(B.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat B is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat B is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
@@ -1878,7 +2052,67 @@ Mat operator +(const Mat &A, const Mat &B)
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
             A._width != B._width || A._height != B._height)
     {
-        throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    int dataN = A._width*A._height;
+
+    if(tmpMat.isU8Mat())
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < dataN; ++i)
+        {
+            int mul = A._data.u8[i] * B._data.u8[i];
+
+            mul = (mul>255)?255:mul;
+
+            tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
+
+        }
+    }
+    else if(tmpMat.isF32Mat())
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < dataN; ++i)
+        {
+            tmpMat._data.f32[i] = A._data.f32[i] * B._data.f32[i];
+        }
+    }
+    else if(tmpMat.isF64Mat())
+    {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < dataN; ++i)
+        {
+            tmpMat._data.f64[i] = A._data.f64[i] * B._data.f64[i];
+        }
+    }
+    return tmpMat;
+}
+
+Mat operator +(const Mat &A, const Mat &B)
+{
+    if(A.isEmpty())
+    {
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(B.isEmpty())
+    {
+        throw Exception(1,"[Mat]: Mat B is empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    Mat tmpMat = A;
+
+    if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
+            A._width != B._width || A._height != B._height)
+    {
+        throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int dataN = A._width*A._height;
@@ -1926,7 +2160,7 @@ Mat operator +(const double &a, const Mat &A)
 
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
@@ -1978,14 +2212,14 @@ Mat operator +(const Mat &A, const double &a)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
 
     if(tmpMat.isEmpty())
     {
-        throw Exception(1,"[CV]: mat empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: mat empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int dataN = A._width*A._height;
@@ -2035,12 +2269,12 @@ Mat operator -(const Mat &A, const Mat &B)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(B.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat B is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat B is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
@@ -2048,7 +2282,7 @@ Mat operator -(const Mat &A, const Mat &B)
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
             A._width != B._width || A._height != B._height)
     {
-        throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int dataN = A._width*A._height;
@@ -2094,14 +2328,14 @@ Mat operator -(const double &a, const Mat &A)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
 
     if(tmpMat.isEmpty())
     {
-        throw Exception(1,"[CV]: mat empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: mat empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int dataN = A._width*A._height;
@@ -2149,14 +2383,14 @@ Mat operator -(const Mat &A, const double &a)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
 
     if(tmpMat.isEmpty())
     {
-        throw Exception(1,"[CV]: mat empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: mat empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int dataN = A._width*A._height;
@@ -2204,67 +2438,59 @@ Mat operator *(const Mat &A, const Mat &B)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(B.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat B is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat B is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    Mat tmpMat = A;
-
-    if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-            A._width != B._width || A._height != B._height)
+    if(A.getWidth() != B.getHeight())
     {
-        throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A'W != B'H ! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    int dataN = A._width*A._height;
-
-    if(tmpMat.isU8Mat())
+    if(A.getMatType() != B.getMatType() || A.getChannel() != B.getChannel() || A.getStep() != B.getStep())
     {
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(!A.isF32Mat() && !A.isF64Mat() && !A.isOneChannel())
+    {
+        throw Exception(1,"[Mat]: mat must be f32/f64 1 channel mat! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    SimdInfo simdInfo;
+
+    if(A.isF32Mat())
+    {
+
+        Mat C(B.getWidth(),A.getHeight(),MatType::MAT_GRAY_F32);
+#ifdef USE_X86
+        Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f32,A.getWidth(),B.getData().f32,B.getWidth(),1,C.getData().f32,C.getWidth(), simdInfo.getSupportAVX2());
+#else
+        Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f32,A.getWidth(),B.getData().f32,B.getWidth(),1,C.getData().f32,C.getWidth(), false);
 #endif
-        for (int i = 0; i < dataN; ++i)
-        {
-            int mul = A._data.u8[i] * B._data.u8[i];
-
-            mul = (mul>255)?255:mul;
-
-            tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
-
-        }
+        return C;
     }
-    else if(tmpMat.isF32Mat())
+    else
     {
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        Mat C(B.getWidth(),A.getHeight(),MatType::MAT_GRAY_F64);
+#ifdef USE_X86
+        Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f64,A.getWidth(),B.getData().f64,B.getWidth(),1,C.getData().f64,C.getWidth(), simdInfo.getSupportAVX2());
+#else
+        Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f64,A.getWidth(),B.getData().f64,B.getWidth(),1,C.getData().f64,C.getWidth(), false);
 #endif
-        for (int i = 0; i < dataN; ++i)
-        {
-            tmpMat._data.f32[i] = A._data.f32[i] * B._data.f32[i];
-        }
+        return C;
     }
-    else if(tmpMat.isF64Mat())
-    {
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
-#endif
-        for (int i = 0; i < dataN; ++i)
-        {
-            tmpMat._data.f64[i] = A._data.f64[i] * B._data.f64[i];
-        }
-    }
-    return tmpMat;
 }
 
 Mat operator *(const double &a, const Mat &A)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
@@ -2316,7 +2542,7 @@ Mat operator *(const Mat &A, const double &a)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
@@ -2368,12 +2594,12 @@ Mat operator /(const Mat &A, const Mat &B)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(B.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat B is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat B is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
@@ -2381,7 +2607,7 @@ Mat operator /(const Mat &A, const Mat &B)
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
             A._width != B._width || A._height != B._height)
     {
-        throw Exception(1,"[CV]: mat properties not equal!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     int dataN = A._width*A._height;
@@ -2437,7 +2663,7 @@ Mat operator /(const double &a, const Mat &A)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
@@ -2494,7 +2720,7 @@ Mat operator /(const Mat &A, const double &a)
 {
     if(A.isEmpty())
     {
-        throw Exception(1,"[CV]: Mat A is empty!", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     Mat tmpMat = A;
@@ -2546,4 +2772,118 @@ Mat operator /(const Mat &A, const double &a)
     }
     return tmpMat;
 }
+
+Quaternion::Quaternion(const double &q0, const double &q1, const double &q2, const double &q3)
+    :_q0(q0),
+      _q1(q1),
+      _q2(q2),
+      _q3(q3)
+{
+
+}
+
+void Quaternion::setVal(std::vector<double> &val)
+{
+    if(val.size()!=4)
+    {
+        throw Exception(1,"[Quaternion]: val size must = 4! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    this->_q0 = val[0];
+    this->_q1 = val[1];
+    this->_q2 = val[2];
+    this->_q3 = val[3];
+}
+
+std::vector<double> Quaternion::getVal()
+{
+    return {this->_q0,this->_q1,this->_q2,this->_q3};
+}
+
+double Quaternion::mod()
+{
+    return sqrt(this->_q0*this->_q0 + this->_q1*this->_q1 + this->_q2*this->_q2 + this->_q2*this->_q2);
+}
+
+Quaternion Quaternion::invert()
+{
+    double mod = this->mod();
+    return Quaternion(this->_q0/mod, this->_q1/mod, this->_q2/mod, this->_q3/mod);
+}
+
+double Quaternion::getQ0() const
+{
+    return _q0;
+}
+
+double Quaternion::getQ1() const
+{
+    return _q1;
+}
+
+double Quaternion::getQ2() const
+{
+    return _q2;
+}
+
+double Quaternion::getQ3() const
+{
+    return _q3;
+}
+
+double Quaternion::operator[](const uint8_t &index)
+{
+    if(index >4)
+    {
+        throw Exception(1,"[Quaternion]: index out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+    if(index == 0)
+    {
+        return this->_q0;
+    }
+    else if(index == 1)
+    {
+        return this->_q1;
+    }
+    else if(index == 2)
+    {
+        return this->_q2;
+    }
+    else
+    {
+        return this->_q3;
+    }
+}
+
+Quaternion operator/(const Quaternion &A, Quaternion &B)
+{
+    return A*B.invert();
+}
+
+Quaternion operator*(const Quaternion &A, const Quaternion &B)
+{
+    return Quaternion(
+                A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
+                A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
+                A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
+                A.getQ0()*B.getQ3()+A.getQ1()*B.getQ2()-A.getQ2()*B.getQ1()+A.getQ3()*B.getQ0()
+                );
+}
+
+Quaternion operator+(const Quaternion &A, const Quaternion &B)
+{
+    return Quaternion(A.getQ0()+B.getQ0(),
+                      A.getQ1()+B.getQ1(),
+                      A.getQ2()+B.getQ2(),
+                      A.getQ3()+B.getQ3());
+}
+
+Quaternion operator-(const Quaternion &A, const Quaternion &B)
+{
+    return Quaternion(A.getQ0()-B.getQ0(),
+                      A.getQ1()-B.getQ1(),
+                      A.getQ2()-B.getQ2(),
+                      A.getQ3()-B.getQ3());
+}
+
 }

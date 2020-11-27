@@ -75,11 +75,12 @@ void unetMsnhCV(const std::string& msnhnetPath, const std::string& msnhbinPath, 
         std::cout<<msnhNet.getTimeDetail()<<std::endl;
 		Msnhnet::MatOp::cvtColor(mat, mat, Msnhnet::CVT_GRAY2RGB);
         mat = mat + mask;
-        mat.saveImage("unet.jpg");
-		#ifdef _WIN32
-        system("unet.jpg");
+
+        #ifdef USE_MSNHCV_GUI
+        Msnhnet::Gui::imShow("unet",mat);
+        Msnhnet::Gui::wait();
         #else
-        std::cout<<"result pic has been saved at /[App Dir]/unet.jpg"<<std::endl;
+        mat.saveImage("unet.jpg");
         #endif
     }
     catch (Msnhnet::Exception ex)

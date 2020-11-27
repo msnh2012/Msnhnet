@@ -14,6 +14,12 @@ ResBlockLayer::ResBlockLayer(const int &batch, NetBuildParams &params, std::vect
     this->_height        =   params.height;
     this->_channel       =   params.channels;
 
+    if(this->_activation == ActivationType::PRELU) 
+
+    {
+        throw Exception(1, "prelu activation is not supported by ResBlock ", __FILE__, __LINE__, __FUNCTION__);
+    }
+
     BaseLayer *layer    =   nullptr;
     this->_layerDetail.append("================================  ResBlock ================================\n");
 

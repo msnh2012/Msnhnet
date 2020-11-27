@@ -30,6 +30,7 @@ public:
 
     static float activate(const float &x, const ActivationType &actType, const float &params = 0.1f);
     static void activateArray(float *const &x, const int &numX, const ActivationType &actType, const bool &useAVX, const float &param = 0.1f);
+    static void activatePRelu(float *const &x, const int &batch, const int &channels, float *const &weights, const int &whStep, const bool &useAVX);
     static void activateArrayNormCh(float *const &x, const int &numX, const int &batch, const int &channels, const int &whStep, float *const &output);
     static void activateArrayNormChSoftMax(float *const &x, const int &numX, const int &batch, const int &channels, const int &whStep, float *const &output, const int &useMaxVal);
 

@@ -20,7 +20,6 @@ public:
     BatchNormLayer(const int &batch, const int &width, const int &height, const int &channel, const ActivationType &activation, const float &eps, const std::vector<float> &actParams);
 
     virtual void forward(NetworkState &netState);
-
     virtual void mallocMemory();
 
 #ifdef USE_GPU
@@ -40,6 +39,7 @@ public:
     void loadBias(float *const &bias, const int& len);
     void loadRollMean(float *const &rollMean, const int& len);
     void loadRollVariance(float *const &rollVariance, const int& len);
+    void loadPreluWeights(float *const &weights, const int& len); 
 
     ~BatchNormLayer();
 
@@ -48,11 +48,13 @@ public:
     float *getRollMean() const;
     float *getRollVariance() const;
     float *getActivationInput() const;
+    float *getPreluWeights() const;
 
     int getNBiases() const;
     int getNScales() const;
     int getNRollMean() const;
     int getNRollVariance() const;
+    int getNPreluWeights() const;
 
 protected:
     float       *_scales             =   nullptr;
@@ -60,14 +62,17 @@ protected:
     float       *_rollMean           =   nullptr;
     float       *_rollVariance       =   nullptr;
     float       *_activationInput    =   nullptr;
+    float       *_preluWeights       =   nullptr;
 
 #ifdef USE_GPU
     float       *_gpuScales          =   nullptr;
     float       *_gpuBiases          =   nullptr;
     float       *_gpuRollMean        =   nullptr;
     float       *_gpuRollVariance    =   nullptr;
+    float       *_gpuPreluWeights    =   nullptr;
 #endif
 
+    int         _nPreluWeights       =   0;
     int         _nBiases             =   0;
     int         _nScales             =   0;
     int         _nRollMean           =   0;

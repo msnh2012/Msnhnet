@@ -76,6 +76,7 @@ private:
     int         _nWeights            =   0;
 
     int         _groups              =   1;
+
 };
 }
 #endif 

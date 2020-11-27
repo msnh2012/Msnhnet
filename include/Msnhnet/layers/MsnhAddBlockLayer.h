@@ -41,8 +41,8 @@ public:
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);
 #endif
-
     ~AddBlockLayer();
+
 };
 }
 

@@ -13,6 +13,7 @@ public:
     static void conv3x3s1WinogradTransformKenel(float *const &kernel, float* &kernel_tm, float* &kernel_tm2,const int &inChannel, const int &outChannel);
     static void conv3x3s1WinogradNeon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                                  const int &kHeight, const int &kWidth, float* &dest, const int &outWidth, const int &outHeight, const int &outChannel);
+    
 
 };
 

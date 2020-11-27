@@ -50,7 +50,17 @@ ConnectedLayer::ConnectedLayer(const int &batch, const int &steps, const int &in
         this->_nRollVariance =   outputNum;
     }
 
-    this->_numWeights            =   static_cast<size_t>(this->_nWeights + this->_nScales + this->_nRollMean + this->_nRollVariance + this->_nBiases);
+    if(activation==ActivationType::PRELU) 
+
+    {
+        this->_nPreluWeights = outputNum;
+    }
+    else
+    {
+        this->_nPreluWeights = 0;
+    }
+
+    this->_numWeights            =   static_cast<size_t>(this->_nWeights + this->_nScales + this->_nRollMean + this->_nRollVariance + this->_nBiases + this->_nPreluWeights);
 
     this->_inputSpaceSize        =   _inputNum;
 
@@ -79,6 +89,16 @@ ConnectedLayer::~ConnectedLayer()
     Cuda::freeCuda(_gpuRollMean);
     Cuda::freeCuda(_gpuRollVariance);
 #endif
+
+    if(this->_activation==ActivationType::PRELU) 
+
+    {
+        releaseArr(this->_preluWeights);
+#ifdef USE_GPU
+
+        Cuda::freeCuda(this->_gpuPreluWeights);
+#endif
+    }
 }
 
 void ConnectedLayer::forward(NetworkState &netState)
@@ -195,14 +215,21 @@ void ConnectedLayer::forward(NetworkState &netState)
         this->_forwardTime  =   TimeUtil::getElapsedTime(st);
         return;
     }
+    else if(this->_activation == ActivationType::PRELU)
 
-    if(_actParams.size() > 0)
     {
-        Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx,_actParams[0]);
+        Activations::activatePRelu(layerOutput,this->_batch, this->_outChannel,this->_preluWeights, this->_outWidth*this->_outHeight, this->supportAvx);
     }
     else
     {
-        Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
+        if(_actParams.size() > 0)
+        {
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx,_actParams[0]);
+        }
+        else
+        {
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
+        }
     }
 
     this->_forwardTime =  TimeUtil::getElapsedTime(st);
@@ -273,6 +300,12 @@ void ConnectedLayer::saveAllWeights(const int &mainIdx, const int &branchIdx, co
             Cuda::pullCudaArray(this->_gpuRollMean, this->_rollMean, this->_nRollMean);
             Cuda::pullCudaArray(this->_gpuRollVariance, this->_rollVariance, this->_nRollVariance);
         }
+
+        if(this->_activation == ActivationType::PRELU) 
+
+        {
+            Cuda::pullCudaArray(this->_gpuPreluWeights, this->_preluWeights, this->_nPreluWeights);
+        }
     }
 #endif
 
@@ -312,6 +345,18 @@ void ConnectedLayer::saveAllWeights(const int &mainIdx, const int &branchIdx, co
         Msnhnet::IO::saveVector<float>(rollMeanVec,rollMeanName.c_str(),"\n");
         std::string rollVarianceName = "rollVariance"+name;
         Msnhnet::IO::saveVector<float>(rollVarianceVec,rollVarianceName.c_str(),"\n");
+    }
+
+    if(this->_activation==ActivationType::PRELU) 
+
+    {
+        if(this->_preluWeights==nullptr)
+        {
+            throw Exception(1,"connected weights err.", __FILE__, __LINE__, __FUNCTION__);
+        }
+        std::vector<float> preluWeightsVec(this->_preluWeights,this->_preluWeights+this->_nPreluWeights);
+        std::string preluWeightsName = "preluWeights"+name;
+        Msnhnet::IO::saveVector<float>(preluWeightsVec,preluWeightsName.c_str(),"\n");
     }
 }
 #ifdef USE_GPU
@@ -421,14 +466,21 @@ void ConnectedLayer::forwardGPU(NetworkState &netState)
         this->recordCudaStop();
         return;
     }
+    else if(this->_activation == ActivationType::PRELU) 
 
-    if(_actParams.size() > 0)
     {
-        ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+        ActivationsGPU::gpuActivatePRelu(layerGpuOutput,this->_batch, this->_outChannel, this->_gpuPreluWeights, this->_outHeight*this->_outWidth);
     }
     else
     {
-        ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation);
+        if(_actParams.size() > 0)
+        {
+            ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation, _actParams[0]);
+        }
+        else
+        {
+            ActivationsGPU::gpuActivateArray(layerGpuOutput, this->_outputNum*this->_batch, this->_activation);
+        }
     }
 
     this->recordCudaStop();
@@ -445,8 +497,11 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
     }
     if(!BaseLayer::isPreviewMode)
     {
+        int offset = 0;
+
         this->_weights       =   new float[static_cast<size_t>(this->_nWeights)]();
         loadWeights(weights.data(), _nWeights);
+        offset += _nWeights;
 
         if(this->_batchNorm)
         {
@@ -459,11 +514,25 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
             loadRollMean(weights.data() + this->_nWeights + this->_nScales, this->_nRollMean);
             loadRollVariance(weights.data() + this->_nWeights + this->_nScales + this->_nRollMean, this->_nRollVariance);
             loadBias(weights.data() + this->_nWeights + this->_nScales + this->_nRollMean + this->_nRollVariance, this->_nBiases);
+
+            offset = offset + this->_nScales + this->_nRollMean + this->_nRollVariance + this->_nBiases;
         }
         else
         {
-            this->_biases        =   new float[static_cast<size_t>(this->_nBiases)]();
-            loadBias(weights.data() + this->_nWeights, this->_nBiases);
+            if(this->_useBias)
+            {
+                this->_biases        =   new float[static_cast<size_t>(this->_nBiases)]();
+                loadBias(weights.data() + this->_nWeights, this->_nBiases);
+
+                offset = offset + this->_nBiases;
+            }
+        }
+
+        if(this->_activation == ActivationType::PRELU) 
+
+        {
+            this->_preluWeights = new float[static_cast<size_t>(this->_nPreluWeights)]();
+            loadPreluWeights(weights.data() + offset, this->_nPreluWeights);
         }
 
 #ifdef USE_GPU
@@ -481,6 +550,12 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
             {
                 this->_gpuBiases        =   Cuda::makeCudaArray(this->_biases, this->_nBiases);
             }
+
+            if(this->_activation == ActivationType::PRELU) 
+
+            {
+                this->_gpuPreluWeights = Cuda::makeCudaArray(this->_preluWeights, this->_nPreluWeights);
+            }
         }
 
         if(BaseLayer::onlyUseGpu)
@@ -490,6 +565,11 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
             releaseArr(this->_rollMean    );
             releaseArr(this->_rollVariance);
             releaseArr(this->_biases      );
+            if(this->_activation == ActivationType::PRELU) 
+
+            {
+                releaseArr(this->_preluWeights);
+            }
         }
 #endif
     }
@@ -540,6 +620,15 @@ void ConnectedLayer::loadRollVariance(float * const &rollVariance, const int &le
         throw Exception(1, "load roll variance data len error ",__FILE__,__LINE__, __FUNCTION__);
     }
     Blas::cpuCopy(len, rollVariance, 1, this->_rollVariance,1);
+}
+
+void ConnectedLayer::loadPreluWeights(float * const &weights, const int &len)
+{
+    if(len != this->_nPreluWeights)
+    {
+        throw Exception(1, "load preluWeights data len error",__FILE__,__LINE__, __FUNCTION__);
+    }
+    Blas::cpuCopy(len, weights, 1, this->_preluWeights,1);
 }
 
 float *ConnectedLayer::getWeights() const

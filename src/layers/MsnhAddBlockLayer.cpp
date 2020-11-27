@@ -8,6 +8,12 @@ AddBlockLayer::AddBlockLayer(const int &batch, NetBuildParams &params, std::vect
     this->_activation    =   activation;
     this->_actParams     =   actParams;
 
+    if(this->_activation == ActivationType::PRELU)  
+
+    {
+        throw Exception(1, "prelu activation is not supported by AddBlock ", __FILE__, __LINE__, __FUNCTION__);
+    }
+
     this->_batch         =   batch;
     this->_width         =   params.width;
     this->_height        =   params.height;

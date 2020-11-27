@@ -10,4 +10,4 @@ resnet18.eval()
 input=torch.ones([1,3,224,224])
 
 # trans msnhnet and msnhbin file
-trans(resnet18, input,"resnet18.msnhnet","resnet18.msnhbin")
+trans(resnet18, input,"resnet18.msnhnet","resnet18.msnhbin",False)
