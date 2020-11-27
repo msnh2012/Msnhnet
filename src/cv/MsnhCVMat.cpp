@@ -1099,17 +1099,17 @@ bool Mat::isEmpty() const
     }
 }
 
-Vec2I32 Mat::getSize()
+Vec2I32 Mat::getSize() const
 {
     return Vec2I32(this->_width, this->_height);
 }
 
-size_t Mat::getDataNum()
+size_t Mat::getDataNum() const
 {
     return this->_width*this->_height*this->_channel;
 }
 
-uint8_t Mat::getPerDataByteNum()
+uint8_t Mat::getPerDataByteNum() const
 {
     return static_cast<uint8_t>(this->_step/this->_channel);
 }
@@ -2007,7 +2007,7 @@ Mat Mat::dot(const Mat &A, const Mat &B)
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
@@ -2067,7 +2067,7 @@ Mat operator +(const Mat &A, const Mat &B)
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
@@ -2117,7 +2117,7 @@ Mat operator +(const double &a, const Mat &A)
 
     Mat tmpMat = A;
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
@@ -2174,7 +2174,7 @@ Mat operator +(const Mat &A, const double &a)
         throw Exception(1,"[Mat]: mat empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
@@ -2237,7 +2237,7 @@ Mat operator -(const Mat &A, const Mat &B)
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
@@ -2290,7 +2290,7 @@ Mat operator -(const double &a, const Mat &A)
         throw Exception(1,"[Mat]: mat empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
@@ -2345,7 +2345,7 @@ Mat operator -(const Mat &A, const double &a)
         throw Exception(1,"[Mat]: mat empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
@@ -2447,21 +2447,19 @@ Mat operator *(const double &a, const Mat &A)
 
     Mat tmpMat = A;
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
-        int mulVal = static_cast<int>(a);
-        mulVal = mulVal>255?255:mulVal;
-        mulVal = mulVal<0?0:mulVal;
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
-            int mul = A._data.u8[i]* mulVal;
+            int mul = static_cast<int>(A._data.u8[i]* a);
 
             mul = (mul>255)?255:mul;
+            mul = (mul<0)?0:mul;
 
             tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
 
@@ -2499,21 +2497,19 @@ Mat operator *(const Mat &A, const double &a)
 
     Mat tmpMat = A;
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
-        int mulVal = static_cast<int>(a);
-        mulVal = mulVal>255?255:mulVal;
-        mulVal = mulVal<0?0:mulVal;
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
-            int mul = A._data.u8[i]*mulVal;
+            int mul = static_cast<int>(A._data.u8[i]* a);
 
             mul = (mul>255)?255:mul;
+            mul = (mul<0)?0:mul;
 
             tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
 
@@ -2562,7 +2558,7 @@ Mat operator /(const Mat &A, const Mat &B)
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
@@ -2620,7 +2616,7 @@ Mat operator /(const double &a, const Mat &A)
 
     Mat tmpMat = A;
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
@@ -2677,12 +2673,10 @@ Mat operator /(const Mat &A, const double &a)
 
     Mat tmpMat = A;
 
-    int dataN = A._width*A._height;
+    size_t dataN = A.getDataNum();
 
     if(tmpMat.isU8Mat())
     {
-        int divVal = static_cast<int>(a);
-        divVal = divVal<0?0:divVal;
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
@@ -2690,15 +2684,16 @@ Mat operator /(const Mat &A, const double &a)
         {
             int div =  0;
 
-            if(A._data.u8[i] == 0 || divVal == 0)
+            if(A._data.u8[i] == 0 || abs(a)<0.0000001)
             {
                 div = 0;
             }
             else
             {
-                div = static_cast<int>(A._data.u8[i]/divVal);
+                div = static_cast<int>(A._data.u8[i]/a);
             }
             div = (div>255)?255:div;
+            div = (div<0)?0:div;
             tmpMat._data.u8[i] = static_cast<uint8_t>(div);
         }
     }

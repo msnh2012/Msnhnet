@@ -226,11 +226,11 @@ public:
 
     bool isEmpty() const; 
 
-    Vec2I32 getSize();
+    Vec2I32 getSize() const;
 
-    size_t getDataNum();
+    size_t getDataNum() const;
 
-    uint8_t getPerDataByteNum();
+    uint8_t getPerDataByteNum() const;
 
     /* one channel  */
     static Mat eye(const int &num, const MatType &matType);
