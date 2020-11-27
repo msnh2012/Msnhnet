@@ -582,7 +582,7 @@ namespace Msnhnet
 
             for(int i = 0; i < inChannel; i++){
                 destptr[0] = k0[0];
-                destptr += 4;
+                destptr++;
                 k0 += 1;
             }
         }
@@ -592,6 +592,7 @@ namespace Msnhnet
     // shape[c, h, w]: [outSize / 8 + (outSize % 8) / 4 + outSize % 4, 8*4, inChannel/4+inChannel%4]
     void ConvolutionalLayerArm1x1::conv1x1s1SgemmNeon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                                  float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
+        int inSize = inHeight * inWidth;
         int outSize = outHeight * outWidth;
         // transformed kernel
         int kernelSize = 4 * 4 * (inChannel / 4 + inChannel%4);
@@ -627,7 +628,7 @@ namespace Msnhnet
                 src_tm_ptr[7] = srcptr[7];
 
                 src_tm_ptr += 8;
-                srcptr += inHeight * inWidth;
+                srcptr += outSize;
             }
 
         }
@@ -652,7 +653,7 @@ namespace Msnhnet
                 src_tm_ptr[3] = srcptr[3];
 
                 src_tm_ptr += 4;
-                srcptr += inHeight * inWidth;
+                srcptr += outSize;
             }
         }
 
@@ -674,7 +675,7 @@ namespace Msnhnet
                 src_tm_ptr[0] = srcptr[0];
 
                 src_tm_ptr += 1;
-                srcptr += inHeight * inWidth;
+                srcptr += outSize;
             }
         }
 
@@ -889,7 +890,7 @@ namespace Msnhnet
                     sum3_2 += src_tm_ptr[2] * kernel0[3];
                     sum3_3 += src_tm_ptr[3] * kernel0[3];
 
-                    src_tm_ptr += 4；
+                    src_tm_ptr += 4;
                     kernel0 += 4;
                 }
 
@@ -967,6 +968,7 @@ namespace Msnhnet
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif    
+
         for(int cc = remainOutChannel; cc < outChannel; cc++){
             int c = cc;
             float *destptr0 = dest + c * outSize;
