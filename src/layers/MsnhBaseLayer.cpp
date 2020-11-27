@@ -227,6 +227,11 @@ void BaseLayer::setPreviewMode(const bool &previewMode)
     BaseLayer::isPreviewMode = previewMode;
 }
 
+void BaseLayer::setMemAlign(const bool &memAlign)
+{
+    MemoryManager::memAlign = memAlign;
+}
+
 #ifdef USE_GPU
 void BaseLayer::setForceUseCuda(const bool &forceUseCuda)
 {

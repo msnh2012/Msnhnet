@@ -245,7 +245,8 @@ void ConnectedLayer::mallocMemory()
             if(!BaseLayer::onlyUseGpu) 
 
             {
-                this->_output        =   new float[static_cast<size_t>(this->_totalBatch * this->_outputNum) ]();
+
+                this->_output   = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_batch*this->_outputNum));
             }
 #ifdef USE_GPU
             if(!BaseLayer::onlyUseCpu)
@@ -499,16 +500,18 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
     {
         int offset = 0;
 
-        this->_weights       =   new float[static_cast<size_t>(this->_nWeights)]();
+        this->_weights   = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nWeights));
+
         loadWeights(weights.data(), _nWeights);
         offset += _nWeights;
 
         if(this->_batchNorm)
         {
-            this->_scales        =   new float[static_cast<size_t>(this->_nScales)]();
-            this->_rollMean      =   new float[static_cast<size_t>(this->_nRollMean)]();
-            this->_rollVariance  =   new float[static_cast<size_t>(this->_nRollVariance)]();
-            this->_biases        =   new float[static_cast<size_t>(this->_nBiases)]();
+
+            this->_scales        =    MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nScales));
+            this->_rollMean      =    MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nRollMean));
+            this->_rollVariance  =    MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nRollVariance));
+            this->_biases        =    MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nBiases));
 
             loadScales(weights.data() + this->_nWeights, this->_nScales);
             loadRollMean(weights.data() + this->_nWeights + this->_nScales, this->_nRollMean);
@@ -521,7 +524,9 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
         {
             if(this->_useBias)
             {
-                this->_biases        =   new float[static_cast<size_t>(this->_nBiases)]();
+
+                this->_biases        =    MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nBiases));
+
                 loadBias(weights.data() + this->_nWeights, this->_nBiases);
 
                 offset = offset + this->_nBiases;
@@ -531,7 +536,8 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
         if(this->_activation == ActivationType::PRELU) 
 
         {
-            this->_preluWeights = new float[static_cast<size_t>(this->_nPreluWeights)]();
+
+            this->_preluWeights       = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nPreluWeights));
             loadPreluWeights(weights.data() + offset, this->_nPreluWeights);
         }
 

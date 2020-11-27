@@ -43,54 +43,6 @@ Mat::~Mat()
     release();
 }
 
-Mat::Mat(const int &width, const int &height, const MatType &matType)
-{
-    this->_width    = width;
-    this->_height   = height;
-    this->_matType  = matType;
-
-    switch (matType)
-    {
-    case MatType::MAT_GRAY_U8:
-        this->_channel  = 1;
-        this->_step     = 1;
-        break;
-    case MatType::MAT_GRAY_F32:
-        this->_channel  = 1;
-        this->_step     = 4;
-        break;
-    case MatType::MAT_GRAY_F64:
-        this->_channel  = 1;
-        this->_step     = 8;
-        break;
-    case MatType::MAT_RGB_U8:
-        this->_channel  = 3;
-        this->_step     = 3;
-        break;
-    case MatType::MAT_RGB_F32:
-        this->_channel  = 3;
-        this->_step     = 12;
-        break;
-    case MatType::MAT_RGB_F64:
-        this->_channel  = 3;
-        this->_step     = 24;
-        break;
-    case MatType::MAT_RGBA_U8:
-        this->_channel  = 4;
-        this->_step     = 4;
-        break;
-    case MatType::MAT_RGBA_F32:
-        this->_channel  = 4;
-        this->_step     = 16;
-    case MatType::MAT_RGBA_F64:
-        this->_channel  = 4;
-        this->_step     = 32;
-        break;
-    }
-
-    this->_data.u8      = new uint8_t[this->_width*this->_height*this->_step]();
-}
-
 Mat::Mat(const int &width, const int &height, const MatType &matType, void *data)
 {
     this->_width    = width;
@@ -1893,7 +1845,7 @@ Mat Mat::invert(const DecompType &decompType)
 
 }
 
-void Mat::printMat()
+void Mat::print()
 {
     if(isF32Mat())
     {
@@ -2829,6 +2781,11 @@ double Quaternion::getQ2() const
 double Quaternion::getQ3() const
 {
     return _q3;
+}
+
+void Quaternion::print()
+{
+    std::cout<<"[ "<<_q0<<", "<<_q1<<", "<<_q2<<", "<<_q3<<"] "<<std::endl;
 }
 
 double Quaternion::operator[](const uint8_t &index)

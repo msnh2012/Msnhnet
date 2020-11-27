@@ -52,6 +52,8 @@ public:
 
     static void setPreviewMode(const bool &mode);
 
+    static void setMemAlign(const bool &memAlign);
+
 #ifdef USE_GPU
     static void setOnlyGpu(const bool &onlyGpu);
     static void setOnlyCpu(const bool &onlyCpu);
