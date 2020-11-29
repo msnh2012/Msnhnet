@@ -39,7 +39,8 @@ void CropLayer::mallocMemory()
     {
         if(!BaseLayer::isPreviewMode)
         {
-            this->_output           =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+
+            this->_output             = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_outputNum * this->_batch));
             this->_memoryMalloced   =   true;
         }
     }

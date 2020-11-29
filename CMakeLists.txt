@@ -102,6 +102,7 @@ endif()
 set(SRCS
     src/core/MsnhBlas.cpp
     src/core/MsnhGemm.cpp
+    src/core/MsnhMemoryManager.cpp
     src/io/MsnhIO.cpp
     src/io/MsnhParser.cpp
     src/layers/MsnhActivationLayer.cpp

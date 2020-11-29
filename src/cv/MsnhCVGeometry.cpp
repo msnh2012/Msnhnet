@@ -14,21 +14,21 @@ bool Geometry::isRealRotMat(Mat &R)
 RotationMat Geometry::euler2RotMat(Euler &euler, const RotSequence &seq)
 {
 
-    double a = deg2rad(euler.getVal(0));
-    double b = deg2rad(euler.getVal(1));
-    double c = deg2rad(euler.getVal(2));
+    double a = euler.getVal(0);
+    double b = euler.getVal(1);
+    double c = euler.getVal(2);
 
-    double sina = sin(a); 
+    double sina = std::sin(a); 
 
-    double sinb = sin(b); 
+    double sinb = std::sin(b); 
 
-    double sinc = sin(c); 
+    double sinc = std::sin(c); 
 
-    double cosa = cos(a); 
+    double cosa = std::cos(a); 
 
-    double cosb = cos(b); 
+    double cosb = std::cos(b); 
 
-    double cosc = cos(c); 
+    double cosc = std::cos(c); 
 
     RotationMat Rx;
     Rx.setVal({
@@ -67,18 +67,6 @@ RotationMat Geometry::euler2RotMat(Euler &euler, const RotSequence &seq)
         return Rz*Rx*Ry;
     case ROT_ZYX:
         return Rz*Ry*Rx;
-    case ROT_YXY:
-        return Ry*Rx*Ry;
-    case ROT_ZXZ:
-        return Rz*Ry*Rz;
-    case ROT_XYX:
-        return Rx*Ry*Rx;
-    case ROT_ZYZ:
-        return Rz*Ry*Rz;
-    case ROT_XZX:
-        return Rx*Rz*Rx;
-    case ROT_YZY:
-        return Ry*Rz*Ry;
     default:
         return Rz*Ry*Rx;
     }
@@ -86,21 +74,21 @@ RotationMat Geometry::euler2RotMat(Euler &euler, const RotSequence &seq)
 
 Quaternion Geometry::euler2Quaternion(Euler &euler, const RotSequence &seq)
 {
-    double a = deg2rad(euler.getVal(0))/2;
-    double b = deg2rad(euler.getVal(1))/2;
-    double c = deg2rad(euler.getVal(2))/2;
+    double a = euler.getVal(0)/2;
+    double b = euler.getVal(1)/2;
+    double c = euler.getVal(2)/2;
 
-    double sina = sin(a); 
+    double sina = std::sin(a); 
 
-    double sinb = sin(b); 
+    double sinb = std::sin(b); 
 
-    double sinc = sin(c); 
+    double sinc = std::sin(c); 
 
-    double cosa = cos(a); 
+    double cosa = std::cos(a); 
 
-    double cosb = cos(b); 
+    double cosb = std::cos(b); 
 
-    double cosc = cos(c); 
+    double cosc = std::cos(c); 
 
     Quaternion Rx(cosa,sina,0,0);
     Quaternion Ry(cosb,0,sinb,0);
@@ -121,18 +109,6 @@ Quaternion Geometry::euler2Quaternion(Euler &euler, const RotSequence &seq)
         return Rz*Rx*Ry;
     case ROT_ZYX:
         return Rz*Ry*Rx;
-    case ROT_YXY:
-        return Ry*Rx*Ry;
-    case ROT_ZXZ:
-        return Rz*Ry*Rz;
-    case ROT_XYX:
-        return Rx*Ry*Rx;
-    case ROT_ZYZ:
-        return Rz*Ry*Rz;
-    case ROT_XZX:
-        return Rx*Rz*Rx;
-    case ROT_YZY:
-        return Ry*Rz*Ry;
     default:
         return Rz*Ry*Rx;
     }
@@ -140,115 +116,152 @@ Quaternion Geometry::euler2Quaternion(Euler &euler, const RotSequence &seq)
 
 Euler Geometry::rotMat2Euler(RotationMat &rotMat, const RotSequence &seq)
 {
-    Quaternion quat = rotMat2Quaternion(rotMat);
-    return quaternion2Euler(quat,seq);
-}
+    const double m11 = rotMat.getValAtRowCol(0,0), m12 = rotMat.getValAtRowCol(0,1), m13 = rotMat.getValAtRowCol(0,2);
+    const double m21 = rotMat.getValAtRowCol(1,0), m22 = rotMat.getValAtRowCol(1,1), m23 = rotMat.getValAtRowCol(1,2);
+    const double m31 = rotMat.getValAtRowCol(2,0), m32 = rotMat.getValAtRowCol(2,1), m33 = rotMat.getValAtRowCol(2,2);
 
-Euler Geometry::quaternion2Euler(Quaternion &q, const RotSequence &seq)
-{
-    double psi = 0;
-    double theta = 0;
-    double phi = 0;
+    double x = 0;
+    double y = 0;
+    double z = 0;
 
     switch (seq)
     {
     case ROT_XYZ:
-        psi   = atan2(2 * (q[1] * q[0] - q[2] * q[3]),(q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]));
-        theta = asin(2 * (q[1] * q[3] + q[2] * q[0]));
-        phi   = atan2(2 * (q[3] * q[0] - q[1] * q[2]), (q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]));
-        singularityCheck(2,theta);
-        break;
-    case ROT_XZY:
-        psi   = atan2(2 * (q[1] * q[0] + q[2] * q[3]), (q[0] * q[0] - q[1] * q[1] + q[2] * q[2] - q[3] * q[3]));
-        theta = asin(2 * (q[3] * q[0] - q[1] * q[2]));
-        phi   = atan2(2 * (q[1] * q[3] + q[2] * q[0]), (q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]));
-        singularityCheck(2, theta);
+        y = std::asin(clamp(m13,-1,1));
+        if(std::abs(m13) < 0.999999)
+        {
+            x = std::atan2( - m23, m33 );
+            z = std::atan2( - m12, m11 );
+        }
+        else
+        {
+            x = std::atan2( m32, m22 );
+            z = 0;
+        }
         break;
     case ROT_YXZ:
-        psi   = atan2(2 * (q[1] * q[3] + q[2] * q[0]), (q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]));
-        theta = asin(2 * (q[1] * q[0] - q[2] * q[3]));
-        phi   = atan2(2 * (q[1] * q[2] + q[3] * q[0]), (q[0] * q[0] - q[1] * q[1] + q[2] * q[2] - q[3] * q[3]));
-        singularityCheck(2, theta);
-        break;
-    case ROT_YZX:
-        psi   = atan2(2 * (q[2] * q[0] - q[1] * q[3]), (q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]));
-        theta = asin(2 * (q[1] * q[2] + q[3] * q[0]));
-        phi   = atan2(2 * (q[1] * q[0] - q[3] * q[2]), (q[0] * q[0] - q[1] * q[1] + q[2] * q[2] - q[3] * q[3]));
-        singularityCheck(2, theta);
+        x = std::asin( - clamp( m23, - 1, 1 ) );
+
+        if ( std::abs( m23 ) < 0.999999)
+        {
+            y = std::atan2( m13, m33 );
+            z = std::atan2( m21, m22 );
+        }
+        else
+        {
+            y = std::atan2( - m31, m11 );
+            z = 0;
+        }
         break;
     case ROT_ZXY:
-        psi   = atan2(2 * (q[3] * q[0] - q[1] * q[2]), (q[0] * q[0] - q[1] * q[1] + q[2] * q[2] - q[3] * q[3]));
-        theta = asin(2 * (q[1] * q[0] + q[2] * q[3]));
-        phi   = atan2(2 * (q[2] * q[0] - q[3] * q[1]), (q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]));
-        singularityCheck(2, theta);
+        x = std::asin( clamp( m32, - 1, 1 ) );
+
+        if ( std::abs( m32 ) < 0.999999 )
+        {
+            y = std::atan2( - m31, m33 );
+            z = std::atan2( - m12, m22 );
+        }
+        else
+        {
+            y = 0;
+            z = std::atan2( m21, m11 );
+        }
         break;
     case ROT_ZYX:
-        psi   = atan2(2 * (q[1] * q[2] + q[3] * q[0]), (q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]));
-        theta = asin(2 * (q[2] * q[0] - q[1] * q[3]));
-        phi   = atan2(2 * (q[1] * q[0] + q[3] * q[2]), (q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]));
-        singularityCheck(2, theta);
+        y = std::asin( - clamp( m31, - 1, 1 ) );
+
+        if ( std::abs( m31 ) < 0.999999 )
+        {
+            x = std::atan2( m32, m33 );
+            z = std::atan2( m21, m11 );
+        }
+        else
+        {
+            x = 0;
+            z = std::atan2( - m12, m22 );
+        }
         break;
-    case ROT_YXY:
-        psi = atan2((q[1] * q[2] - q[3] * q[0]), (q[1] * q[0] + q[2] * q[3]));
-        theta = acos(q[0] * q[0] - q[1] * q[1] + q[2] * q[2] - q[3] * q[3]);
-        phi = atan2((q[1] * q[2] + q[3] * q[0]), (q[1] * q[0] - q[2] * q[3]));
-        singularityCheck(1, theta);
+    case ROT_YZX:
+        z = std::asin( clamp( m21, - 1, 1 ) );
+
+        if ( std::abs( m21 ) < 0.999999 )
+        {
+            x = std::atan2( - m23, m22 );
+            y = std::atan2( - m31, m11 );
+        }
+        else
+        {
+            x = 0;
+            y = std::atan2( m13, m33 );
+        }
         break;
-    case ROT_ZXZ:
-        psi = atan2((q[1] * q[3] + q[2] * q[0]), (q[1] * q[0] - q[2] * q[3]));
-        theta = acos(q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
-        phi = atan2((q[1] * q[3] - q[2] * q[0]), (q[1] * q[0] + q[2] * q[3]));
-        singularityCheck(1, theta);
-        break;
-    case ROT_XYX:
-        psi = atan2((q[1] * q[2] + q[3] * q[0]), (q[2] * q[0] - q[1] * q[3]));
-        theta = acos(q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]);
-        phi = atan2((q[1] * q[2] - q[3] * q[0]), (q[1] * q[3] + q[2] * q[0]));
-        singularityCheck(1, theta);
-        break;
-    case ROT_ZYZ:
-        psi = atan2((q[2] * q[3] - q[1] * q[0]), (q[1] * q[3] + q[2] * q[0]));
-        theta = acos(q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
-        phi = atan2((q[1] * q[0] + q[2] * q[3]), (q[2] * q[0] - q[1] * q[3]));
-        singularityCheck(1, theta);
-        break;
-    case ROT_XZX:
-        psi = atan2((q[1] * q[3] - q[2] * q[0]), (q[1] * q[2] + q[3] * q[0]));
-        theta = acos(q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]);
-        phi = atan2((q[1] * q[3] + q[2] * q[0]), (q[3] * q[0] - q[1] * q[2]));
-        singularityCheck(1, theta);
-        break;
-    case ROT_YZY:
-        psi = atan2((q[1] * q[0] + q[2] * q[3]), (q[3] * q[0] - q[1] * q[2]));
-        theta = acos(q[0] * q[0] - q[1] * q[1] + q[2] * q[2] - q[3] * q[3]);
-        phi = atan2((q[2] * q[3] - q[1] * q[0]), (q[1] * q[2] + q[3] * q[0]));
-        singularityCheck(1, theta);
-        break;
-    default:
-        psi   = atan2(2 * (q[1] * q[2] + q[3] * q[0]), (q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]));
-        theta = asin(2 * (q[2] * q[0] - q[1] * q[3]));
-        phi   = atan2(2 * (q[1] * q[0] + q[3] * q[2]), (q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]));
-        singularityCheck(2, theta);
+    case ROT_XZY:
+        z = std::asin( - clamp( m12, - 1, 1 ) );
+
+        if ( std::abs( m12 ) < 0.999999 )
+        {
+            x = std::atan2( m32, m22 );
+            y = std::atan2( m13, m11 );
+        }
+        else
+        {
+            x = std::atan2( - m23, m33 );
+            y = 0;
+        }
+
         break;
     }
 
     Euler euler;
-    euler.setVal({rad2deg(psi),rad2deg(theta),rad2deg(phi)});
+    euler.setVal({x,y,z});
     return euler;
+}
+
+Euler Geometry::quaternion2Euler(Quaternion &q, const RotSequence &seq)
+{
+
+    RotationMat rotMat = quaternion2RotMat(q);
+    return rotMat2Euler(rotMat,seq);
 }
 
 Quaternion Geometry::rotMat2Quaternion(RotationMat &rotMat)
 {
-    if(isRealRotMat(rotMat))
-    {
-        throw Exception(1, "[Geometry]: is not a rotation matrix! \n",__FILE__,__LINE__,__FUNCTION__);
-    }
-
     double q[4];
-    q[0] = 0.5*sqrt(1+rotMat.getVal(0,0)+rotMat.getVal(1,1)+rotMat.getVal(2,2));
-    q[1] = (rotMat.getVal(2,1) - rotMat.getVal(1,2))/(4*q[0]);
-    q[2] = (rotMat.getVal(0,2) - rotMat.getVal(2,0))/(4*q[0]);
-    q[3] = (rotMat.getVal(1,0) - rotMat.getVal(0,1))/(4*q[0]);
+
+    double trace = rotMat.getValAtRowCol(0,0)+rotMat.getValAtRowCol(1,1)+rotMat.getValAtRowCol(2,2);
+
+    if(trace > ROT_EPS)
+
+    {
+        q[0] = 0.5*sqrt(1+rotMat.getValAtRowCol(0,0)+rotMat.getValAtRowCol(1,1)+rotMat.getValAtRowCol(2,2));
+        q[1] = (rotMat.getValAtRowCol(2,1) - rotMat.getValAtRowCol(1,2))/(4*q[0]);
+        q[2] = (rotMat.getValAtRowCol(0,2) - rotMat.getValAtRowCol(2,0))/(4*q[0]);
+        q[3] = (rotMat.getValAtRowCol(1,0) - rotMat.getValAtRowCol(0,1))/(4*q[0]);
+    }
+    else if(rotMat.getValAtRowCol(0,0)>rotMat.getValAtRowCol(1,1) && rotMat.getValAtRowCol(0,0)>rotMat.getValAtRowCol(2,2))
+    {
+        double t = 2*sqrt(1+rotMat.getValAtRowCol(0,0)-rotMat.getValAtRowCol(1,1)-rotMat.getValAtRowCol(2,2));
+        q[0]     = (rotMat.getValAtRowCol(2,1) - rotMat.getValAtRowCol(1,2))/t;
+        q[1]     = 0.25*t;
+        q[2]     = (rotMat.getValAtRowCol(0,2) + rotMat.getValAtRowCol(2,0))/t;
+        q[3]     = (rotMat.getValAtRowCol(0,1) + rotMat.getValAtRowCol(1,0))/t;
+    }
+    else if(rotMat.getValAtRowCol(1,1)>rotMat.getValAtRowCol(0,0) && rotMat.getValAtRowCol(1,1)>rotMat.getValAtRowCol(2,2))
+    {
+        double t = 2*sqrt(1-rotMat.getValAtRowCol(0,0)+rotMat.getValAtRowCol(1,1)-rotMat.getValAtRowCol(2,2));
+        q[0]     = (rotMat.getValAtRowCol(0,2) - rotMat.getValAtRowCol(2,0))/t;
+        q[1]     = (rotMat.getValAtRowCol(0,1) + rotMat.getValAtRowCol(1,0))/t;
+        q[2]     = 0.25*t;
+        q[3]     = (rotMat.getValAtRowCol(2,1) + rotMat.getValAtRowCol(1,2))/t;
+    }
+    else if(rotMat.getValAtRowCol(2,2)>rotMat.getValAtRowCol(0,0) && rotMat.getValAtRowCol(2,2)>rotMat.getValAtRowCol(1,1))
+    {
+        double t = 2*sqrt(1-rotMat.getValAtRowCol(0,0)-rotMat.getValAtRowCol(1,1)+rotMat.getValAtRowCol(2,2));
+        q[0]     = (rotMat.getValAtRowCol(1,0) - rotMat.getValAtRowCol(0,1))/t;
+        q[1]     = (rotMat.getValAtRowCol(0,2) + rotMat.getValAtRowCol(2,0))/t;
+        q[2]     = (rotMat.getValAtRowCol(1,2) + rotMat.getValAtRowCol(2,1))/t;
+        q[3]     = 0.25*t;
+    }
 
     return Quaternion(q[0],q[1],q[2],q[3]);
 }
@@ -262,17 +275,80 @@ RotationMat Geometry::quaternion2RotMat(Quaternion &q)
 
     RotationMat rotMat;
     rotMat.setVal({
-                      q0*q0+q1*q1-q2*q2-q3*q3,  2.0*(q1*q2-q0*q3),         2.0*(q1*q3+q0*q2),
-                      2.0*(q1*q2+q0*q3),        q0*q0-q1*q1+q2*q2-q3*q3,   2.0*(q2*q3-q0*q1),
-                      2.0*(q1*q3-q0*q2),        2.0*(q2*q3+q0*q1),         q0*q0-q1*q1-q2*q2+q3*q3
+                      1.0-2*(q2*q2+q3*q3),  2.0*(q1*q2-q0*q3),         2.0*(q1*q3+q0*q2),
+                      2.0*(q1*q2+q0*q3),        1.0-2*(q1*q1+q3*q3),   2.0*(q2*q3-q0*q1),
+                      2.0*(q1*q3-q0*q2),        2.0*(q2*q3+q0*q1),         1.0-2*(q1*q1+q2*q2)
                   });
 
-    if(isRealRotMat(rotMat))
+    return rotMat;
+}
+
+Quaternion Geometry::rotVec2Quaternion(RotationVec &rotVec)
+{
+    double Rx = rotVec.getFloat64()[0];
+    double Ry = rotVec.getFloat64()[1];
+    double Rz = rotVec.getFloat64()[2];
+
+    double theta = sqrt(Rx*Rx+Ry*Ry+Rz*Rz);
+
+    if(theta==0)
     {
-        throw Exception(1, "[Geometry]: is not a rotation matrix! \n",__FILE__,__LINE__,__FUNCTION__);
+        return Quaternion(1,0,0,0);
     }
 
-    return rotMat;
+    double kx = Rx/theta;
+    double ky = Ry/theta;
+    double kz = Rz/theta;
+
+    double q0 = std::cos(0.5*theta);
+    double q1 = kx*std::sin(0.5*theta);
+    double q2 = ky*std::sin(0.5*theta);
+    double q3 = kz*std::sin(0.5*theta);
+
+    return Quaternion(q0,q1,q2,q3);
+}
+
+RotationVec Geometry::quaternion2RotVec(Quaternion &q)
+{
+    double theta = 2*acos(q.getQ0());
+    RotationVec vec;
+
+    if(theta==0)
+    {
+        vec.setVal({0,0,0});
+        return vec;
+    }
+
+    double kx    = q.getQ1()/std::sin(0.5*theta);
+    double ky    = q.getQ2()/std::sin(0.5*theta);
+    double kz    = q.getQ3()/std::sin(0.5*theta);
+
+    vec.setVal({kx*theta,ky*theta,kz*theta});
+    return vec;
+}
+
+RotationMat Geometry::rotVec2RotMat(RotationVec &rotVec)
+{
+    Quaternion q = rotVec2Quaternion(rotVec);
+    return quaternion2RotMat(q);
+}
+
+RotationVec Geometry::rotMat2RotVec(RotationMat &rotMat)
+{
+    Quaternion q = rotMat2Quaternion(rotMat);
+    return quaternion2RotVec(q);
+}
+
+RotationVec Geometry::euler2RotVec(Euler &euler, const RotSequence &seq)
+{
+    Quaternion q = euler2Quaternion(euler,seq);
+    return quaternion2RotVec(q);
+}
+
+Euler Geometry::rotVec2Euler(RotationVec & rotVec, const RotSequence &seq)
+{
+    Quaternion q = rotVec2Quaternion(rotVec);
+    return quaternion2Euler(q,seq);
 }
 
 double Geometry::deg2rad(double val)
@@ -285,21 +361,19 @@ double Geometry::rad2deg(double val)
     return val*180/M_PI;
 }
 
-void Geometry::singularityCheck(const int &group, double &theta)
+double Geometry::clamp(const double &val, const double &min, const double &max)
 {
-    if (group == 1 && (M_PI - theta < M_PI / 180 || theta < M_PI / 180))
+    if(val<min)
     {
-
-        throw Exception(1, "[Geometry]: singularity check failed \n",__FILE__,__LINE__,__FUNCTION__);
+        return min;
     }
-    else if (group == 2 && fabs(theta - M_PI / 2) < M_PI / 180)
+    else if(val>max)
     {
-
-        throw Exception(1, "[Geometry]: singularity check failed \n",__FILE__,__LINE__,__FUNCTION__);
+        return max;
     }
-    else if (group != 1 && group != 2)
+    else
     {
-        throw Exception(1, "[Geometry]: group not 1 or 2 \n",__FILE__,__LINE__,__FUNCTION__);
+        return val;
     }
 }
 

@@ -639,17 +639,17 @@ double MatOp::norm(Mat &mat, const NormType &normType)
             for (int i = 0; i < mat.getDataNum(); ++i)
             {
                 double v = std::abs(mat.getFloat32()[i]);
-    #ifdef USE_OMP
+#ifdef USE_OMP
                 if(v>tmpMax[omp_get_thread_num()])
                 {
                     tmpMax[omp_get_thread_num()] = v;
                 }
-    #else
+#else
                 if(v>tmpMax[omp_get_thread_num()])
                 {
                     final = v;
                 }
-    #endif
+#endif
             }
         }
         else if(mat.isF64Mat())
@@ -660,17 +660,17 @@ double MatOp::norm(Mat &mat, const NormType &normType)
             for (int i = 0; i < mat.getDataNum(); ++i)
             {
                 double v = std::abs(mat.getFloat64()[i]);
-    #ifdef USE_OMP
+#ifdef USE_OMP
                 if(v>tmpMax[omp_get_thread_num()])
                 {
                     tmpMax[omp_get_thread_num()] = v;
                 }
-    #else
+#else
                 if(v>tmpMax[omp_get_thread_num()])
                 {
                     final = v;
                 }
-    #endif
+#endif
             }
         }
 #ifdef USE_OMP
@@ -678,6 +678,63 @@ double MatOp::norm(Mat &mat, const NormType &normType)
 #else
         return final;
 #endif
+    }
+}
+
+void MatOp::split(Mat &src, std::vector<Mat> &dst)
+{
+
+    if(src.isU8Mat())
+    {
+        _split<uint8_t>(src,dst);
+    }
+    else if(src.isF32Mat())
+    {
+        _split<float>(src,dst);
+    }
+    else if(src.isF64Mat())
+    {
+        _split<double>(src,dst);
+    }
+
+}
+
+void MatOp::merge(std::vector<Mat> &src, Mat &dst)
+{
+    if(src.empty())
+    {
+        throw Exception(1,"[MatOp]: Merge src mats empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    for (int i = 0; i < src.size()-1; ++i)
+    {
+        if(!checkMatsProps(src[i],src[i+1]))
+        {
+            throw Exception(1,"[MatOp]: Merge mats props must be same! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+
+    if(src[0].getChannel()!=1)
+    {
+        throw Exception(1,"[MatOp]: Merge mats must be only 1 channel! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(src.size()!=1 && src.size()!=3 && src.size()!=4)
+    {
+        throw Exception(1,"[MatOp]: Merge src mats size must be 1/3/4! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(src[0].isU8Mat())
+    {
+        _merge<uint8_t>(src,dst);
+    }
+    else if(src[0].isF32Mat())
+    {
+        _merge<float>(src,dst);
+    }
+    else if(src[0].isF64Mat())
+    {
+        _merge<double>(src,dst);
     }
 }
 
@@ -689,6 +746,309 @@ bool MatOp::checkMatsProps(Mat &mat1, Mat &mat2)
     }
 
     return true;
+}
+
+void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double &maxVal, const int &thresholdType)
+{
+
+    if(threshold > maxVal)
+    {
+        throw Exception(1,"[MatOp]: threshold should < maxVal ! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    int thType = thresholdType;
+
+    if(src.isU8Mat())
+    {
+        if(threshold>255 || maxVal>255)
+        {
+            throw Exception(1,"[MatOp]: threshold and maxVal should < 256 ! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
+
+        uint8_t thU8  = static_cast<uint8_t>(threshold);
+        uint8_t maxU8 = static_cast<uint8_t>(maxVal);
+
+        if((thType>>3)==1)
+        {
+            if(src.getChannel()!=1)
+                throw Exception(1,"[MatOp]: Otus channel should = 1 ! \n", __FILE__, __LINE__, __FUNCTION__);
+
+            thU8 = getOtsu(src);
+
+            std::cout<<(int)thU8<<"----------------------"<<std::endl;
+
+            thType = thType - 8;
+        }
+
+        dst = src;
+
+        if(thType == THRESH_BINARY)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getBytes()[i]>thU8)
+                {
+                    dst.getBytes()[i] = maxU8;
+                }
+                else
+                {
+                    dst.getBytes()[i] = 0;
+                }
+            }
+        }
+        else if(thType == THRESH_BINARY_INV)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getBytes()[i]>thU8)
+                {
+                    dst.getBytes()[i] = 0;
+                }
+                else
+                {
+                    dst.getBytes()[i] = maxU8;
+                }
+            }
+        }
+        else if(thType == THRESH_TOZERO)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getBytes()[i]<thU8)
+                {
+                    dst.getBytes()[i] = 0;
+                }
+            }
+        }
+        else if(thType == THRESH_TOZERO_INV)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getBytes()[i]>thU8)
+                {
+                    dst.getBytes()[i] = 0;
+                }
+            }
+        }
+    }
+    else if(src.isF32Mat())
+    {
+
+        float thF32  = static_cast<float>(threshold);
+        float maxF32 = static_cast<float>(maxVal);
+
+        dst = src;
+
+        if(thType == THRESH_BINARY)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getFloat32()[i]>thF32)
+                {
+                    dst.getFloat32()[i] = maxF32;
+                }
+                else
+                {
+                    dst.getFloat32()[i] = 0;
+                }
+            }
+        }
+        else if(thType == THRESH_BINARY_INV)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getFloat32()[i]>thF32)
+                {
+                    dst.getFloat32()[i] = 0;
+                }
+                else
+                {
+                    dst.getFloat32()[i] = maxF32;
+                }
+            }
+        }
+        else if(thType == THRESH_TOZERO)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getFloat32()[i]<thF32)
+                {
+                    dst.getFloat32()[i] = 0;
+                }
+            }
+        }
+        else if(thType == THRESH_TOZERO_INV)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getFloat32()[i]>thF32)
+                {
+                    dst.getFloat32()[i] = 0;
+                }
+            }
+        }
+    }
+    else if(src.isF64Mat())
+    {
+
+        double thF64  = threshold;
+        double maxF64 = maxVal;
+
+        dst = src;
+
+        if(thType == THRESH_BINARY)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getFloat64()[i]>thF64)
+                {
+                    dst.getFloat64()[i] = maxF64;
+                }
+                else
+                {
+                    dst.getFloat64()[i] = 0;
+                }
+            }
+        }
+        else if(thType == THRESH_BINARY_INV)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getFloat64()[i]>thF64)
+                {
+                    dst.getFloat64()[i] = 0;
+                }
+                else
+                {
+                    dst.getFloat64()[i] = maxF64;
+                }
+            }
+        }
+        else if(thType == THRESH_TOZERO)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getFloat64()[i]<thF64)
+                {
+                    dst.getFloat64()[i] = 0;
+                }
+            }
+        }
+        else if(thType == THRESH_TOZERO_INV)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < src.getDataNum(); ++i)
+            {
+                if(src.getFloat64()[i]>thF64)
+                {
+                    dst.getFloat64()[i] = 0;
+                }
+            }
+        }
+    }
+}
+
+std::vector<int> MatOp::histogram(Mat &src)
+{
+    std::vector<int> hist(256,0);
+
+    if(src.getMatType()!=MAT_GRAY_U8)
+    {
+        throw Exception(1,"[MatOp]: histogram mat type must be GRAY U8! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    for (int i = 0; i < src.getDataNum(); ++i)
+    {
+        uint8_t val = src.getBytes()[i];
+        hist[val] += 1;
+    }
+
+    return hist;
+}
+
+uint8_t MatOp::getOtsu(Mat &src)
+{
+    if(src.getMatType()!=MAT_GRAY_U8)
+    {
+        throw Exception(1,"[MatOp]: histogram mat type must be GRAY U8! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    int threshold;
+
+    int height = src.getHeight();
+    int width  = src.getWidth();
+
+    std::vector<int> hist = histogram(src);
+
+    std::vector<float> histF(256,0);
+
+    int size = height*width;
+    for (int i = 0; i < 256; i++)
+    {
+        histF[i] = 1.0f*hist[i] / size;
+    }
+
+    float avgValue = 0;
+    for (int i = 0; i < 256; i++)
+    {
+        avgValue += i*histF[i];
+    }
+
+    float maxVariance = 0;
+    float w = 0;
+    float u = 0;
+    for (int i = 0; i < 256; i++)
+    {
+        w += histF[i];
+        u += i*histF[i];
+
+        float t = avgValue*w - u;
+        float variance = t*t / (w*(1 - w));
+
+        if (variance > maxVariance)
+        {
+            maxVariance = variance;
+            threshold = i;
+        }
+    }
+
+    return static_cast<uint8_t>(threshold);
+
 }
 
 void MatOp::RGB2BGR(const Mat &src, Mat &dst)

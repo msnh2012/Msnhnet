@@ -223,7 +223,8 @@ void ActivationLayer::mallocMemory()
             if(!BaseLayer::onlyUseGpu)
 
             {
-                this->_output           =   new float[static_cast<size_t>(this->_batch*this->_outputNum)]();
+
+                this->_output   = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_batch*this->_outputNum));
             }
 #ifdef USE_GPU
             if(!BaseLayer::onlyUseCpu)
@@ -250,7 +251,8 @@ void ActivationLayer::loadAllWeigths(std::vector<float> &weights)
 
         if(!BaseLayer::isPreviewMode)
         {
-            this->_preluWeights        =  new float[static_cast<size_t>(this->_nPreluWeights)](); 
+
+            this->_preluWeights   = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nPreluWeights));
 
             loadPreluWeights(weights.data(), this->_nPreluWeights);
 #ifdef USE_GPU

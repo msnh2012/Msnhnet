@@ -46,9 +46,11 @@ YoloOutLayer::YoloOutLayer(const int &batch, const int &orgWidth, const int &org
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->_allInput             =   new float[static_cast<size_t>(this->_yoloAllInputNum * this->_batch)]();
+
+        this->_allInput             = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_yoloAllInputNum * this->_batch));
 #ifndef USE_GPU
-        this->_shuffleInput         =   new float[static_cast<size_t>(this->_yoloAllInputNum * this->_batch)]();
+
+        this->_shuffleInput             = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_yoloAllInputNum * this->_batch));
 #endif
 #ifdef USE_GPU
         CUDA_CHECK(cudaHostAlloc(&this->_shuffleInput, this->_yoloAllInputNum * this->_batch * sizeof(float), cudaHostRegisterMapped));  

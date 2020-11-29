@@ -460,7 +460,8 @@ void ConvolutionalLayer::mallocMemory()
             if(!BaseLayer::onlyUseGpu) 
 
             {
-                this->_output            = new float[static_cast<size_t>(_outputNum * this->_batch)]();
+
+                this->_output             = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_outputNum * this->_batch));
             }
 #ifdef USE_GPU
             if(!BaseLayer::onlyUseCpu)
@@ -1137,7 +1138,7 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
         {
             int offset = 0;
 
-            this->_weights              = new float[static_cast<size_t>(this->_nWeights)]();
+            this->_weights             = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nWeights));
             loadWeights(weights.data(), _nWeights);
 
             offset += this->_nWeights;
@@ -1149,8 +1150,10 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
                 this->_winogradOutHeight   =   1;
                 this->_winogradOutWidth   =   (8*8*this->_channel*4);
 
-                this->_winogradWeights1 = new float[this->_channel*this->_outChannel*64]();
-                this->_winogradWeights2 = new float[packOutChannel*this->_winogradOutHeight*this->_winogradOutWidth]();
+                this->_winogradWeights1       = MemoryManager::effcientNew<float>(this->_channel*this->_outChannel*64);
+
+                this->_winogradWeights2       = MemoryManager::effcientNew<float>(packOutChannel*this->_winogradOutHeight*this->_winogradOutWidth);
+
                 ConvolutionalLayerArm3x3s1Winograd::conv3x3s1WinogradTransformKenel(this->_weights,
                                                                                     this->_winogradWeights1,
                                                                                     this->_winogradWeights2,
@@ -1160,7 +1163,9 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
             }
             else if(useIm2ColSgemm)
             {
-                this->_sgemmWeightsPack4 = new float[(this->_outChannel/4 + this->_outChannel%4)*4*this->_kSizeX*this->_kSizeY*this->_channel]();
+
+                this->_sgemmWeightsPack4       = MemoryManager::effcientNew<float>((this->_outChannel/4 + this->_outChannel%4)*4*this->_kSizeX*this->_kSizeY*this->_channel);
+
                 ConvolutionLayerSgemm::convolutionTransformKernel(this->_weights,
                                                                   this->_kSizeX,
                                                                   this->_kSizeY,
@@ -1173,10 +1178,12 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
 
             if(this->_batchNorm)
             {
-                this->_scales           = new float[static_cast<size_t>(this->_nScales)]();
-                this->_biases           = new float[static_cast<size_t>(this->_nBiases)]();
-                this->_rollMean         = new float[static_cast<size_t>(this->_nRollMean)]();
-                this->_rollVariance     = new float[static_cast<size_t>(this->_nRollVariance)]();
+
+                this->_scales               = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nScales));
+                this->_biases               = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nBiases));
+                this->_rollMean             = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nRollMean));
+                this->_rollVariance         = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nRollVariance));
+
                 loadScales(weights.data() + _nWeights, _nScales);
                 loadBias(weights.data() + _nWeights + _nScales, _nBiases);
                 loadRollMean(weights.data() + _nWeights + _nScales + _nBiases, _nRollMean);
@@ -1188,7 +1195,9 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
             {
                 if(this->_useBias)
                 {
-                    this->_biases           = new float[static_cast<size_t>(this->_nBiases)]();
+
+                    this->_biases               = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nBiases));
+
                     loadBias(weights.data() + _nWeights, _nBiases);
 
                     offset = offset + _nBiases;
@@ -1198,7 +1207,8 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
             if(this->_activation == ActivationType::PRELU) 
 
             {
-                this->_preluWeights = new float[static_cast<size_t>(this->_nPreluWeights)]();
+
+                this->_preluWeights       = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nPreluWeights));
                 loadPreluWeights(weights.data() + offset, this->_nPreluWeights);
             }
 
@@ -1259,9 +1269,10 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
     {
         if(!BaseLayer::isPreviewMode)
         {
-            this->_binaryWeights = new float[static_cast<size_t>(this->_nWeights)]();
-            this->_cWeights      = new char[static_cast<size_t>(this->_nWeights)]();
-            this->_scales        = new float[static_cast<size_t>(this->_num)]();
+
+            this->_binaryWeights       = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nWeights));
+            this->_cWeights            = MemoryManager::effcientNew<char>(static_cast<size_t>(this->_nWeights));
+            this->_scales              = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_num));
 
 #ifdef USE_GPU
 
@@ -1281,9 +1292,10 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
 
         if(!BaseLayer::isPreviewMode)
         {
-            this->_binaryWeights = new float[static_cast<size_t>(this->_nWeights)]();
-            this->_binaryInputs  = new float[static_cast<size_t>(this->_inputNum * this->_batch)]();
-            this->_meanArr       = new float[static_cast<size_t>(this->_num)]();
+
+            this->_binaryWeights       = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nWeights));
+            this->_binaryInputs        = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_inputNum * this->_batch));
+            this->_meanArr             = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_num));
 
             const int newCh     = this->_channel / 32;
             int rePackedISize   = newCh * this->_width * this->_height + 1;
