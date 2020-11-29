@@ -622,7 +622,18 @@ namespace Msnhnet
             float *src_tm_ptr = src_tm + (newi / 8) * src_tm_size;
 
             for(int q = 0; q < inChannel; q++){
-
+#if USE_NEON
+                asm volatile(
+                    "pld        [%0, #256]          \n"
+                    "vld1.f32   {d0-d3}, [%0]       \n"
+                    "vst1.f32   {d0-d3}, [%1]!      \n"
+                    : "=r"(srcptr),  // %0
+                    "=r"(src_tm_ptr) // %1
+                    : "0"(srcptr),
+                    "1"(src_tm_ptr)
+                    : "memory", "q0", "q1"
+                );
+#else
                 src_tm_ptr[0] = srcptr[0];
                 src_tm_ptr[1] = srcptr[1];
                 src_tm_ptr[2] = srcptr[2];
@@ -631,9 +642,9 @@ namespace Msnhnet
                 src_tm_ptr[5] = srcptr[5];
                 src_tm_ptr[6] = srcptr[6];
                 src_tm_ptr[7] = srcptr[7];
-
                 src_tm_ptr += 8;
-                srcptr += inHeight * inWidth;
+#endif
+                srcptr += outSize;
             }
 
         }
@@ -651,14 +662,26 @@ namespace Msnhnet
             float *src_tm_ptr = src_tm + (newi / 8 + (newi % 8) / 4) * src_tm_size;
 
             for(int q = 0; q < inChannel; q++){
-
+#if USE_NEON
+                asm volatile(
+                    "pld        [%0, #128]          \n"
+                    "vld1.f32   {d0-d1}, [%0]       \n"
+                    "vst1.f32   {d0-d1}, [%1]!      \n"
+                    : "=r"(srcptr),  // %0
+                    "=r"(src_tm_ptr) // %1
+                    : "0"(srcptr),
+                    "1"(src_tm_ptr)
+                    : "memory", "q0"
+                );
+#else
                 src_tm_ptr[0] = srcptr[0];
                 src_tm_ptr[1] = srcptr[1];
                 src_tm_ptr[2] = srcptr[2];
                 src_tm_ptr[3] = srcptr[3];
-
                 src_tm_ptr += 4;
-                srcptr += inHeight * inWidth;
+
+#endif
+                srcptr += outSize;
             }
         }
 
@@ -707,13 +730,132 @@ namespace Msnhnet
 
                 const float *kernel0 = kernel + (c / 4) *  kernelSize;
 
-#if USE_ARM
+#if USE_NEON
 
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
                 asm volatile(
+
+                    "veor       q0, q0, q0          \n"
+                    "vdup.f32   q8, d0[0]           \n"
+                    "vdup.f32   q9, d0[0]           \n"
+                    "vdup.f32   q10, d0[0]          \n"
+                    "vdup.f32   q11, d0[0]          \n"
+
+                    "vdup.f32   q12, d0[0]          \n"
+                    "vdup.f32   q13, d0[0]          \n"
+                    "vdup.f32   q14, d0[0]          \n"
+                    "vdup.f32   q15, d0[0]          \n"
+                    // r4 = inChannnel >> 2
+                    "lsr        r4, %12, #2         \n"
+                    "cmp        r4, #0              \n"
+                    "beq        1f                  \n"
+
+                    "0:                             \n"
+                    "pld        [%4, #512]          \n"
+                    "vldm       %4!, {d8-d15}       \n"
+
+                    "pld        [%5, #512]          \n"
+                    "vldm       %5!, {d0-d7}        \n"
+
+                    "vmla.f32   q8, q4, d0[0]       \n"
+                    "vmla.f32   q10, q4, d0[1]      \n"
+                    "vmla.f32   q12, q4, d1[0]      \n"
+                    "vmla.f32   q14, q4, d1[1]      \n"
+
+                    "vmla.f32   q9, q5, d0[0]       \n"
+                    "vmla.f32   q11, q5, d0[1]      \n"
+                    "vmla.f32   q13, q5, d1[0]      \n"
+                    "vmla.f32   q15, q5, d1[1]      \n"
+
+                    "vmla.f32   q8, q6, d2[0]       \n"
+                    "vmla.f32   q10, q6, d2[1]      \n"
+                    "vmla.f32   q12, q6, d3[0]      \n"
+                    "vmla.f32   q14, q6, d3[1]      \n"
+
+                    "vmla.f32   q9, q7, d2[0]       \n"
+                    "vmla.f32   q11, q7, d2[1]      \n"
+                    "vmla.f32   q13, q7, d3[0]      \n"
+                    "vmla.f32   q15, q7, d3[1]      \n"
+
+                    "pld        [%4, #512]          \n"
+                    "vldm       %4!, {d8-d15}       \n"
+
+                    "vmla.f32   q8, q4, d4[0]       \n"
+                    "vmla.f32   q10, q4, d4[1]      \n"
+                    "vmla.f32   q12, q4, d5[0]      \n"
+                    "vmla.f32   q14, q4, d5[1]      \n"
+
+                    "vmla.f32   q9, q5, d4[0]       \n"
+                    "vmla.f32   q11, q5, d4[1]      \n"
+                    "vmla.f32   q13, q5, d5[0]      \n"
+                    "vmla.f32   q15, q5, d5[1]      \n"
+
+                    "vmla.f32   q8, q6, d6[0]       \n"
+                    "vmla.f32   q10, q6, d6[1]      \n"
+                    "vmla.f32   q12, q6, d7[0]      \n"
+                    "vmla.f32   q14, q6, d7[1]      \n"
+
+                    "vmla.f32   q9, q7, d6[0]       \n"
+                    "vmla.f32   q11, q7, d6[1]      \n"
+                    "vmla.f32   q13, q7, d7[0]      \n"
+                    "vmla.f32   q15, q7, d7[1]      \n"
+
+                    "subs       r4, r4, #1          \n"
+                    "bne        0b                  \n"
+
+                    "1:                             \n"
+                    // r4 = remain = inChannel & 3;
+                    "and        r4, %12, #3         \n" 
+                    "cmp        r4, #0              \n"
+                    "beq        3f                  \n"
+
+                    "2:                             \n"
+
+                    "pld        [%4, #256]          \n"
+                    "vld1.f32   {d8-d11}, [%4]!     \n"
+
+                    "pld        [%5, #128]          \n"
+                    "vld1.f32   {d0-d1}, [%5]!      \n"
+
+                    "vmla.f32   q8, q4, d0[0]       \n"
+                    "vmla.f32   q10, q4, d0[1]      \n"
+                    "vmla.f32   q12, q4, d1[0]      \n"
+                    "vmla.f32   q14, q4, d1[1]      \n"
+
+                    "vmla.f32   q9, q5, d0[0]       \n"
+                    "vmla.f32   q11, q5, d0[1]      \n"
+                    "vmla.f32   q13, q5, d1[0]      \n"
+                    "vmla.f32   q15, q5, d1[1]      \n"
+
                     
+                    "subs       r4, r4, #1          \n"
+
+                    "bne        2b                  \n"
+
+                    "3:                             \n"
+
+                    "vst1.f32   {d16-d19}, [%0]!   \n"
+                    "vst1.f32   {d20-d23}, [%1]!   \n"
+                    "vst1.f32   {d24-d27}, [%2]!   \n"
+                    "vst1.f32   {d28-d31}, [%3]!   \n"
+                    
+
+                    : "=r"(destptr0), // %0
+                    "=r"(destptr1), // %1
+                    "=r"(destptr2), // %2
+                    "=r"(destptr3), // %3
+                    "=r"(src_tm_ptr),  // %4
+                    "=r"(kernel0)     // %5
+                    : "0"(destptr0),
+                    "1"(destptr1),
+                    "2"(destptr2),
+                    "3"(destptr3),
+                    "4"(src_tm_ptr),
+                    "5"(kernel0),
+                    "r"(inChannel)     // %12
+                    : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
                 );
 #endif
 
@@ -843,13 +985,99 @@ namespace Msnhnet
                 const float *src_tm_ptr = src_tm + ((i / 8) + (i % 8) / 4) * src_tm_size;
                 const float *kernel0 = kernel + (c / 4) *  kernelSize;
 
-#if USE_ARM
+#if USE_NEON
 
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
                 asm volatile(
-                    
+                    "veor       q0, q0, q0          \n"
+                    "vdup.f32   q8, d0[0]           \n"
+                    "vdup.f32   q9, d0[0]           \n"
+                    "vdup.f32   q10, d0[0]          \n"
+                    "vdup.f32   q11, d0[0]          \n"
+
+                    // r4 = nn = inChannel >> 2
+                    "lsr        r4, %12, #2         \n" 
+                    "cmp        r4, #0              \n"
+                    "beq        1f                  \n"
+
+                    "0:                             \n"
+                    "pld        [%4, #512]          \n"
+                    "vldm       %4!, {d8-d15}       \n"
+
+                    "pld        [%5, #512]          \n"
+                    "vldm       %5!, {d0-d7}        \n"
+
+                    "vmla.f32   q8, q4, d0[0]       \n"
+                    "vmla.f32   q9, q4, d0[1]       \n"
+                    "vmla.f32   q10, q4, d1[0]      \n"
+                    "vmla.f32   q11, q4, d1[1]      \n"
+
+                    "vmla.f32   q8, q5, d2[0]       \n"
+                    "vmla.f32   q9, q5, d2[1]       \n"
+                    "vmla.f32   q10, q5, d3[0]      \n"
+                    "vmla.f32   q11, q5, d3[1]      \n"
+
+                    "subs       r4, r4, #1          \n"
+
+                    "vmla.f32   q8, q6, d4[0]       \n"
+                    "vmla.f32   q9, q6, d4[1]       \n"
+                    "vmla.f32   q10, q6, d5[0]      \n"
+                    "vmla.f32   q11, q6, d5[1]      \n"
+
+                    "vmla.f32   q8, q7, d6[0]       \n"
+                    "vmla.f32   q9, q7, d6[1]       \n"
+                    "vmla.f32   q10, q7, d7[0]      \n"
+                    "vmla.f32   q11, q7, d7[1]      \n"
+
+                    "bne        0b                  \n"
+
+                    "1:                             \n"
+
+                    // r4 = remain = inChannel & 3;
+                    "and        r4, %12, #3         \n" 
+                    "cmp        r4, #0              \n"
+                    "beq        3f                  \n"
+
+                    "2:                             \n"
+
+                    "pld        [%4, #128]          \n"
+                    "vld1.f32   {d8-d9}, [%4]!      \n"
+
+                    "pld        [%5, #128]          \n"
+                    "vld1.f32   {d0-d1}, [%5]!      \n"
+
+                    "subs       r4, r4, #1          \n"
+
+                    "vmla.f32   q8, q4, d0[0]       \n"
+                    "vmla.f32   q9, q4, d0[1]       \n"
+                    "vmla.f32   q10, q4, d1[0]      \n"
+                    "vmla.f32   q11, q4, d1[1]      \n"
+
+                    "bne        2b                  \n"
+
+                    "3:                             \n"
+
+                    "vst1.f32   {d16-d17}, [%0]!   \n"
+                    "vst1.f32   {d18-d19}, [%1]!   \n"
+                    "vst1.f32   {d20-d21}, [%2]!   \n"
+                    "vst1.f32   {d22-d23}, [%3]!   \n"
+
+                    : "=r"(destptr0), // %0
+                    "=r"(destptr1), // %1
+                    "=r"(destptr2), // %2
+                    "=r"(destptr3), // %3
+                    "=r"(src_tm_ptr),  // %4
+                    "=r"(kernel0)     // %5
+                    : "0"(destptr0),
+                    "1"(destptr1),
+                    "2"(destptr2),
+                    "3"(destptr3),
+                    "4"(src_tm_ptr),
+                    "5"(kernel0),
+                    "r"(inChannel)     // %12
+                    : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11"
                 );
 #endif
 
@@ -930,13 +1158,94 @@ namespace Msnhnet
                 const float *src_tm_ptr = src_tm + ((i / 8) + (i % 8) / 4 + i % 4) * src_tm_size;
                 const float *kernel0 = kernel + (c / 4) *  kernelSize;
 
-#if USE_ARM
+#if USE_NEON
 
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
                 asm volatile(
+                    "veor       q0, q0, q0          \n"
+                    "vdup.f32   q8, d0[0]           \n"
+                    "vdup.f32   q9, d0[0]           \n"
+                    "vdup.f32   q10, d0[0]          \n"
+                    "vdup.f32   q11, d0[0]          \n"
+
+                    // r4 = nn = inChannel >> 2
+                    "lsr        r4, %12, #2         \n" 
+                    "cmp        r4, #0              \n"
+                    "beq        1f                  \n"
+
+                    "0:                             \n"
+                    "pld        [%4, #128]          \n"
+                    "vld1.f32   {d8-d9}, [%4]!      \n"
+
+                    "pld        [%5, #512]          \n"
+                    "vldm       %5!, {d0-d7}        \n"
+
+                    "vmla.f32   q8, q0, d8[0]       \n"
+                    "vmla.f32   q9, q1, d8[1]       \n"
+                    "vmla.f32   q10, q2, d9[0]      \n"
+                    "vmla.f32   q11, q3, d9[1]      \n"
+
+                    "subs       r4, r4, #1          \n"
+
+                    "bne        0b                  \n"
+
+                    // sum0 = q8 = [a1, b1, c1, d1]
+                    // sum1 = q9 = [a2, b2, c2, d2]
+                    // sum3 = q10 = [a3, b3, c3, d3]
+                    // sum4 = q11 = [a4, b4, c4, d4]
                     
+                    // q8 = [a1+b1,c1+d1, a2+b2, c2+d2]
+                    "vadd.f32   q8, q8, q9          \n"
+                    // q10 = [a3+b3, c3+d3, a4+b4, c4+d4]
+                    "vadd.f32   q10, q10, q11       \n"
+                    // q8 = [a1+b1+c1+d1, a2+b2+c2+d2, a3+b3+c3+d3, a4+b4+c4+d4]
+                    "vadd.f32   q8, q8, q10         \n"
+
+                    "1:                             \n"
+
+                    // r4 = remain = inChannel & 3;
+                    "and        r4, %12, #3         \n" 
+                    "cmp        r4, #0              \n"
+                    "beq        3f                  \n"
+
+                    "2:                             \n"
+
+                    "pld        [%4, #32]           \n"
+                    "vld1.f32   {d8[],d9[]}, [%4]!  \n"
+
+                    "pld        [%5, #128]          \n"
+                    "vld1.f32   {d0-d1}, [%5]!      \n"
+
+                    "subs       r4, r4, #1          \n"
+
+                    "vmla.f32   q8, q4, q0         \n"
+
+                    "bne        2b                  \n"
+
+                    "3:                             \n"
+
+                    "vst1.f32   {d16[0]}, [%0]!     \n"
+                    "vst1.f32   {d16[1]}, [%1]!     \n"
+                    "vst1.f32   {d17[0]}, [%2]!     \n"
+                    "vst1.f32   {d17[1]}, [%3]!     \n"
+
+
+                    : "=r"(destptr0), // %0
+                    "=r"(destptr1), // %1
+                    "=r"(destptr2), // %2
+                    "=r"(destptr3), // %3
+                    "=r"(src_tm_ptr),  // %4
+                    "=r"(kernel0)     // %5
+                    : "0"(destptr0),
+                    "1"(destptr1),
+                    "2"(destptr2),
+                    "3"(destptr3),
+                    "4"(src_tm_ptr),
+                    "5"(kernel0),
+                    "r"(inChannel)     // %12
+                    : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11"
                 );
 #endif
 
@@ -1101,6 +1410,7 @@ namespace Msnhnet
 #endif
             }
         }
+
 
     }
 }
