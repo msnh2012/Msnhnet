@@ -553,51 +553,7 @@ namespace Msnhnet
     // pack 4x4
     // shape[c, h, w]: [outChannel / 4 + outChannel %4， 4 * 4， inChannel / 4 + inChannel%4]
     void ConvolutionalLayerArm1x1::conv1x1s1SgemmTransformKenel(float *const &kernel, float* &dest, const int &inChannel, const int &outChannel){
-        int c = 0;
-
-        int Stride = 4 * 4 * (inChannel / 4 + inChannel%4);
-
-        for(; c + 3 < outChannel; c += 4){
-            const float* k0 = kernel + c * inChannel;
-            const float* k1 = kernel + (c + 1) * inChannel;
-            const float* k2 = kernel + (c + 2) * inChannel;
-            const float* k3 = kernel + (c + 3) * inChannel;
-
-            float* destptr = dest + (c / 4) * Stride;
-
-            for(int i = 0; i < inChannel; i++){
-
-                destptr[0] = k0[0];
-                destptr[1] = k1[0];
-                destptr[2] = k2[0];
-                destptr[3] = k3[0];
-
-                destptr += 4;
-
-                k0 += 1;
-                k1 += 1;
-                k2 += 1;
-                k3 += 1;
-            }
-        }
-
-        for(; c < outChannel; c++){
-            const float* k0 = kernel + c * inChannel;
-
-            float* destptr = dest + (c / 4 + c % 4) * Stride;
-
-            for(int i = 0; i < inChannel; i++){
-                destptr[0] = k0[0];
-                destptr += 4;
-                k0 += 1;
-            }
-        }
-    }
-
-    // pack 8x4
-    // shape[c, h, w]: [outSize / 8 + (outSize % 8) / 4 + outSize % 4, 8*4, inChannel/4+inChannel%4]
-    void ConvolutionalLayerArm1x1::conv1x1s1SgemmNeon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
-                                 float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
+        int inSize = inHeight * inWidth;
         int outSize = outHeight * outWidth;
         // transformed kernel
         int kernelSize = 4 * 4 * (inChannel / 4 + inChannel%4);
@@ -679,7 +635,6 @@ namespace Msnhnet
                 src_tm_ptr[2] = srcptr[2];
                 src_tm_ptr[3] = srcptr[3];
                 src_tm_ptr += 4;
-
 #endif
                 srcptr += outSize;
             }
@@ -703,7 +658,7 @@ namespace Msnhnet
                 src_tm_ptr[0] = srcptr[0];
 
                 src_tm_ptr += 1;
-                srcptr += inHeight * inWidth;
+                srcptr += outSize;
             }
         }
 
@@ -1123,7 +1078,7 @@ namespace Msnhnet
                     sum3_2 += src_tm_ptr[2] * kernel0[3];
                     sum3_3 += src_tm_ptr[3] * kernel0[3];
 
-                    src_tm_ptr += 4；
+                    src_tm_ptr += 4;
                     kernel0 += 4;
                 }
 
@@ -1282,6 +1237,7 @@ namespace Msnhnet
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif    
+
         for(int cc = remainOutChannel; cc < outChannel; cc++){
             int c = cc;
             float *destptr0 = dest + c * outSize;
@@ -1292,13 +1248,77 @@ namespace Msnhnet
 
                 const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
 
-#if USE_ARM
+#if USE_NEON
 
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
                 asm volatile(
-                    
+                    "veor       q8, q8, q8          \n"
+                    "veor       q9, q9, q9          \n"
+
+                    // r4 = nn = inChannel >> 2
+                    "lsr        r4, %6, #2          \n" 
+                    "cmp        r4, #0              \n"
+                    "beq        1f                  \n"
+
+                    "0:                             \n"
+                    "pld        [%1, #512]          \n"
+                    "vldm       %1!, {d8-d15}       \n"
+
+                    "pld        [%2, #128]          \n"
+                    "vld1.f32   {d0-d1}, [%2]!       \n"
+
+                    "vmla.f32   q8, q4, d0[0]       \n"
+                    "vmla.f32   q9, q5, d0[0]       \n"
+
+                    "pld        [%1, #512]          \n"
+                    "vldm       %1!, {d24-d31}      \n"
+
+                    "vmla.f32   q8, q6, d0[1]       \n"
+                    "vmla.f32   q9, q7, d0[1]       \n"
+
+                    "vmla.f32   q8, q12, d1[0]      \n"
+                    "vmla.f32   q9, q13, d1[0]      \n"
+
+                    "vmla.f32   q8, q14, d1[1]      \n"
+                    "vmla.f32   q9, q15, d1[1]      \n"
+
+                    "subs       r4, r4, #1          \n"
+                    "bne        0b                  \n"
+                    "1:                             \n"
+
+                    // r4 = remain = inChannel & 3;
+                    "and        r4, %6, #3          \n"
+                    "cmp        r4, #0              \n"
+                    "beq        3f                  \n"
+
+                    "2:                             \n"
+                    "pld        [%1, #256]          \n"
+                    "vld1.f32   {d8-d11}, [%1]!     \n"
+
+                    "pld        [%2, #32]           \n"
+                    "vld1.f32   {d0[],d1[]}, [%2]!  \n"
+
+                    "subs       r4, r4, #1          \n"
+
+                    "vmla.f32   q8, q4, q0          \n"
+                    "vmla.f32   q9, q5, q0          \n"
+
+                    "bne        2b                  \n"
+
+                    "3:                             \n"
+                    "vst1.f32   {d16-d19}, [%0]!    \n"
+
+
+                    : "=r"(destptr0), // %0
+                    "=r"(src_tm_ptr),  // %1
+                    "=r"(kernel0)     // %2
+                    : "0"(destptr0),
+                    "1"(src_tm_ptr),
+                    "2"(kernel0),
+                    "r"(inChannel)   // %6
+                    : "cc", "memory", "r4", "q0", "q4", "q5", "q6", "q7", "q8", "q9", "q12", "q13", "q14", "q15"
                 );
 #endif
 
@@ -1409,8 +1429,6 @@ namespace Msnhnet
                 destptr0++;
 #endif
             }
-        }
-
 
     }
 }
