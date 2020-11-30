@@ -1,4 +1,3 @@
-#define USE_ARM 1
 #ifdef USE_ARM
 #include "Msnhnet/layers/arm/MsnhConvolution1x1.h"
 
@@ -46,7 +45,7 @@ namespace Msnhnet
                 const float *kernel2 = kernel + (c + 2) * inChannel + q;
                 const float *kernel3 = kernel + (c + 3) * inChannel + q;
 
-#if USE_NEON
+#if USE_ARM
                 int nn = out_size >> 3;
                 int remain = out_size & 7;
                 float32x4_t k0 = vld1q_f32(kernel0);
@@ -57,7 +56,7 @@ namespace Msnhnet
                 int remain = out_size;
 #endif
                 
-#if USE_NEON
+#if USE_ARM
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
@@ -255,7 +254,7 @@ namespace Msnhnet
 
                 const float *r0 = src0;
 
-#if USE_NEON
+#if USE_ARM
                 int nn = out_size >> 3;
                 int remain = out_size & 7;
                 float32x4_t k0 = vld1q_f32(kernel0);
@@ -266,7 +265,7 @@ namespace Msnhnet
                 int remain = out_size;
 #endif
 
-#if USE_NEON
+#if USE_ARM
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
@@ -397,7 +396,7 @@ namespace Msnhnet
 
                 const float *kernel0 = kernel + cc * inChannel + q;
 
-#if USE_NEON
+#if USE_ARM
                 int nn = out_size >> 3;
                 int remain = out_size & 7;
                 float32x4_t k0 = vdupq_n_f32(kernel0[0]);
@@ -408,7 +407,7 @@ namespace Msnhnet
                 int remain = out_size;
 #endif
 
-#if USE_NEON
+#if USE_ARM
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
@@ -492,7 +491,7 @@ namespace Msnhnet
                 const float *src0 = src + q * in_size;
                 const float *kernel0 = kernel + cc * inChannel + q;
                 const float *r0 = src0;
-#if USE_NEON
+#if USE_ARM
                 int nn = out_size >> 3;
                 int remain = out_size & 7;
                 float32x4_t k0 = vdupq_n_f32(kernel0[0]);
@@ -500,7 +499,7 @@ namespace Msnhnet
                 int remain = out_size;
 #endif
 
-#if USE_NEON
+#if USE_ARM
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
@@ -553,881 +552,984 @@ namespace Msnhnet
     // pack 4x4
     // shape[c, h, w]: [outChannel / 4 + outChannel %4， 4 * 4， inChannel / 4 + inChannel%4]
     void ConvolutionalLayerArm1x1::conv1x1s1SgemmTransformKenel(float *const &kernel, float* &dest, const int &inChannel, const int &outChannel){
-        int inSize = inHeight * inWidth;
-        int outSize = outHeight * outWidth;
-        // transformed kernel
-        int kernelSize = 4 * 4 * (inChannel / 4 + inChannel%4);
+            int c = 0;
 
-        // pack input start
-        int nnSize = outSize >> 3;
-        int remainSize = nnSize << 3;
+            int Stride = 4 * 4 * (inChannel / 4 + inChannel%4);
 
-        int src_tm_channel = outSize / 8 + (outSize % 8) / 4 + outSize % 4;
-        int src_tm_h = 8 * 4;
-        int src_tm_w = inChannel/4+inChannel%4;
-        int src_tm_size = src_tm_h * src_tm_w;
-        float *src_tm = new float[src_tm_channel * src_tm_size];
+            for(; c + 3 < outChannel; c += 4){
+                const float* k0 = kernel + c * inChannel;
+                const float* k1 = kernel + (c + 1) * inChannel;
+                const float* k2 = kernel + (c + 2) * inChannel;
+                const float* k3 = kernel + (c + 3) * inChannel;
 
-#if USE_OMP
-    #pragma omp parallel for num_threads(OMP_THREAD)
-#endif
-        for(int i = 0; i < nnSize; i++){
-            int newi = i << 3;
-            const float* srcptr = src + newi;
+                float* destptr = dest + (c / 4) * Stride;
 
-            float *src_tm_ptr = src_tm + (newi / 8) * src_tm_size;
+                for(int i = 0; i < inChannel; i++){
 
-            for(int q = 0; q < inChannel; q++){
-#if USE_NEON
-                asm volatile(
-                    "pld        [%0, #256]          \n"
-                    "vld1.f32   {d0-d3}, [%0]       \n"
-                    "vst1.f32   {d0-d3}, [%1]!      \n"
-                    : "=r"(srcptr),  // %0
-                    "=r"(src_tm_ptr) // %1
-                    : "0"(srcptr),
-                    "1"(src_tm_ptr)
-                    : "memory", "q0", "q1"
-                );
-#else
-                src_tm_ptr[0] = srcptr[0];
-                src_tm_ptr[1] = srcptr[1];
-                src_tm_ptr[2] = srcptr[2];
-                src_tm_ptr[3] = srcptr[3];
-                src_tm_ptr[4] = srcptr[4];
-                src_tm_ptr[5] = srcptr[5];
-                src_tm_ptr[6] = srcptr[6];
-                src_tm_ptr[7] = srcptr[7];
-                src_tm_ptr += 8;
-#endif
-                srcptr += outSize;
+                    destptr[0] = k0[0];
+                    destptr[1] = k1[0];
+                    destptr[2] = k2[0];
+                    destptr[3] = k3[0];
+
+                    destptr += 4;
+
+                    k0 += 1;
+                    k1 += 1;
+                    k2 += 1;
+                    k3 += 1;
+                }
             }
 
-        }
+            for(; c < outChannel; c++){
+                const float* k0 = kernel + c * inChannel;
 
-        nnSize = (outSize - remainSize) >> 2;
+                float* destptr = dest + (c / 4 + c % 4) * Stride;
 
-#if USE_OMP
-    #pragma omp parallel for num_threads(OMP_THREAD)
-#endif
-        for(int i = 0; i < nnSize; i++){
-            int newi = remainSize + i * 4;
-
-            const float* srcptr = src + newi;
-
-            float *src_tm_ptr = src_tm + (newi / 8 + (newi % 8) / 4) * src_tm_size;
-
-            for(int q = 0; q < inChannel; q++){
-#if USE_NEON
-                asm volatile(
-                    "pld        [%0, #128]          \n"
-                    "vld1.f32   {d0-d1}, [%0]       \n"
-                    "vst1.f32   {d0-d1}, [%1]!      \n"
-                    : "=r"(srcptr),  // %0
-                    "=r"(src_tm_ptr) // %1
-                    : "0"(srcptr),
-                    "1"(src_tm_ptr)
-                    : "memory", "q0"
-                );
-#else
-                src_tm_ptr[0] = srcptr[0];
-                src_tm_ptr[1] = srcptr[1];
-                src_tm_ptr[2] = srcptr[2];
-                src_tm_ptr[3] = srcptr[3];
-                src_tm_ptr += 4;
-#endif
-                srcptr += outSize;
+                for(int i = 0; i < inChannel; i++){
+                    destptr[0] = k0[0];
+                    destptr++;
+                    k0 += 1;
+                }
             }
-        }
+    }
 
-        remainSize += nnSize << 2;
+    // pack 8x4
+    // shape[c, h, w]: [outSize / 8 + (outSize % 8) / 4 + outSize % 4, 8*4, inChannel/4+inChannel%4]
+    void ConvolutionalLayerArm1x1::conv1x1s1SgemmNeon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
+                                    float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
+            int inSize = inHeight * inWidth;
+            int outSize = outHeight * outWidth;
+            // transformed kernel
+            int kernelSize = 4 * 4 * (inChannel / 4 + inChannel%4);
 
-#if USE_OMP
-    #pragma omp parallel for num_threads(OMP_THREAD)
-#endif
+            // pack input start
+            int nnSize = outSize >> 3;
+            int remainSize = nnSize << 3;
 
-        for(int i = remainSize; i < outSize; i++){
-            int newi = i;
+            int src_tm_channel = outSize / 8 + (outSize % 8) / 4 + outSize % 4;
+            int src_tm_h = 8 * 4;
+            int src_tm_w = inChannel/4+inChannel%4;
+            int src_tm_size = src_tm_h * src_tm_w;
+            float *src_tm = new float[src_tm_channel * src_tm_size];
 
-            const float* srcptr = src + newi;
+    #if USE_OMP
+        #pragma omp parallel for num_threads(OMP_THREAD)
+    #endif
+            for(int i = 0; i < nnSize; i++){
+                int newi = i << 3;
+                const float* srcptr = src + newi;
 
-            float *src_tm_ptr = src_tm + (newi / 8 + (newi % 8) / 4 + newi % 4) * src_tm_size;
-
-            for(int q = 0; q < inChannel; q++){
-
-                src_tm_ptr[0] = srcptr[0];
-
-                src_tm_ptr += 1;
-                srcptr += outSize;
-            }
-        }
-
-        // pack input end
-
-        int nnOutChannel = outChannel >> 2;
-        int remainOutChannel = nnOutChannel << 2;
-
-#if USE_OMP
-    #pragma omp parallel for num_threads(OMP_THREAD)
-#endif
-        for(int cc = 0; cc < nnOutChannel; cc++){
-            int c = cc << 2;
-
-            float *destptr0 = dest + c * outSize;
-            float *destptr1 = dest + (c + 1) * outSize;
-            float *destptr2 = dest + (c + 2) * outSize;
-            float *destptr3 = dest + (c + 3) * outSize;
-
-            int i = 0;
-
-            for(; i + 7 < outSize; i += 8){
-                const float *src_tm_ptr = src_tm + (i / 8) * src_tm_size;
-
-                const float *kernel0 = kernel + (c / 4) *  kernelSize;
-
-#if USE_NEON
-
-#if __aarch64__
-                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-#else
-                asm volatile(
-
-                    "veor       q0, q0, q0          \n"
-                    "vdup.f32   q8, d0[0]           \n"
-                    "vdup.f32   q9, d0[0]           \n"
-                    "vdup.f32   q10, d0[0]          \n"
-                    "vdup.f32   q11, d0[0]          \n"
-
-                    "vdup.f32   q12, d0[0]          \n"
-                    "vdup.f32   q13, d0[0]          \n"
-                    "vdup.f32   q14, d0[0]          \n"
-                    "vdup.f32   q15, d0[0]          \n"
-                    // r4 = inChannnel >> 2
-                    "lsr        r4, %12, #2         \n"
-                    "cmp        r4, #0              \n"
-                    "beq        1f                  \n"
-
-                    "0:                             \n"
-                    "pld        [%4, #512]          \n"
-                    "vldm       %4!, {d8-d15}       \n"
-
-                    "pld        [%5, #512]          \n"
-                    "vldm       %5!, {d0-d7}        \n"
-
-                    "vmla.f32   q8, q4, d0[0]       \n"
-                    "vmla.f32   q10, q4, d0[1]      \n"
-                    "vmla.f32   q12, q4, d1[0]      \n"
-                    "vmla.f32   q14, q4, d1[1]      \n"
-
-                    "vmla.f32   q9, q5, d0[0]       \n"
-                    "vmla.f32   q11, q5, d0[1]      \n"
-                    "vmla.f32   q13, q5, d1[0]      \n"
-                    "vmla.f32   q15, q5, d1[1]      \n"
-
-                    "vmla.f32   q8, q6, d2[0]       \n"
-                    "vmla.f32   q10, q6, d2[1]      \n"
-                    "vmla.f32   q12, q6, d3[0]      \n"
-                    "vmla.f32   q14, q6, d3[1]      \n"
-
-                    "vmla.f32   q9, q7, d2[0]       \n"
-                    "vmla.f32   q11, q7, d2[1]      \n"
-                    "vmla.f32   q13, q7, d3[0]      \n"
-                    "vmla.f32   q15, q7, d3[1]      \n"
-
-                    "pld        [%4, #512]          \n"
-                    "vldm       %4!, {d8-d15}       \n"
-
-                    "vmla.f32   q8, q4, d4[0]       \n"
-                    "vmla.f32   q10, q4, d4[1]      \n"
-                    "vmla.f32   q12, q4, d5[0]      \n"
-                    "vmla.f32   q14, q4, d5[1]      \n"
-
-                    "vmla.f32   q9, q5, d4[0]       \n"
-                    "vmla.f32   q11, q5, d4[1]      \n"
-                    "vmla.f32   q13, q5, d5[0]      \n"
-                    "vmla.f32   q15, q5, d5[1]      \n"
-
-                    "vmla.f32   q8, q6, d6[0]       \n"
-                    "vmla.f32   q10, q6, d6[1]      \n"
-                    "vmla.f32   q12, q6, d7[0]      \n"
-                    "vmla.f32   q14, q6, d7[1]      \n"
-
-                    "vmla.f32   q9, q7, d6[0]       \n"
-                    "vmla.f32   q11, q7, d6[1]      \n"
-                    "vmla.f32   q13, q7, d7[0]      \n"
-                    "vmla.f32   q15, q7, d7[1]      \n"
-
-                    "subs       r4, r4, #1          \n"
-                    "bne        0b                  \n"
-
-                    "1:                             \n"
-                    // r4 = remain = inChannel & 3;
-                    "and        r4, %12, #3         \n" 
-                    "cmp        r4, #0              \n"
-                    "beq        3f                  \n"
-
-                    "2:                             \n"
-
-                    "pld        [%4, #256]          \n"
-                    "vld1.f32   {d8-d11}, [%4]!     \n"
-
-                    "pld        [%5, #128]          \n"
-                    "vld1.f32   {d0-d1}, [%5]!      \n"
-
-                    "vmla.f32   q8, q4, d0[0]       \n"
-                    "vmla.f32   q10, q4, d0[1]      \n"
-                    "vmla.f32   q12, q4, d1[0]      \n"
-                    "vmla.f32   q14, q4, d1[1]      \n"
-
-                    "vmla.f32   q9, q5, d0[0]       \n"
-                    "vmla.f32   q11, q5, d0[1]      \n"
-                    "vmla.f32   q13, q5, d1[0]      \n"
-                    "vmla.f32   q15, q5, d1[1]      \n"
-
-                    
-                    "subs       r4, r4, #1          \n"
-
-                    "bne        2b                  \n"
-
-                    "3:                             \n"
-
-                    "vst1.f32   {d16-d19}, [%0]!   \n"
-                    "vst1.f32   {d20-d23}, [%1]!   \n"
-                    "vst1.f32   {d24-d27}, [%2]!   \n"
-                    "vst1.f32   {d28-d31}, [%3]!   \n"
-                    
-
-                    : "=r"(destptr0), // %0
-                    "=r"(destptr1), // %1
-                    "=r"(destptr2), // %2
-                    "=r"(destptr3), // %3
-                    "=r"(src_tm_ptr),  // %4
-                    "=r"(kernel0)     // %5
-                    : "0"(destptr0),
-                    "1"(destptr1),
-                    "2"(destptr2),
-                    "3"(destptr3),
-                    "4"(src_tm_ptr),
-                    "5"(kernel0),
-                    "r"(inChannel)     // %12
-                    : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
-                );
-#endif
-
-#else
-                float sum0_0 = 0.f;
-                float sum0_1 = 0.f;
-                float sum0_2 = 0.f;
-                float sum0_3 = 0.f;
-                float sum0_4 = 0.f;
-                float sum0_5 = 0.f;
-                float sum0_6 = 0.f;
-                float sum0_7 = 0.f;
-
-                float sum1_0 = 0.f;
-                float sum1_1 = 0.f;
-                float sum1_2 = 0.f;
-                float sum1_3 = 0.f;
-                float sum1_4 = 0.f;
-                float sum1_5 = 0.f;
-                float sum1_6 = 0.f;
-                float sum1_7 = 0.f;
-
-                float sum2_0 = 0.f;
-                float sum2_1 = 0.f;
-                float sum2_2 = 0.f;
-                float sum2_3 = 0.f;
-                float sum2_4 = 0.f;
-                float sum2_5 = 0.f;
-                float sum2_6 = 0.f;
-                float sum2_7 = 0.f;
-
-                float sum3_0 = 0.f;
-                float sum3_1 = 0.f;
-                float sum3_2 = 0.f;
-                float sum3_3 = 0.f;
-                float sum3_4 = 0.f;
-                float sum3_5 = 0.f;
-                float sum3_6 = 0.f;
-                float sum3_7 = 0.f;
+                float *src_tm_ptr = src_tm + (newi / 8) * src_tm_size;
 
                 for(int q = 0; q < inChannel; q++){
-                    sum0_0 += src_tm_ptr[0] * kernel0[0];
-                    sum0_1 += src_tm_ptr[1] * kernel0[0];
-                    sum0_2 += src_tm_ptr[2] * kernel0[0];
-                    sum0_3 += src_tm_ptr[3] * kernel0[0];
-                    sum0_4 += src_tm_ptr[4] * kernel0[0];
-                    sum0_5 += src_tm_ptr[5] * kernel0[0];
-                    sum0_6 += src_tm_ptr[6] * kernel0[0];
-                    sum0_7 += src_tm_ptr[7] * kernel0[0];
-
-                    sum1_0 += src_tm_ptr[0] * kernel0[1];
-                    sum1_1 += src_tm_ptr[1] * kernel0[1];
-                    sum1_2 += src_tm_ptr[2] * kernel0[1];
-                    sum1_3 += src_tm_ptr[3] * kernel0[1];
-                    sum1_4 += src_tm_ptr[4] * kernel0[1];
-                    sum1_5 += src_tm_ptr[5] * kernel0[1];
-                    sum1_6 += src_tm_ptr[6] * kernel0[1];
-                    sum1_7 += src_tm_ptr[7] * kernel0[1];
-
-                    sum2_0 += src_tm_ptr[0] * kernel0[2];
-                    sum2_1 += src_tm_ptr[1] * kernel0[2];
-                    sum2_2 += src_tm_ptr[2] * kernel0[2];
-                    sum2_3 += src_tm_ptr[3] * kernel0[2];
-                    sum2_4 += src_tm_ptr[4] * kernel0[2];
-                    sum2_5 += src_tm_ptr[5] * kernel0[2];
-                    sum2_6 += src_tm_ptr[6] * kernel0[2];
-                    sum2_7 += src_tm_ptr[7] * kernel0[2];
-
-                    sum3_0 += src_tm_ptr[0] * kernel0[3];
-                    sum3_1 += src_tm_ptr[1] * kernel0[3];
-                    sum3_2 += src_tm_ptr[2] * kernel0[3];
-                    sum3_3 += src_tm_ptr[3] * kernel0[3];
-                    sum3_4 += src_tm_ptr[4] * kernel0[3];
-                    sum3_5 += src_tm_ptr[5] * kernel0[3];
-                    sum3_6 += src_tm_ptr[6] * kernel0[3];
-                    sum3_7 += src_tm_ptr[7] * kernel0[3];
-
+    #if USE_ARM
+                    asm volatile(
+                        "pld        [%0, #256]          \n"
+                        "vld1.f32   {d0-d3}, [%0]       \n"
+                        "vst1.f32   {d0-d3}, [%1]!      \n"
+                        : "=r"(srcptr),  // %0
+                        "=r"(src_tm_ptr) // %1
+                        : "0"(srcptr),
+                        "1"(src_tm_ptr)
+                        : "memory", "q0", "q1"
+                    );
+    #else
+                    src_tm_ptr[0] = srcptr[0];
+                    src_tm_ptr[1] = srcptr[1];
+                    src_tm_ptr[2] = srcptr[2];
+                    src_tm_ptr[3] = srcptr[3];
+                    src_tm_ptr[4] = srcptr[4];
+                    src_tm_ptr[5] = srcptr[5];
+                    src_tm_ptr[6] = srcptr[6];
+                    src_tm_ptr[7] = srcptr[7];
                     src_tm_ptr += 8;
-                    kernel0 += 4;
-                }    
-
-                destptr0[0] = sum0_0;
-                destptr0[1] = sum0_1;
-                destptr0[2] = sum0_2;
-                destptr0[3] = sum0_3;
-                destptr0[4] = sum0_4;
-                destptr0[5] = sum0_5;
-                destptr0[6] = sum0_6;
-                destptr0[7] = sum0_7;
-
-                destptr1[0] = sum1_0;
-                destptr1[1] = sum1_1;
-                destptr1[2] = sum1_2;
-                destptr1[3] = sum1_3;
-                destptr1[4] = sum1_4;
-                destptr1[5] = sum1_5;
-                destptr1[6] = sum1_6;
-                destptr1[7] = sum1_7;
-
-                destptr2[0] = sum2_0;
-                destptr2[1] = sum2_1;
-                destptr2[2] = sum2_2;
-                destptr2[3] = sum2_3;
-                destptr2[4] = sum2_4;
-                destptr2[5] = sum2_5;
-                destptr2[6] = sum2_6;
-                destptr2[7] = sum2_7;
-
-                destptr3[0] = sum3_0;
-                destptr3[1] = sum3_1;
-                destptr3[2] = sum3_2;
-                destptr3[3] = sum3_3;
-                destptr3[4] = sum3_4;
-                destptr3[5] = sum3_5;
-                destptr3[6] = sum3_6;
-                destptr3[7] = sum3_7;
-
-                destptr0 += 8;
-                destptr1 += 8;
-                destptr2 += 8;
-                destptr3 += 8;
-#endif
+    #endif
+                    srcptr += outSize;
+                }
 
             }
 
-            for(; i + 3 < outSize; i += 4){
-                const float *src_tm_ptr = src_tm + ((i / 8) + (i % 8) / 4) * src_tm_size;
-                const float *kernel0 = kernel + (c / 4) *  kernelSize;
+            nnSize = (outSize - remainSize) >> 2;
 
-#if USE_NEON
+    #if USE_OMP
+        #pragma omp parallel for num_threads(OMP_THREAD)
+    #endif
+            for(int i = 0; i < nnSize; i++){
+                int newi = remainSize + i * 4;
 
-#if __aarch64__
-                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-#else
-                asm volatile(
-                    "veor       q0, q0, q0          \n"
-                    "vdup.f32   q8, d0[0]           \n"
-                    "vdup.f32   q9, d0[0]           \n"
-                    "vdup.f32   q10, d0[0]          \n"
-                    "vdup.f32   q11, d0[0]          \n"
+                const float* srcptr = src + newi;
 
-                    // r4 = nn = inChannel >> 2
-                    "lsr        r4, %12, #2         \n" 
-                    "cmp        r4, #0              \n"
-                    "beq        1f                  \n"
-
-                    "0:                             \n"
-                    "pld        [%4, #512]          \n"
-                    "vldm       %4!, {d8-d15}       \n"
-
-                    "pld        [%5, #512]          \n"
-                    "vldm       %5!, {d0-d7}        \n"
-
-                    "vmla.f32   q8, q4, d0[0]       \n"
-                    "vmla.f32   q9, q4, d0[1]       \n"
-                    "vmla.f32   q10, q4, d1[0]      \n"
-                    "vmla.f32   q11, q4, d1[1]      \n"
-
-                    "vmla.f32   q8, q5, d2[0]       \n"
-                    "vmla.f32   q9, q5, d2[1]       \n"
-                    "vmla.f32   q10, q5, d3[0]      \n"
-                    "vmla.f32   q11, q5, d3[1]      \n"
-
-                    "subs       r4, r4, #1          \n"
-
-                    "vmla.f32   q8, q6, d4[0]       \n"
-                    "vmla.f32   q9, q6, d4[1]       \n"
-                    "vmla.f32   q10, q6, d5[0]      \n"
-                    "vmla.f32   q11, q6, d5[1]      \n"
-
-                    "vmla.f32   q8, q7, d6[0]       \n"
-                    "vmla.f32   q9, q7, d6[1]       \n"
-                    "vmla.f32   q10, q7, d7[0]      \n"
-                    "vmla.f32   q11, q7, d7[1]      \n"
-
-                    "bne        0b                  \n"
-
-                    "1:                             \n"
-
-                    // r4 = remain = inChannel & 3;
-                    "and        r4, %12, #3         \n" 
-                    "cmp        r4, #0              \n"
-                    "beq        3f                  \n"
-
-                    "2:                             \n"
-
-                    "pld        [%4, #128]          \n"
-                    "vld1.f32   {d8-d9}, [%4]!      \n"
-
-                    "pld        [%5, #128]          \n"
-                    "vld1.f32   {d0-d1}, [%5]!      \n"
-
-                    "subs       r4, r4, #1          \n"
-
-                    "vmla.f32   q8, q4, d0[0]       \n"
-                    "vmla.f32   q9, q4, d0[1]       \n"
-                    "vmla.f32   q10, q4, d1[0]      \n"
-                    "vmla.f32   q11, q4, d1[1]      \n"
-
-                    "bne        2b                  \n"
-
-                    "3:                             \n"
-
-                    "vst1.f32   {d16-d17}, [%0]!   \n"
-                    "vst1.f32   {d18-d19}, [%1]!   \n"
-                    "vst1.f32   {d20-d21}, [%2]!   \n"
-                    "vst1.f32   {d22-d23}, [%3]!   \n"
-
-                    : "=r"(destptr0), // %0
-                    "=r"(destptr1), // %1
-                    "=r"(destptr2), // %2
-                    "=r"(destptr3), // %3
-                    "=r"(src_tm_ptr),  // %4
-                    "=r"(kernel0)     // %5
-                    : "0"(destptr0),
-                    "1"(destptr1),
-                    "2"(destptr2),
-                    "3"(destptr3),
-                    "4"(src_tm_ptr),
-                    "5"(kernel0),
-                    "r"(inChannel)     // %12
-                    : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11"
-                );
-#endif
-
-#else
-                float sum0_0 = 0.f;
-                float sum0_1 = 0.f;
-                float sum0_2 = 0.f;
-                float sum0_3 = 0.f;
-
-                float sum1_0 = 0.f;
-                float sum1_1 = 0.f;
-                float sum1_2 = 0.f;
-                float sum1_3 = 0.f;
-
-                float sum2_0 = 0.f;
-                float sum2_1 = 0.f;
-                float sum2_2 = 0.f;
-                float sum2_3 = 0.f;
-
-                float sum3_0 = 0.f;
-                float sum3_1 = 0.f;
-                float sum3_2 = 0.f;
-                float sum3_3 = 0.f;
+                float *src_tm_ptr = src_tm + (newi / 8 + (newi % 8) / 4) * src_tm_size;
 
                 for(int q = 0; q < inChannel; q++){
-                    sum0_0 += src_tm_ptr[0] * kernel0[0];
-                    sum0_1 += src_tm_ptr[1] * kernel0[0];
-                    sum0_2 += src_tm_ptr[2] * kernel0[0];
-                    sum0_3 += src_tm_ptr[3] * kernel0[0];
-
-                    sum1_0 += src_tm_ptr[0] * kernel0[1];
-                    sum1_1 += src_tm_ptr[1] * kernel0[1];
-                    sum1_2 += src_tm_ptr[2] * kernel0[1];
-                    sum1_3 += src_tm_ptr[3] * kernel0[1];
-
-                    sum2_0 += src_tm_ptr[0] * kernel0[2];
-                    sum2_1 += src_tm_ptr[1] * kernel0[2];
-                    sum2_2 += src_tm_ptr[2] * kernel0[2];
-                    sum2_3 += src_tm_ptr[3] * kernel0[2];
-
-                    sum3_0 += src_tm_ptr[0] * kernel0[3];
-                    sum3_1 += src_tm_ptr[1] * kernel0[3];
-                    sum3_2 += src_tm_ptr[2] * kernel0[3];
-                    sum3_3 += src_tm_ptr[3] * kernel0[3];
-
+    #if USE_ARM
+                    asm volatile(
+                        "pld        [%0, #128]          \n"
+                        "vld1.f32   {d0-d1}, [%0]       \n"
+                        "vst1.f32   {d0-d1}, [%1]!      \n"
+                        : "=r"(srcptr),  // %0
+                        "=r"(src_tm_ptr) // %1
+                        : "0"(srcptr),
+                        "1"(src_tm_ptr)
+                        : "memory", "q0"
+                    );
+    #else
+                    src_tm_ptr[0] = srcptr[0];
+                    src_tm_ptr[1] = srcptr[1];
+                    src_tm_ptr[2] = srcptr[2];
+                    src_tm_ptr[3] = srcptr[3];
                     src_tm_ptr += 4;
-                    kernel0 += 4;
+    #endif
+                    srcptr += outSize;
                 }
-
-                destptr0[0] = sum0_0;
-                destptr0[1] = sum0_1;
-                destptr0[2] = sum0_2;
-                destptr0[3] = sum0_3;
-
-                destptr1[0] = sum1_0;
-                destptr1[1] = sum1_1;
-                destptr1[2] = sum1_2;
-                destptr1[3] = sum1_3;
-
-                destptr2[0] = sum2_0;
-                destptr2[1] = sum2_1;
-                destptr2[2] = sum2_2;
-                destptr2[3] = sum2_3;
-
-                destptr3[0] = sum3_0;
-                destptr3[1] = sum3_1;
-                destptr3[2] = sum3_2;
-                destptr3[3] = sum3_3;
-
-                destptr0 += 4;
-                destptr1 += 4;
-                destptr2 += 4;
-                destptr3 += 4;
-#endif
             }
 
-            for(; i < outSize; i++){
-                const float *src_tm_ptr = src_tm + ((i / 8) + (i % 8) / 4 + i % 4) * src_tm_size;
-                const float *kernel0 = kernel + (c / 4) *  kernelSize;
+            remainSize += nnSize << 2;
 
-#if USE_NEON
+    #if USE_OMP
+        #pragma omp parallel for num_threads(OMP_THREAD)
+    #endif
 
-#if __aarch64__
-                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-#else
-                asm volatile(
-                    "veor       q0, q0, q0          \n"
-                    "vdup.f32   q8, d0[0]           \n"
-                    "vdup.f32   q9, d0[0]           \n"
-                    "vdup.f32   q10, d0[0]          \n"
-                    "vdup.f32   q11, d0[0]          \n"
+            for(int i = remainSize; i < outSize; i++){
+                int newi = i;
 
-                    // r4 = nn = inChannel >> 2
-                    "lsr        r4, %12, #2         \n" 
-                    "cmp        r4, #0              \n"
-                    "beq        1f                  \n"
+                const float* srcptr = src + newi;
 
-                    "0:                             \n"
-                    "pld        [%4, #128]          \n"
-                    "vld1.f32   {d8-d9}, [%4]!      \n"
-
-                    "pld        [%5, #512]          \n"
-                    "vldm       %5!, {d0-d7}        \n"
-
-                    "vmla.f32   q8, q0, d8[0]       \n"
-                    "vmla.f32   q9, q1, d8[1]       \n"
-                    "vmla.f32   q10, q2, d9[0]      \n"
-                    "vmla.f32   q11, q3, d9[1]      \n"
-
-                    "subs       r4, r4, #1          \n"
-
-                    "bne        0b                  \n"
-
-                    // sum0 = q8 = [a1, b1, c1, d1]
-                    // sum1 = q9 = [a2, b2, c2, d2]
-                    // sum3 = q10 = [a3, b3, c3, d3]
-                    // sum4 = q11 = [a4, b4, c4, d4]
-                    
-                    // q8 = [a1+b1,c1+d1, a2+b2, c2+d2]
-                    "vadd.f32   q8, q8, q9          \n"
-                    // q10 = [a3+b3, c3+d3, a4+b4, c4+d4]
-                    "vadd.f32   q10, q10, q11       \n"
-                    // q8 = [a1+b1+c1+d1, a2+b2+c2+d2, a3+b3+c3+d3, a4+b4+c4+d4]
-                    "vadd.f32   q8, q8, q10         \n"
-
-                    "1:                             \n"
-
-                    // r4 = remain = inChannel & 3;
-                    "and        r4, %12, #3         \n" 
-                    "cmp        r4, #0              \n"
-                    "beq        3f                  \n"
-
-                    "2:                             \n"
-
-                    "pld        [%4, #32]           \n"
-                    "vld1.f32   {d8[],d9[]}, [%4]!  \n"
-
-                    "pld        [%5, #128]          \n"
-                    "vld1.f32   {d0-d1}, [%5]!      \n"
-
-                    "subs       r4, r4, #1          \n"
-
-                    "vmla.f32   q8, q4, q0         \n"
-
-                    "bne        2b                  \n"
-
-                    "3:                             \n"
-
-                    "vst1.f32   {d16[0]}, [%0]!     \n"
-                    "vst1.f32   {d16[1]}, [%1]!     \n"
-                    "vst1.f32   {d17[0]}, [%2]!     \n"
-                    "vst1.f32   {d17[1]}, [%3]!     \n"
-
-
-                    : "=r"(destptr0), // %0
-                    "=r"(destptr1), // %1
-                    "=r"(destptr2), // %2
-                    "=r"(destptr3), // %3
-                    "=r"(src_tm_ptr),  // %4
-                    "=r"(kernel0)     // %5
-                    : "0"(destptr0),
-                    "1"(destptr1),
-                    "2"(destptr2),
-                    "3"(destptr3),
-                    "4"(src_tm_ptr),
-                    "5"(kernel0),
-                    "r"(inChannel)     // %12
-                    : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11"
-                );
-#endif
-
-#else
-                float sum0 = 0.f;
-                float sum1 = 0.f;
-                float sum2 = 0.f;
-                float sum3 = 0.f;
+                float *src_tm_ptr = src_tm + (newi / 8 + (newi % 8) / 4 + newi % 4) * src_tm_size;
 
                 for(int q = 0; q < inChannel; q++){
-                    sum0 += src_tm_ptr[0] * kernel0[0];
-                    sum1 += src_tm_ptr[0] * kernel0[1];
-                    sum2 += src_tm_ptr[0] * kernel0[2];
-                    sum3 += src_tm_ptr[0] * kernel0[3];
 
-                    src_tm_ptr++;
-                    kernel0 += 4;
+                    src_tm_ptr[0] = srcptr[0];
+
+                    src_tm_ptr += 1;
+                    srcptr += outSize;
                 }
-
-                destptr0[0] = sum0;
-                destptr1[0] = sum1;
-                destptr2[0] = sum2;
-                destptr3[0] = sum3;
-
-                destptr0 ++;
-                destptr1 ++;
-                destptr2 ++;
-                destptr3 ++;
-#endif
             }
 
-        }
+            // pack input end
 
-#if USE_OMP
-    #pragma omp parallel for num_threads(OMP_THREAD)
-#endif    
+            int nnOutChannel = outChannel >> 2;
+            int remainOutChannel = nnOutChannel << 2;
 
-        for(int cc = remainOutChannel; cc < outChannel; cc++){
-            int c = cc;
-            float *destptr0 = dest + c * outSize;
+    #if USE_OMP
+        #pragma omp parallel for num_threads(OMP_THREAD)
+    #endif
+            for(int cc = 0; cc < nnOutChannel; cc++){
+                int c = cc << 2;
 
-            int i = 0;
-            for(; i + 7 < outSize; i += 8){
-                const float *src_tm_ptr = src_tm + (i / 8) * src_tm_size;
+                float *destptr0 = dest + c * outSize;
+                float *destptr1 = dest + (c + 1) * outSize;
+                float *destptr2 = dest + (c + 2) * outSize;
+                float *destptr3 = dest + (c + 3) * outSize;
 
-                const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
+                int i = 0;
 
-#if USE_NEON
+                for(; i + 7 < outSize; i += 8){
+                    const float *src_tm_ptr = src_tm + (i / 8) * src_tm_size;
 
-#if __aarch64__
-                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-#else
-                asm volatile(
-                    "veor       q8, q8, q8          \n"
-                    "veor       q9, q9, q9          \n"
+                    const float *kernel0 = kernel + (c / 4) *  kernelSize;
 
-                    // r4 = nn = inChannel >> 2
-                    "lsr        r4, %6, #2          \n" 
-                    "cmp        r4, #0              \n"
-                    "beq        1f                  \n"
+    #if USE_ARM
 
-                    "0:                             \n"
-                    "pld        [%1, #512]          \n"
-                    "vldm       %1!, {d8-d15}       \n"
+    #if __aarch64__
+                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+    #else
+                    asm volatile(
 
-                    "pld        [%2, #128]          \n"
-                    "vld1.f32   {d0-d1}, [%2]!       \n"
+                        "veor       q0, q0, q0          \n"
+                        "vdup.f32   q8, d0[0]           \n"
+                        "vdup.f32   q9, d0[0]           \n"
+                        "vdup.f32   q10, d0[0]          \n"
+                        "vdup.f32   q11, d0[0]          \n"
 
-                    "vmla.f32   q8, q4, d0[0]       \n"
-                    "vmla.f32   q9, q5, d0[0]       \n"
+                        "vdup.f32   q12, d0[0]          \n"
+                        "vdup.f32   q13, d0[0]          \n"
+                        "vdup.f32   q14, d0[0]          \n"
+                        "vdup.f32   q15, d0[0]          \n"
+                        // r4 = inChannnel >> 2
+                        "lsr        r4, %12, #2         \n"
+                        "cmp        r4, #0              \n"
+                        "beq        1f                  \n"
 
-                    "pld        [%1, #512]          \n"
-                    "vldm       %1!, {d24-d31}      \n"
+                        "0:                             \n"
+                        "pld        [%4, #512]          \n"
+                        "vldm       %4!, {d8-d15}       \n"
 
-                    "vmla.f32   q8, q6, d0[1]       \n"
-                    "vmla.f32   q9, q7, d0[1]       \n"
+                        "pld        [%5, #512]          \n"
+                        "vldm       %5!, {d0-d7}        \n"
 
-                    "vmla.f32   q8, q12, d1[0]      \n"
-                    "vmla.f32   q9, q13, d1[0]      \n"
+                        "vmla.f32   q8, q4, d0[0]       \n"
+                        "vmla.f32   q10, q4, d0[1]      \n"
+                        "vmla.f32   q12, q4, d1[0]      \n"
+                        "vmla.f32   q14, q4, d1[1]      \n"
 
-                    "vmla.f32   q8, q14, d1[1]      \n"
-                    "vmla.f32   q9, q15, d1[1]      \n"
+                        "vmla.f32   q9, q5, d0[0]       \n"
+                        "vmla.f32   q11, q5, d0[1]      \n"
+                        "vmla.f32   q13, q5, d1[0]      \n"
+                        "vmla.f32   q15, q5, d1[1]      \n"
 
-                    "subs       r4, r4, #1          \n"
-                    "bne        0b                  \n"
-                    "1:                             \n"
+                        "vmla.f32   q8, q6, d2[0]       \n"
+                        "vmla.f32   q10, q6, d2[1]      \n"
+                        "vmla.f32   q12, q6, d3[0]      \n"
+                        "vmla.f32   q14, q6, d3[1]      \n"
 
-                    // r4 = remain = inChannel & 3;
-                    "and        r4, %6, #3          \n"
-                    "cmp        r4, #0              \n"
-                    "beq        3f                  \n"
+                        "vmla.f32   q9, q7, d2[0]       \n"
+                        "vmla.f32   q11, q7, d2[1]      \n"
+                        "vmla.f32   q13, q7, d3[0]      \n"
+                        "vmla.f32   q15, q7, d3[1]      \n"
 
-                    "2:                             \n"
-                    "pld        [%1, #256]          \n"
-                    "vld1.f32   {d8-d11}, [%1]!     \n"
+                        "pld        [%4, #512]          \n"
+                        "vldm       %4!, {d8-d15}       \n"
 
-                    "pld        [%2, #32]           \n"
-                    "vld1.f32   {d0[],d1[]}, [%2]!  \n"
+                        "vmla.f32   q8, q4, d4[0]       \n"
+                        "vmla.f32   q10, q4, d4[1]      \n"
+                        "vmla.f32   q12, q4, d5[0]      \n"
+                        "vmla.f32   q14, q4, d5[1]      \n"
 
-                    "subs       r4, r4, #1          \n"
+                        "vmla.f32   q9, q5, d4[0]       \n"
+                        "vmla.f32   q11, q5, d4[1]      \n"
+                        "vmla.f32   q13, q5, d5[0]      \n"
+                        "vmla.f32   q15, q5, d5[1]      \n"
 
-                    "vmla.f32   q8, q4, q0          \n"
-                    "vmla.f32   q9, q5, q0          \n"
+                        "vmla.f32   q8, q6, d6[0]       \n"
+                        "vmla.f32   q10, q6, d6[1]      \n"
+                        "vmla.f32   q12, q6, d7[0]      \n"
+                        "vmla.f32   q14, q6, d7[1]      \n"
 
-                    "bne        2b                  \n"
+                        "vmla.f32   q9, q7, d6[0]       \n"
+                        "vmla.f32   q11, q7, d6[1]      \n"
+                        "vmla.f32   q13, q7, d7[0]      \n"
+                        "vmla.f32   q15, q7, d7[1]      \n"
 
-                    "3:                             \n"
-                    "vst1.f32   {d16-d19}, [%0]!    \n"
+                        "subs       r4, r4, #1          \n"
+                        "bne        0b                  \n"
 
+                        "1:                             \n"
+                        // r4 = remain = inChannel & 3;
+                        "and        r4, %12, #3         \n" 
+                        "cmp        r4, #0              \n"
+                        "beq        3f                  \n"
 
-                    : "=r"(destptr0), // %0
-                    "=r"(src_tm_ptr),  // %1
-                    "=r"(kernel0)     // %2
-                    : "0"(destptr0),
-                    "1"(src_tm_ptr),
-                    "2"(kernel0),
-                    "r"(inChannel)   // %6
-                    : "cc", "memory", "r4", "q0", "q4", "q5", "q6", "q7", "q8", "q9", "q12", "q13", "q14", "q15"
-                );
-#endif
+                        "2:                             \n"
 
-#else
-                float sum0 = 0.f;
-                float sum1 = 0.f;
-                float sum2 = 0.f;
-                float sum3 = 0.f;
-                float sum4 = 0.f;
-                float sum5 = 0.f;
-                float sum6 = 0.f;
-                float sum7 = 0.f;
+                        "pld        [%4, #256]          \n"
+                        "vld1.f32   {d8-d11}, [%4]!     \n"
 
-                for(int q = 0; q < inChannel; q++){
-                    sum0 += src_tm_ptr[0] * kernel0[0];
-                    sum1 += src_tm_ptr[1] * kernel0[0];
-                    sum2 += src_tm_ptr[2] * kernel0[0];
-                    sum3 += src_tm_ptr[3] * kernel0[0];
-                    sum4 += src_tm_ptr[4] * kernel0[0];
-                    sum5 += src_tm_ptr[5] * kernel0[0];
-                    sum6 += src_tm_ptr[6] * kernel0[0];
-                    sum7 += src_tm_ptr[7] * kernel0[0];
+                        "pld        [%5, #128]          \n"
+                        "vld1.f32   {d0-d1}, [%5]!      \n"
 
-                    src_tm_ptr += 8;
-                    kernel0++;
+                        "vmla.f32   q8, q4, d0[0]       \n"
+                        "vmla.f32   q10, q4, d0[1]      \n"
+                        "vmla.f32   q12, q4, d1[0]      \n"
+                        "vmla.f32   q14, q4, d1[1]      \n"
+
+                        "vmla.f32   q9, q5, d0[0]       \n"
+                        "vmla.f32   q11, q5, d0[1]      \n"
+                        "vmla.f32   q13, q5, d1[0]      \n"
+                        "vmla.f32   q15, q5, d1[1]      \n"
+
+                        
+                        "subs       r4, r4, #1          \n"
+
+                        "bne        2b                  \n"
+
+                        "3:                             \n"
+
+                        "vst1.f32   {d16-d19}, [%0]!   \n"
+                        "vst1.f32   {d20-d23}, [%1]!   \n"
+                        "vst1.f32   {d24-d27}, [%2]!   \n"
+                        "vst1.f32   {d28-d31}, [%3]!   \n"
+                        
+
+                        : "=r"(destptr0), // %0
+                        "=r"(destptr1), // %1
+                        "=r"(destptr2), // %2
+                        "=r"(destptr3), // %3
+                        "=r"(src_tm_ptr),  // %4
+                        "=r"(kernel0)     // %5
+                        : "0"(destptr0),
+                        "1"(destptr1),
+                        "2"(destptr2),
+                        "3"(destptr3),
+                        "4"(src_tm_ptr),
+                        "5"(kernel0),
+                        "r"(inChannel)     // %12
+                        : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
+                    );
+    #endif
+
+    #else
+                    float sum0_0 = 0.f;
+                    float sum0_1 = 0.f;
+                    float sum0_2 = 0.f;
+                    float sum0_3 = 0.f;
+                    float sum0_4 = 0.f;
+                    float sum0_5 = 0.f;
+                    float sum0_6 = 0.f;
+                    float sum0_7 = 0.f;
+
+                    float sum1_0 = 0.f;
+                    float sum1_1 = 0.f;
+                    float sum1_2 = 0.f;
+                    float sum1_3 = 0.f;
+                    float sum1_4 = 0.f;
+                    float sum1_5 = 0.f;
+                    float sum1_6 = 0.f;
+                    float sum1_7 = 0.f;
+
+                    float sum2_0 = 0.f;
+                    float sum2_1 = 0.f;
+                    float sum2_2 = 0.f;
+                    float sum2_3 = 0.f;
+                    float sum2_4 = 0.f;
+                    float sum2_5 = 0.f;
+                    float sum2_6 = 0.f;
+                    float sum2_7 = 0.f;
+
+                    float sum3_0 = 0.f;
+                    float sum3_1 = 0.f;
+                    float sum3_2 = 0.f;
+                    float sum3_3 = 0.f;
+                    float sum3_4 = 0.f;
+                    float sum3_5 = 0.f;
+                    float sum3_6 = 0.f;
+                    float sum3_7 = 0.f;
+
+                    for(int q = 0; q < inChannel; q++){
+                        sum0_0 += src_tm_ptr[0] * kernel0[0];
+                        sum0_1 += src_tm_ptr[1] * kernel0[0];
+                        sum0_2 += src_tm_ptr[2] * kernel0[0];
+                        sum0_3 += src_tm_ptr[3] * kernel0[0];
+                        sum0_4 += src_tm_ptr[4] * kernel0[0];
+                        sum0_5 += src_tm_ptr[5] * kernel0[0];
+                        sum0_6 += src_tm_ptr[6] * kernel0[0];
+                        sum0_7 += src_tm_ptr[7] * kernel0[0];
+
+                        sum1_0 += src_tm_ptr[0] * kernel0[1];
+                        sum1_1 += src_tm_ptr[1] * kernel0[1];
+                        sum1_2 += src_tm_ptr[2] * kernel0[1];
+                        sum1_3 += src_tm_ptr[3] * kernel0[1];
+                        sum1_4 += src_tm_ptr[4] * kernel0[1];
+                        sum1_5 += src_tm_ptr[5] * kernel0[1];
+                        sum1_6 += src_tm_ptr[6] * kernel0[1];
+                        sum1_7 += src_tm_ptr[7] * kernel0[1];
+
+                        sum2_0 += src_tm_ptr[0] * kernel0[2];
+                        sum2_1 += src_tm_ptr[1] * kernel0[2];
+                        sum2_2 += src_tm_ptr[2] * kernel0[2];
+                        sum2_3 += src_tm_ptr[3] * kernel0[2];
+                        sum2_4 += src_tm_ptr[4] * kernel0[2];
+                        sum2_5 += src_tm_ptr[5] * kernel0[2];
+                        sum2_6 += src_tm_ptr[6] * kernel0[2];
+                        sum2_7 += src_tm_ptr[7] * kernel0[2];
+
+                        sum3_0 += src_tm_ptr[0] * kernel0[3];
+                        sum3_1 += src_tm_ptr[1] * kernel0[3];
+                        sum3_2 += src_tm_ptr[2] * kernel0[3];
+                        sum3_3 += src_tm_ptr[3] * kernel0[3];
+                        sum3_4 += src_tm_ptr[4] * kernel0[3];
+                        sum3_5 += src_tm_ptr[5] * kernel0[3];
+                        sum3_6 += src_tm_ptr[6] * kernel0[3];
+                        sum3_7 += src_tm_ptr[7] * kernel0[3];
+
+                        src_tm_ptr += 8;
+                        kernel0 += 4;
+                    }    
+
+                    destptr0[0] = sum0_0;
+                    destptr0[1] = sum0_1;
+                    destptr0[2] = sum0_2;
+                    destptr0[3] = sum0_3;
+                    destptr0[4] = sum0_4;
+                    destptr0[5] = sum0_5;
+                    destptr0[6] = sum0_6;
+                    destptr0[7] = sum0_7;
+
+                    destptr1[0] = sum1_0;
+                    destptr1[1] = sum1_1;
+                    destptr1[2] = sum1_2;
+                    destptr1[3] = sum1_3;
+                    destptr1[4] = sum1_4;
+                    destptr1[5] = sum1_5;
+                    destptr1[6] = sum1_6;
+                    destptr1[7] = sum1_7;
+
+                    destptr2[0] = sum2_0;
+                    destptr2[1] = sum2_1;
+                    destptr2[2] = sum2_2;
+                    destptr2[3] = sum2_3;
+                    destptr2[4] = sum2_4;
+                    destptr2[5] = sum2_5;
+                    destptr2[6] = sum2_6;
+                    destptr2[7] = sum2_7;
+
+                    destptr3[0] = sum3_0;
+                    destptr3[1] = sum3_1;
+                    destptr3[2] = sum3_2;
+                    destptr3[3] = sum3_3;
+                    destptr3[4] = sum3_4;
+                    destptr3[5] = sum3_5;
+                    destptr3[6] = sum3_6;
+                    destptr3[7] = sum3_7;
+
+                    destptr0 += 8;
+                    destptr1 += 8;
+                    destptr2 += 8;
+                    destptr3 += 8;
+    #endif
+
                 }
 
-                destptr0[0] = sum0;
-                destptr0[1] = sum1;
-                destptr0[2] = sum2;
-                destptr0[3] = sum3;
-                destptr0[4] = sum4;
-                destptr0[5] = sum5;
-                destptr0[6] = sum6;
-                destptr0[7] = sum7;
+                for(; i + 3 < outSize; i += 4){
+                    const float *src_tm_ptr = src_tm + ((i / 8) + (i % 8) / 4) * src_tm_size;
+                    const float *kernel0 = kernel + (c / 4) *  kernelSize;
 
-                destptr0 += 8;
-#endif
-            }
+    #if USE_ARM
 
-            for(; i + 3 < outSize; i += 4){
-                const float *src_tm_ptr = src_tm + (i / 8 + (i % 8) / 4) * src_tm_size;
+    #if __aarch64__
+                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+    #else
+                    asm volatile(
+                        "veor       q0, q0, q0          \n"
+                        "vdup.f32   q8, d0[0]           \n"
+                        "vdup.f32   q9, d0[0]           \n"
+                        "vdup.f32   q10, d0[0]          \n"
+                        "vdup.f32   q11, d0[0]          \n"
 
-                const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
-            
-#if USE_ARM
+                        // r4 = nn = inChannel >> 2
+                        "lsr        r4, %12, #2         \n" 
+                        "cmp        r4, #0              \n"
+                        "beq        1f                  \n"
 
-#if __aarch64__
-                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-#else
-                asm volatile(
-                    
-                );
-#endif
+                        "0:                             \n"
+                        "pld        [%4, #512]          \n"
+                        "vldm       %4!, {d8-d15}       \n"
 
-#else
-                float sum0 = 0.f;
-                float sum1 = 0.f;
-                float sum2 = 0.f;
-                float sum3 = 0.f;
+                        "pld        [%5, #512]          \n"
+                        "vldm       %5!, {d0-d7}        \n"
 
-                for(int q = 0; q < inChannel; q++){
-                    sum0 += src_tm_ptr[0] * kernel0[0];
-                    sum1 += src_tm_ptr[1] * kernel0[0];
-                    sum2 += src_tm_ptr[2] * kernel0[0];
-                    sum3 += src_tm_ptr[3] * kernel0[0];
+                        "vmla.f32   q8, q4, d0[0]       \n"
+                        "vmla.f32   q9, q4, d0[1]       \n"
+                        "vmla.f32   q10, q4, d1[0]      \n"
+                        "vmla.f32   q11, q4, d1[1]      \n"
 
-                    src_tm_ptr += 4;
-                    kernel0++;
+                        "vmla.f32   q8, q5, d2[0]       \n"
+                        "vmla.f32   q9, q5, d2[1]       \n"
+                        "vmla.f32   q10, q5, d3[0]      \n"
+                        "vmla.f32   q11, q5, d3[1]      \n"
+
+                        "subs       r4, r4, #1          \n"
+
+                        "vmla.f32   q8, q6, d4[0]       \n"
+                        "vmla.f32   q9, q6, d4[1]       \n"
+                        "vmla.f32   q10, q6, d5[0]      \n"
+                        "vmla.f32   q11, q6, d5[1]      \n"
+
+                        "vmla.f32   q8, q7, d6[0]       \n"
+                        "vmla.f32   q9, q7, d6[1]       \n"
+                        "vmla.f32   q10, q7, d7[0]      \n"
+                        "vmla.f32   q11, q7, d7[1]      \n"
+
+                        "bne        0b                  \n"
+
+                        "1:                             \n"
+
+                        // r4 = remain = inChannel & 3;
+                        "and        r4, %12, #3         \n" 
+                        "cmp        r4, #0              \n"
+                        "beq        3f                  \n"
+
+                        "2:                             \n"
+
+                        "pld        [%4, #128]          \n"
+                        "vld1.f32   {d8-d9}, [%4]!      \n"
+
+                        "pld        [%5, #128]          \n"
+                        "vld1.f32   {d0-d1}, [%5]!      \n"
+
+                        "subs       r4, r4, #1          \n"
+
+                        "vmla.f32   q8, q4, d0[0]       \n"
+                        "vmla.f32   q9, q4, d0[1]       \n"
+                        "vmla.f32   q10, q4, d1[0]      \n"
+                        "vmla.f32   q11, q4, d1[1]      \n"
+
+                        "bne        2b                  \n"
+
+                        "3:                             \n"
+
+                        "vst1.f32   {d16-d17}, [%0]!   \n"
+                        "vst1.f32   {d18-d19}, [%1]!   \n"
+                        "vst1.f32   {d20-d21}, [%2]!   \n"
+                        "vst1.f32   {d22-d23}, [%3]!   \n"
+
+                        : "=r"(destptr0), // %0
+                        "=r"(destptr1), // %1
+                        "=r"(destptr2), // %2
+                        "=r"(destptr3), // %3
+                        "=r"(src_tm_ptr),  // %4
+                        "=r"(kernel0)     // %5
+                        : "0"(destptr0),
+                        "1"(destptr1),
+                        "2"(destptr2),
+                        "3"(destptr3),
+                        "4"(src_tm_ptr),
+                        "5"(kernel0),
+                        "r"(inChannel)     // %12
+                        : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11"
+                    );
+    #endif
+
+    #else
+                    float sum0_0 = 0.f;
+                    float sum0_1 = 0.f;
+                    float sum0_2 = 0.f;
+                    float sum0_3 = 0.f;
+
+                    float sum1_0 = 0.f;
+                    float sum1_1 = 0.f;
+                    float sum1_2 = 0.f;
+                    float sum1_3 = 0.f;
+
+                    float sum2_0 = 0.f;
+                    float sum2_1 = 0.f;
+                    float sum2_2 = 0.f;
+                    float sum2_3 = 0.f;
+
+                    float sum3_0 = 0.f;
+                    float sum3_1 = 0.f;
+                    float sum3_2 = 0.f;
+                    float sum3_3 = 0.f;
+
+                    for(int q = 0; q < inChannel; q++){
+                        sum0_0 += src_tm_ptr[0] * kernel0[0];
+                        sum0_1 += src_tm_ptr[1] * kernel0[0];
+                        sum0_2 += src_tm_ptr[2] * kernel0[0];
+                        sum0_3 += src_tm_ptr[3] * kernel0[0];
+
+                        sum1_0 += src_tm_ptr[0] * kernel0[1];
+                        sum1_1 += src_tm_ptr[1] * kernel0[1];
+                        sum1_2 += src_tm_ptr[2] * kernel0[1];
+                        sum1_3 += src_tm_ptr[3] * kernel0[1];
+
+                        sum2_0 += src_tm_ptr[0] * kernel0[2];
+                        sum2_1 += src_tm_ptr[1] * kernel0[2];
+                        sum2_2 += src_tm_ptr[2] * kernel0[2];
+                        sum2_3 += src_tm_ptr[3] * kernel0[2];
+
+                        sum3_0 += src_tm_ptr[0] * kernel0[3];
+                        sum3_1 += src_tm_ptr[1] * kernel0[3];
+                        sum3_2 += src_tm_ptr[2] * kernel0[3];
+                        sum3_3 += src_tm_ptr[3] * kernel0[3];
+
+                        src_tm_ptr += 4;
+                        kernel0 += 4;
+                    }
+
+                    destptr0[0] = sum0_0;
+                    destptr0[1] = sum0_1;
+                    destptr0[2] = sum0_2;
+                    destptr0[3] = sum0_3;
+
+                    destptr1[0] = sum1_0;
+                    destptr1[1] = sum1_1;
+                    destptr1[2] = sum1_2;
+                    destptr1[3] = sum1_3;
+
+                    destptr2[0] = sum2_0;
+                    destptr2[1] = sum2_1;
+                    destptr2[2] = sum2_2;
+                    destptr2[3] = sum2_3;
+
+                    destptr3[0] = sum3_0;
+                    destptr3[1] = sum3_1;
+                    destptr3[2] = sum3_2;
+                    destptr3[3] = sum3_3;
+
+                    destptr0 += 4;
+                    destptr1 += 4;
+                    destptr2 += 4;
+                    destptr3 += 4;
+    #endif
                 }
 
-                destptr0[0] = sum0;
-                destptr0[1] = sum1;
-                destptr0[2] = sum2;
-                destptr0[3] = sum3;
+                for(; i < outSize; i++){
+                    const float *src_tm_ptr = src_tm + ((i / 8) + (i % 8) / 4 + i % 4) * src_tm_size;
+                    const float *kernel0 = kernel + (c / 4) *  kernelSize;
 
-                destptr0 += 4;
-#endif
+    #if USE_ARM
+
+    #if __aarch64__
+                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+    #else
+                    asm volatile(
+                        "veor       q0, q0, q0          \n"
+                        "vdup.f32   q8, d0[0]           \n"
+                        "vdup.f32   q9, d0[0]           \n"
+                        "vdup.f32   q10, d0[0]          \n"
+                        "vdup.f32   q11, d0[0]          \n"
+
+                        // r4 = nn = inChannel >> 2
+                        "lsr        r4, %12, #2         \n" 
+                        "cmp        r4, #0              \n"
+                        "beq        1f                  \n"
+
+                        "0:                             \n"
+                        "pld        [%4, #128]          \n"
+                        "vld1.f32   {d8-d9}, [%4]!      \n"
+
+                        "pld        [%5, #512]          \n"
+                        "vldm       %5!, {d0-d7}        \n"
+
+                        "vmla.f32   q8, q0, d8[0]       \n"
+                        "vmla.f32   q9, q1, d8[1]       \n"
+                        "vmla.f32   q10, q2, d9[0]      \n"
+                        "vmla.f32   q11, q3, d9[1]      \n"
+
+                        "subs       r4, r4, #1          \n"
+
+                        "bne        0b                  \n"
+
+                        // sum0 = q8 = [a1, b1, c1, d1]
+                        // sum1 = q9 = [a2, b2, c2, d2]
+                        // sum3 = q10 = [a3, b3, c3, d3]
+                        // sum4 = q11 = [a4, b4, c4, d4]
+                        
+                        // q8 = [a1+b1,c1+d1, a2+b2, c2+d2]
+                        "vadd.f32   q8, q8, q9          \n"
+                        // q10 = [a3+b3, c3+d3, a4+b4, c4+d4]
+                        "vadd.f32   q10, q10, q11       \n"
+                        // q8 = [a1+b1+c1+d1, a2+b2+c2+d2, a3+b3+c3+d3, a4+b4+c4+d4]
+                        "vadd.f32   q8, q8, q10         \n"
+
+                        "1:                             \n"
+
+                        // r4 = remain = inChannel & 3;
+                        "and        r4, %12, #3         \n" 
+                        "cmp        r4, #0              \n"
+                        "beq        3f                  \n"
+
+                        "2:                             \n"
+
+                        "pld        [%4, #32]           \n"
+                        "vld1.f32   {d8[],d9[]}, [%4]!  \n"
+
+                        "pld        [%5, #128]          \n"
+                        "vld1.f32   {d0-d1}, [%5]!      \n"
+
+                        "subs       r4, r4, #1          \n"
+
+                        "vmla.f32   q8, q4, q0         \n"
+
+                        "bne        2b                  \n"
+
+                        "3:                             \n"
+
+                        "vst1.f32   {d16[0]}, [%0]!     \n"
+                        "vst1.f32   {d16[1]}, [%1]!     \n"
+                        "vst1.f32   {d17[0]}, [%2]!     \n"
+                        "vst1.f32   {d17[1]}, [%3]!     \n"
+
+
+                        : "=r"(destptr0), // %0
+                        "=r"(destptr1), // %1
+                        "=r"(destptr2), // %2
+                        "=r"(destptr3), // %3
+                        "=r"(src_tm_ptr),  // %4
+                        "=r"(kernel0)     // %5
+                        : "0"(destptr0),
+                        "1"(destptr1),
+                        "2"(destptr2),
+                        "3"(destptr3),
+                        "4"(src_tm_ptr),
+                        "5"(kernel0),
+                        "r"(inChannel)     // %12
+                        : "cc", "memory", "r4", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11"
+                    );
+    #endif
+
+    #else
+                    float sum0 = 0.f;
+                    float sum1 = 0.f;
+                    float sum2 = 0.f;
+                    float sum3 = 0.f;
+
+                    for(int q = 0; q < inChannel; q++){
+                        sum0 += src_tm_ptr[0] * kernel0[0];
+                        sum1 += src_tm_ptr[0] * kernel0[1];
+                        sum2 += src_tm_ptr[0] * kernel0[2];
+                        sum3 += src_tm_ptr[0] * kernel0[3];
+
+                        src_tm_ptr++;
+                        kernel0 += 4;
+                    }
+
+                    destptr0[0] = sum0;
+                    destptr1[0] = sum1;
+                    destptr2[0] = sum2;
+                    destptr3[0] = sum3;
+
+                    destptr0 ++;
+                    destptr1 ++;
+                    destptr2 ++;
+                    destptr3 ++;
+    #endif
+                }
+
             }
 
-            for(; i < outSize; i++){
-                const float *src_tm_ptr = src_tm + (i / 8 + (i % 8) / 4 + i % 4) * src_tm_size;
+    #if USE_OMP
+        #pragma omp parallel for num_threads(OMP_THREAD)
+    #endif    
 
-                const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
+            for(int cc = remainOutChannel; cc < outChannel; cc++){
+                int c = cc;
+                float *destptr0 = dest + c * outSize;
 
-#if USE_ARM
+                int i = 0;
+                for(; i + 7 < outSize; i += 8){
+                    const float *src_tm_ptr = src_tm + (i / 8) * src_tm_size;
 
-#if __aarch64__
-                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-#else
-                asm volatile(
-                    
-                );
-#endif
+                    const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
 
-#else
-                float sum0 = 0.f;
+    #if USE_ARM
 
-                for(int q = 0; q < inChannel; q++){
-                    sum0 += src_tm_ptr[0] * kernel0[0];
-                    
-                    src_tm_ptr++;
-                    kernel0++;
-                }   
+    #if __aarch64__
+                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+    #else
+                    asm volatile(
+                        "veor       q8, q8, q8          \n"
+                        "veor       q9, q9, q9          \n"
 
-                destptr0[0] = sum0;
+                        // r4 = nn = inChannel >> 2
+                        "lsr        r4, %6, #2          \n" 
+                        "cmp        r4, #0              \n"
+                        "beq        1f                  \n"
 
-                destptr0++;
-#endif
+                        "0:                             \n"
+                        "pld        [%1, #512]          \n"
+                        "vldm       %1!, {d8-d15}       \n"
+
+                        "pld        [%2, #128]          \n"
+                        "vld1.f32   {d0-d1}, [%2]!       \n"
+
+                        "vmla.f32   q8, q4, d0[0]       \n"
+                        "vmla.f32   q9, q5, d0[0]       \n"
+
+                        "pld        [%1, #512]          \n"
+                        "vldm       %1!, {d24-d31}      \n"
+
+                        "vmla.f32   q8, q6, d0[1]       \n"
+                        "vmla.f32   q9, q7, d0[1]       \n"
+
+                        "vmla.f32   q8, q12, d1[0]      \n"
+                        "vmla.f32   q9, q13, d1[0]      \n"
+
+                        "vmla.f32   q8, q14, d1[1]      \n"
+                        "vmla.f32   q9, q15, d1[1]      \n"
+
+                        "subs       r4, r4, #1          \n"
+                        "bne        0b                  \n"
+                        "1:                             \n"
+
+                        // r4 = remain = inChannel & 3;
+                        "and        r4, %6, #3          \n"
+                        "cmp        r4, #0              \n"
+                        "beq        3f                  \n"
+
+                        "2:                             \n"
+                        "pld        [%1, #256]          \n"
+                        "vld1.f32   {d8-d11}, [%1]!     \n"
+
+                        "pld        [%2, #32]           \n"
+                        "vld1.f32   {d0[],d1[]}, [%2]!  \n"
+
+                        "subs       r4, r4, #1          \n"
+
+                        "vmla.f32   q8, q4, q0          \n"
+                        "vmla.f32   q9, q5, q0          \n"
+
+                        "bne        2b                  \n"
+
+                        "3:                             \n"
+                        "vst1.f32   {d16-d19}, [%0]!    \n"
+
+
+                        : "=r"(destptr0), // %0
+                        "=r"(src_tm_ptr),  // %1
+                        "=r"(kernel0)     // %2
+                        : "0"(destptr0),
+                        "1"(src_tm_ptr),
+                        "2"(kernel0),
+                        "r"(inChannel)   // %6
+                        : "cc", "memory", "r4", "q0", "q4", "q5", "q6", "q7", "q8", "q9", "q12", "q13", "q14", "q15"
+                    );
+    #endif
+
+    #else
+                    float sum0 = 0.f;
+                    float sum1 = 0.f;
+                    float sum2 = 0.f;
+                    float sum3 = 0.f;
+                    float sum4 = 0.f;
+                    float sum5 = 0.f;
+                    float sum6 = 0.f;
+                    float sum7 = 0.f;
+
+                    for(int q = 0; q < inChannel; q++){
+                        sum0 += src_tm_ptr[0] * kernel0[0];
+                        sum1 += src_tm_ptr[1] * kernel0[0];
+                        sum2 += src_tm_ptr[2] * kernel0[0];
+                        sum3 += src_tm_ptr[3] * kernel0[0];
+                        sum4 += src_tm_ptr[4] * kernel0[0];
+                        sum5 += src_tm_ptr[5] * kernel0[0];
+                        sum6 += src_tm_ptr[6] * kernel0[0];
+                        sum7 += src_tm_ptr[7] * kernel0[0];
+
+                        src_tm_ptr += 8;
+                        kernel0++;
+                    }
+
+                    destptr0[0] = sum0;
+                    destptr0[1] = sum1;
+                    destptr0[2] = sum2;
+                    destptr0[3] = sum3;
+                    destptr0[4] = sum4;
+                    destptr0[5] = sum5;
+                    destptr0[6] = sum6;
+                    destptr0[7] = sum7;
+
+                    destptr0 += 8;
+    #endif
+                }
+
+                for(; i + 3 < outSize; i += 4){
+                    const float *src_tm_ptr = src_tm + (i / 8 + (i % 8) / 4) * src_tm_size;
+
+                    const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
+                
+    #if USE_ARM
+
+    #if __aarch64__
+                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+    #else
+                    asm volatile(
+                        "veor       q8, q8, q8          \n"
+                        "veor       q9, q9, q9          \n"
+
+                        // r4 = nn = inChannel >> 2
+                        "lsr        r4, %6, #2          \n" 
+                        "cmp        r4, #0              \n"
+                        "beq        1f                  \n"
+
+                        "0:                             \n"
+                        "pld        [%1, #256]          \n"
+                        "vldm       %1!, {d8-d11}       \n"
+
+                        "pld        [%2, #128]          \n"
+                        "vld1.f32   {d0-d1}, [%2]!       \n"
+
+                        "vmla.f32   q8, q4, d0[0]       \n"
+                        "vmla.f32   q8, q5, d0[1]       \n"
+
+                        "pld        [%1, #256]          \n"
+                        "vldm       %1!, {d24-d27}      \n"
+
+                        "vmla.f32   q8, q12, d1[0]      \n"
+                        "vmla.f32   q8 , q13, d1[1]      \n"
+
+                        "subs       r4, r4, #1          \n"
+                        "bne        0b                  \n"
+                        "1:                             \n"
+
+                        // r4 = remain = inChannel & 3;
+                        "and        r4, %6, #3          \n"
+                        "cmp        r4, #0              \n"
+                        "beq        3f                  \n"
+
+                        "2:                             \n"
+                        "pld        [%1, #128]          \n"
+                        "vld1.f32   {d8-d9}, [%1]!     \n"
+
+                        "pld        [%2, #32]           \n"
+                        "vld1.f32   {d0[],d1[]}, [%2]!  \n"
+
+                        "subs       r4, r4, #1          \n"
+
+                        "vmla.f32   q8, q4, q0          \n"
+
+                        "bne        2b                  \n"
+
+                        "3:                             \n"
+                        "vst1.f32   {d16-d17}, [%0]!    \n"
+
+
+                        : "=r"(destptr0), // %0
+                        "=r"(src_tm_ptr),  // %1
+                        "=r"(kernel0)     // %2
+                        : "0"(destptr0),
+                        "1"(src_tm_ptr),
+                        "2"(kernel0),
+                        "r"(inChannel)   // %6
+                        : "cc", "memory", "r4", "q0", "q4", "q5", "q6", "q7", "q8", "q9", "q12", "q13", "q14", "q15"
+                    );
+    #endif
+
+    #else
+                    float sum0 = 0.f;
+                    float sum1 = 0.f;
+                    float sum2 = 0.f;
+                    float sum3 = 0.f;
+
+                    for(int q = 0; q < inChannel; q++){
+                        sum0 += src_tm_ptr[0] * kernel0[0];
+                        sum1 += src_tm_ptr[1] * kernel0[0];
+                        sum2 += src_tm_ptr[2] * kernel0[0];
+                        sum3 += src_tm_ptr[3] * kernel0[0];
+
+                        src_tm_ptr += 4;
+                        kernel0++;
+                    }
+
+                    destptr0[0] = sum0;
+                    destptr0[1] = sum1;
+                    destptr0[2] = sum2;
+                    destptr0[3] = sum3;
+
+                    destptr0 += 4;
+    #endif
+                }
+
+                for(; i < outSize; i++){
+                    const float *src_tm_ptr = src_tm + (i / 8 + (i % 8) / 4 + i % 4) * src_tm_size;
+
+                    const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
+
+    #if USE_ARM
+
+    #if __aarch64__
+                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+    #else
+                    asm volatile(
+                        
+                    );
+    #endif
+
+    #else
+                    float sum0 = 0.f;
+
+                    for(int q = 0; q < inChannel; q++){
+                        sum0 += src_tm_ptr[0] * kernel0[0];
+                        
+                        src_tm_ptr++;
+                        kernel0++;
+                    }   
+
+                    destptr0[0] = sum0;
+
+                    destptr0++;
+    #endif
+                }
             }
 
     }
