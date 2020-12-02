@@ -9,6 +9,7 @@ bool BaseLayer::isPreviewMode   = false;
 bool BaseLayer::onlyUseCuda     = false;
 bool BaseLayer::onlyUseCpu      = false;
 bool BaseLayer::onlyUseGpu      = false;
+bool BaseLayer::convSingleOptim = false;
 
 bool BaseLayer::useFp16         = false;
 

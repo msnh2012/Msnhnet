@@ -52,6 +52,7 @@ set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/utils/MsnhExString.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/utils/MsnhExVector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/utils/MsnhTimeUtil.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/x86/MsnhConvolution3x3LayerX86.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MsnhViewerAttribute.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MsnhViewerColorTabel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MsnhViewerLink.cpp

@@ -108,6 +108,10 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
     selectArmConv();
 #endif
 
+#ifdef USE_X86
+    selectX86Conv();
+#endif
+
 #ifdef USE_GPU
 #ifdef USE_CUDNN
 
@@ -631,23 +635,54 @@ void ConvolutionalLayer::forward(NetworkState &netState)
                 else
                 {
 #endif
-TempARRCH64:
 
-                    if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+#ifdef USE_X86
+
+                    if(BaseLayer::convSingleOptim)
                     {
-                        b = im;
+
+                        if(use3x3S1)
+                        {
+                            Convolution3x3LayerX86::convolution3x3S1(im, this->_height, this->_width, this->_channel,c,
+                                                                     this->_outHeight,this->_outWidth,this->_outChannel,a,supportFma);
+
+                        }
+                        else if(use3x3S2)
+                        {
+                            Convolution3x3LayerX86::convolution3x3S2(im, this->_height, this->_width, this->_channel,c,
+                                                                     this->_outHeight,this->_outWidth,this->_outChannel,a,supportFma);
+
+                        }
+                        else
+                        {
+                            goto TempARRCH64;
+                        }
                     }
                     else
                     {
+#endif
 
-                        Gemm::cpuIm2colEx(im, this->_channel/this->_groups, this->_height, this->_width, this->_kSizeX, this->_kSizeY,
-                                          this->_paddingX, this->_paddingY, this->_strideX, this->_strideY, this->_dilationX, this->_dilationY,
-                                          b);
+TempARRCH64:
 
-                    }
+                        if(this->_kSizeX == 1 && this->_kSizeY == 1 &&  this->_strideX == 1  &&  this->_strideY == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+                        {
+                            b = im;
+                        }
+                        else
+                        {
 
-                    Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
+                            Gemm::cpuIm2colEx(im, this->_channel/this->_groups, this->_height, this->_width, this->_kSizeX, this->_kSizeY,
+                                              this->_paddingX, this->_paddingY, this->_strideX, this->_strideY, this->_dilationX, this->_dilationY,
+                                              b);
+
+                        }
+
+                        Gemm::cpuGemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, this->supportAvx&&this->supportFma);
 #ifdef USE_ARM
+                    }
+#endif
+
+#ifdef USE_X86
                 }
 #endif
             }
@@ -1691,6 +1726,22 @@ void ConvolutionalLayer::selectArmConv()
     else if(this->_channel*this->_kSizeX*this->_kSizeY > 2000)
     {
         useIm2ColSgemm  = true;
+    }
+}
+#endif
+
+#ifdef USE_X86
+void ConvolutionalLayer::selectX86Conv()
+{
+    use3x3S1             =   false;
+    use3x3S2             =   false;
+    if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideX == 1&& this->_paddingX == 0 && this->_paddingY == 0)
+    {
+        use3x3S1        = true;
+    }
+    else if(this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 2 && this->_strideX == 2&& this->_paddingX == 0 && this->_paddingY == 0)
+    {
+        use3x3S2        = true;
     }
 }
 #endif

@@ -1355,7 +1355,7 @@ void Blas::cpuBilinearResize(float * const &in, const int &width, const int &hei
         {
             const float* inTmp = inPtr + c*inSize;
             *(outPtr + c*outSize) = h0Lamd * (w0Lamd*(*inTmp) + w1Lamd*(*(inTmp + w1p)))
-                                   +h1Lamd * (w0Lamd*(*(inTmp + h1p*width))+w1Lamd * (*(inTmp + h1p*width + w1p)));
+                    +h1Lamd * (w0Lamd*(*(inTmp + h1p*width))+w1Lamd * (*(inTmp + h1p*width + w1p)));
         }
 
     }

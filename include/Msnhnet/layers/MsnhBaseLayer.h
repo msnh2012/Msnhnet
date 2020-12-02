@@ -27,6 +27,7 @@ public:
     static bool     onlyUseCpu;
     static bool     onlyUseGpu;
     static bool     useFp16;
+    static bool     convSingleOptim;
 
 #ifdef USE_GPU
     static cudaEvent_t     _start;
