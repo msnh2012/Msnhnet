@@ -1531,6 +1531,8 @@ namespace Msnhnet
     #endif
                 }
             }
+        
+        delete [] src_tm;
 
     }
 }
