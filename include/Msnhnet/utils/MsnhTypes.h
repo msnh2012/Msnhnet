@@ -2,6 +2,12 @@
 #define MSNHTYPES_H
 #include <stdint.h>
 #include <algorithm>
+#include "Msnhnet/config/MsnhnetMacro.h"
+
+#ifdef USE_X86
+#include <immintrin.h>
+#endif
+
 namespace Msnhnet
 {
 union UInt16
@@ -58,6 +64,15 @@ struct Point2I
     int x = 0;
     int y = 0;
 };
+
+#ifdef USE_X86
+union M128
+{
+    __m128 m128;
+    float f32[4];
+};
+
+#endif
 
 class Box
 {

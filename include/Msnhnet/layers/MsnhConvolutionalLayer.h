@@ -18,6 +18,10 @@
 #include "Msnhnet/layers/arm/MsnhConvolution3x3s1Winograd.h"
 #endif
 
+#ifdef USE_X86
+#include "Msnhnet/layers/x86/MsnhConvolution3x3LayerX86.h"
+#endif
+
 namespace Msnhnet
 {
 class MsnhNet_API ConvolutionalLayer:public BaseLayer
@@ -155,6 +159,15 @@ protected:
     bool        use3x3S1             =   false;
     bool        use3x3S2             =   false;
 #endif
+
+    void selectX86Conv();
+
+    bool        use3x3S1             =   false;
+    bool        use3x3S2             =   false;
+#ifdef USE_X86
+
+#endif
+
     float       *_weights            =   nullptr;
     float       *_biases             =   nullptr;
     ConvolutionalLayer* _shareLayer  =   nullptr;

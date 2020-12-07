@@ -102,6 +102,7 @@ endif()
 set(SRCS
     src/core/MsnhBlas.cpp
     src/core/MsnhGemm.cpp
+    src/core/MsnhMemoryManager.cpp
     src/io/MsnhIO.cpp
     src/io/MsnhParser.cpp
     src/layers/MsnhActivationLayer.cpp
@@ -142,6 +143,7 @@ set(SRCS
     src/utils/MsnhOpencvUtil.cpp
     src/utils/MsnhTimeUtil.cpp
     src/c_api/MsnhnetLib.cpp
+    src/layers/x86/MsnhConvolution3x3LayerX86.cpp
     src/layers/arm/MsnhConvolution3x3s1.cpp 
     src/layers/arm/MsnhConvolution3x3s2.cpp 
     src/layers/arm/MsnhConvolution3x3s1Winograd.cpp

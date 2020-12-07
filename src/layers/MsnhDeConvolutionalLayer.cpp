@@ -60,12 +60,16 @@ DeConvolutionalLayer::DeConvolutionalLayer(const int &batch, const int &height, 
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->_weights       =   new float[static_cast<size_t>(this->_nWeights)]();
+
+        this->_weights             = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nWeights));
+
         if(this->_useBias)
         {
-            this->_biases        =   new float[static_cast<size_t>(this->_nBiases)]();
+
+            this->_biases              =   MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nBiases));
         }
-        this->_colImg        =   new float[static_cast<size_t>(this->_height * this->_width * this->_kSizeX * this->_kSizeX * this->_num)]();
+
+        this->_colImg              =   MemoryManager::effcientNew<float>(static_cast<size_t>(this->_height * this->_width * this->_kSizeX * this->_kSizeX * this->_num));
     }
 
     this->_maxOutputNum  = this->_batch*this->_outputNum;
@@ -88,7 +92,9 @@ void DeConvolutionalLayer::mallocMemory()
     {
         if(!BaseLayer::isPreviewMode)
         {
-            this->_output         =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
+
+            this->_output             = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_outputNum * this->_batch));
+
             this->_memoryMalloced =   true;
         }
     }

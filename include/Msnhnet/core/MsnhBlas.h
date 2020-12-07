@@ -4,7 +4,7 @@
 #include <algorithm>
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/core/MsnhSimd.h"
-#include "Msnhnet/utils/MsnhExport.h"
+
 #ifdef USE_X86
 #include "Msnhnet/layers/MsnhActivationsAvx.h"
 #endif

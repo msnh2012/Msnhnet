@@ -262,8 +262,8 @@ void BatchNormLayer::mallocMemory()
             if(!BaseLayer::onlyUseGpu) 
 
             {
-                this->_output        =  new float[static_cast<size_t>(this->_outputNum * this->_batch)](); 
 
+                this->_output   = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_batch*this->_outputNum));
             }
 
 #ifdef USE_GPU
@@ -460,13 +460,11 @@ void BatchNormLayer::loadAllWeigths(std::vector<float> &weights)
 
     if(!BaseLayer::isPreviewMode)
     {
-        this->_biases        =  new float[static_cast<size_t>(this->_nBiases)](); 
 
-        this->_scales        =  new float[static_cast<size_t>(this->_nScales)](); 
-
-        this->_rollMean      =  new float[static_cast<size_t>(this->_nRollMean)](); 
-
-        this->_rollVariance  =  new float[static_cast<size_t>(this->_nRollVariance)](); 
+        this->_biases        = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nBiases));
+        this->_scales        = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nScales));
+        this->_rollMean      = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nRollMean));
+        this->_rollVariance  = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nRollVariance));
 
         loadScales(weights.data(), this->_nScales);
         loadBias(weights.data() + this->_nScales , this->_nBiases);
@@ -476,7 +474,9 @@ void BatchNormLayer::loadAllWeigths(std::vector<float> &weights)
         if(this->_activation == ActivationType::PRELU) 
 
         {
-            this->_preluWeights = new float[static_cast<size_t>(this->_nPreluWeights)]();
+
+            this->_preluWeights = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_nPreluWeights));
+
             loadPreluWeights(weights.data() + this->_nScales + this->_nBiases + this->_nRollVariance + this->_nRollMean ,this->_nPreluWeights);
         }
 

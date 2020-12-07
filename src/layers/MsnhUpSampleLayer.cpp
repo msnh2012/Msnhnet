@@ -123,7 +123,8 @@ void UpSampleLayer::mallocMemory()
             if(!BaseLayer::onlyUseGpu) 
 
             {
-                this->_output        =   new float[static_cast<size_t>(this->_outputNum * this->_batch)]();
+
+                this->_output         = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_outputNum * this->_batch));
             }
 #ifdef USE_GPU
             if(!BaseLayer::onlyUseCpu)

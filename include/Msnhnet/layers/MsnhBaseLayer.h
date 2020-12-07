@@ -5,6 +5,7 @@
 #include "Msnhnet/core/MsnhSimd.h"
 #include "Msnhnet/utils/MsnhExport.h"
 #include "Msnhnet/utils/MsnhTimeUtil.h"
+#include "Msnhnet/core/MsnhMemoryManager.h"
 
 #ifdef USE_GPU
 #include "Msnhnet/config/MsnhnetCuda.h"
@@ -26,6 +27,7 @@ public:
     static bool     onlyUseCpu;
     static bool     onlyUseGpu;
     static bool     useFp16;
+    static bool     convSingleOptim;
 
 #ifdef USE_GPU
     static cudaEvent_t     _start;
@@ -33,6 +35,7 @@ public:
 #endif
 
     static void setPreviewMode(const bool &isPreviewMode);
+    static void setMemAlign(const bool &memAlign);
 
 #ifdef USE_GPU
     static void setForceUseCuda(const bool &forceUseCuda);
@@ -60,11 +63,8 @@ public:
     template<typename T>
     inline void releaseArr(T *& value)
     {
-        if(value!=nullptr)
-        {
-            delete[] value;
-            value = nullptr;
-        }
+
+        MemoryManager::effcientDelete<T>(value);
     }
 
     LayerType type() const;

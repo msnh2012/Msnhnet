@@ -9,6 +9,7 @@ bool BaseLayer::isPreviewMode   = false;
 bool BaseLayer::onlyUseCuda     = false;
 bool BaseLayer::onlyUseCpu      = false;
 bool BaseLayer::onlyUseGpu      = false;
+bool BaseLayer::convSingleOptim = false;
 
 bool BaseLayer::useFp16         = false;
 
@@ -225,6 +226,11 @@ BaseLayer::~BaseLayer()
 void BaseLayer::setPreviewMode(const bool &previewMode)
 {
     BaseLayer::isPreviewMode = previewMode;
+}
+
+void BaseLayer::setMemAlign(const bool &memAlign)
+{
+    MemoryManager::memAlign = memAlign;
 }
 
 #ifdef USE_GPU

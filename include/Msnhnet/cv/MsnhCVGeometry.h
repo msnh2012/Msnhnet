@@ -8,6 +8,10 @@
 #define M_PI 3.14159265453
 #endif
 
+#ifndef ROT_EPS
+#define ROT_EPS 0.00001
+#endif
+
 namespace Msnhnet
 {
 
@@ -28,11 +32,23 @@ public:
 
     static RotationMat quaternion2RotMat(Quaternion& q);
 
+    static Quaternion  rotVec2Quaternion(RotationVec& rotVec);
+
+    static RotationVec quaternion2RotVec(Quaternion& q);
+
+    static RotationMat rotVec2RotMat(RotationVec& rotVec);
+
+    static RotationVec rotMat2RotVec(RotationMat& rotMat);
+
+    static RotationVec euler2RotVec(Euler& euler, const RotSequence& seq);
+
+    static Euler rotVec2Euler(RotationVec& rotVec, const RotSequence& seq);
+
     static double deg2rad(double val);
 
     static double rad2deg(double val);
 
-    static void singularityCheck(const int &group, double& theta);
+    static double clamp(const double &val,const double &min,const double &max);
 };
 
 }

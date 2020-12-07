@@ -36,6 +36,8 @@
 
 #define MSNHNET_VERSION 1200
 
+#define EFFCIENT_ALIGN 16
+
 enum ActivationType
 {
     LOGISTIC,

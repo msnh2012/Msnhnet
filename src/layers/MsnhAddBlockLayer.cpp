@@ -236,7 +236,8 @@ void AddBlockLayer::mallocMemory()
             if(!BaseLayer::onlyUseGpu)
 
             {
-                this->_output            =   new float[static_cast<size_t>(_outputNum * this->_batch)]();
+
+                this->_output   = MemoryManager::effcientNew<float>(static_cast<size_t>(this->_batch*this->_outputNum));
             }
 #ifdef USE_GPU
             if(!BaseLayer::onlyUseCpu)

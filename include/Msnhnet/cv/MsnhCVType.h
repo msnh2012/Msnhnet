@@ -41,12 +41,6 @@ enum RotSequence
     ROT_YZX,
     ROT_ZXY,
     ROT_ZYX,
-    ROT_YXY,
-    ROT_ZXZ,
-    ROT_XYX,
-    ROT_ZYZ,
-    ROT_XZX,
-    ROT_YZY
 };
 
 enum CvtColorType
@@ -119,6 +113,20 @@ enum VideoFpsType
     VIDEO_FPS_30,
     VIDEO_FPS_50,
     VIDEO_FPS_60,
+};
+
+enum ThresholdType
+{
+    THRESH_BINARY = 0, 
+
+    THRESH_BINARY_INV, 
+
+    THRESH_TOZERO,     
+
+    THRESH_TOZERO_INV, 
+
+    THRESH_OTSU   = 8  
+
 };
 
 union MatData

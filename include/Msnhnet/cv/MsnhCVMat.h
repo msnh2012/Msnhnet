@@ -20,8 +20,7 @@ public:
 
     Mat (const Mat& mat);
     Mat (const std::string &path);
-    Mat (const int &width, const int &height, const MatType &matType);
-    Mat (const int &width, const int &height, const MatType &matType, void *data);
+    Mat (const int &width, const int &height, const MatType &matType, void *data=nullptr);
     Mat ();
     ~Mat ();
 
@@ -35,7 +34,7 @@ public:
 
         if(pos.x1 < 0 || pos.x2 < 0 || pos.x1 >= this->_width || pos.x2>= this->_height)
         {
-            throw Exception(1,"[CV]: pixel pos out of memory", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: pixel pos out of memory", __FILE__, __LINE__, __FUNCTION__);
         }
 
         T val;
@@ -54,6 +53,12 @@ public:
         }
 
         return val;
+    }
+
+    template<typename T>
+    T getPixelAtRowCol(const Vec2I32 &pos)
+    {
+        return getPixel<T>({pos.x2,pos.x1});
     }
 
     template<typename T>
@@ -93,7 +98,7 @@ public:
 
         if(this->_width == 0 || this->_height == 0)
         {
-            throw Exception(1,"[CV]: width == 0 || height == 0!", __FILE__, __LINE__, __FUNCTION__);
+            throw Exception(1,"[Mat]: width == 0 || height == 0!", __FILE__, __LINE__, __FUNCTION__);
         }
 
         for (int i = 0; i < this->_height; ++i)
@@ -112,6 +117,61 @@ public:
                 {
                     memcpy(this->_data.f64+(this->_width*i + j)*array, &val, array*8);
                 }
+            }
+        }
+    }
+
+    template<typename T>
+    static void createMat(const int &width, const int &height, const int &channel, Mat &mat, T* data=nullptr)
+    {
+        if(!std::is_same<T,uint8_t>::value && !std::is_same<T,float>::value && !std::is_same<T,double>::value)
+        {
+            throw Exception(1,"[Mat]: createMat only uint8_t float and double supported!", __FILE__, __LINE__, __FUNCTION__);
+        }
+
+        if(std::is_same<T,uint8_t>::value)
+        {
+            if(channel==1)
+            {
+                mat = Mat(width,height,MAT_GRAY_U8,data);
+            }
+            else if(channel==3)
+            {
+                mat = Mat(width,height,MAT_RGB_U8,data);
+            }
+            else if(channel==4)
+            {
+                mat = Mat(width,height,MAT_RGBA_U8,data);
+            }
+        }
+        else if(std::is_same<T,float>::value)
+        {
+            if(channel==1)
+            {
+                mat = Mat(width,height,MAT_GRAY_F32,data);
+            }
+            else if(channel==3)
+            {
+                mat = Mat(width,height,MAT_RGB_F32,data);
+            }
+            else if(channel==4)
+            {
+                mat = Mat(width,height,MAT_RGBA_F32,data);
+            }
+        }
+        else if(std::is_same<T,double>::value)
+        {
+            if(channel==1)
+            {
+                mat = Mat(width,height,MAT_GRAY_F64,data);
+            }
+            else if(channel==3)
+            {
+                mat = Mat(width,height,MAT_RGB_F64,data);
+            }
+            else if(channel==4)
+            {
+                mat = Mat(width,height,MAT_RGBA_F64,data);
             }
         }
     }
@@ -166,11 +226,11 @@ public:
 
     bool isEmpty() const; 
 
-    Vec2I32 getSize();
+    Vec2I32 getSize() const;
 
-    size_t getDataNum();
+    size_t getDataNum() const;
 
-    uint8_t getPerDataByteNum();
+    uint8_t getPerDataByteNum() const;
 
     /* one channel  */
     static Mat eye(const int &num, const MatType &matType);
@@ -221,7 +281,7 @@ public:
     Mat solve();
     /*================*/
 
-    void printMat();
+    void print();
 
     bool isF32Mat() const; 
 
@@ -306,6 +366,16 @@ public:
             throw Exception(1,"[Mat_]: index out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
         }
 
+        return *((T*)this->getBytes()+index);
+    }
+
+    T getValAtRowCol(const uint8_t& row, const uint8_t& col)
+    {
+        uint16_t index = row*this->_width + col;
+        if(index > getDataNum()-1)
+        {
+            throw Exception(1,"[Mat_]: index out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
         return *((T*)this->getBytes()+index);
     }
 
@@ -420,6 +490,8 @@ public:
     double getQ2() const;
     double getQ3() const;
 
+    void print();
+
     double operator[] (const uint8_t& index);
 
     MsnhNet_API friend Quaternion operator- (const Quaternion &A, const Quaternion &B);
@@ -436,6 +508,7 @@ private:
 typedef Mat_<3,3,double> RotationMat;
 typedef Mat_<4,1,double> Quat;
 typedef Mat_<3,1,double> Euler;
+typedef Mat_<3,1,double> RotationVec;
 
 typedef Mat_<2,2,uint8_t> Mat2x2B;
 typedef Mat_<2,2,float> Mat2x2F;

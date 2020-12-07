@@ -55,12 +55,10 @@ public:
     template<typename T>
     inline void releaseArr(T *& value)
     {
-        if(value!=nullptr)
-        {
-            delete[] value;
-            value = nullptr;
-        }
+
+        MemoryManager::effcientDelete<T>(value);
     }
+
     ~NetworkState();
 
     inline void shuffleInOut()

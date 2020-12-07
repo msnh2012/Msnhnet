@@ -30,6 +30,11 @@ void NetBuilder::setPreviewMode(const bool &mode)
     BaseLayer::setPreviewMode(mode);
 }
 
+void NetBuilder::setMemAlign(const bool &memAlign)
+{
+    BaseLayer::setMemAlign(memAlign);
+}
+
 #ifdef USE_GPU
 void NetBuilder::setForceUseCuda(const bool &onlyUseCuda)
 {
@@ -567,14 +572,16 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
         _netState->releaseArr(_netState->memPool2);
         if(maxInputSpace != 0)
         {
-            _netState->workspace     =   new float[maxWorkSpace]();
+
+            _netState->workspace     =   MemoryManager::effcientNew<float>(maxWorkSpace);
         }
         else
         {
             std::cout<<" Warning: workspace size equal 0 "<<std::endl;
         }
-        _netState->memPool1      =   new float[maxOutputSpace]();
-        _netState->memPool2      =   new float[maxOutputSpace]();
+
+        _netState->memPool1     =   MemoryManager::effcientNew<float>(maxOutputSpace);
+        _netState->memPool2     =   MemoryManager::effcientNew<float>(maxOutputSpace);
 #ifdef USE_GPU
     }
 #endif
@@ -858,7 +865,9 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
         if(this->_saveLayerOutput)
         {
             std::cout<<"Saving layer gpu outputs. Layer : "<<i<<std::endl;
-            float* out = new float[_netState->inputNum]();
+
+            float* out   = MemoryManager::effcientNew<float>(_netState->inputNum);
+
             if(_net->layers[i]->getMemReUse()==1)
             {
                 Cuda::pullCudaArray(_netState->getGpuInput(), out,_netState->inputNum);
@@ -882,7 +891,8 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
         }
     }
 
-    float* out = new float[_netState->inputNum]();
+    float* out   = MemoryManager::effcientNew<float>(_netState->inputNum);
+
     if(_net->layers[_net->layers.size()-1]->getMemReUse()==1)
     {
         Cuda::pullCudaArray(_netState->getGpuInput(), out,_netState->inputNum);
@@ -892,8 +902,8 @@ std::vector<float> NetBuilder::runClassifyGPU(std::vector<float> img)
         Cuda::pullCudaArray(_netState->input, out,_netState->inputNum);
     }
     std::vector<float> pred(out, out + _netState->inputNum);
-    delete[] out;
-    out = nullptr;
+
+    MemoryManager::effcientDelete<float>(out);
 
     _gpuInferenceTime = TimeUtil::getElapsedTime(st);
     return pred;
@@ -954,7 +964,9 @@ std::vector<std::vector<YoloBox>> NetBuilder::runYoloGPU(std::vector<float> img)
         if(this->_saveLayerOutput)
         {
             std::cout<<"Saving layer gpu outputs. Layer : "<<i<<std::endl;
-            float* out = new float[_netState->inputNum]();
+
+            float* out   = MemoryManager::effcientNew<float>(_netState->inputNum);
+
             if(_net->layers[i]->getMemReUse()==1)
             {
                 Cuda::pullCudaArray(_netState->getGpuInput(), out,_netState->inputNum);
