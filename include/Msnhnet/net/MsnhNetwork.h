@@ -2,6 +2,7 @@
 #define MSNHNETWORK_H
 #include "Msnhnet/layers/MsnhBaseLayer.h"
 #include "Msnhnet/utils/MsnhExport.h"
+#include "Msnhnet/core/MsnhMemoryManager.h"
 
 namespace Msnhnet
 {
