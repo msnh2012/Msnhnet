@@ -66,21 +66,154 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 #if USE_NEON
                 if(nn > 0){
                     asm volatile(
+                        // v8.4s [a0, b0, c0, d0]
+                        // v9.4s [e0, f0, g0, h0]
                         "prfm   pldl1keep, [%5, #256]       \n"
-                        // v8.4s = [a1, b1, c1, d1]
-                        // v9.4s = [e1, f1, g1, h1]
                         "ld1    {v8.4s, v9.4s}, [%5]        \n" // r0
                         "add    %5, %5, #16                 \n"
 
-                        // v14.4s = [a3, b3, c3, d3]
-                        // v15.s = [e3, f3, g3, h3]
+                        // v14.4s [a3, b3, c3, d3]
+                        // v15.4s [e3, f3, g3, h3]
                         "prfm   pldl1keep, [%8, #256]       \n"
                         "ld1    {v14.4s, v15.4s}, [%8]      \n" // r3
                         "add    %8, %8, #16                 \n"
 
-                        
+                        // v8.4s [a0, b0, c0, d0]
+                        // v9.4s [e0, f0, g0, h0]
+                        // v10.4s [b0, c0, d0, e0]
                         "ext    v10.16b, v8.16b, v9.16b, #4 \n"
+                        // v14.4s [a3, b3, c3, d3]
+                        // v15.4s [e3, f3, g3, h3]
+                        // v11.4s [c3, d3, e3, f3]
                         "ext    v11.16b, v14.16b, v15.16b, #8 \n"
+
+                        "0:                                 \n"
+
+                        //sum0
+                        "prfm   pldl1keep, [%1, #128]       \n"
+                        "ld1    {v6.4s}, [%1]               \n"
+
+                        //sum1
+                        "prfm   pldl1keep, [%2, #128]       \n"
+                        "ld1    {v7.4s}, [%2]               \n"
+                        
+                        // v8.4s [a0, b0, c0, d0] 只和k012的第一个元素相乘获得v6.4s
+                        "fmla   v6.4s, v8.4s, %18.s[0]      \n"
+                        // v8.4s [a0, b0, c0, d0] 只和k012_next的第一个元素相乘获得v7.4s
+                        "fmla   v7.4s, v8.4s, %21.s[0]      \n"
+
+                        //sum0_next
+                        "prfm   pldl1keep, [%3, #128]       \n"
+                        "ld1    {v12.4s}, [%3]              \n" 
+
+                        //sum1_next
+                        "prfm   pldl1keep, [%4, #128]       \n"
+                        "ld1    {v13.4s}, [%4]              \n"
+
+                        // v14.4s [a3, b3, c3, d3] 只和k678的第一个元素相乘获得v12.4s
+                        "fmla   v12.4s, v14.4s, %20.s[0]    \n"
+                        // v14.4s [a3, b3, c3, d3] 只和k678_next的第一个元素相乘获得v13.4s
+                        "fmla   v13.4s, v14.4s, %23.s[0]    \n"
+
+                        // v8.4s [a0, b0, c0, d0]
+                        // v9.4s [e0, f0, g0, h0]
+                        // v8.4s [c0, d0, e0, f0]
+                        "ext    v8.16b, v8.16b, v9.16b, #8  \n"
+                        // v14.4s [a3, b3, c3, d3]
+                        // v15.4s [e3, f3, g3, h3]
+                        // v9.4s [b3, c3, d3, e3]
+                        "ext    v9.16b, v14.16b, v15.16b, #4 \n"
+
+                        // v10.4s [b0, c0, d0, e0]只和k012的第二个元素相乘并累加到v6.4s
+                        "fmla   v6.4s, v10.4s, %18.s[1]     \n"
+                        // v10.4s [b0, c0, d0, e0]只和k012_next的第二个元素相乘并累加到v7.4s
+                        "fmla   v7.4s, v10.4s, %21.s[1]     \n"
+
+                        // v11.4s [c3, d3, e3, f3]只和k678的第三个元素相乘并累加到v12.4s
+                        "fmla   v12.4s, v11.4s, %20.s[2]    \n"
+                        // v11.4s [c3, d3, e3, f3]只和k678_next的第三个元素相乘并累加到v13.4s
+                        "fmla   v13.4s, v11.4s, %23.s[2]    \n"
+
+                        "prfm   pldl1keep, [%6, #256]       \n"
+                        "ld1    {v14.4s, v15.4s}, [%6]      \n" // r1
+                        "add    %6, %6, #16                 \n"
+
+                        // v8.4s [c0, d0, e0, f0]只和k012的第三个元素相乘并累加到v6.4s
+                        "fmla   v6.4s, v8.4s, %18.s[2]      \n"
+                        // v8.4s [c0, d0, e0, f0]只和k012_next的第三个元素相乘并累加到v8.4s
+                        "fmla   v7.4s, v8.4s, %21.s[2]      \n"
+                        // v9.4s [b3, c3, d3, e3] 只和k678的第二个元素相乘并累加到v12.4s
+                        "fmla   v12.4s, v9.4s, %20.s[1]     \n"
+                        // v9.4s [b3, c3, d3, e3] 只和k678_next的第二个元素相乘并累加到v13.4s
+                        "fmla   v13.4s, v9.4s, %23.s[1]     \n"
+
+                        "ext    v10.16b, v14.16b, v15.16b, #4 \n"
+
+                        "fmla   v6.4s, v14.4s, %19.s[0]     \n"
+                        "fmla   v7.4s, v14.4s, %22.s[0]     \n"
+                        "fmla   v12.4s, v14.4s, %18.s[0]    \n"
+                        "fmla   v13.4s, v14.4s, %21.s[0]    \n"
+
+                        "ext    v11.16b, v14.16b, v15.16b, #8 \n"
+
+                        "fmla   v6.4s, v10.4s, %19.s[1]     \n"
+                        "fmla   v7.4s, v10.4s, %22.s[1]     \n"
+                        "fmla   v12.4s, v10.4s, %18.s[1]    \n"
+                        "fmla   v13.4s, v10.4s, %21.s[1]    \n"
+
+                        "prfm   pldl1keep, [%7, #256]       \n"
+                        "ld1    {v8.4s, v9.4s}, [%7]        \n" // r2
+                        "add    %7, %7, #16                 \n"
+
+                        "fmla   v6.4s, v11.4s, %19.s[2]     \n"
+                        "fmla   v7.4s, v11.4s, %22.s[2]     \n"
+                        "fmla   v12.4s, v11.4s, %18.s[2]    \n"
+                        "fmla   v13.4s, v11.4s, %21.s[2]    \n"
+
+                        "ext    v10.16b, v8.16b, v9.16b, #4 \n"
+
+                        "fmla   v6.4s, v8.4s, %20.s[0]      \n"
+                        "fmla   v7.4s, v8.4s, %23.s[0]      \n"
+                        "fmla   v12.4s, v8.4s, %19.s[0]     \n"
+                        "fmla   v13.4s, v8.4s, %22.s[0]     \n"
+
+                        "ext    v11.16b, v8.16b, v9.16b, #8 \n"
+
+                        "fmla   v6.4s, v10.4s, %20.s[1]     \n"
+                        "fmla   v7.4s, v10.4s, %23.s[1]     \n"
+                        "fmla   v12.4s, v10.4s, %19.s[1]    \n"
+                        "fmla   v13.4s, v10.4s, %22.s[1]    \n"
+
+                        "prfm   pldl1keep, [%5, #256]       \n"
+                        "ld1    {v8.4s, v9.4s}, [%5]        \n" // r0
+                        "add    %5, %5, #16                 \n"
+
+                        "fmla   v6.4s, v11.4s, %20.s[2]     \n"
+                        "fmla   v7.4s, v11.4s, %23.s[2]     \n"
+                        "fmla   v12.4s, v11.4s, %19.s[2]    \n"
+                        "fmla   v13.4s, v11.4s, %22.s[2]    \n"
+
+                        "prfm   pldl1keep, [%8, #256]       \n"
+                        "ld1    {v14.4s, v15.4s}, [%8]      \n" // r3
+                        "add    %8, %8, #16                 \n"
+
+                        "ext    v10.16b, v8.16b, v9.16b, #4 \n"
+
+                        "st1    {v6.4s}, [%1], #16          \n"
+                        "st1    {v7.4s}, [%2], #16          \n"
+
+                        "ext    v11.16b, v14.16b, v15.16b, #8 \n"
+
+                        "st1    {v12.4s}, [%3], #16         \n"
+                        "st1    {v13.4s}, [%4], #16         \n"
+
+                        "subs   %w0, %w0, #1                \n"
+                        "bne    0b                          \n"
+
+                        "sub    %5, %5, #16                 \n"
+                        "sub    %8, %8, #16                 \n"
+
+
 
                         : "=r"(nn),       // %0
                         "=r"(destptr0),  // %1
