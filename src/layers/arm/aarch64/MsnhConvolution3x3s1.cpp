@@ -135,39 +135,60 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
                         "fmla   v13.4s, v11.4s, %23.s[2]    \n"
 
                         "prfm   pldl1keep, [%6, #256]       \n"
+                        // v14.4s [a1, b1, c1, d1]
+                        // v15.4s [e1, f1, g1, h1]
                         "ld1    {v14.4s, v15.4s}, [%6]      \n" // r1
                         "add    %6, %6, #16                 \n"
 
                         // v8.4s [c0, d0, e0, f0]只和k012的第三个元素相乘并累加到v6.4s
                         "fmla   v6.4s, v8.4s, %18.s[2]      \n"
-                        // v8.4s [c0, d0, e0, f0]只和k012_next的第三个元素相乘并累加到v8.4s
+                        // v8.4s [c0, d0, e0, f0]只和k012_next的第三个元素相乘并累加到v7.4s
                         "fmla   v7.4s, v8.4s, %21.s[2]      \n"
                         // v9.4s [b3, c3, d3, e3] 只和k678的第二个元素相乘并累加到v12.4s
                         "fmla   v12.4s, v9.4s, %20.s[1]     \n"
                         // v9.4s [b3, c3, d3, e3] 只和k678_next的第二个元素相乘并累加到v13.4s
                         "fmla   v13.4s, v9.4s, %23.s[1]     \n"
 
+                        // v14.4s [a1, b1, c1, d1]
+                        // v15.4s [e1, f1, g1, h1]
+                        // v10.4s [b1, c1, d1, e1]
                         "ext    v10.16b, v14.16b, v15.16b, #4 \n"
 
+                        // v14.4s [a1, b1, c1, d1] 和k345的第一个元素相乘并累加到v6.4s
                         "fmla   v6.4s, v14.4s, %19.s[0]     \n"
+                        // v14.4s [a1, b1, c1, d1] 和k345_next的第一个元素相乘并累加到v7.4s
                         "fmla   v7.4s, v14.4s, %22.s[0]     \n"
+                        // v14.4s [a1, b1, c1, d1] 和k012的第一个元素相乘并累加到v12.4s
                         "fmla   v12.4s, v14.4s, %18.s[0]    \n"
+                        // v14.4s [a1, b1, c1, d1] 和k012_next的第一个元素相乘并累加到v13.4s
                         "fmla   v13.4s, v14.4s, %21.s[0]    \n"
 
+                        // v14.4s [a1, b1, c1, d1]
+                        // v15.4s [e1, f1, g1, h1]
+                        // v11.4s [c1, d1, e1, f1]
                         "ext    v11.16b, v14.16b, v15.16b, #8 \n"
 
+                        // v10.4s [b1, c1, d1, e1] 和k345的第二个元素相乘并累加到v6.4s
                         "fmla   v6.4s, v10.4s, %19.s[1]     \n"
+                        // v10.4s [b1, c1, d1, e1] 和k345_next的第二个元素相乘并累加到v7.4s
                         "fmla   v7.4s, v10.4s, %22.s[1]     \n"
+                        // v10.4s [b1, c1, d1, e1] 和k012的第二个元素相乘并累加到v12.4s
                         "fmla   v12.4s, v10.4s, %18.s[1]    \n"
+                        // v10.4s [b1, c1, d1, e1] 和k012_next的第二个元素相乘并累加到v13.4s
                         "fmla   v13.4s, v10.4s, %21.s[1]    \n"
 
+                        // 
                         "prfm   pldl1keep, [%7, #256]       \n"
                         "ld1    {v8.4s, v9.4s}, [%7]        \n" // r2
                         "add    %7, %7, #16                 \n"
 
+                        // v11.4s [c1, d1, e1, f1] 和k345的第三个元素相乘并累加到v6.4s
                         "fmla   v6.4s, v11.4s, %19.s[2]     \n"
+                        // v11.4s [c1, d1, e1, f1] 和k345_next的第三个元素相乘并累加到v7.4s
                         "fmla   v7.4s, v11.4s, %22.s[2]     \n"
+                        // v11.4s [c1, d1, e1, f1] 和k012的第三个元素相乘并累加到v12.4s
                         "fmla   v12.4s, v11.4s, %18.s[2]    \n"
+                        // v11.4s [c1, d1, e1, f1] 和k012_next的第三个元素相乘并累加到v12.4s
                         "fmla   v13.4s, v11.4s, %21.s[2]    \n"
 
                         "ext    v10.16b, v8.16b, v9.16b, #4 \n"
