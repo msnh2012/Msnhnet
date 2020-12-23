@@ -7,6 +7,8 @@
 
 #ifdef USE_X86
 #include "Msnhnet/layers/MsnhActivationsAvx.h"
+#include "Msnhnet/core/MsnhBlasNCHW4.h"
+#include "Msnhnet/core/MsnhBlasNCHW8.h"
 #endif
 
 #ifdef USE_ARM
