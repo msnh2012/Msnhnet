@@ -24,6 +24,7 @@ option(BUILD_USE_MSNHCV_GUI "Use msnhCV GUI"            ON)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_Release} -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 #use omp
 if(ENABLE_OMP MATCHES ON)
@@ -330,6 +331,9 @@ endif()
 if(BUILD_SHARED_LIBS MATCHES ON)
     add_library(${PROJECT_NAME} SHARED ${SRCS} ${CUDA_SRCS})     #generate libs
     set(USE_SHARED_MSNHNET_MACRO "#define USE_SHARED_MSNHNET\n") #===============
+    if(UNIX OR APPLE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+    endif()
     message("shared--------------------")
 else()
     add_library(${PROJECT_NAME} STATIC ${SRCS} ${CUDA_SRCS})     #generate libs
