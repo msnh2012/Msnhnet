@@ -268,8 +268,9 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
                         "w"(k012_next), // %21
                         "w"(k345_next), // %22
                         "w"(k678_next)  // %23
-                        : "cc", "memory", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15");
-                    )
+                        : "cc", "memory", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15"
+                        );
+                    
                 }
 
 #endif
@@ -406,8 +407,8 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 #endif
 
 #if USE_NEON
-
-                asm volatile(
+                if(nn > 0){
+                    asm volatile(
                         "0:                                 \n"
 
                         // v8.4s [a0, b0, c0, d0]
@@ -924,7 +925,6 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
             kernel0 += 9;
         }
     }
-    
 }
 
 }
