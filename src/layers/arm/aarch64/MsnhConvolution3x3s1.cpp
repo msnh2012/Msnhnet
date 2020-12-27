@@ -42,7 +42,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 
 
 
-#if USE_NEON
+#if USE_ARM
             float32x4_t k012 = vld1q_f32(k0);
             float32x4_t k345 = vld1q_f32(k0 + 3);
             float32x4_t k678 = vld1q_f32(k0 + 6);
@@ -55,7 +55,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
             int i = 0;
             for(; i + 1 < outHeight; i += 2){
                 
-#if USE_NEON
+#if USE_ARM
                 int nn = outWidth >> 2;
                 int remain = outWidth & 3;
 #else
@@ -63,7 +63,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 #endif
 
 
-#if USE_NEON
+#if USE_ARM
                 if(nn > 0){
                     asm volatile(
                         // v8.4s [a0, b0, c0, d0]
@@ -277,7 +277,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 
                 for(; remain > 0; remain--){
 
-#if USE_NEON
+#if USE_ARM
                     float32x4_t r00 = vld1q_f32(r0);
                     float32x4_t r10 = vld1q_f32(r1);
                     float32x4_t r20 = vld1q_f32(r2);
@@ -398,7 +398,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
             //deal three lines and get one output in a feature map
             for(; i < outHeight; i++){
                 
-#if USE_NEON
+#if USE_ARM
                 int nn = outWidth >> 2;
                 int remain = outWidth - (nn << 2);
 #else                
@@ -406,7 +406,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 
 #endif
 
-#if USE_NEON
+#if USE_ARM
                 if(nn > 0){
                     asm volatile(
                         "0:                                 \n"
@@ -510,7 +510,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 #endif
 
                 for(; remain > 0; remain--){
-#if USE_NEON
+#if USE_ARM
                     float32x4_t r00 = vld1q_f32(r0);
                     float32x4_t r10 = vld1q_f32(r1);
                     float32x4_t r20 = vld1q_f32(r2);
@@ -605,7 +605,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
             const float* r2 = src0 + inWidth * 2;
             const float* r3 = src0 + inWidth * 3;
 
-#if USE_NEON
+#if USE_ARM
             float32x4_t k012 = vld1q_f32(kernel0);
             float32x4_t k345 = vld1q_f32(kernel0 + 3);
             float32x4_t k678 = vld1q_f32(kernel0 + 6);
@@ -617,14 +617,14 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 
             int i = 0;
             for(; i + 1 < outHeight; i += 2){
-#if USE_NEON
+#if USE_ARM
                 int nn = outWidth >> 2;
                 int remain = outWidth - (nn << 2);
 #else
                 int remain = outWidth;
 #endif
 
-#if USE_NEON
+#if USE_ARM
                 if(nn > 0){
                     asm volatile(
                         "prfm   pldl1keep, [%3, #256]       \n"
@@ -733,7 +733,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 #endif
 
                 for(; remain > 0; remain--){
-#if USE_NEON
+#if USE_ARM
                     float32x4_t r00 = vld1q_f32(r0);
                     float32x4_t r10 = vld1q_f32(r1);
                     float32x4_t r20 = vld1q_f32(r2);
@@ -797,14 +797,14 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
             }
 
             for(; i < outHeight; i++){
-#if USE_NEON
+#if USE_ARM
                 int nn = outWidth >> 2;
                 int remain = outWidth - (nn << 2);
 #else
                 int remain = outWidth;
 #endif
 
-#if USE_NEON
+#if USE_ARM
                 if(nn > 0){
                     asm volatile(
                         "prfm   pldl1keep, [%2, #256]       \n"
@@ -883,7 +883,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 
                 for(; remain > 0; remain--){
                     
-#if USE_NEON
+#if USE_ARM
                     float32x4_t r00 = vld1q_f32(r0);
                     float32x4_t r10 = vld1q_f32(r1);
                     float32x4_t r20 = vld1q_f32(r2);
