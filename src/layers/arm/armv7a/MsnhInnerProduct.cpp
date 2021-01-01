@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhInnerProduct.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhInnerProduct.h"
 
 namespace Msnhnet
 {
