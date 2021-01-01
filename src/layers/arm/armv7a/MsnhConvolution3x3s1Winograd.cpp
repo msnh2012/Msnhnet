@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhConvolution3x3s1Winograd.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhConvolution3x3s1Winograd.h"
 #include "Msnhnet/layers/arm/MsnhPadding.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 

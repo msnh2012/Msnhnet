@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhConvolutionSgemm.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhConvolutionSgemm.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 
 namespace Msnhnet

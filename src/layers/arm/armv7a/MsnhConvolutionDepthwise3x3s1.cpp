@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhConvolutionDepthwise3x3s1.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhConvolutionDepthwise3x3s1.h"
 namespace Msnhnet
 {
     void ConvolutionalDepthwiseLayerArm3x3s1::convdepthwise3x3s1Neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,

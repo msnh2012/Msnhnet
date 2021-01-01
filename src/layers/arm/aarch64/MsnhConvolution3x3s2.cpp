@@ -131,33 +131,50 @@ void ConvolutionalLayerArmV8_3x3s2::conv3x3s2Neon(float *const &src, const int &
                         // v9.4s [b1, d1, f1, h1] 和k345_next的第二个元素相乘并累加到v13.4s
                         "fmla   v13.4s, v9.4s, %16.s[1]     \n"
 
-                        //
+                        // v8.4s [a2, c2, e2, g2]
+                        // v9.4s [b2, d2, f2, h2]
                         "prfm   pldl1keep, [%5, #256]       \n"
                         "ld2    {v8.4s, v9.4s}, [%5], #32   \n" // r2
 
+                        // v14.4s [c1, e1, g1, f1] 和k345的第三个元素相乘并累加到v6.4s
+                        // v14.4s [c1, e1, g1, f1] 和k345_next的第三个元素相乘并累加到v7.4s
                         "fmla   v6.4s, v14.4s, %13.s[2]     \n"
                         "fmla   v7.4s, v14.4s, %16.s[2]     \n"
 
+                        // v10.4s [i2, k2, m2, o2]
+                        // v11.4s [c2, e2, g2, i2]
                         "prfm   pldl1keep, [%5, #128]       \n"
                         "ld2    {v10.4s, v11.4s}, [%5]      \n"
 
+                        // v8.4s [a2, c2, e2, g2] 和k678的第一个元素相乘并累加到v12.4s
+                        // v8.4s [a2, c2, e2, g2] 和k678_next的第一个元素相乘并累加到v13.4s
                         "fmla   v12.4s, v8.4s, %14.s[0]     \n"
                         "fmla   v13.4s, v8.4s, %17.s[0]     \n"
 
+                        // v8.4s [a2, c2, e2, g2]
+                        // v10.4s [i2, k2, m2, o2]
+                        // v14.4s [c2, e2, g2, i2]
                         "ext    v14.16b, v8.16b, v10.16b, #4\n"
 
+                        // v9.4s [b2, d2, f2, h2] 和k678的第二个元素相乘并累加到v6.4s
+                        // v9.4s [b2, d2, f2, h2] 和k678_next的第二个元素相乘并累加到v7.4s
                         "fmla   v6.4s, v9.4s, %14.s[1]      \n"
                         "fmla   v7.4s, v9.4s, %17.s[1]      \n"
 
+                        // v14.4s [c2, e2, g2, i2] 和k678的第三个元素相乘并累加到v12.4s
+                        // v14.4s [c2, e2, g2, i2] 和k678_next的第三个元素相乘并累加到v13.4s
                         "fmla   v12.4s, v14.4s, %14.s[2]    \n"
                         "fmla   v13.4s, v14.4s, %17.s[2]    \n"
 
                         "prfm   pldl1keep, [%3, #256]       \n"
                         "ld2    {v8.4s, v9.4s}, [%3], #32   \n" // v8 v9 = r0
 
+                        // v6.4s 和 v12.4s 统一累加到v6.4s
+                        // v7.4s 和 v13.4s 统一累加到v7.4s
                         "fadd   v6.4s, v6.4s, v12.4s        \n"
                         "fadd   v7.4s, v7.4s, v13.4s        \n"
 
+                        // nn -= 1
                         "subs   %w0, %w0, #1                \n"
 
                         "st1    {v6.4s}, [%1], #16          \n"
