@@ -145,13 +145,13 @@ set(SRCS
     src/utils/MsnhTimeUtil.cpp
     src/c_api/MsnhnetLib.cpp
     src/layers/x86/MsnhConvolution3x3LayerX86.cpp
-    src/layers/arm/MsnhConvolution3x3s1.cpp 
-    src/layers/arm/MsnhConvolution3x3s2.cpp 
-    src/layers/arm/MsnhConvolution3x3s1Winograd.cpp
-    src/layers/arm/MsnhConvolutionSgemm.cpp
-    src/layers/arm/MsnhBatchNorm.cpp 
-    src/layers/arm/MsnhPadding.cpp 
-    src/layers/arm/MsnhActivation.cpp
+    src/layers/arm/armv7a/MsnhConvolution3x3s1.cpp
+    src/layers/arm/armv7a/MsnhConvolution3x3s2.cpp
+    src/layers/arm/armv7a/MsnhConvolution3x3s1Winograd.cpp
+    src/layers/arm/armv7a/MsnhConvolutionSgemm.cpp
+    src/layers/arm/armv7a/MsnhBatchNorm.cpp
+    src/layers/arm/armv7a/MsnhPadding.cpp
+    src/layers/arm/armv7a/MsnhActivation.cpp
     src/3rdparty/yaml_cpp/binary.cpp
     src/3rdparty/yaml_cpp/contrib/graphbuilder.cpp
     src/3rdparty/yaml_cpp/contrib/graphbuilderadapter.cpp
