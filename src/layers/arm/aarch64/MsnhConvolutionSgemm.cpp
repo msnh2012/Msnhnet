@@ -1,3 +1,4 @@
+#define USE_ARM 1
 #ifdef USE_ARM
 #include "Msnhnet/layers/arm/aarch64/MsnhConvolutionSgemm.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
@@ -14,10 +15,48 @@ namespace Msnhnet
         int ccRemainOutChannel = 0;
         int Stride = 0;
 
-                
+#if USE_NEON
+        ccOutChannel = outChannel >> 3;
+        ccRemainOutChannel = ccOutChannel << 3;
 
-        ccOutChannel = outChannel >> 2;
-        ccRemainOutChannel = ccOutChannel << 2;
+        for(int cc = 0; cc < ccOutChannel; cc++){
+            int c = cc << 3;
+            const float* k0 = kernel + c * inChannel * kernelSize;
+            const float* k1 = kernel + (c + 1) * inChannel * kernelSize;
+            const float* k2 = kernel + (c + 2) * inChannel * kernelSize;
+            const float* k3 = kernel + (c + 3) * inChannel * kernelSize;
+            const float* k4 = kernel + (c + 4) * inChannel * kernelSize;
+            const float* k5 = kernel + (c + 5) * inChannel * kernelSize;
+            const float* k6 = kernel + (c + 6) * inChannel * kernelSize;
+            const float *k7 = kernel + (c + 7) * inChannel * kernelSize;
+
+            Stride = 8 * inChannel * kernelSize;
+            float* destptr = dest + (c / 8) * Stride;
+
+            for(int i = 0; i < inChannel * kernelSize; i++){
+                destptr[0] = k0[0];
+                destptr[1] = k1[0];
+                destptr[2] = k2[0];
+                destptr[3] = k3[0];
+                destptr[4] = k4[0];
+                destptr[5] = k5[0];
+                destptr[6] = k6[0];
+                destptr[7] = k7[0];
+                destptr += 8;
+
+                k0 += 1;
+                k1 += 1;
+                k2 += 1;
+                k3 += 1;
+                k4 += 1;
+                k5 += 1;
+                k6 += 1;
+                k7 += 1;
+            }
+        }
+#endif            
+
+        ccOutChannel = (outChannel - ccRemainOutChannel) >> 2;
 
         for(int cc = 0;  cc < ccOutChannel; cc ++){
             int c = cc << 2;
@@ -26,7 +65,7 @@ namespace Msnhnet
             const float* k2 = kernel + (c + 2) * inChannel * kernelSize;
             const float* k3 = kernel + (c + 3) * inChannel * kernelSize;
 
-            Stride = 4 * kernelSize * inChannel;
+            Stride = 4 * inChannel * kernelSize;
             float* destptr = dest + (c / 4) * Stride;
 
             for(int i = 0; i < inChannel * kernelSize; i++){
@@ -44,6 +83,8 @@ namespace Msnhnet
             }
         }
 
+        ccRemainOutChannel += ccOutChannel << 2;
+        
         for(int cc = ccRemainOutChannel; cc < outChannel; cc++){
             int c = cc;
             const float* k0 = kernel + c * inChannel * kernelSize;
@@ -108,9 +149,9 @@ namespace Msnhnet
         const int packHeight = inChannel;    
         const int packWidth = 8 * kernelSize;
 
-        int kernelPackChannel = outChannel / 4 + outChannel % 4;
+        int kernelPackChannel = outChannel / 8 + (outChannel %8)/4 + outChannel%4;
         const int kernelPackHeight = inChannel;
-        const int kernelPackWidth = 4 * kernelSize;
+        const int kernelPackWidth = 8 * kernelSize;
 
         float *src_im2col_pack = new float[packHeight * packWidth * packChannel];
 
@@ -132,21 +173,16 @@ namespace Msnhnet
 
             for(int j = 0; j < inChannel * kernelSize; j ++){
 #if USE_NEON
-#if __aarch64__
-                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-#else
                 asm volatile(
-                    "pld        [%0, #256]          \n"
-                    "vld1.f32   {d0-d3}, [%0]       \n"
-                    "vst1.f32   {d0-d3}, [%1]       \n"
+                    "prfm    pldl1keep, [%0, #256]   \n"
+                    "ld1     {v0.4s, v1.4s}, [%0]    \n"
+                    "st1     {v0.4s, v1.4s}, [%1]    \n"
                     : "=r"(src0),  // %0
                     "=r"(packptr) // %1
                     : "0"(src0),
                     "1"(packptr)
-                    : "memory", "q0", "q1"
+                    : "cc", "memory", "v0", "v1"
                 );
-#endif
-
 #else
                 packptr[0] = src0[0];
                 packptr[1] = src0[1];
@@ -201,13 +237,171 @@ namespace Msnhnet
         int N = outHeight * outWidth;
         int K = kernelSize * inChannel;
         
-        int ccOutChannel = outChannel >> 2;
-        int ccRemainOutChannel = ccOutChannel << 2;
+        int ccOutChannel = 0;
+        int ccRemainOutChannel = 0;
+
+
+
+#if USE_NEON
+        ccOutChannel = outChannel >> 3;
+        ccRemainOutChannel = ccOutChannel << 3;
 
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
+        for(int cc = 0; cc < ccOutChannel; cc++){
+            int c = cc << 3;
+            float *destptr0 = dest + c * outSize;
+            float *destptr1 = dest + (c + 1) * outSize;
+            float *destptr2 = dest + (c + 2) * outSize;
+            float *destptr3 = dest + (c + 3) * outSize;
+            float *destptr4 = dest + (c + 4) * outSize;
+            float *destptr5 = dest + (c + 5) * outSize;
+            float *destptr6 = dest + (c + 6) * outSize;
+            float *destptr7 = dest + (c + 7) * outSize;
 
+            int i = 0;
+            for(; i + 7 < N; i = i + 8){
+                const float *ptrB = src_im2col_pack + (i / 8) *  packHeight * packWidth;
+                const float *ptrA = kernel_im2col_pack + (c / 8) * kernelPackHeight * kernelPackWidth;
+#if __aarch64__
+
+#else
+                float sum0[8] = {0};
+                float sum1[8] = {0};
+                float sum2[8] = {0};
+                float sum3[8] = {0};
+                float sum4[8] = {0};
+                float sum5[8] = {0};
+                float sum6[8] = {0};
+                float sum7[8] = {0};
+                int j = 0;
+                // K = kernelSize * inChannel
+                // 同时计算8行，同时在每一列计算8个输出
+                for(; j + 7 < K; j = j + 8){
+                    for(int n = 0; n < 8; n++){
+                        sum0[n] += ptrA[0] * ptrB[n];
+                        sum1[n] += ptrA[1] * ptrB[n];
+                        sum2[n] += ptrA[2] * ptrB[n];
+                        sum3[n] += ptrA[3] * ptrB[n];
+                        sum4[n] += ptrA[4] * ptrB[n];
+                        sum5[n] += ptrA[5] * ptrB[n];
+                        sum6[n] += ptrA[6] * ptrB[n];
+                        sum7[n] += ptrA[7] * ptrB[n];
+                        ptrA += 8;
+
+                        sum0[n] += ptrA[0] * ptrB[n + 8];
+                        sum1[n] += ptrA[1] * ptrB[n + 8];
+                        sum2[n] += ptrA[2] * ptrB[n + 8];
+                        sum3[n] += ptrA[3] * ptrB[n + 8];
+                        sum4[n] += ptrA[4] * ptrB[n + 8];
+                        sum5[n] += ptrA[5] * ptrB[n + 8];
+                        sum6[n] += ptrA[6] * ptrB[n + 8];
+                        sum7[n] += ptrA[7] * ptrB[n + 8];
+                        ptrA += 8;
+
+                        sum0[n] += ptrA[0] * ptrB[n + 16];
+                        sum1[n] += ptrA[1] * ptrB[n + 16];
+                        sum2[n] += ptrA[2] * ptrB[n + 16];
+                        sum3[n] += ptrA[3] * ptrB[n + 16];
+                        sum4[n] += ptrA[4] * ptrB[n + 16];
+                        sum5[n] += ptrA[5] * ptrB[n + 16];
+                        sum6[n] += ptrA[6] * ptrB[n + 16];
+                        sum7[n] += ptrA[7] * ptrB[n + 16];
+                        ptrA += 8;
+
+                        sum0[n] += ptrA[0] * ptrB[n + 24];
+                        sum1[n] += ptrA[1] * ptrB[n + 24];
+                        sum2[n] += ptrA[2] * ptrB[n + 24];
+                        sum3[n] += ptrA[3] * ptrB[n + 24];
+                        sum4[n] += ptrA[4] * ptrB[n + 24];
+                        sum5[n] += ptrA[5] * ptrB[n + 24];
+                        sum6[n] += ptrA[6] * ptrB[n + 24];
+                        sum7[n] += ptrA[7] * ptrB[n + 24];
+                        ptrA += 8;
+
+                        sum0[n] += ptrA[0] * ptrB[n + 32];
+                        sum1[n] += ptrA[1] * ptrB[n + 32];
+                        sum2[n] += ptrA[2] * ptrB[n + 32];
+                        sum3[n] += ptrA[3] * ptrB[n + 32];
+                        sum4[n] += ptrA[4] * ptrB[n + 32];
+                        sum5[n] += ptrA[5] * ptrB[n + 32];
+                        sum6[n] += ptrA[6] * ptrB[n + 32];
+                        sum7[n] += ptrA[7] * ptrB[n + 32];
+                        ptrA += 8;
+
+                        sum0[n] += ptrA[0] * ptrB[n + 40];
+                        sum1[n] += ptrA[1] * ptrB[n + 40];
+                        sum2[n] += ptrA[2] * ptrB[n + 40];
+                        sum3[n] += ptrA[3] * ptrB[n + 40];
+                        sum4[n] += ptrA[4] * ptrB[n + 40];
+                        sum5[n] += ptrA[5] * ptrB[n + 40];
+                        sum6[n] += ptrA[6] * ptrB[n + 40];
+                        sum7[n] += ptrA[7] * ptrB[n + 40];
+                        ptrA += 8;
+
+                        sum0[n] += ptrA[0] * ptrB[n + 48];
+                        sum1[n] += ptrA[1] * ptrB[n + 48];
+                        sum2[n] += ptrA[2] * ptrB[n + 48];
+                        sum3[n] += ptrA[3] * ptrB[n + 48];
+                        sum4[n] += ptrA[4] * ptrB[n + 48];
+                        sum5[n] += ptrA[5] * ptrB[n + 48];
+                        sum6[n] += ptrA[6] * ptrB[n + 48];
+                        sum7[n] += ptrA[7] * ptrB[n + 48];
+                        ptrA += 8;
+
+                        sum0[n] += ptrA[0] * ptrB[n + 56];
+                        sum1[n] += ptrA[1] * ptrB[n + 56];
+                        sum2[n] += ptrA[2] * ptrB[n + 56];
+                        sum3[n] += ptrA[3] * ptrB[n + 56];
+                        sum4[n] += ptrA[4] * ptrB[n + 56];
+                        sum5[n] += ptrA[5] * ptrB[n + 56];
+                        sum6[n] += ptrA[6] * ptrB[n + 56];
+                        sum7[n] += ptrA[7] * ptrB[n + 56];
+                        ptrA -= 56;
+                    }
+
+                    ptrA += 64;
+                    ptrB += 64;
+                }
+
+                // K = kernelSize * inChannel * 8
+                // 如果是pack4x4那么末尾一定是4的倍数
+                for(; j < K; j++){
+                    for(int n = 0; n < 8; n++){
+                        sum0[n] += ptrA[0] * ptrB[n];
+                        sum1[n] += ptrA[1] * ptrB[n];
+                        sum2[n] += ptrA[2] * ptrB[n];
+                        sum3[n] += ptrA[3] * ptrB[n];
+                        sum4[n] += ptrA[4] * ptrB[n];
+                        sum5[n] += ptrA[5] * ptrB[n];
+                        sum6[n] += ptrA[6] * ptrB[n];
+                        sum7[n] += ptrA[7] * ptrB[n];
+                    }
+                    ptrA += 8;
+                    ptrB += 8;
+                }
+
+                for(int n = 0; n < 8; n++){
+                    destptr0[n] = sum0[n];
+                    destptr1[n] = sum1[n];
+                    destptr2[n] = sum2[n];
+                    destptr3[n] = sum3[n];
+                    destptr4[n] = sum0[n];
+                    destptr5[n] = sum1[n];
+                    destptr6[n] = sum2[n];
+                    destptr7[n] = sum3[n];
+                }
+
+#endif
+            }
+        }
+
+#endif
+
+#if USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD)
+#endif
         for(int cc = 0; cc < ccOutChannel; cc++){
             int c = cc << 2;
             float *destptr0 = dest + c * outSize;
