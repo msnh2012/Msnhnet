@@ -24,6 +24,7 @@ option(BUILD_USE_MSNHCV_GUI "Use msnhCV GUI"            ON)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_Release} -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 #use omp
 if(ENABLE_OMP MATCHES ON)
@@ -144,13 +145,13 @@ set(SRCS
     src/utils/MsnhTimeUtil.cpp
     src/c_api/MsnhnetLib.cpp
     src/layers/x86/MsnhConvolution3x3LayerX86.cpp
-    src/layers/arm/MsnhConvolution3x3s1.cpp 
-    src/layers/arm/MsnhConvolution3x3s2.cpp 
-    src/layers/arm/MsnhConvolution3x3s1Winograd.cpp
-    src/layers/arm/MsnhConvolutionSgemm.cpp
-    src/layers/arm/MsnhBatchNorm.cpp 
-    src/layers/arm/MsnhPadding.cpp 
-    src/layers/arm/MsnhActivation.cpp
+    src/layers/arm/armv7a/MsnhConvolution3x3s1.cpp
+    src/layers/arm/armv7a/MsnhConvolution3x3s2.cpp
+    src/layers/arm/armv7a/MsnhConvolution3x3s1Winograd.cpp
+    src/layers/arm/armv7a/MsnhConvolutionSgemm.cpp
+    src/layers/arm/armv7a/MsnhBatchNorm.cpp
+    src/layers/arm/armv7a/MsnhPadding.cpp
+    src/layers/arm/armv7a/MsnhActivation.cpp
     src/3rdparty/yaml_cpp/binary.cpp
     src/3rdparty/yaml_cpp/contrib/graphbuilder.cpp
     src/3rdparty/yaml_cpp/contrib/graphbuilderadapter.cpp
@@ -330,6 +331,9 @@ endif()
 if(BUILD_SHARED_LIBS MATCHES ON)
     add_library(${PROJECT_NAME} SHARED ${SRCS} ${CUDA_SRCS})     #generate libs
     set(USE_SHARED_MSNHNET_MACRO "#define USE_SHARED_MSNHNET\n") #===============
+    if(UNIX OR APPLE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+    endif()
     message("shared--------------------")
 else()
     add_library(${PROJECT_NAME} STATIC ${SRCS} ${CUDA_SRCS})     #generate libs

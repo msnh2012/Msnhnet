@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhMaxPooling2x2s2.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhMaxPooling2x2s2.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include <iostream>
 #include <algorithm>

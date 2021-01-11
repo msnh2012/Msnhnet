@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhConvolution3x3s1.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhConvolution3x3s1.h"
 namespace Msnhnet
 {
 //src conv kernel
@@ -228,7 +228,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         "vst1.f32   {d26-d27}, [%4]!    \n"
 
                         "subs       %0, #1              \n"
-                        "bne        0b                  \n"
+                        "bne        0b                  \n" 
 
                         // OutputOperands 
                         : "=r"(nn),       // %0

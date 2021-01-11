@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhBatchNorm.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhBatchNorm.h"
 namespace Msnhnet
 {
 void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float* dest,

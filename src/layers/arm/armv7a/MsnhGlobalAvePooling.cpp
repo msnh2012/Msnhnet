@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhGlobalAvePooling.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhGlobalAvePooling.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include <iostream>
 #include <algorithm>

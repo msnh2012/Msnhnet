@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhAbsVal.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhAbsVal.h"
 namespace Msnhnet
 {
 void AbsValLayerArm::AbsVal(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float* dest)

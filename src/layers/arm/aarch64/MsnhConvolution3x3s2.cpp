@@ -1,10 +1,11 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhConvolution3x3s2.h"
+#include "Msnhnet/layers/arm/aarch64/MsnhConvolution3x3s2.h"
 namespace Msnhnet
 {
-    void ConvolutionalLayerArm3x3s2::conv3x3s2Neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
+//src conv kernel
+void ConvolutionalLayerArmV8_3x3s2::conv3x3s2Neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                                         float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
-        int ccOutChannel = outChannel >> 1;
+    int ccOutChannel = outChannel >> 1;
         int ccRemainOutChannel = ccOutChannel << 1;
 
         const int in_size = inWidth * inHeight;
@@ -38,7 +39,7 @@ namespace Msnhnet
 
 
 
-    #if USE_NEON
+    #if USE_ARM
                 float32x4_t k012 = vld1q_f32(k0);
                 float32x4_t k345 = vld1q_f32(k0 + 3);
                 float32x4_t k678 = vld1q_f32(k0 + 6);
@@ -53,7 +54,7 @@ namespace Msnhnet
                 //deal three lines and get one output in a feature map
                 for(; i < outHeight; i++){
                     
-    #if USE_NEON
+    #if USE_ARM
                     int nn = outWidth >> 2;
                     int remain = outWidth - (nn << 2);
     #else                
@@ -61,106 +62,134 @@ namespace Msnhnet
 
     #endif
 
-    #if USE_NEON
-
-    #if __aarch64__
-                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-    #else
+    #if USE_ARM
                     if(nn > 0){
-                        asm  volatile(
-                            "0:                             \n"
-                            // r0
-                            // q8 = [a, c, e, g]
-                            // q9 = [b, d, f, h]
-                            "pld        [%3, #256]          \n"
-                            "vld2.f32   {d16-d19}, [%3]!    \n" 
+                        asm volatile(
+                            // v8.4s [a, c, e, g]
+                            // v9.4s [b, d, g, h]
+                            "prfm   pldl1keep, [%3, #256]       \n"
+                            "ld2    {v8.4s, v9.4s}, [%3], #32   \n" 
 
-                            //sum0 = q6
-                            "pld        [%1, #128]          \n"
-                            "vld1.f32   {d12-d13}, [%1]     \n"
+                            "0:                                 \n"
 
-                            //sum1 = q7
-                            "pld        [%2, #128]          \n"
-                            "vld1.f32   {d14-d15}, [%2]     \n"
+                            // sum0 = v6
+                            "prfm   pldl1keep, [%1, #128]       \n"
+                            "ld1    {v6.4s}, [%1]               \n" 
 
-                            // q8和k012的第一个元素相乘
-                            "vmul.f32   q12, q8, %e12[0]    \n"
-                            // q8和k012_next的第一个元素相乘
-                            "vmul.f32   q13, q8, %e15[0]    \n"
-                            // q10 = [a, b, c, d]
-                            "pld        [%3, #128]          \n"
-                            "vld2.f32   {d20-d21}, [%3]     \n" 
+                            // v8.4s [a, c, e, g] 和 k012的第一个元素相乘得到v12.4s
+                            "fmul   v12.4s, v8.4s, %12.s[0]     \n"
 
-                            // q9 = [b, d, f, h] 和 k012的第二个元素相乘
-                            "vmla.f32   q6, q9, %e12[1]     \n"
-                            // q9 = [b, d, f, h] 和 k012_next的第二个元素相乘
-                            "vmla.f32   q7, q9, %e15[1]     \n"
+                            // sum1 = v7
+                            "prfm   pldl1keep, [%2, #128]       \n"
+                            "ld1    {v7.4s}, [%2]               \n"
 
-                            // q8 = [a, c, e, g]
-                            // q10 = [i, j, k, l]
-                            // q11 = [c, e, g, i]
-                            "vext.32    q11, q8, q10, #1    \n"
+                            // v8.4s [a, c, e, g] 和 k012_next的第一个元素相乘得到v13.4s
+                            "fmul   v13.4s, v8.4s, %15.s[0]     \n"
 
-                            // q11 = [c, e, g, i] 和 k012的第三个元素相乘
-                            // q11 = [c, e, g, i] 和 k012_next的第三个元素相乘
-                            "vmla.f32   q12, q11, %f12[0]   \n"
-                            "vmla.f32   q13, q11, %f15[0]   \n"
+                            // v10.4s [i, k, m, o]
+                            // v11.4s [j, l, n, p]
+                            "prfm   pldl1keep, [%3, #128]       \n"
+                            "ld2    {v10.4s, v11.4s}, [%3]      \n" 
 
+                            // v9.4s [b, d, g, h] 和k012的第二个元素相乘并累加到v6.4s
+                            "fmla   v6.4s, v9.4s, %12.s[1]      \n"
 
-                            // r1
-                            "pld        [%4, #256]          \n"
-                            "vld2.f32   {d16-d19}, [%4]!    \n"
+                            // v8.4s [a, c, e, g]
+                            // v10.4s [i, k, m, o]
+                            // v14.4s [c, e, g, i]
+                            "ext    v14.16b, v8.16b, v10.16b, #4\n"
+                            
+                            // v9.4s [b, d, g, h] 和k012_next的第二个元素相乘并累加到v7.4s
+                            "fmla   v7.4s, v9.4s, %15.s[1]      \n"
 
-                            "pld        [%4, #128]          \n"
-                            "vld2.f32   {d20-d21}, [%4]     \n"
+                            // v8.4s [a1, c1, e1, g1]
+                            // v9.4s [b1, d1, f1, h1]
+                            "prfm   pldl1keep, [%4, #256]       \n"
+                            "ld2    {v8.4s, v9.4s}, [%4], #32   \n" // r1
 
-                            "vmla.f32   q6, q8, %e13[0]     \n"
-                            "vmla.f32   q7, q8, %e16[0]     \n"
+                            // v14.4s [c, e, g, i] 和k012的第三个元素相乘并累加到v12.4s
+                            "fmla   v12.4s, v14.4s, %12.s[2]    \n"
+                            // v14.4s [c, e, g, i] 和k012_next的第三个元素相乘并累加到v13.4s 
+                            "fmla   v13.4s, v14.4s, %15.s[2]    \n"
 
-                            "vext.32    q11, q8, q10, #1    \n"
+                            // v10.4s [i1, k1, m1, o1]
+                            // v11.4s [j1, l1, n1, p1]
+                            "prfm   pldl1keep, [%4, #128]       \n"
+                            "ld2    {v10.4s, v11.4s}, [%4]      \n"
 
-                            "vmla.f32   q6, q9, %e13[1]    \n"
-                            "vmla.f32   q7, q9, %e16[1]    \n"
+                            // v8.4s [a1, c1, e1, g1] 和k345的第一个元素相乘并累加到v6.4s
+                            "fmla   v6.4s, v8.4s, %13.s[0]      \n"
+                            // v8.4s [a1, c1, e1, g1] 和k345_next的第一个元素相乘并累加到v7.4s
+                            "fmla   v7.4s, v8.4s, %16.s[0]      \n"
 
-                            "vmla.f32   q12, q11, %f13[0]    \n"
-                            "vmla.f32   q13, q11, %f16[0]    \n"
+                            // v8.4s [a1, c1, e1, g1]
+                            // v10.4s [i1, k1, m1, o1]
+                            // v14.4s [c1, e1, g1, i1]
+                            "ext    v14.16b, v8.16b, v10.16b, #4\n"
 
-                            //r2
-                            "pld        [%5, #256]          \n"
-                            "vld2.f32   {d16-d19}, [%5]!    \n"
+                            // v9.4s [b1, d1, f1, h1] 和k345的第二个元素相乘并累加到v12.4s
+                            "fmla   v12.4s, v9.4s, %13.s[1]     \n"
+                            // v9.4s [b1, d1, f1, h1] 和k345_next的第二个元素相乘并累加到v13.4s
+                            "fmla   v13.4s, v9.4s, %16.s[1]     \n"
 
-                            "pld        [%5, #128]          \n"
-                            "vld2.f32   {d20-d21}, [%5]     \n"
+                            // v8.4s [a2, c2, e2, g2]
+                            // v9.4s [b2, d2, f2, h2]
+                            "prfm   pldl1keep, [%5, #256]       \n"
+                            "ld2    {v8.4s, v9.4s}, [%5], #32   \n" // r2
 
-                            "vmla.f32   q12, q8, %e14[0]    \n"
-                            "vmla.f32   q13, q8, %e17[0]    \n"
+                            // v14.4s [c1, e1, g1, f1] 和k345的第三个元素相乘并累加到v6.4s
+                            // v14.4s [c1, e1, g1, f1] 和k345_next的第三个元素相乘并累加到v7.4s
+                            "fmla   v6.4s, v14.4s, %13.s[2]     \n"
+                            "fmla   v7.4s, v14.4s, %16.s[2]     \n"
 
-                            "vext.32    q11, q8, q10, #1    \n"
+                            // v10.4s [i2, k2, m2, o2]
+                            // v11.4s [c2, e2, g2, i2]
+                            "prfm   pldl1keep, [%5, #128]       \n"
+                            "ld2    {v10.4s, v11.4s}, [%5]      \n"
 
-                            "vmla.f32   q6, q9, %e14[1]     \n"
-                            "vmla.f32   q7, q9, %e17[1]     \n"
+                            // v8.4s [a2, c2, e2, g2] 和k678的第一个元素相乘并累加到v12.4s
+                            // v8.4s [a2, c2, e2, g2] 和k678_next的第一个元素相乘并累加到v13.4s
+                            "fmla   v12.4s, v8.4s, %14.s[0]     \n"
+                            "fmla   v13.4s, v8.4s, %17.s[0]     \n"
 
-                            "vmla.f32   q12, q11, %f14[0]   \n"
-                            "vmla.f32   q13, q11, %f17[0]   \n"
+                            // v8.4s [a2, c2, e2, g2]
+                            // v10.4s [i2, k2, m2, o2]
+                            // v14.4s [c2, e2, g2, i2]
+                            "ext    v14.16b, v8.16b, v10.16b, #4\n"
 
-                            //sum
-                            "vadd.f32   q6, q6, q12         \n"
-                            "vadd.f32   q7, q7, q13         \n"
+                            // v9.4s [b2, d2, f2, h2] 和k678的第二个元素相乘并累加到v6.4s
+                            // v9.4s [b2, d2, f2, h2] 和k678_next的第二个元素相乘并累加到v7.4s
+                            "fmla   v6.4s, v9.4s, %14.s[1]      \n"
+                            "fmla   v7.4s, v9.4s, %17.s[1]      \n"
 
-                            "vst1.f32   {d12-d13}, [%1]!    \n"
-                            "vst1.f32   {d14-d15}, [%2]!    \n"
+                            // v14.4s [c2, e2, g2, i2] 和k678的第三个元素相乘并累加到v12.4s
+                            // v14.4s [c2, e2, g2, i2] 和k678_next的第三个元素相乘并累加到v13.4s
+                            "fmla   v12.4s, v14.4s, %14.s[2]    \n"
+                            "fmla   v13.4s, v14.4s, %17.s[2]    \n"
 
-                            "subs       %0, #1              \n"
-                            "bne        0b                  \n"
+                            "prfm   pldl1keep, [%3, #256]       \n"
+                            "ld2    {v8.4s, v9.4s}, [%3], #32   \n" // v8 v9 = r0
 
-                            // OutputOperands 
+                            // v6.4s 和 v12.4s 统一累加到v6.4s
+                            // v7.4s 和 v13.4s 统一累加到v7.4s
+                            "fadd   v6.4s, v6.4s, v12.4s        \n"
+                            "fadd   v7.4s, v7.4s, v13.4s        \n"
+
+                            // nn -= 1
+                            "subs   %w0, %w0, #1                \n"
+
+                            "st1    {v6.4s}, [%1], #16          \n"
+                            "st1    {v7.4s}, [%2], #16          \n"
+
+                            "bne    0b                          \n"
+                            "sub    %3, %3, #32                 \n"
+
                             : "=r"(nn),      // %0
                             "=r"(destptr0), // %1
                             "=r"(destptr1), // %2
                             "=r"(r0),      // %3
                             "=r"(r1),      // %4
                             "=r"(r2)       // %5
-                            //InputOperands
                             : "0"(nn),
                             "1"(destptr0),
                             "2"(destptr1),
@@ -173,16 +202,12 @@ namespace Msnhnet
                             "w"(k012_next), // %15
                             "w"(k345_next), // %16
                             "w"(k678_next)  // %17
-                            //Clobbers
-                            : "cc", "memory", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
-                        );
-                    }
-    #endif
-
+                            : "cc", "memory", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15");
+                }
     #endif
 
                     for(; remain > 0; remain--){
-    #if USE_NEON
+    #if USE_ARM
                         float32x4_t r00 = vld1q_f32(r0);
                         float32x4_t r10 = vld1q_f32(r1);
                         float32x4_t r20 = vld1q_f32(r2);
@@ -288,7 +313,7 @@ namespace Msnhnet
                 const float* r2 = src0 + inWidth * 2;
                 const float* r3 = src0 + inWidth * 3;
 
-    #if USE_NEON
+    #if USE_ARM
                 float32x4_t k012 = vld1q_f32(kernel0);
                 float32x4_t k345 = vld1q_f32(kernel0 + 3);
                 float32x4_t k678 = vld1q_f32(kernel0 + 6);
@@ -302,78 +327,72 @@ namespace Msnhnet
                 
 
                 for(; i < outHeight; i++){
-    #if USE_NEON
+    #if USE_ARM
                     int nn = outWidth >> 2;
                     int remain = outWidth - (nn << 2);
     #else
                     int remain = outWidth;
     #endif
 
-    #if USE_NEON
+    #if USE_ARM
 
-    #if __aarch64__
-                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
-    #else    
-                    if(nn > 0){
+                    if (nn > 0) {
                         asm volatile(
-                            "0:                             \n"
-                            "pld        [%2, #256]          \n"
-                            "vld2.f32   {d4-d7}, [%2]!      \n"
+                            "prfm       pldl1keep, [%2, #256]          \n"
+                            "ld2        {v2.4s, v3.4s}, [%2], #32      \n"
+                            "0:                                        \n"
 
-                            "pld        [%1, #128]          \n"
-                            "vld1.f32   {d0-d1}, [%1]       \n"
+                            "prfm       pldl1keep, [%1, #128]          \n"
+                            "ld1        {v0.4s}, [%1]                  \n"
 
-                            "vmla.f32   q0, q2, %e10[0]     \n"
-                            "vmul.f32   q10, q3, %e10[1]    \n"
+                            "fmla       v0.4s,  v2.4s, %10.s[0]        \n"
+                            "fmul       v10.4s, v3.4s, %10.s[1]        \n"
 
-                            "pld        [%2, #128]          \n"
-                            "vld2.f32   {d16-d17}, [%2]     \n"
-                            "vext.32    q1, q2, q8, #1      \n"
+                            "prfm       pldl1keep, [%2, #256]          \n"
+                            "ld2        {v8.4s, v9.4s}, [%2]           \n"
+                            "ext        v1.16b, v2.16b, v8.16b, #4     \n"
 
-                            "vmul.f32   q11, q1, %f10[0]    \n"
+                            "fmul       v11.4s, v1.4s, %10.s[2]        \n"
 
-                            "pld        [%3, #256]          \n"
-                            "vld2.f32   {d4-d7}, [%3]!      \n"
+                            "prfm       pldl1keep, [%3, #256]          \n"
+                            "ld2        {v2.4s, v3.4s}, [%3], #32      \n"
 
-                            "vmla.f32   q0, q2, %e11[0]     \n"
-                            "vmla.f32   q10, q3, %e11[1]    \n"
+                            "fmla       v0.4s,  v2.4s, %11.s[0]        \n"
+                            "fmla       v10.4s, v3.4s, %11.s[1]        \n"
 
-                            "pld        [%3, #128]          \n"
-                            "vld2.f32   {d16-d17}, [%3]     \n"
-                            "vext.32    q1, q2, q8, #1      \n"
+                            "prfm       pldl1keep, [%3, #256]          \n"
+                            "ld2        {v8.4s, v9.4s}, [%3]           \n"
+                            "ext        v1.16b, v2.16b, v8.16b, #4     \n"
 
-                            "vmla.f32   q11, q1, %f11[0]    \n"
+                            "fmla       v11.4s, v1.4s, %11.s[2]        \n"
 
-                            "pld        [%4, #256]          \n"
-                            "vld2.f32   {d4-d7}, [%4]!      \n"
+                            "prfm       pldl1keep, [%4, #256]          \n"
+                            "ld2        {v2.4s, v3.4s}, [%4], #32      \n"
 
-                            "vmla.f32   q0, q2, %e12[0]     \n"
-                            "vmla.f32   q10, q3, %e12[1]    \n"
+                            "fmla       v0.4s,  v2.4s, %12.s[0]        \n"
+                            "fmla       v10.4s, v3.4s, %12.s[1]        \n"
 
-                            "pld        [%4, #128]          \n"
-                            "vld2.f32   {d16-d17}, [%4]     \n"
-                            "vext.32    q1, q2, q8, #1      \n"
+                            "prfm       pldl1keep, [%4, #256]          \n"
+                            "ld2        {v8.4s, v9.4s}, [%4]           \n"
+                            "ext        v1.16b, v2.16b, v8.16b, #4     \n"
 
-                            "vmla.f32   q11, q1, %f12[0]    \n"
+                            "fmla       v11.4s, v1.4s, %12.s[2]        \n"
 
+                            "prfm       pldl1keep, [%2, #256]          \n"
+                            "ld2        {v2.4s, v3.4s}, [%2], #32      \n"
 
-                            "vadd.f32   q0, q0, q10         \n"
-                            "vadd.f32   q0, q0, q11         \n"
+                            "fadd       v0.4s, v0.4s, v10.4s           \n"
+                            "fadd       v0.4s, v0.4s, v11.4s           \n"
 
-                            "vst1.f32   {d0-d1}, [%1]!      \n"
-
-                            "subs       %0, #1              \n"
-                            "bne        0b                  \n"
-
-
-
-                            // OutputOperands 
+                            "subs       %w0, %w0, #1                   \n"
+                            "st1        {v0.4s}, [%1], #16             \n"
+                            "bne        0b                             \n"
+                            "sub        %2, %2, #32                    \n"
                             : "=r"(nn),     // %0
                             "=r"(destptr0), // %1
                             "=r"(r0),     // %2
                             "=r"(r1),     // %3
                             "=r"(r2)      // %4
-                            // InputOperands
                             : "0"(nn),
                             "1"(destptr0),
                             "2"(r0),
@@ -382,19 +401,15 @@ namespace Msnhnet
                             "w"(k012), // %10
                             "w"(k345), // %11
                             "w"(k678)  // %12
-                            // Clobbers
-                            : "cc", "memory", "q0", "q1", "q2", "q3", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
-                        );
-                           
-                    } 
-    #endif
+                            : "cc", "memory", "v0", "v1", "v2", "v3", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15");
+                    }
                     
 
     #endif
 
                     for(; remain > 0; remain--){
                         
-    #if USE_NEON
+    #if USE_ARM
                         float32x4_t r00 = vld1q_f32(r0);
                         float32x4_t r10 = vld1q_f32(r1);
                         float32x4_t r20 = vld1q_f32(r2);
@@ -442,6 +457,8 @@ namespace Msnhnet
                 kernel0 += 9;
             }
         }
-    }
 }
+
+}
+
 #endif

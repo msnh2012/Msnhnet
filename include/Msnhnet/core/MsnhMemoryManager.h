@@ -1,6 +1,7 @@
 ﻿#ifndef MSNHMEMORYMANAGER_H
 #define MSNHMEMORYMANAGER_H
 #include "Msnhnet/config/MsnhnetCfg.h"
+#include <stddef.h>
 
 namespace Msnhnet
 {

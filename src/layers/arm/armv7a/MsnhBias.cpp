@@ -1,5 +1,5 @@
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhBias.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhBias.h"
 namespace Msnhnet
 {
 void BiasLayerArm::Bias(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &bias, float* dest)

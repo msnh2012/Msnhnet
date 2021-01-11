@@ -136,8 +136,7 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
 #endif
         for(int i=0; i<inputN; ++i)
         {
-            float tmp   = (y[i*stepY]==0?0.000001f:y[i*stepY]);
-            out[i*stepOut]      = x[i*stepX] / tmp;
+            out[i*stepOut]      = x[i*stepX] / y[i*stepY];
         }
     }
     else if(type == Arithmetic::ARITH_DIV_INV)
@@ -147,8 +146,7 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
 #endif
         for(int i=0; i<inputN; ++i)
         {
-            float tmp   = (x[i*stepX]==0?0.000001f:x[i*stepX]);
-            out[i*stepOut]      = y[i*stepY] / tmp;
+            out[i*stepOut]      = y[i*stepY] / x[i*stepX];
         }
     }
 
@@ -198,13 +196,12 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     }
     else if(type == Arithmetic::ARITH_DIV)
     {
-        float tmp   = (alpha==0?0.000001f:alpha);
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
         for(int i=0; i<inputN; ++i)
         {
-            out[i*stepOut]      = x[i*stepX] / tmp;
+            out[i*stepOut]      = x[i*stepX] / alpha;
         }
     }
     else if(type == Arithmetic::ARITH_DIV_INV)
@@ -214,8 +211,7 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
 #endif
         for(int i=0; i<inputN; ++i)
         {
-            float tmp   = x[i*stepX]==0?0.000001f:x[i*stepX];
-            out[i*stepOut]      = alpha / tmp;
+            out[i*stepOut]      = alpha / x[i*stepX];
         }
     }
 
@@ -1274,7 +1270,7 @@ void Blas::cpuLogisticCorssEntropy(const int &num, float * const &pred, float * 
 }
 
 void Blas::cpuUpSample(float * const &in, const int &width, const int &height, const int &channel, const int &batch, const int &strideX,
-                       const int &strideY, const float &scale, float * const &out)
+                        const int &strideY, const float &scale, float * const &out)
 {
 
     for (int b = 0; b < batch; ++b)
@@ -1298,7 +1294,8 @@ void Blas::cpuUpSample(float * const &in, const int &width, const int &height, c
     }
 }
 
-void Blas::cpuBilinearResize(float * const &in, const int &width, const int &height, const int &channel, const int &batch, const int &outWidth, const int &outHeight, const int &alignCorners, float * const &out)
+void Blas::cpuBilinearResize(float * const &in, const int &width, const int &height, const int &channel, const int &batch, const int &outWidth,
+                              const int &outHeight, const int &alignCorners, float * const &out)
 {
 
     if(height<1 || outHeight<1 || width <1 || outWidth <1)
