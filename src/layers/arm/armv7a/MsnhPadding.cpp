@@ -31,7 +31,19 @@ namespace Msnhnet
 
             if(nn > 0){
 #if __aarch64__
-                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+                asm volatile(
+                    "dup        v0.4s, %w4          \n"
+                    "0:                             \n"
+                    "st1        {v0.4s}, [%0], #16  \n"
+                    "subs       %w3, %w3, #1        \n"
+                    "bne        0b                  \n"
+                    : "=r"(destptr),
+                      "=r"(nn)
+                    : "0"(destptr),     // %0
+                    "1"(nn),            // %w1
+                    "r"(pval)           // %w4
+                    : "cc", "memory", "v0"
+                );
 #else
                 asm volatile(
                     "vdup.f32   q0, %4              \n"
@@ -84,7 +96,21 @@ namespace Msnhnet
 #if USE_NEON
             if(nn > 0){
 #if __aarch64__
-                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+                asm volatile(
+                    "0:                             \n"
+                    "prfm       pldl1keep, [%0, #128]   \n"
+                    "ld1        {v0.4s}, [%0], #16  \n"
+                    "st1        {v0.4s}, [%1], #16  \n"
+                    "subs       %w2, %w2, #1        \n"
+                    "bne        0b                  \n"
+                    : "=r"(srcptr),
+                    "=r"(destptr),
+                    "=r"(nn)
+                    : "0"(srcptr),      // %0
+                    "1"(destptr),     // %1
+                    "2"(nn)           // %w2
+                    : "cc", "memory", "v0"
+                );
 #else
                 asm volatile(
                     "0:                             \n"
@@ -136,7 +162,19 @@ namespace Msnhnet
 #if USE_NEON
             if(nn > 0){
 #if __aarch64__
-                throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+                asm volatile(
+                    "dup        v0.4s, %w4          \n"
+                    "0:                             \n"
+                    "st1        {v0.4s}, [%0], #16  \n"
+                    "subs       %w3, %w3, #1        \n"
+                    "bne        0b                  \n"
+                    : "=r"(destptr),
+                      "=r"(nn)
+                    : "0"(destptr),     // %0
+                    "1"(nn),            // %w1
+                    "r"(pval)           // %w4
+                    : "cc", "memory", "v0"
+                );
 #else
                 asm volatile(
                     "vdup.f32   q0, %4              \n"

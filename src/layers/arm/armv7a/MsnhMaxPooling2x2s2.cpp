@@ -38,7 +38,32 @@ void MaxPooling2x2s2Arm::pooling(float *const &src, const int &inWidth, const in
 
                 if(nn > 0){
 #if __aarch64__
-                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+                    asm volatile(
+                        "0:                             \n"
+                        "prfm       pldl1keep, [%0, #128]   \n"
+                        "prfm       pldl1keep, [%1, #128]   \n"
+                        "ld1        {v0.4s}, [%0], #16  \n"
+                        "ld1        {v1.4s}, [%0], #16  \n"
+                        "ld1        {v2.4s}, [%1], #16  \n"
+                        "ld1        {v3.4s}, [%1], #16  \n"
+                        "fmax       v0.4s, v0.4s, v2.4s \n"
+                        "fmax       v1.4s, v1.4s, v3.4s \n"
+                        "fmaxp      v0.4s, v0.4s, v1.4s \n"
+                        "st1        {v0.4s}, [%2], #16   \n"
+
+                        "subs       %w3, %w3, #1        \n"
+                        "bne        0b                  \n"
+
+                        : "=r"(r0),     // %0
+                        "=r"(r1),       // %1
+                        "=r"(destptr),  // %2
+                        "=r"(nn)        // %3
+                        : "0"(r0),
+                        "1"(r1),
+                        "2"(destptr),
+                        "3"(nn)
+                        : "cc", "memory", "v0", "v1"
+                    );
 #else
                     asm volatile(
                         "0:                             \n"

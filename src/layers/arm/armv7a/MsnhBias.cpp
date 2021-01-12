@@ -21,7 +21,29 @@ void BiasLayerArm::Bias(float *const &src, const int &inWidth, const int &inHeig
 
 #if USE_NEON
 #if __aarch64__
-                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+        if(nn > 0){
+            asm volatile(
+                "dup        v0.4s, %w6          \n"
+
+                "0:                             \n"
+                "prfm       pldl1keep, [%0, #128]   \n"
+                "ld1        {v1.4s}, [%0], #16  \n"
+                "fadd       v1.4s, v1.4s, v0.4s \n"
+                "st1        {v1.4s}, [%1], #16  \n"
+
+                "subs       %w2, %w2, #1        \n"
+                "bne        0b                  \n"
+
+                : "=r"(srcptr), // %0
+                "=r"(destptr),  // %1
+                "=r"(nn)        // %2
+                : "0"(srcptr),
+                "1"(destptr),   
+                "2"(nn),
+                "r"(Bias)         // %w6
+                : "cc", "memory", "v0", "v1"
+            );
+        }
 #else
         if(nn > 0){
             asm volatile(
@@ -73,7 +95,27 @@ void BiasLayerArm::BiasInplace(float* src, const int &inWidth, const int &inHeig
 
 #if USE_NEON
 #if __aarch64__
-                    throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
+        if(nn > 0){
+            asm volatile(
+                "dup        v0.4s, %w4          \n"
+
+                "0:                             \n"
+                "prfm       pldl1keep, [%0, #128]   \n"
+                "ld1        {v1.4s}, [%0]       \n"
+                "fadd       v1.4s, v1.4s, v0.4s \n"
+                "st1        {v1.4s}, [%0], #16  \n"
+
+                "subs       %w1, %w1, #1        \n"
+                "bne        0b                  \n"
+
+                : "=r"(srcptr), // %0
+                "=r"(nn)        // %1
+                : "0"(srcptr),
+                "1"(nn),
+                "r"(Bias)          // %w4
+                : "cc", "memory", "v0", "v1"
+            );
+        }
 #else
         if(nn > 0){
             asm volatile(
