@@ -51,6 +51,20 @@ public:
     static double clamp(const double &val,const double &min,const double &max);
 };
 
+class Matrix4x4 : public Mat_<4,4,double>
+{
+public:
+    Matrix4x4();
+
+    Matrix4x4(const Mat &mat); 
+
+    Matrix4x4(const Matrix4x4& mat); 
+
+    Matrix4x4& operator= (Matrix4x4 &mat);
+
+    Matrix4x4& operator= (const Mat &mat);
+};
+
 }
 
 #endif 

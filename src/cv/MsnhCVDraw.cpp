@@ -678,7 +678,6 @@ void Draw::fillRect(Mat &mat, const Vec2I32 &p1, const Vec2I32 &p2, const Vec3U8
             }
         }
     }
-
 }
 
 void Draw::fillEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const int32_t &height, const Vec3U8 &color)
