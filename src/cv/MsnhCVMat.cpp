@@ -356,7 +356,7 @@ void Mat::release()
     this->_matType  = MatType::MAT_RGB_U8;
 }
 
-Mat &Mat::operator = (const Mat &mat) 
+Mat &Mat::operator = (const Mat &mat)  
 
 {
     if(this!=&mat)
@@ -387,7 +387,7 @@ bool Mat::operator ==(const Mat &A)
 
     if(A.isU8Mat())
     {
-        for (int i = 0; i < A.getDataNum(); ++i)
+        for (size_t i = 0; i < A.getDataNum(); ++i)
         {
             if(this->_data.u8[i] != A.getData().u8[i])
             {
@@ -398,9 +398,9 @@ bool Mat::operator ==(const Mat &A)
 
     if(A.isF32Mat())
     {
-        for (int i = 0; i < A.getDataNum(); ++i)
+        for (size_t i = 0; i < A.getDataNum(); ++i)
         {
-            if(std::fabsf(this->_data.f32[i] - A.getData().f32[i])>MSNH_F32_EPS)
+            if(fabsf(this->_data.f32[i] - A.getData().f32[i])>MSNH_F32_EPS)
             {
                 return false;
             }
@@ -409,7 +409,7 @@ bool Mat::operator ==(const Mat &A)
 
     if(A.isF64Mat())
     {
-        for (int i = 0; i < A.getDataNum(); ++i)
+        for (size_t i = 0; i < A.getDataNum(); ++i)
         {
             if(std::fabs(this->_data.f64[i] - A.getData().f64[i])>MSNH_F64_EPS)
             {
@@ -1054,6 +1054,30 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
     }
 }
 
+Mat Mat::toFloat32()
+{
+    if(this->isEmpty())
+    {
+        throw Exception(1,"[Mat]: img empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    Mat mat;
+    convertTo(mat, CvtDataType::CVT_DATA_TO_F32_DIRECTLY);
+    return mat;
+}
+
+Mat Mat::toFloat64()
+{
+    if(this->isEmpty())
+    {
+        throw Exception(1,"[Mat]: img empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    Mat mat;
+    convertTo(mat, CvtDataType::CVT_DATA_TO_F64_DIRECTLY);
+    return mat;
+}
+
 int Mat::getWidth() const
 {
     return _width;
@@ -1144,7 +1168,7 @@ double Mat::getVal2Double(const size_t &index) const
     {
         return this->getFloat32()[index];
     }
-    else 
+    else  
 
     {
         return this->getFloat64()[index];
@@ -1695,7 +1719,7 @@ std::vector<Mat> Mat::LUDecomp(bool outLU) const
 
             }
             if(!outLU)
-                A.getData().f32[i*m + i] = -d; 
+                A.getData().f32[i*m + i] = -d;  
 
         }
 
@@ -1783,7 +1807,7 @@ std::vector<Mat> Mat::LUDecomp(bool outLU) const
 
             }
             if(!outLU)
-                A.getData().f64[i*m + i] = -d; 
+                A.getData().f64[i*m + i] = -d;  
 
         }
 
@@ -1818,6 +1842,8 @@ std::vector<Mat> Mat::LUDecomp(bool outLU) const
 
 std::vector<Mat> Mat::CholeskyDeComp(bool outChols) const
 {
+    (void)outChols;
+
     if(this->_matType != MAT_GRAY_F32 && this->_matType != MAT_GRAY_F64)
     {
         throw Exception(1,"[Mat]: Only one channel F32/F64 Mat is supported! \n", __FILE__, __LINE__, __FUNCTION__);
@@ -2093,7 +2119,7 @@ Mat Mat::mul(const Mat &A, const Mat &B)
 
 Mat Mat::div(const Mat &A, const Mat &B)
 {
-    return A/B;
+    return A*B.invert();
 }
 
 Mat Mat::eleWiseDiv(const Mat &A, const Mat &B)
@@ -2232,7 +2258,7 @@ bool Mat::isNull() const
         return true;
     }
 
-    for (int i = 0; i < this->getByteNum(); ++i)
+    for (size_t i = 0; i < this->getByteNum(); ++i)
     {
         if(this->getBytes()[i] > 0)
         {
@@ -2251,7 +2277,7 @@ bool Mat::isFuzzyNull() const
 
     if(this->isU8Mat())
     {
-        for (int i = 0; i < this->getDataNum(); ++i)
+        for (size_t i = 0; i < this->getDataNum(); ++i)
         {
             if(this->getBytes()[i] > 0)
             {
@@ -2262,9 +2288,9 @@ bool Mat::isFuzzyNull() const
     }
     else if(this->isF32Mat())
     {
-        for (int i = 0; i < this->getDataNum(); ++i)
+        for (size_t i = 0; i < this->getDataNum(); ++i)
         {
-            if(std::fabsf(this->getFloat32()[i]) > MSNH_F32_EPS)
+            if(fabsf(this->getFloat32()[i]) > MSNH_F32_EPS)
             {
                 return false;
             }
@@ -2273,7 +2299,7 @@ bool Mat::isFuzzyNull() const
     }
     else
     {
-        for (int i = 0; i < this->getDataNum(); ++i)
+        for (size_t i = 0; i < this->getDataNum(); ++i)
         {
             if(std::fabs(this->getFloat64()[i]) > MSNH_F64_EPS)
             {
@@ -2635,7 +2661,12 @@ Mat operator *(const Mat &A, const Mat &B)
         throw Exception(1,"[Mat]: Mat B is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    if(A.isNum() && !B.isNum()) 
+    if(A._matType != B._matType)
+    {
+        throw Exception(1,"[Mat]: Mat type must be equal! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(A.isNum() && !B.isNum())  
 
     {
         return A.getVal2Double(0)*B;
@@ -2648,16 +2679,28 @@ Mat operator *(const Mat &A, const Mat &B)
     else if(A.isNum() && B.isNum())
 
     {
-        double val = A.getVal2Double(0)*B.getVal2Double(0);
-        return Mat(1,1,MAT_GRAY_F64,&val);
+        if(A.isU8Mat())
+        {
+            uint8_t val = A.getBytes()[0]*B.getBytes()[0];
+            return Mat(1,1,MAT_GRAY_U8,&val);
+        }
+        else if(A.isF32Mat())
+        {
+            float val = A.getFloat32()[0]*B.getFloat32()[0];
+            return Mat(1,1,MAT_GRAY_F32,&val);
+        }
+        else if(A.isF64Mat())
+        {
+            double val = A.getFloat64()[0]*B.getFloat64()[0];
+            return Mat(1,1,MAT_GRAY_F64,&val);
+        }
     }
-    else 
+    else  
 
     {
         if(A.isVector()&&B.isVector())
 
         {
-            double finalVal = 0;
 
             if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
                     A._width != B._width || A._height != B._height)
@@ -2669,6 +2712,7 @@ Mat operator *(const Mat &A, const Mat &B)
 
             if(A.isU8Mat())
             {
+                uint8_t finalVal = 0;
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
 #endif
@@ -2678,9 +2722,11 @@ Mat operator *(const Mat &A, const Mat &B)
 
                     finalVal += mul;
                 }
+                return Mat(1,1,MAT_GRAY_U8, &finalVal);
             }
             else if(A.isF32Mat())
             {
+                float finalVal = 0;
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
 #endif
@@ -2689,9 +2735,11 @@ Mat operator *(const Mat &A, const Mat &B)
                     float mul= A._data.f32[i] * B._data.f32[i];
                     finalVal += mul;
                 }
+                return Mat(1,1,MAT_GRAY_F32, &finalVal);
             }
             else if(A.isF64Mat())
             {
+                double finalVal = 0;
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
 #endif
@@ -2700,10 +2748,11 @@ Mat operator *(const Mat &A, const Mat &B)
                     double mul = A._data.f64[i] * B._data.f64[i];
                     finalVal += mul;
                 }
+                return Mat(1,1,MAT_GRAY_F64, &finalVal);
             }
-            return Mat(1,1,MAT_GRAY_F64, &finalVal);
+
         }
-        else 
+        else  
 
         {
             if(A.getMatType() != B.getMatType() || A.getChannel() != B.getChannel() || A.getStep() != B.getStep())
@@ -2837,7 +2886,9 @@ Mat operator *(const Mat &A, const double &a)
     }
     else if(tmpMat.isF64Mat())
     {
-
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
         for (int i = 0; i < dataN; ++i)
         {
             tmpMat._data.f64[i] = A._data.f64[i]*a;
@@ -2858,7 +2909,12 @@ Mat operator /(const Mat &A, const Mat &B)
         throw Exception(1,"[Mat]: Mat B is empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    if(A.isNum() && !B.isNum()) 
+    if(A._matType != B._matType)
+    {
+        throw Exception(1,"[Mat]: Mat type must be equal! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(A.isNum() && !B.isNum())  
 
     {
         return A.getVal2Double(0)/B;
@@ -2871,8 +2927,21 @@ Mat operator /(const Mat &A, const Mat &B)
     else if(A.isNum() && B.isNum())
 
     {
-        double val = A.getVal2Double(0)/B.getVal2Double(0);
-        return Mat(1,1,MAT_GRAY_F64,&val);
+        if(A.isU8Mat())
+        {
+            uint8_t val = A.getBytes()[0]/B.getBytes()[0];
+            return Mat(1,1,MAT_GRAY_U8,&val);
+        }
+        else if(A.isF32Mat())
+        {
+            float val = A.getFloat32()[0]/B.getFloat32()[0];
+            return Mat(1,1,MAT_GRAY_F32,&val);
+        }
+        else if(A.isF64Mat())
+        {
+            double val = A.getFloat64()[0]/B.getFloat64()[0];
+            return Mat(1,1,MAT_GRAY_F64,&val);
+        }
     }
     else
     {
@@ -2898,8 +2967,21 @@ Mat operator /(const double &a, const Mat &A)
 
     if(A.isNum())
     {
-        double val = a/A.getVal2Double(0);
-        return Mat(1,1,MAT_GRAY_F64,&val);
+        if(A.isU8Mat())
+        {
+            uint8_t val = static_cast<uint8_t>(a/A.getBytes()[0]);
+            return Mat(1,1,MAT_GRAY_U8,&val);
+        }
+        else if(A.isF32Mat())
+        {
+            float val = static_cast<float>(a/A.getFloat32()[0]);
+            return Mat(1,1,MAT_GRAY_F32,&val);
+        }
+        else if(A.isF64Mat())
+        {
+            double val = a/A.getFloat64()[0];
+            return Mat(1,1,MAT_GRAY_F64,&val);
+        }
     }
     else if(A.isVector())
     {
@@ -2914,11 +2996,11 @@ Mat operator /(const double &a, const Mat &A)
 
 Mat operator /(const Mat &A, const double &a)
 {
-    return A*(1.0/a); 
+    return A*(1.0/a);  
 
 }
 
-Quaternion::Quaternion(const Quaternion &q)
+QuaternionD::QuaternionD(const QuaternionD &q)
 {
     this->_q0 = q._q0;
     this->_q1 = q._q1;
@@ -2926,7 +3008,7 @@ Quaternion::Quaternion(const Quaternion &q)
     this->_q3 = q._q3;
 }
 
-Quaternion::Quaternion(const double &q0, const double &q1, const double &q2, const double &q3)
+QuaternionD::QuaternionD(const double &q0, const double &q1, const double &q2, const double &q3)
     :_q0(q0),
       _q1(q1),
       _q2(q2),
@@ -2935,11 +3017,16 @@ Quaternion::Quaternion(const double &q0, const double &q1, const double &q2, con
 
 }
 
-void Quaternion::setVal(const std::vector<double> &val)
+QuaternionD::QuaternionD(const std::vector<double> &val)
+{
+    setVal(val);
+}
+
+void QuaternionD::setVal(const std::vector<double> &val)
 {
     if(val.size()!=4)
     {
-        throw Exception(1,"[Quaternion]: val size must = 4! \n", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[QuaternionD]: val size must = 4! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     this->_q0 = val[0];
@@ -2948,52 +3035,52 @@ void Quaternion::setVal(const std::vector<double> &val)
     this->_q3 = val[3];
 }
 
-std::vector<double> Quaternion::getVal() const
+std::vector<double> QuaternionD::getVal() const
 {
     return {this->_q0,this->_q1,this->_q2,this->_q3};
 }
 
-double Quaternion::mod() const
+double QuaternionD::mod() const
 {
     return sqrt(this->_q0*this->_q0 + this->_q1*this->_q1 + this->_q2*this->_q2 + this->_q2*this->_q2);
 }
 
-Quaternion Quaternion::invert() const
+QuaternionD QuaternionD::invert() const
 {
     double mod = this->mod();
-    return Quaternion(this->_q0/mod, this->_q1/mod, this->_q2/mod, this->_q3/mod);
+    return QuaternionD(this->_q0/mod, this->_q1/mod, this->_q2/mod, this->_q3/mod);
 }
 
-double Quaternion::getQ0() const
+double QuaternionD::getQ0() const
 {
     return _q0;
 }
 
-double Quaternion::getQ1() const
+double QuaternionD::getQ1() const
 {
     return _q1;
 }
 
-double Quaternion::getQ2() const
+double QuaternionD::getQ2() const
 {
     return _q2;
 }
 
-double Quaternion::getQ3() const
+double QuaternionD::getQ3() const
 {
     return _q3;
 }
 
-void Quaternion::print()
+void QuaternionD::print()
 {
     std::cout<<"[ "<<_q0<<", "<<_q1<<", "<<_q2<<", "<<_q3<<"] "<<std::endl;
 }
 
-double Quaternion::operator[](const uint8_t &index)
+double QuaternionD::operator[](const uint8_t &index)
 {
     if(index >4)
     {
-        throw Exception(1,"[Quaternion]: index out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
+        throw Exception(1,"[QuaternionD]: index out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
     }
     if(index == 0)
     {
@@ -3013,7 +3100,7 @@ double Quaternion::operator[](const uint8_t &index)
     }
 }
 
-Quaternion &Quaternion::operator=(const Quaternion &q)
+QuaternionD &QuaternionD::operator=(const QuaternionD &q)
 {
     if(this!=&q)
     {
@@ -3026,14 +3113,29 @@ Quaternion &Quaternion::operator=(const Quaternion &q)
     return *this;
 }
 
-Quaternion operator/(const Quaternion &A, const Quaternion &B)
+bool QuaternionD::operator==(const QuaternionD &q)
+{
+    if(abs(this->_q0-q.getQ0())<MSNH_F64_EPS&&
+       abs(this->_q1-q.getQ1())<MSNH_F64_EPS&&
+       abs(this->_q2-q.getQ2())<MSNH_F64_EPS&&
+       abs(this->_q3-q.getQ3())<MSNH_F64_EPS)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+QuaternionD operator/(const QuaternionD &A, const QuaternionD &B)
 {
     return A*B.invert();
 }
 
-Quaternion operator*(const Quaternion &A, const Quaternion &B)
+QuaternionD operator*(const QuaternionD &A, const QuaternionD &B)
 {
-    return Quaternion(
+    return QuaternionD(
                 A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
                 A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
                 A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
@@ -3041,20 +3143,179 @@ Quaternion operator*(const Quaternion &A, const Quaternion &B)
                 );
 }
 
-Quaternion operator+(const Quaternion &A, const Quaternion &B)
+QuaternionD operator+(const QuaternionD &A, const QuaternionD &B)
 {
-    return Quaternion(A.getQ0()+B.getQ0(),
-                      A.getQ1()+B.getQ1(),
-                      A.getQ2()+B.getQ2(),
-                      A.getQ3()+B.getQ3());
+    return QuaternionD(A.getQ0()+B.getQ0(),
+                       A.getQ1()+B.getQ1(),
+                       A.getQ2()+B.getQ2(),
+                       A.getQ3()+B.getQ3());
 }
 
-Quaternion operator-(const Quaternion &A, const Quaternion &B)
+QuaternionD operator-(const QuaternionD &A, const QuaternionD &B)
 {
-    return Quaternion(A.getQ0()-B.getQ0(),
-                      A.getQ1()-B.getQ1(),
-                      A.getQ2()-B.getQ2(),
-                      A.getQ3()-B.getQ3());
+    return QuaternionD(A.getQ0()-B.getQ0(),
+                       A.getQ1()-B.getQ1(),
+                       A.getQ2()-B.getQ2(),
+                       A.getQ3()-B.getQ3());
+}
+
+QuaternionF::QuaternionF(const QuaternionF &q)
+{
+    this->_q0 = q._q0;
+    this->_q1 = q._q1;
+    this->_q2 = q._q2;
+    this->_q3 = q._q3;
+}
+
+QuaternionF::QuaternionF(const float &q0, const float &q1, const float &q2, const float &q3)
+    :_q0(q0),
+      _q1(q1),
+      _q2(q2),
+      _q3(q3)
+{
+
+}
+
+QuaternionF::QuaternionF(const std::vector<float> &val)
+{
+    setVal(val);
+}
+
+void QuaternionF::setVal(const std::vector<float> &val)
+{
+    if(val.size()!=4)
+    {
+        throw Exception(1,"[QuaternionF]: val size must = 4! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    this->_q0 = val[0];
+    this->_q1 = val[1];
+    this->_q2 = val[2];
+    this->_q3 = val[3];
+}
+
+std::vector<float> QuaternionF::getVal() const
+{
+    return {this->_q0,this->_q1,this->_q2,this->_q3};
+}
+
+float QuaternionF::mod() const
+{
+    return sqrt(this->_q0*this->_q0 + this->_q1*this->_q1 + this->_q2*this->_q2 + this->_q2*this->_q2);
+}
+
+QuaternionF QuaternionF::invert() const
+{
+    double mod = this->mod();
+    return QuaternionF(this->_q0/mod, this->_q1/mod, this->_q2/mod, this->_q3/mod);
+}
+
+void QuaternionF::print()
+{
+    std::cout<<"[ "<<_q0<<", "<<_q1<<", "<<_q2<<", "<<_q3<<"] "<<std::endl;
+}
+
+float QuaternionF::operator[](const uint8_t &index)
+{
+    if(index >4)
+    {
+        throw Exception(1,"[QuaternionF]: index out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+    if(index == 0)
+    {
+        return this->_q0;
+    }
+    else if(index == 1)
+    {
+        return this->_q1;
+    }
+    else if(index == 2)
+    {
+        return this->_q2;
+    }
+    else
+    {
+        return this->_q3;
+    }
+}
+
+QuaternionF &QuaternionF::operator=(const QuaternionF &q)
+{
+    if(this!=&q)
+    {
+        this->_q0 = q._q0;
+        this->_q1 = q._q1;
+        this->_q2 = q._q2;
+        this->_q3 = q._q3;
+    }
+
+    return *this;
+}
+
+bool QuaternionF::operator ==(const QuaternionF &q)
+{
+    if(abs(this->_q0-q.getQ0())<MSNH_F32_EPS&&
+       abs(this->_q1-q.getQ1())<MSNH_F32_EPS&&
+       abs(this->_q2-q.getQ2())<MSNH_F32_EPS&&
+       abs(this->_q3-q.getQ3())<MSNH_F32_EPS)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+QuaternionF operator-(const QuaternionF &A, const QuaternionF &B)
+{
+    return QuaternionF(A.getQ0()-B.getQ0(),
+                       A.getQ1()-B.getQ1(),
+                       A.getQ2()-B.getQ2(),
+                       A.getQ3()-B.getQ3());
+}
+
+QuaternionF operator+(const QuaternionF &A, const QuaternionF &B)
+{
+    return QuaternionF(A.getQ0()+B.getQ0(),
+                       A.getQ1()+B.getQ1(),
+                       A.getQ2()+B.getQ2(),
+                       A.getQ3()+B.getQ3());
+}
+
+QuaternionF operator*(const QuaternionF &A, const QuaternionF &B)
+{
+    return QuaternionF(
+                A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
+                A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
+                A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
+                A.getQ0()*B.getQ3()+A.getQ1()*B.getQ2()-A.getQ2()*B.getQ1()+A.getQ3()*B.getQ0()
+                );
+}
+
+QuaternionF operator/(const QuaternionF &A, const QuaternionF &B)
+{
+    return A*B.invert();
+}
+
+float QuaternionF::getQ0() const
+{
+    return _q0;
+}
+
+float QuaternionF::getQ1() const
+{
+    return _q1;
+}
+
+float QuaternionF::getQ2() const
+{
+    return _q2;
+}
+
+float QuaternionF::getQ3() const
+{
+    return _q3;
 }
 
 Vector3D::Vector3D(const Vector3D &vec)
@@ -3165,6 +3426,118 @@ Vector3D Vector3D::normal(const Vector3D &v1, const Vector3D &v2)
 }
 
 Vector3D Vector3D::normal(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3)
+{
+    return crossProduct((v2-v1),(v3-v1)).normalized();
+}
+
+Vector3F::Vector3F(const Vector3F &vec)
+{
+    release();
+    this->_channel  = vec.getChannel();
+    this->_width    = vec.getWidth();
+    this->_height   = vec.getHeight();
+    this->_step     = vec.getStep();
+    this->_matType  = vec.getMatType();
+
+    if(vec.getBytes()!=nullptr)
+    {
+        uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+        memcpy(u8Ptr, vec.getBytes(), this->_width*this->_height*this->_step);
+        this->_data.u8 =u8Ptr;
+    }
+}
+
+Vector3F::Vector3F(const Mat &mat)
+{
+    if(mat.getWidth()!=3 || mat.getWidth()!=1 || mat.getChannel()!=1)
+    {
+        if(mat.getMatType()!=MAT_GRAY_F32 )
+        {
+            throw Exception(1, "[Vector3F] mat should be: channel==1 step==4 matType==MAT_GRAY_F32 w->3 , h->1" , __FILE__, __LINE__,__FUNCTION__);
+        }
+    }
+
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+
+    if(mat.getBytes()!=nullptr)
+    {
+        uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+        memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
+        this->_data.u8 =u8Ptr;
+    }
+}
+
+Vector3F &Vector3F::operator=(const Vector3F &vec)
+{
+    if(this!=&vec)
+    {
+        release();
+        this->_channel  = vec._channel;
+        this->_width    = vec._width;
+        this->_height   = vec._height;
+        this->_step     = vec._step;
+        this->_matType  = vec._matType;
+
+        if(vec._data.u8!=nullptr)
+        {
+            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+            memcpy(u8Ptr, vec._data.u8, this->_width*this->_height*this->_step);
+            this->_data.u8 =u8Ptr;
+        }
+    }
+    return *this;
+}
+
+Vector3F &Vector3F::operator=(const Mat &mat)
+{
+    if(mat.getWidth()!=3 || mat.getWidth()!=1 || mat.getChannel()!=1)
+    {
+        if(mat.getMatType()!=MAT_GRAY_F32 )
+        {
+            throw Exception(1, "[Vector3F] mat should be: channel==1 step==4 matType==MAT_GRAY_F32 w->3 , h->1" , __FILE__, __LINE__,__FUNCTION__);
+        }
+    }
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat.getChannel();
+        this->_width    = mat.getWidth();
+        this->_height   = mat.getHeight();
+        this->_step     = mat.getStep();
+        this->_matType  = mat.getMatType();
+
+        if(mat.getBytes()!=nullptr)
+        {
+            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+            memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
+            this->_data.u8 =u8Ptr;
+        }
+    }
+    return *this;
+}
+
+Vector3F Vector3F::crossProduct(const Vector3F &v1, const Vector3F &v2)
+{
+    Vector3F vec;
+
+    vec.setVal({ v1[1]*v2[2] - v1[2]*v2[1],
+                 v1[2]*v2[0] - v1[0]*v2[2],
+                 v1[0]*v2[1] - v1[1]*v2[0]});
+
+    return vec;
+}
+
+Vector3F Vector3F::normal(const Vector3F &v1, const Vector3F &v2)
+{
+    return crossProduct(v1,v2).normalized();
+}
+
+Vector3F Vector3F::normal(const Vector3F &v1, const Vector3F &v2, const Vector3F &v3)
 {
     return crossProduct((v2-v1),(v3-v1)).normalized();
 }

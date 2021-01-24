@@ -662,7 +662,7 @@ void VideoEncoder::writeMat(const Mat &mat)
         throw Exception(1, "[Video Encoder]: Mat empty! \n",__FILE__,__LINE__,__FUNCTION__);
     }
 
-    if(tmpMat.getWidth()!=this->_width || tmpMat.getHeight()!=this->_height)
+    if(tmpMat.getWidth()!=(int)this->_width || tmpMat.getHeight()!=(int)this->_height)
     {
         throw Exception(1, "[Video Encoder]: mat's width or height != enoder's width or height! \n",__FILE__,__LINE__,__FUNCTION__);
     }

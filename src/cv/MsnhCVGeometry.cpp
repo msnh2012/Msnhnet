@@ -3,6 +3,26 @@
 namespace Msnhnet
 {
 
+double deg2rad(const double &val)
+{
+    return val/180.0*M_PI;
+}
+
+float deg2rad(const float &val)
+{
+    return static_cast<float>(val/180.0*M_PI);
+}
+
+double rad2deg(const double &val)
+{
+    return val/M_PI*180.0;
+}
+
+float rad2deg(const float &val)
+{
+    return static_cast<float>(val/M_PI*180.0);
+}
+
 bool Geometry::isRealRotMat(Mat &R)
 {
     Mat Rt = R.transpose();
@@ -11,40 +31,40 @@ bool Geometry::isRealRotMat(Mat &R)
     return  MatOp::norm(I, shouldBeIdentity) < 1e-5;
 }
 
-RotationMat Geometry::euler2RotMat(Euler &euler, const RotSequence &seq)
+RotationMatD Geometry::euler2RotMat(const EulerD &euler, const RotSequence &seq)
 {
 
     double a = euler.getVal(0);
     double b = euler.getVal(1);
     double c = euler.getVal(2);
 
-    double sina = std::sin(a); 
+    double sina = sin(a); 
 
-    double sinb = std::sin(b); 
+    double sinb = sin(b); 
 
-    double sinc = std::sin(c); 
+    double sinc = sin(c); 
 
-    double cosa = std::cos(a); 
+    double cosa = cos(a); 
 
-    double cosb = std::cos(b); 
+    double cosb = cos(b); 
 
-    double cosc = std::cos(c); 
+    double cosc = cos(c); 
 
-    RotationMat Rx;
+    RotationMatD Rx;
     Rx.setVal({
                   1 ,  0   ,   0   ,
                   0 , cosa , -sina ,
                   0 , sina ,  cosa
               });
 
-    RotationMat Ry;
+    RotationMatD Ry;
     Ry.setVal({
                   cosb , 0 , sinb ,
                   0   , 1 ,   0  ,
                   -sinb , 0 , cosb
               });
 
-    RotationMat Rz;
+    RotationMatD Rz;
 
     Rz.setVal({
                   cosc , -sinc , 0 ,
@@ -72,27 +92,46 @@ RotationMat Geometry::euler2RotMat(Euler &euler, const RotSequence &seq)
     }
 }
 
-Quaternion Geometry::euler2Quaternion(Euler &euler, const RotSequence &seq)
+RotationMatF Geometry::euler2RotMat(const EulerF &euler, const RotSequence &seq)
 {
-    double a = euler.getVal(0)/2;
-    double b = euler.getVal(1)/2;
-    double c = euler.getVal(2)/2;
 
-    double sina = std::sin(a); 
+    float a = euler.getVal(0);
+    float b = euler.getVal(1);
+    float c = euler.getVal(2);
 
-    double sinb = std::sin(b); 
+    float sina = sinf(a); 
 
-    double sinc = std::sin(c); 
+    float sinb = sinf(b); 
 
-    double cosa = std::cos(a); 
+    float sinc = sinf(c); 
 
-    double cosb = std::cos(b); 
+    float cosa = cosf(a); 
 
-    double cosc = std::cos(c); 
+    float cosb = cosf(b); 
 
-    Quaternion Rx(cosa,sina,0,0);
-    Quaternion Ry(cosb,0,sinb,0);
-    Quaternion Rz(cosc,0,0,sinc);
+    float cosc = cosf(c); 
+
+    RotationMatF Rx;
+    Rx.setVal({
+                  1 ,  0   ,   0   ,
+                  0 , cosa , -sina ,
+                  0 , sina ,  cosa
+              });
+
+    RotationMatF Ry;
+    Ry.setVal({
+                  cosb , 0 , sinb ,
+                  0   , 1 ,   0  ,
+                  -sinb , 0 , cosb
+              });
+
+    RotationMatF Rz;
+
+    Rz.setVal({
+                  cosc , -sinc , 0 ,
+                  sinc , cosc  , 0 ,
+                  0   ,  0    , 1
+              });
 
     /*TODO: exact all*/
     switch (seq)
@@ -114,7 +153,91 @@ Quaternion Geometry::euler2Quaternion(Euler &euler, const RotSequence &seq)
     }
 }
 
-Euler Geometry::rotMat2Euler(RotationMat &rotMat, const RotSequence &seq)
+QuaternionD Geometry::euler2Quaternion(EulerD &euler, const RotSequence &seq)
+{
+    double a = euler.getVal(0)/2.0;
+    double b = euler.getVal(1)/2.0;
+    double c = euler.getVal(2)/2.0;
+
+    double sina = sin(a); 
+
+    double sinb = sin(b); 
+
+    double sinc = sin(c); 
+
+    double cosa = cos(a); 
+
+    double cosb = cos(b); 
+
+    double cosc = cos(c); 
+
+    QuaternionD Rx(cosa,sina,0,0);
+    QuaternionD Ry(cosb,0,sinb,0);
+    QuaternionD Rz(cosc,0,0,sinc);
+
+    /*TODO: exact all*/
+    switch (seq)
+    {
+    case ROT_XYZ:
+        return Rx*Ry*Rz;
+    case ROT_XZY:
+        return Rx*Rz*Ry;
+    case ROT_YXZ:
+        return Ry*Rx*Rz;
+    case ROT_YZX:
+        return Ry*Rz*Rx;
+    case ROT_ZXY:
+        return Rz*Rx*Ry;
+    case ROT_ZYX:
+        return Rz*Ry*Rx;
+    default:
+        return Rz*Ry*Rx;
+    }
+}
+
+QuaternionF Geometry::euler2Quaternion(EulerF &euler, const RotSequence &seq)
+{
+    float a = euler.getVal(0)/2.0f;
+    float b = euler.getVal(1)/2.0f;
+    float c = euler.getVal(2)/2.0f;
+
+    float sina = sinf(a); 
+
+    float sinb = sinf(b); 
+
+    float sinc = sinf(c); 
+
+    float cosa = cosf(a); 
+
+    float cosb = cosf(b); 
+
+    float cosc = cosf(c); 
+
+    QuaternionF Rx(cosa,sina,0,0);
+    QuaternionF Ry(cosb,0,sinb,0);
+    QuaternionF Rz(cosc,0,0,sinc);
+
+    /*TODO: exact all*/
+    switch (seq)
+    {
+    case ROT_XYZ:
+        return Rx*Ry*Rz;
+    case ROT_XZY:
+        return Rx*Rz*Ry;
+    case ROT_YXZ:
+        return Ry*Rx*Rz;
+    case ROT_YZX:
+        return Ry*Rz*Rx;
+    case ROT_ZXY:
+        return Rz*Rx*Ry;
+    case ROT_ZYX:
+        return Rz*Ry*Rx;
+    default:
+        return Rz*Ry*Rx;
+    }
+}
+
+EulerD Geometry::rotMat2Euler(RotationMatD &rotMat, const RotSequence &seq)
 {
     const double m11 = rotMat.getValAtRowCol(0,0), m12 = rotMat.getValAtRowCol(0,1), m13 = rotMat.getValAtRowCol(0,2);
     const double m21 = rotMat.getValAtRowCol(1,0), m22 = rotMat.getValAtRowCol(1,1), m23 = rotMat.getValAtRowCol(1,2);
@@ -212,19 +335,129 @@ Euler Geometry::rotMat2Euler(RotationMat &rotMat, const RotSequence &seq)
         break;
     }
 
-    Euler euler;
+    EulerD euler;
     euler.setVal({x,y,z});
     return euler;
 }
 
-Euler Geometry::quaternion2Euler(Quaternion &q, const RotSequence &seq)
+EulerF Geometry::rotMat2Euler(RotationMatF &rotMat, const RotSequence &seq)
+{
+    const float m11 = rotMat.getValAtRowCol(0,0), m12 = rotMat.getValAtRowCol(0,1), m13 = rotMat.getValAtRowCol(0,2);
+    const float m21 = rotMat.getValAtRowCol(1,0), m22 = rotMat.getValAtRowCol(1,1), m23 = rotMat.getValAtRowCol(1,2);
+    const float m31 = rotMat.getValAtRowCol(2,0), m32 = rotMat.getValAtRowCol(2,1), m33 = rotMat.getValAtRowCol(2,2);
+
+    float x = 0;
+    float y = 0;
+    float z = 0;
+
+    switch (seq)
+    {
+    case ROT_XYZ:
+        y = asinf(clamp(m13,-1.f,1.f));
+        if(fabsf(m13) < 0.999999f)
+        {
+            x = atan2f( - m23, m33 );
+            z = atan2f( - m12, m11 );
+        }
+        else
+        {
+            x = atan2f( m32, m22 );
+            z = 0;
+        }
+        break;
+    case ROT_YXZ:
+        x = asinf( - clamp( m23, -1.f, 1.f));
+
+        if ( fabsf( m23 ) < 0.999999f)
+        {
+            y = atan2f( m13, m33 );
+            z = atan2f( m21, m22 );
+        }
+        else
+        {
+            y = atan2f( - m31, m11 );
+            z = 0;
+        }
+        break;
+    case ROT_ZXY:
+        x = asinf( clamp( m32, -1.f, 1.f) );
+
+        if (fabsf( m32 ) < 0.999999f)
+        {
+            y = atan2f( - m31, m33 );
+            z = atan2f( - m12, m22 );
+        }
+        else
+        {
+            y = 0;
+            z = atan2f( m21, m11 );
+        }
+        break;
+    case ROT_ZYX:
+        y = asinf( - clamp( m31, -1.f, 1.f ));
+
+        if ( fabsf( m31 ) < 0.999999f )
+        {
+            x = atan2f( m32, m33 );
+            z = atan2f( m21, m11 );
+        }
+        else
+        {
+            x = 0;
+            z = atan2f( - m12, m22 );
+        }
+        break;
+    case ROT_YZX:
+        z = asinf( clamp( m21, -1.f, 1.f));
+
+        if ( fabsf( m21 ) < 0.999999f )
+        {
+            x = atan2f( - m23, m22 );
+            y = atan2f( - m31, m11 );
+        }
+        else
+        {
+            x = 0;
+            y = atan2f( m13, m33 );
+        }
+        break;
+    case ROT_XZY:
+        z = asinf( - clamp( m12, -1.f, 1.f));
+
+        if ( fabsf( m12 ) < 0.999999f )
+        {
+            x = atan2f( m32, m22 );
+            y = atan2f( m13, m11 );
+        }
+        else
+        {
+            x = atan2f( - m23, m33 );
+            y = 0;
+        }
+
+        break;
+    }
+
+    EulerF euler;
+    euler.setVal({x,y,z});
+    return euler;
+}
+
+EulerD Geometry::quaternion2Euler(QuaternionD &q, const RotSequence &seq)
 {
 
-    RotationMat rotMat = quaternion2RotMat(q);
+    RotationMatD rotMat = quaternion2RotMat(q);
     return rotMat2Euler(rotMat,seq);
 }
 
-Quaternion Geometry::rotMat2Quaternion(RotationMat &rotMat)
+EulerF Geometry::quaternion2Euler(QuaternionF &q, const RotSequence &seq)
+{
+
+    RotationMatF rotMat = quaternion2RotMat(q);
+    return rotMat2Euler(rotMat,seq);
+}
+
+QuaternionD Geometry::rotMat2Quaternion(RotationMatD &rotMat)
 {
     double q[4];
 
@@ -263,37 +496,96 @@ Quaternion Geometry::rotMat2Quaternion(RotationMat &rotMat)
         q[3]     = 0.25*t;
     }
 
-    return Quaternion(q[0],q[1],q[2],q[3]);
+    return QuaternionD(q[0],q[1],q[2],q[3]);
 }
 
-RotationMat Geometry::quaternion2RotMat(Quaternion &q)
+QuaternionF Geometry::rotMat2Quaternion(RotationMatF &rotMat)
+{
+    float q[4];
+
+    float trace = rotMat.getValAtRowCol(0,0)+rotMat.getValAtRowCol(1,1)+rotMat.getValAtRowCol(2,2);
+
+    if(trace > ROT_EPS)
+
+    {
+        q[0] = 0.5f*sqrtf(1+rotMat.getValAtRowCol(0,0)+rotMat.getValAtRowCol(1,1)+rotMat.getValAtRowCol(2,2));
+        q[1] = (rotMat.getValAtRowCol(2,1) - rotMat.getValAtRowCol(1,2))/(4*q[0]);
+        q[2] = (rotMat.getValAtRowCol(0,2) - rotMat.getValAtRowCol(2,0))/(4*q[0]);
+        q[3] = (rotMat.getValAtRowCol(1,0) - rotMat.getValAtRowCol(0,1))/(4*q[0]);
+    }
+    else if(rotMat.getValAtRowCol(0,0)>rotMat.getValAtRowCol(1,1) && rotMat.getValAtRowCol(0,0)>rotMat.getValAtRowCol(2,2))
+    {
+        float t = 2*sqrtf(1+rotMat.getValAtRowCol(0,0)-rotMat.getValAtRowCol(1,1)-rotMat.getValAtRowCol(2,2));
+        q[0]     = (rotMat.getValAtRowCol(2,1) - rotMat.getValAtRowCol(1,2))/t;
+        q[1]     = 0.25f*t;
+        q[2]     = (rotMat.getValAtRowCol(0,2) + rotMat.getValAtRowCol(2,0))/t;
+        q[3]     = (rotMat.getValAtRowCol(0,1) + rotMat.getValAtRowCol(1,0))/t;
+    }
+    else if(rotMat.getValAtRowCol(1,1)>rotMat.getValAtRowCol(0,0) && rotMat.getValAtRowCol(1,1)>rotMat.getValAtRowCol(2,2))
+    {
+        float t = 2*sqrtf(1-rotMat.getValAtRowCol(0,0)+rotMat.getValAtRowCol(1,1)-rotMat.getValAtRowCol(2,2));
+        q[0]     = (rotMat.getValAtRowCol(0,2) - rotMat.getValAtRowCol(2,0))/t;
+        q[1]     = (rotMat.getValAtRowCol(0,1) + rotMat.getValAtRowCol(1,0))/t;
+        q[2]     = 0.25f*t;
+        q[3]     = (rotMat.getValAtRowCol(2,1) + rotMat.getValAtRowCol(1,2))/t;
+    }
+    else if(rotMat.getValAtRowCol(2,2)>rotMat.getValAtRowCol(0,0) && rotMat.getValAtRowCol(2,2)>rotMat.getValAtRowCol(1,1))
+    {
+        float t = 2*sqrtf(1-rotMat.getValAtRowCol(0,0)-rotMat.getValAtRowCol(1,1)+rotMat.getValAtRowCol(2,2));
+        q[0]     = (rotMat.getValAtRowCol(1,0) - rotMat.getValAtRowCol(0,1))/t;
+        q[1]     = (rotMat.getValAtRowCol(0,2) + rotMat.getValAtRowCol(2,0))/t;
+        q[2]     = (rotMat.getValAtRowCol(1,2) + rotMat.getValAtRowCol(2,1))/t;
+        q[3]     = 0.25f*t;
+    }
+
+    return QuaternionF(q[0],q[1],q[2],q[3]);
+}
+
+RotationMatD Geometry::quaternion2RotMat(QuaternionD &q)
 {
     double q0 = q.getQ0();
     double q1 = q.getQ1();
     double q2 = q.getQ2();
     double q3 = q.getQ3();
 
-    RotationMat rotMat;
+    RotationMatD rotMat;
     rotMat.setVal({
-                      1.0-2*(q2*q2+q3*q3),  2.0*(q1*q2-q0*q3),         2.0*(q1*q3+q0*q2),
-                      2.0*(q1*q2+q0*q3),        1.0-2*(q1*q1+q3*q3),   2.0*(q2*q3-q0*q1),
-                      2.0*(q1*q3-q0*q2),        2.0*(q2*q3+q0*q1),         1.0-2*(q1*q1+q2*q2)
+                      1.0-2*(q2*q2+q3*q3),  2.0*(q1*q2-q0*q3),     2.0*(q1*q3+q0*q2),
+                      2.0*(q1*q2+q0*q3),    1.0-2*(q1*q1+q3*q3),   2.0*(q2*q3-q0*q1),
+                      2.0*(q1*q3-q0*q2),    2.0*(q2*q3+q0*q1),     1.0-2*(q1*q1+q2*q2)
                   });
 
     return rotMat;
 }
 
-Quaternion Geometry::rotVec2Quaternion(RotationVec &rotVec)
+RotationMatF Geometry::quaternion2RotMat(QuaternionF &q)
 {
-    double Rx = rotVec.getFloat64()[0];
-    double Ry = rotVec.getFloat64()[1];
-    double Rz = rotVec.getFloat64()[2];
+    float q0 = q.getQ0();
+    float q1 = q.getQ1();
+    float q2 = q.getQ2();
+    float q3 = q.getQ3();
+
+    RotationMatD rotMat;
+    rotMat.setVal({
+                      1.0f-2*(q2*q2+q3*q3),  2.0f*(q1*q2-q0*q3),     2.0f*(q1*q3+q0*q2),
+                      2.0f*(q1*q2+q0*q3),    1.0f-2*(q1*q1+q3*q3),   2.0f*(q2*q3-q0*q1),
+                      2.0f*(q1*q3-q0*q2),    2.0f*(q2*q3+q0*q1),     1.0f-2*(q1*q1+q2*q2)
+                  });
+
+    return rotMat;
+}
+
+QuaternionD Geometry::rotVec2Quaternion(RotationVecD &rotVec)
+{
+    double Rx = rotVec[0];
+    double Ry = rotVec[1];
+    double Rz = rotVec[2];
 
     double theta = sqrt(Rx*Rx+Ry*Ry+Rz*Rz);
 
     if(theta==0)
     {
-        return Quaternion(1,0,0,0);
+        return QuaternionD(1,0,0,0);
     }
 
     double kx = Rx/theta;
@@ -305,13 +597,38 @@ Quaternion Geometry::rotVec2Quaternion(RotationVec &rotVec)
     double q2 = ky*std::sin(0.5*theta);
     double q3 = kz*std::sin(0.5*theta);
 
-    return Quaternion(q0,q1,q2,q3);
+    return QuaternionD(q0,q1,q2,q3);
 }
 
-RotationVec Geometry::quaternion2RotVec(Quaternion &q)
+QuaternionF Geometry::rotVec2Quaternion(RotationVecF &rotVec)
+{
+    float Rx = rotVec[0];
+    float Ry = rotVec[1];
+    float Rz = rotVec[2];
+
+    float theta = sqrtf(Rx*Rx+Ry*Ry+Rz*Rz);
+
+    if(theta==0)
+    {
+        return QuaternionF(1,0,0,0);
+    }
+
+    float kx = Rx/theta;
+    float ky = Ry/theta;
+    float kz = Rz/theta;
+
+    float q0 = cosf(0.5f*theta);
+    float q1 = kx*sinf(0.5f*theta);
+    float q2 = ky*sinf(0.5f*theta);
+    float q3 = kz*sinf(0.5f*theta);
+
+    return QuaternionF(q0,q1,q2,q3);
+}
+
+RotationVecD Geometry::quaternion2RotVec(QuaternionD &q)
 {
     double theta = 2*acos(q.getQ0());
-    RotationVec vec;
+    RotationVecD vec;
 
     if(theta==0)
     {
@@ -327,38 +644,71 @@ RotationVec Geometry::quaternion2RotVec(Quaternion &q)
     return vec;
 }
 
-RotationMat Geometry::rotVec2RotMat(RotationVec &rotVec)
+RotationVecF Geometry::quaternion2RotVec(QuaternionF &q)
 {
-    Quaternion q = rotVec2Quaternion(rotVec);
+    float theta = 2*acosf(q.getQ0());
+    RotationVecF vec;
+
+    if(theta==0)
+    {
+        vec.setVal({0,0,0});
+        return vec;
+    }
+
+    float kx    = q.getQ1()/sinf(0.5f*theta);
+    float ky    = q.getQ2()/sinf(0.5f*theta);
+    float kz    = q.getQ3()/sinf(0.5f*theta);
+
+    vec.setVal({kx*theta,ky*theta,kz*theta});
+    return vec;
+}
+
+RotationMatD Geometry::rotVec2RotMat(RotationVecD &rotVec)
+{
+    QuaternionD q = rotVec2Quaternion(rotVec);
     return quaternion2RotMat(q);
 }
 
-RotationVec Geometry::rotMat2RotVec(RotationMat &rotMat)
+RotationMatF Geometry::rotVec2RotMat(RotationVecF &rotVec)
 {
-    Quaternion q = rotMat2Quaternion(rotMat);
+    QuaternionF q = rotVec2Quaternion(rotVec);
+    return quaternion2RotMat(q);
+}
+
+RotationVecD Geometry::rotMat2RotVec(RotationMatD &rotMat)
+{
+    QuaternionD q = rotMat2Quaternion(rotMat);
     return quaternion2RotVec(q);
 }
 
-RotationVec Geometry::euler2RotVec(Euler &euler, const RotSequence &seq)
+RotationVecF Geometry::rotMat2RotVec(RotationMatF &rotMat)
 {
-    Quaternion q = euler2Quaternion(euler,seq);
+    QuaternionF q = rotMat2Quaternion(rotMat);
     return quaternion2RotVec(q);
 }
 
-Euler Geometry::rotVec2Euler(RotationVec & rotVec, const RotSequence &seq)
+RotationVecD Geometry::euler2RotVec(EulerD &euler, const RotSequence &seq)
 {
-    Quaternion q = rotVec2Quaternion(rotVec);
+    QuaternionD q = euler2Quaternion(euler,seq);
+    return quaternion2RotVec(q);
+}
+
+RotationVecF Geometry::euler2RotVec(EulerF &euler, const RotSequence &seq)
+{
+    QuaternionF q = euler2Quaternion(euler,seq);
+    return quaternion2RotVec(q);
+}
+
+EulerD Geometry::rotVec2Euler(RotationVecD & rotVec, const RotSequence &seq)
+{
+    QuaternionD q = rotVec2Quaternion(rotVec);
     return quaternion2Euler(q,seq);
 }
 
-double Geometry::deg2rad(double val)
+EulerF Geometry::rotVec2Euler(RotationVecF &rotVec, const RotSequence &seq)
 {
-    return val/180*M_PI;
-}
-
-double Geometry::rad2deg(double val)
-{
-    return val*180/M_PI;
+    QuaternionF q = rotVec2Quaternion(rotVec);
+    return quaternion2Euler(q,seq);
 }
 
 double Geometry::clamp(const double &val, const double &min, const double &max)
@@ -377,12 +727,28 @@ double Geometry::clamp(const double &val, const double &min, const double &max)
     }
 }
 
-Matrix4x4::Matrix4x4():Mat_()
+float Geometry::clamp(const float &val, const float &min, const float &max)
+{
+    if(val<min)
+    {
+        return min;
+    }
+    else if(val>max)
+    {
+        return max;
+    }
+    else
+    {
+        return val;
+    }
+}
+
+Matrix4x4D::Matrix4x4D():Mat_<4,4,double>()
 {
 
 }
 
-Matrix4x4::Matrix4x4(const Mat &mat)
+Matrix4x4D::Matrix4x4D(const Mat &mat)
 {
     if(mat.getWidth()!=4 || mat.getWidth()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
     {
@@ -403,7 +769,7 @@ Matrix4x4::Matrix4x4(const Mat &mat)
     }
 }
 
-Matrix4x4::Matrix4x4(const Matrix4x4 &mat)
+Matrix4x4D::Matrix4x4D(const Matrix4x4D &mat)
 {
     release();
     this->_channel  = mat.getChannel();
@@ -420,7 +786,19 @@ Matrix4x4::Matrix4x4(const Matrix4x4 &mat)
     }
 }
 
-Matrix4x4 &Matrix4x4::operator=(Matrix4x4 &mat)
+Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat, const TransformD &trans):Mat_()
+{
+    this->setVal({
+                     rotMat.getValAtRowCol(0,0), rotMat.getValAtRowCol(0,1), rotMat.getValAtRowCol(0,2), trans[0],
+                     rotMat.getValAtRowCol(1,0), rotMat.getValAtRowCol(1,1), rotMat.getValAtRowCol(1,2), trans[1],
+                     rotMat.getValAtRowCol(2,0), rotMat.getValAtRowCol(2,1), rotMat.getValAtRowCol(2,2), trans[2],
+                     0,                          0,                          0,                          1
+                 });
+}
+
+Matrix4x4D::Matrix4x4D(const std::vector<double> &val):Mat_<4,4,double>(val){}
+
+Matrix4x4D &Matrix4x4D::operator=(Matrix4x4D &mat)
 {
     if(this!=&mat)
     {
@@ -441,7 +819,7 @@ Matrix4x4 &Matrix4x4::operator=(Matrix4x4 &mat)
     return *this;
 }
 
-Matrix4x4 &Matrix4x4::operator=(const Mat &mat)
+Matrix4x4D &Matrix4x4D::operator=(const Mat &mat)
 {
     if(mat.getWidth()!=4 || mat.getWidth()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
     {
@@ -465,6 +843,486 @@ Matrix4x4 &Matrix4x4::operator=(const Mat &mat)
         }
     }
     return *this;
+}
+
+RotationMatD Matrix4x4D::getRotationMat() const
+{
+    RotationMatD rotMat;
+    rotMat.setVal({
+                      this->getValAtRowCol(0,0), this->getValAtRowCol(0,1),this->getValAtRowCol(0,2),
+                      this->getValAtRowCol(1,0), this->getValAtRowCol(1,1),this->getValAtRowCol(1,2),
+                      this->getValAtRowCol(2,0), this->getValAtRowCol(2,1),this->getValAtRowCol(2,2),
+                  });
+    return rotMat;
+}
+
+TransformD Matrix4x4D::getTransform() const
+{
+    TransformD trans;
+    trans.setVal({
+                     this->getValAtRowCol(0,3),
+                     this->getValAtRowCol(1,3),
+                     this->getValAtRowCol(2,3)
+                 });
+    return trans;
+}
+
+Matrix4x4D Matrix4x4D::eye()
+{
+    return Mat::eye(4,MatType::MAT_GRAY_F64);
+}
+
+void Matrix4x4D::setRotationMat(const RotationMatD &rotMat)
+{
+    this->setValAtRowCol(0,0,rotMat.getValAtRowCol(0,0));
+    this->setValAtRowCol(0,1,rotMat.getValAtRowCol(0,1));
+    this->setValAtRowCol(0,2,rotMat.getValAtRowCol(0,2));
+
+    this->setValAtRowCol(1,0,rotMat.getValAtRowCol(1,0));
+    this->setValAtRowCol(1,1,rotMat.getValAtRowCol(1,1));
+    this->setValAtRowCol(1,2,rotMat.getValAtRowCol(1,2));
+
+    this->setValAtRowCol(2,0,rotMat.getValAtRowCol(2,0));
+    this->setValAtRowCol(2,1,rotMat.getValAtRowCol(2,1));
+    this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
+}
+
+void Matrix4x4D::setTransform(const TransformD &trans)
+{
+    this->setValAtRowCol(0,3,trans[0]);
+    this->setValAtRowCol(1,3,trans[1]);
+    this->setValAtRowCol(2,3,trans[2]);
+}
+
+void Matrix4x4D::translate(const Vector3D &vector)
+{
+
+    translate(vector[0], vector[1], vector[2]);
+}
+
+void Matrix4x4D::translate(const double &x, const double &y, const double &z)
+{
+    this->getFloat64()[3]  += x;
+    this->getFloat64()[7]  += y;
+    this->getFloat64()[11] += z;
+}
+
+void Matrix4x4D::rotate(const double &angle, const double &x, const double &y, const double &z)
+{
+    rotate(angle,Vector3D({x,y,z}));
+}
+
+void Matrix4x4D::rotate(const double &angle, const Vector3D &vector)
+{
+    Vector3D vec = vector;
+    vec.normalize();
+    double x = vec.getVal(0);
+    double y = vec.getVal(1);
+    double z = vec.getVal(2);
+
+    RotationMatD rotMat = Geometry::euler2RotMat(EulerD({x*angle,y*angle,z*angle}),RotSequence::ROT_ZYX);
+    this->setRotationMat(rotMat);
+}
+
+void Matrix4x4D::rotate(const EulerD &euler)
+{
+    RotationMatD rotMat = Geometry::euler2RotMat(euler,RotSequence::ROT_ZYX);
+    this->setRotationMat(rotMat);
+}
+
+void Matrix4x4D::scale(const double &x, const double &y, const double &z)
+{
+    this->getFloat64()[0]  *= x;
+    this->getFloat64()[1]  *= x;
+    this->getFloat64()[2]  *= x;
+
+    this->getFloat64()[4]  *= y;
+    this->getFloat64()[5]  *= y;
+    this->getFloat64()[6]  *= y;
+
+    this->getFloat64()[8]  *= z;
+    this->getFloat64()[9]  *= z;
+    this->getFloat64()[10] *= z;
+}
+
+void Matrix4x4D::scale(const Vector3D &vector)
+{
+    scale(vector[0],vector[1],vector[2]);
+}
+
+void Matrix4x4D::perspective(const double &verticalAngle, const double &aspectRatio, const double &nearPlane, const double &farPlane)
+{
+
+    if(nearPlane==farPlane || aspectRatio == 0.0)
+    {
+        return;
+    }
+
+    double radians = verticalAngle / 2.0;
+    double sine     = sin(radians);
+    if(sine == 0)
+    {
+        return;
+    }
+
+    double cotan = cos(radians) / sine;
+    double clip  = farPlane - nearPlane;
+
+    Matrix4x4D m = Matrix4x4D::eye();
+
+    m.getFloat64()[0]  = cotan / aspectRatio;
+    m.getFloat64()[5]  = cotan;
+    m.getFloat64()[10] = -(nearPlane + farPlane) / clip;
+    m.getFloat64()[11] = -(2.0 * nearPlane * farPlane) / clip;
+    m.getFloat64()[14] = -1;
+    m.getFloat64()[15] = 0;
+
+    *this = *this * m;
+
+}
+
+void Matrix4x4D::ortho(const double &left, const double &right, const double &bottom, const double &top, const double &nearPlane, const double &farPlane)
+{
+
+    if (left == right || bottom == top || nearPlane == farPlane)
+    {
+        return;
+    }
+
+    double width     = right - left;
+    double invheight = top - bottom;
+    double clip      = farPlane - nearPlane;
+
+    Matrix4x4D m = Matrix4x4D::eye();
+
+    m.getFloat64()[0]  = 2.0 / width;
+    m.getFloat64()[3]  = -(left + right) / width;
+    m.getFloat64()[5]  = 2.0 / invheight;
+    m.getFloat64()[7]  = -(top + bottom) / invheight;
+    m.getFloat64()[10] = -2.0 / clip;
+    m.getFloat64()[11] = -(nearPlane + farPlane) / clip;
+    *this = *this * m;
+}
+
+void Matrix4x4D::lookAt(const Vector3D &eye, const Vector3D &center, const Vector3D &up)
+{
+    Vector3D forward = center - eye;
+
+    if(forward.isFuzzyNull())
+    {
+        return;
+    }
+
+    forward.normalize();
+    Vector3D side     = Vector3D::crossProduct(forward,up).normalized();
+    Vector3D upVector = Vector3D::crossProduct(side, forward);
+
+    Matrix4x4D m = Matrix4x4D::eye();
+
+    m.getFloat64()[0]  = side[0];
+    m.getFloat64()[1]  = side[1];
+    m.getFloat64()[2]  = side[2];
+
+    m.getFloat64()[5]  = upVector[0];
+    m.getFloat64()[6]  = upVector[1];
+    m.getFloat64()[7]  = upVector[2];
+
+    m.getFloat64()[9]  = -forward[0];
+    m.getFloat64()[10] = -forward[1];
+    m.getFloat64()[11] = -forward[2];
+
+    *this = *this * m;
+    translate(Matrix4x4D()-eye);
+}
+
+Matrix4x4F::Matrix4x4F():Mat_<4,4,float>()
+{
+
+}
+
+Matrix4x4F::Matrix4x4F(const Mat &mat)
+{
+    if(mat.getWidth()!=4 || mat.getWidth()!=4 || mat.getChannel()!=1 || mat.getStep()!=4 || mat.getMatType()!= MatType::MAT_GRAY_F32)
+    {
+        throw Exception(1, "[Matrix4x4F] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F32", __FILE__, __LINE__,__FUNCTION__);
+    }
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+
+    if(mat.getBytes()!=nullptr)
+    {
+        uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+        memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
+        this->_data.u8 =u8Ptr;
+    }
+}
+
+Matrix4x4F::Matrix4x4F(const Matrix4x4F &mat)
+{
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+
+    if(mat.getBytes()!=nullptr)
+    {
+        uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+        memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
+        this->_data.u8 =u8Ptr;
+    }
+}
+
+Matrix4x4F::Matrix4x4F(const RotationMatF &rotMat, const TransformF &trans)
+{
+    this->setVal({
+                     rotMat.getValAtRowCol(0,0), rotMat.getValAtRowCol(0,1), rotMat.getValAtRowCol(0,2), trans[0],
+                     rotMat.getValAtRowCol(1,0), rotMat.getValAtRowCol(1,1), rotMat.getValAtRowCol(1,2), trans[1],
+                     rotMat.getValAtRowCol(2,0), rotMat.getValAtRowCol(2,1), rotMat.getValAtRowCol(2,2), trans[2],
+                     0,                          0,                          0,                          1
+                 });
+}
+
+Matrix4x4F::Matrix4x4F(const std::vector<float> &val):Mat_<4,4,float>(val){}
+
+Matrix4x4F &Matrix4x4F::operator=(Matrix4x4F &mat)
+{
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat._channel;
+        this->_width    = mat._width;
+        this->_height   = mat._height;
+        this->_step     = mat._step;
+        this->_matType  = mat._matType;
+
+        if(mat._data.u8!=nullptr)
+        {
+            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+            memcpy(u8Ptr, mat._data.u8, this->_width*this->_height*this->_step);
+            this->_data.u8 =u8Ptr;
+        }
+    }
+    return *this;
+}
+
+Matrix4x4F &Matrix4x4F::operator=(const Mat &mat)
+{
+    if(mat.getWidth()!=4 || mat.getWidth()!=4 || mat.getChannel()!=1 || mat.getStep()!=4 || mat.getMatType()!= MatType::MAT_GRAY_F32)
+    {
+        throw Exception(1, "[Matrix4x4F] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F32", __FILE__, __LINE__,__FUNCTION__);
+    }
+
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat.getChannel();
+        this->_width    = mat.getWidth();
+        this->_height   = mat.getHeight();
+        this->_step     = mat.getStep();
+        this->_matType  = mat.getMatType();
+
+        if(mat.getBytes()!=nullptr)
+        {
+            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+            memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
+            this->_data.u8 =u8Ptr;
+        }
+    }
+    return *this;
+}
+
+RotationMatF Matrix4x4F::getRotationMat() const
+{
+    RotationMatF rotMat;
+    rotMat.setVal({
+                      this->getValAtRowCol(0,0), this->getValAtRowCol(0,1),this->getValAtRowCol(0,2),
+                      this->getValAtRowCol(1,0), this->getValAtRowCol(1,1),this->getValAtRowCol(1,2),
+                      this->getValAtRowCol(2,0), this->getValAtRowCol(2,1),this->getValAtRowCol(2,2),
+                  });
+    return rotMat;
+}
+
+TransformF Matrix4x4F::getTransform() const
+{
+    TransformF trans;
+    trans.setVal({
+                     this->getValAtRowCol(0,3),
+                     this->getValAtRowCol(1,3),
+                     this->getValAtRowCol(2,3)
+                 });
+    return trans;
+}
+
+Matrix4x4F Matrix4x4F::eye()
+{
+    return Mat::eye(4,MatType::MAT_GRAY_F32);
+}
+
+void Matrix4x4F::setRotationMat(const RotationMatF &rotMat)
+{
+    this->setValAtRowCol(0,0,rotMat.getValAtRowCol(0,0));
+    this->setValAtRowCol(0,1,rotMat.getValAtRowCol(0,1));
+    this->setValAtRowCol(0,2,rotMat.getValAtRowCol(0,2));
+
+    this->setValAtRowCol(1,0,rotMat.getValAtRowCol(1,0));
+    this->setValAtRowCol(1,1,rotMat.getValAtRowCol(1,1));
+    this->setValAtRowCol(1,2,rotMat.getValAtRowCol(1,2));
+
+    this->setValAtRowCol(2,0,rotMat.getValAtRowCol(2,0));
+    this->setValAtRowCol(2,1,rotMat.getValAtRowCol(2,1));
+    this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
+}
+
+void Matrix4x4F::setTransform(const TransformF &trans)
+{
+    this->setValAtRowCol(0,3,trans[0]);
+    this->setValAtRowCol(1,3,trans[1]);
+    this->setValAtRowCol(2,3,trans[2]);
+}
+
+void Matrix4x4F::translate(const Vector3F &vector)
+{
+
+    translate(vector[0], vector[1], vector[2]);
+}
+
+void Matrix4x4F::translate(const float &x, const float &y, const float &z)
+{
+    this->getFloat32()[3]  += x;
+    this->getFloat32()[7]  += y;
+    this->getFloat32()[11] += z;
+}
+
+void Matrix4x4F::rotate(const float &angle, const float &x, const float &y, const float &z)
+{
+    rotate(angle,Vector3F({x,y,z}));
+}
+
+void Matrix4x4F::rotate(const float &angle, const Vector3F &vector)
+{
+    Vector3F vec = vector;
+    vec.normalize();
+    float x = vec.getVal(0);
+    float y = vec.getVal(1);
+    float z = vec.getVal(2);
+
+    RotationMatF rotMat = Geometry::euler2RotMat(EulerF({x*angle,y*angle,z*angle}),RotSequence::ROT_ZYX);
+    this->setRotationMat(rotMat);
+}
+
+void Matrix4x4F::rotate(const EulerF &euler)
+{
+    RotationMatF rotMat = Geometry::euler2RotMat(euler,RotSequence::ROT_ZYX);
+    this->setRotationMat(rotMat);
+}
+
+void Matrix4x4F::scale(const float &x, const float &y, const float &z)
+{
+    this->getFloat32()[0]  *= x;
+    this->getFloat32()[1]  *= x;
+    this->getFloat32()[2]  *= x;
+
+    this->getFloat32()[4]  *= y;
+    this->getFloat32()[5]  *= y;
+    this->getFloat32()[6]  *= y;
+
+    this->getFloat32()[8]  *= z;
+    this->getFloat32()[9]  *= z;
+    this->getFloat32()[10] *= z;
+}
+
+void Matrix4x4F::scale(const Vector3F &vector)
+{
+    scale(vector[0],vector[1],vector[2]);
+}
+
+void Matrix4x4F::perspective(const float &verticalAngle, const float &aspectRatio, const float &nearPlane, const float &farPlane)
+{
+
+    if(nearPlane==farPlane || aspectRatio == 0.0f)
+    {
+        return;
+    }
+
+    float radians = verticalAngle / 2.0f;
+    float sine    = sinf(radians);
+    if(sine == 0)
+    {
+        return;
+    }
+
+    float cotan  = cosf(radians) / sine;
+    float clip   = farPlane - nearPlane;
+
+    Matrix4x4F m = Matrix4x4F::eye();
+
+    m.getFloat32()[0]  = cotan / aspectRatio;
+    m.getFloat32()[5]  = cotan;
+    m.getFloat32()[10] = -(nearPlane + farPlane) / clip;
+    m.getFloat32()[11] = -(2.0f * nearPlane * farPlane) / clip;
+    m.getFloat32()[14] = -1.0f;
+    m.getFloat32()[15] = 0;
+
+    *this = *this * m;
+}
+
+void Matrix4x4F::ortho(const float &left, const float &right, const float &bottom, const float &top, const float &nearPlane, const float &farPlane)
+{
+
+    if (left == right || bottom == top || nearPlane == farPlane)
+    {
+        return;
+    }
+
+    float width     = right - left;
+    float invheight = top - bottom;
+    float clip      = farPlane - nearPlane;
+
+    Matrix4x4F m = Matrix4x4F::eye();
+
+    m.getFloat32()[0]  = 2.0f / width;
+    m.getFloat32()[3]  = -(left + right) / width;
+    m.getFloat32()[5]  = 2.0f / invheight;
+    m.getFloat32()[7]  = -(top + bottom) / invheight;
+    m.getFloat32()[10] = -2.0f / clip;
+    m.getFloat32()[11] = -(nearPlane + farPlane) / clip;
+    *this = *this * m;
+}
+
+void Matrix4x4F::lookAt(const Vector3F &eye, const Vector3F &center, const Vector3F &up)
+{
+    Vector3F forward = center - eye;
+
+    if(forward.isFuzzyNull())
+    {
+        return;
+    }
+
+    forward.normalize();
+    Vector3F side     = Vector3F::crossProduct(forward,up).normalized();
+    Vector3F upVector = Vector3F::crossProduct(side, forward);
+
+    this->getFloat32()[0]  = side[0];
+    this->getFloat32()[1]  = side[1];
+    this->getFloat32()[2]  = side[2];
+
+    this->getFloat32()[4]  = upVector[0];
+    this->getFloat32()[5]  = upVector[1];
+    this->getFloat32()[6]  = upVector[2];
+
+    this->getFloat32()[8]  = -forward[0];
+    this->getFloat32()[9]  = -forward[1];
+    this->getFloat32()[10] = -forward[2];
+
+    this->getFloat32()[3]  = -(side*eye).getFloat32()[0];
+    this->getFloat32()[7]  = -(upVector*eye).getFloat32()[0];
+    this->getFloat32()[11] = (forward*eye).getFloat32()[0];
 }
 
 }

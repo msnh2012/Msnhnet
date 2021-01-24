@@ -706,7 +706,7 @@ void MatOp::merge(std::vector<Mat> &src, Mat &dst)
         throw Exception(1,"[MatOp]: Merge src mats empty! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    for (int i = 0; i < src.size()-1; ++i)
+    for (size_t i = 0; i < src.size()-1; ++i)
     {
         if(!checkMatsProps(src[i],src[i+1]))
         {
@@ -992,7 +992,7 @@ std::vector<int> MatOp::histogram(Mat &src)
         throw Exception(1,"[MatOp]: histogram mat type must be GRAY U8! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    for (int i = 0; i < src.getDataNum(); ++i)
+    for (size_t i = 0; i < src.getDataNum(); ++i)
     {
         uint8_t val = src.getBytes()[i];
         hist[val] += 1;

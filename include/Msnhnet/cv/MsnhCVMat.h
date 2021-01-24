@@ -20,7 +20,7 @@ class MsnhNet_API Mat
 public:
 
     Mat (const Mat& mat);
-    Mat (const std::string &path); 
+    Mat (const std::string &path);  
 
     Mat (const int &width, const int &height, const MatType &matType, void *data=nullptr);
     Mat ();
@@ -290,6 +290,10 @@ public:
 
     void convertTo(Mat &dst, const CvtDataType& cvtDataType);
 
+    Mat toFloat32();
+
+    Mat toFloat64();
+
     int getWidth() const;
 
     int getHeight() const;
@@ -322,7 +326,7 @@ public:
 
     double getVal2Double(const size_t &index) const;
 
-    bool isEmpty() const; 
+    bool isEmpty() const;  
 
     Vec2I32 getSize() const;
 
@@ -383,16 +387,16 @@ public:
 
     void print();
 
-    bool isF32Mat() const; 
+    bool isF32Mat() const;  
 
-    bool isF64Mat() const; 
+    bool isF64Mat() const;  
 
-    bool isU8Mat() const; 
+    bool isU8Mat() const;  
 
-    bool isOneChannel() const; 
+    bool isOneChannel() const;  
 
     /* ================ */
-    bool isVector() const; 
+    bool isVector() const;  
 
     bool isNum() const; 
 
@@ -448,7 +452,7 @@ protected:
     int _width          = 0;
     int _height         = 0;
     int _channel        = 0;
-    int _step           = 0; 
+    int _step           = 0;  
 
     MatType _matType    = MatType::MAT_RGB_F32;
     MatData _data;
@@ -468,6 +472,15 @@ public:
         }
     }
 
+    Mat_(const std::vector<T> &val):Mat(w,h,std::is_same<T,double>::value?MAT_GRAY_F64:(std::is_same<T,uint8_t>::value?MAT_GRAY_U8:MAT_GRAY_F32))
+    {
+        if(!std::is_same<T,double>::value && !std::is_same<T,float>::value && !std::is_same<T,uint8_t>::value)
+        {
+            throw Exception(1,"[Mat_]: only u8/f32/f64 is supported! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
+        this->setVal(val);
+    }
+
     void setVal(const std::vector<T> &val)
     {
         if(val.size()!=this->getDataNum())
@@ -476,7 +489,16 @@ public:
         }
 
         memcpy(this->getBytes(), val.data(),val.size()*sizeof(T));
+    }
 
+    void setVal(const size_t &index, const T &val)
+    {
+        if(index>getDataNum()-1)
+        {
+            throw Exception(1,"[Mat_]: index out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
+
+        *((T*)this->getBytes()+index) = val;
     }
 
     T getVal(const size_t &index) const
@@ -509,7 +531,17 @@ public:
         return *((T*)this->getBytes()+index);
     }
 
-    Mat_(const Mat_ &mat)
+    void setValAtRowCol(const int& row, const int& col, const T& val)
+    {
+        size_t index = row*this->_width + col;
+        if(index > getDataNum()-1)
+        {
+            throw Exception(1,"[Mat_]: index out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
+        *((T*)this->getBytes()+index) = val;
+    }
+
+    Mat_(const Mat_ &mat) 
 
     {
         release();
@@ -527,7 +559,7 @@ public:
         }
     }
 
-    Mat_(const Mat &mat) 
+    Mat_(const Mat &mat)  
 
     {
         if(mat.getWidth()!=w || mat.getWidth()!=h || mat.getChannel()!=1)
@@ -623,8 +655,6 @@ public:
     }
 };
 
-typedef Mat_<3,3,double> RotationMat;
-
 template<int w, typename T>
 class MsnhNet_API Vector :public Mat_<w,1,T>
 {
@@ -638,10 +668,15 @@ public:
         }
     }
 
+    Vector(const std::vector<T> &val):Mat_<w,1,T>(val)
+    {
+
+    }
+
     Vector(const Vector &vec)
 
     {
-        release();
+        this->release();
         this->_channel  = vec.getChannel();
         this->_width    = vec.getWidth();
         this->_height   = vec.getHeight();
@@ -667,7 +702,7 @@ public:
             }
         }
 
-        release();
+        this->release();
         this->_channel  = mat.getChannel();
         this->_width    = mat.getWidth();
         this->_height   = mat.getHeight();
@@ -686,7 +721,7 @@ public:
     {
         if(this!=&vec)
         {
-            release();
+            this->release();
             this->_channel  = vec._channel;
             this->_width    = vec._width;
             this->_height   = vec._height;
@@ -714,7 +749,7 @@ public:
         }
         if(this!=&mat)
         {
-            release();
+            this->release();
             this->_channel  = mat.getChannel();
             this->_width    = mat.getWidth();
             this->_height   = mat.getHeight();
@@ -755,12 +790,12 @@ public:
                     len += this->_data.f32[i]*this->_data.f32[i];
                 }
 
-                if(std::fabsf(len - 1.0f) < MSNH_F32_EPS || std::fabsf(len) < MSNH_F32_EPS)
+                if(fabsf(len - 1.0f) < MSNH_F32_EPS || fabsf(len) < MSNH_F32_EPS)
                 {
                     return;
                 }
 
-                len = std::sqrtf(len);
+                len = sqrtf(len);
 
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
@@ -821,17 +856,17 @@ public:
                     len += this->_data.f32[i]*this->_data.f32[i];
                 }
 
-                if(std::fabsf(len - 1.0f) < MSNH_F32_EPS)
+                if(fabsf(len - 1.0f) < MSNH_F32_EPS)
                 {
                     return *this;
                 }
 
-                if(std::fabsf(len) < MSNH_F32_EPS)
+                if(fabsf(len) < MSNH_F32_EPS)
                 {
                     return vec;
                 }
 
-                len = std::sqrtf(len);
+                len = sqrtf(len);
 
 #ifdef USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
@@ -973,8 +1008,10 @@ public:
     }
 };
 
-typedef Vector<3,double> Euler;
-typedef Vector<3,double> RotationVec;
+typedef Mat_<3,3,double> RotationMatD;
+typedef Vector<3,double> EulerD;
+typedef Vector<3,double> TransformD;
+typedef Vector<3,double> RotationVecD;
 typedef Vector<2,double> Vector2D;
 typedef Vector<4,double> Vector4D;
 
@@ -983,9 +1020,11 @@ class MsnhNet_API Vector3D : public Vector<3,double>
 public:
     Vector3D(){}
 
+    Vector3D(const std::vector<double> &val):Vector<3,double>(val){}
+
     Vector3D(const Vector3D &vec);
 
-    Vector3D(const Mat &mat); 
+    Vector3D(const Mat &mat);  
 
     Vector3D& operator= (const Vector3D &vec);
 
@@ -999,12 +1038,13 @@ public:
 
 };
 
-class MsnhNet_API Quaternion
+class MsnhNet_API QuaternionD
 {
 public:
-    Quaternion(){}
-    Quaternion(const Quaternion &q);
-    Quaternion(const double& q0, const double& q1, const double& q2, const double& q3);
+    QuaternionD(){}
+    QuaternionD(const QuaternionD &q);
+    QuaternionD(const double& q0, const double& q1, const double& q2, const double& q3);
+    QuaternionD(const std::vector<double> &val);
 
     void setVal(const std::vector<double> &val);
 
@@ -1012,7 +1052,7 @@ public:
 
     double mod() const;
 
-    Quaternion invert() const;
+    QuaternionD invert() const;
 
     double getQ0() const;
     double getQ1() const;
@@ -1023,14 +1063,14 @@ public:
 
     double operator[] (const uint8_t& index);
 
-    Quaternion& operator=(const Quaternion& q);
+    QuaternionD& operator=(const QuaternionD& q);
 
-    bool operator ==(const Quaternion& q);
+    bool operator== (const QuaternionD& q);
 
-    MsnhNet_API friend Quaternion operator- (const Quaternion &A, const Quaternion &B);
-    MsnhNet_API friend Quaternion operator+ (const Quaternion &A, const Quaternion &B);
-    MsnhNet_API friend Quaternion operator* (const Quaternion &A, const Quaternion &B);
-    MsnhNet_API friend Quaternion operator/ (const Quaternion &A, const Quaternion &B);
+    MsnhNet_API friend QuaternionD operator- (const QuaternionD &A, const QuaternionD &B);
+    MsnhNet_API friend QuaternionD operator+ (const QuaternionD &A, const QuaternionD &B);
+    MsnhNet_API friend QuaternionD operator* (const QuaternionD &A, const QuaternionD &B);
+    MsnhNet_API friend QuaternionD operator/ (const QuaternionD &A, const QuaternionD &B);
 private:
     double _q0 = 0;
     double _q1 = 0;
@@ -1038,6 +1078,76 @@ private:
     double _q3 = 0;
 };
 
+class MsnhNet_API QuaternionF
+{
+public:
+    QuaternionF(){}
+    QuaternionF(const QuaternionF &q);
+    QuaternionF(const float& q0, const float& q1, const float& q2, const float& q3);
+    QuaternionF(const std::vector<float> &val);
+
+    void setVal(const std::vector<float> &val);
+
+    std::vector<float> getVal() const;
+
+    float mod() const;
+
+    QuaternionF invert() const;
+
+    void print();
+
+    float operator[] (const uint8_t& index);
+
+    QuaternionF& operator=(const QuaternionF& q);
+
+    bool operator ==(const QuaternionF& q);
+
+    MsnhNet_API friend QuaternionF operator- (const QuaternionF &A, const QuaternionF &B);
+    MsnhNet_API friend QuaternionF operator+ (const QuaternionF &A, const QuaternionF &B);
+    MsnhNet_API friend QuaternionF operator* (const QuaternionF &A, const QuaternionF &B);
+    MsnhNet_API friend QuaternionF operator/ (const QuaternionF &A, const QuaternionF &B);
+
+    float getQ0() const;
+    float getQ1() const;
+    float getQ2() const;
+    float getQ3() const;
+
+private:
+    float _q0 = 0;
+    float _q1 = 0;
+    float _q2 = 0;
+    float _q3 = 0;
+};
+
+typedef Mat_<3,3,float> RotationMatF;
+typedef Vector<3,float> EulerF;
+typedef Vector<3,float> TransformF;
+typedef Vector<3,float> RotationVecF;
+typedef Vector<2,float> Vector2F;
+typedef Vector<4,float> Vector4F;
+
+class MsnhNet_API Vector3F : public Vector<3,float>
+{
+public:
+    Vector3F(){}
+
+    Vector3F(const std::vector<float> &val):Vector<3,float>(val){}
+
+    Vector3F(const Vector3F &vec);
+
+    Vector3F(const Mat &mat);  
+
+    Vector3F& operator= (const Vector3F &vec);
+
+    Vector3F& operator= (const Mat &mat);
+
+    static Vector3F crossProduct(const Vector3F &v1, const Vector3F &v2);
+
+    static Vector3F normal(const Vector3F &v1, const Vector3F &v2);
+
+    static Vector3F normal(const Vector3F &v1, const Vector3F &v2, const Vector3F &v3);
+
+};
 }
 
 #endif 
