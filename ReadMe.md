@@ -1,4 +1,4 @@
-# 🔥 Msnhnet(V1.2 Opencv is optional)🔥
+# 🔥 Msnhnet(Focusing on Robot Vision)🔥
 English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/details/107216704)</br>
 ###  A mini pytorch inference framework which inspired from darknet.
 ![License](https://img.shields.io/badge/license-MIT-green)
