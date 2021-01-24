@@ -1017,22 +1017,21 @@ void Matrix4x4D::lookAt(const Vector3D &eye, const Vector3D &center, const Vecto
     Vector3D side     = Vector3D::crossProduct(forward,up).normalized();
     Vector3D upVector = Vector3D::crossProduct(side, forward);
 
-    Matrix4x4D m = Matrix4x4D::eye();
+    this->getFloat64()[0]  = side[0];
+    this->getFloat64()[1]  = side[1];
+    this->getFloat64()[2]  = side[2];
 
-    m.getFloat64()[0]  = side[0];
-    m.getFloat64()[1]  = side[1];
-    m.getFloat64()[2]  = side[2];
+    this->getFloat64()[4]  = upVector[0];
+    this->getFloat64()[5]  = upVector[1];
+    this->getFloat64()[6]  = upVector[2];
 
-    m.getFloat64()[5]  = upVector[0];
-    m.getFloat64()[6]  = upVector[1];
-    m.getFloat64()[7]  = upVector[2];
+    this->getFloat64()[8]  = -forward[0];
+    this->getFloat64()[9]  = -forward[1];
+    this->getFloat64()[10] = -forward[2];
 
-    m.getFloat64()[9]  = -forward[0];
-    m.getFloat64()[10] = -forward[1];
-    m.getFloat64()[11] = -forward[2];
-
-    *this = *this * m;
-    translate(Matrix4x4D()-eye);
+    this->getFloat64()[3]  = -(side*eye).getFloat64()[0];
+    this->getFloat64()[7]  = -(upVector*eye).getFloat64()[0];
+    this->getFloat64()[11] = (forward*eye).getFloat64()[0];
 }
 
 Matrix4x4F::Matrix4x4F():Mat_<4,4,float>()
