@@ -28,38 +28,38 @@ public:
     static RotationMatD euler2RotMat(const EulerD &euler, const RotSequence& seq);
     static RotationMatF euler2RotMat(const EulerF &euler, const RotSequence& seq);
 
-    static QuaternionD  euler2Quaternion(EulerD& euler, const RotSequence& seq);
-    static QuaternionF  euler2Quaternion(EulerF& euler, const RotSequence& seq);
+    static QuaternionD  euler2Quaternion(const EulerD& euler, const RotSequence& seq);
+    static QuaternionF  euler2Quaternion(const EulerF& euler, const RotSequence& seq);
 
-    static EulerD rotMat2Euler(RotationMatD& rotMat, const RotSequence &seq);
-    static EulerF rotMat2Euler(RotationMatF& rotMat, const RotSequence &seq);
+    static EulerD rotMat2Euler(const RotationMatD& rotMat, const RotSequence &seq);
+    static EulerF rotMat2Euler(const RotationMatF& rotMat, const RotSequence &seq);
 
-    static EulerD quaternion2Euler(QuaternionD& q, const RotSequence& seq);
-    static EulerF quaternion2Euler(QuaternionF& q, const RotSequence& seq);
+    static EulerD quaternion2Euler(const QuaternionD& q, const RotSequence& seq);
+    static EulerF quaternion2Euler(const QuaternionF& q, const RotSequence& seq);
 
-    static QuaternionD  rotMat2Quaternion(RotationMatD& rotMat);
-    static QuaternionF  rotMat2Quaternion(RotationMatF& rotMat);
+    static QuaternionD  rotMat2Quaternion(const RotationMatD& rotMat);
+    static QuaternionF  rotMat2Quaternion(const RotationMatF& rotMat);
 
-    static RotationMatD quaternion2RotMat(QuaternionD& q);
-    static RotationMatF quaternion2RotMat(QuaternionF& q);
+    static RotationMatD quaternion2RotMat(const QuaternionD& q);
+    static RotationMatF quaternion2RotMat(const QuaternionF& q);
 
-    static QuaternionD  rotVec2Quaternion(RotationVecD& rotVec);
-    static QuaternionF  rotVec2Quaternion(RotationVecF& rotVec);
+    static QuaternionD  rotVec2Quaternion(const RotationVecD& rotVec);
+    static QuaternionF  rotVec2Quaternion(const RotationVecF& rotVec);
 
-    static RotationVecD quaternion2RotVec(QuaternionD& q);
-    static RotationVecF quaternion2RotVec(QuaternionF& q);
+    static RotationVecD quaternion2RotVec(const QuaternionD& q);
+    static RotationVecF quaternion2RotVec(const QuaternionF& q);
 
-    static RotationMatD rotVec2RotMat(RotationVecD& rotVec);
-    static RotationMatF rotVec2RotMat(RotationVecF& rotVec);
+    static RotationMatD rotVec2RotMat(const RotationVecD& rotVec);
+    static RotationMatF rotVec2RotMat(const RotationVecF& rotVec);
 
-    static RotationVecD rotMat2RotVec(RotationMatD& rotMat);
-    static RotationVecF rotMat2RotVec(RotationMatF& rotMat);
+    static RotationVecD rotMat2RotVec(const RotationMatD& rotMat);
+    static RotationVecF rotMat2RotVec(const RotationMatF& rotMat);
 
-    static RotationVecD euler2RotVec(EulerD& euler, const RotSequence& seq);
-    static RotationVecF euler2RotVec(EulerF& euler, const RotSequence& seq);
+    static RotationVecD euler2RotVec(const EulerD& euler, const RotSequence& seq);
+    static RotationVecF euler2RotVec(const EulerF& euler, const RotSequence& seq);
 
-    static EulerD rotVec2Euler(RotationVecD& rotVec, const RotSequence& seq);
-    static EulerF rotVec2Euler(RotationVecF& rotVec, const RotSequence& seq);
+    static EulerD rotVec2Euler(const RotationVecD& rotVec, const RotSequence& seq);
+    static EulerF rotVec2Euler(const RotationVecF& rotVec, const RotSequence& seq);
 
     static double clamp(const double &val,const double &min,const double &max);
     static float clamp(const float &val,const float &min,const float &max);
@@ -86,8 +86,6 @@ public:
 
     TransformD getTransform() const;
 
-    static Matrix4x4D eye();
-
     void setRotationMat(const RotationMatD& rotMat);
 
     void setTransform(const TransformD& trans);
@@ -102,6 +100,8 @@ public:
 
     void rotate(const EulerD &euler);
 
+    void rotate(const QuaternionD &quat);
+
     void scale(const double &x, const double &y, const double &z);
 
     void scale(const Vector3D& vector);
@@ -113,6 +113,11 @@ public:
                 const double &nearPlane, const double &farPlane);
 
     void lookAt(const Vector3D &eye, const Vector3D &center, const Vector3D &up);
+
+    Vector3D mulVec3(const Vector3D &vec3);
+
+    Matrix3x3D normalMatrix();
+
 };
 
 class MsnhNet_API Matrix4x4F : public Mat_<4,4,float>
@@ -136,8 +141,6 @@ public:
 
     TransformF getTransform() const;
 
-    static Matrix4x4F eye();
-
     void setRotationMat(const RotationMatF& rotMat);
 
     void setTransform(const TransformF& trans);
@@ -152,6 +155,8 @@ public:
 
     void rotate(const EulerF &euler);
 
+    void rotate(const QuaternionF &quat);
+
     void scale(const float &x, const float &y, const float &z);
 
     void scale(const Vector3F& vector);
@@ -163,6 +168,10 @@ public:
                 const float &nearPlane, const float &farPlane);
 
     void lookAt(const Vector3F &eye, const Vector3F &center, const Vector3F &up);
+
+    Vector3F mulVec3(const Vector3F &vec3);
+
+    Matrix3x3F normalMatrix();
 };
 
 }

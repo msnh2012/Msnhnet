@@ -387,6 +387,10 @@ public:
 
     void print();
 
+    std::string toString();
+
+    std::string getMatTypeStr();
+
     bool isF32Mat() const;  
 
     bool isF64Mat() const;  
@@ -428,9 +432,12 @@ public:
 
     bool isFuzzyNull() const;
 
-    Mat &operator = (const Mat &mat);
+    bool isNan() const;
 
-    bool operator ==(const Mat &A);
+    Mat &operator= (const Mat &mat);
+
+    MsnhNet_API friend bool operator== (const Mat &A, const Mat &B);
+    MsnhNet_API friend bool operator!= (const Mat &A, const Mat &B);
 
     MsnhNet_API friend Mat operator+ (const Mat &A, const Mat &B);
     MsnhNet_API friend Mat operator+ (const double &a, const Mat &A);
@@ -464,22 +471,35 @@ template<int w,int h,typename T>
 class MsnhNet_API Mat_:public Mat
 {
 public:
-    Mat_():Mat(w,h,std::is_same<T,double>::value?MAT_GRAY_F64:(std::is_same<T,uint8_t>::value?MAT_GRAY_U8:MAT_GRAY_F32))
+    Mat_():Mat(w,h,getMatTypeFromT())
     {
-        if(!std::is_same<T,double>::value && !std::is_same<T,float>::value && !std::is_same<T,uint8_t>::value)
-        {
-            throw Exception(1,"[Mat_]: only u8/f32/f64 is supported! \n", __FILE__, __LINE__, __FUNCTION__);
-        }
+
     }
 
-    Mat_(const std::vector<T> &val):Mat(w,h,std::is_same<T,double>::value?MAT_GRAY_F64:(std::is_same<T,uint8_t>::value?MAT_GRAY_U8:MAT_GRAY_F32))
+    Mat_(const std::vector<T> &val):Mat(w,h,getMatTypeFromT())
     {
-        if(!std::is_same<T,double>::value && !std::is_same<T,float>::value && !std::is_same<T,uint8_t>::value)
+        this->setVal(val);
+    }
+
+   static MatType getMatTypeFromT()
+   {
+        if(std::is_same<T,double>::value)
+        {
+            return MAT_GRAY_F64;
+        }
+        else if(std::is_same<T,float>::value)
+        {
+            return MAT_GRAY_F32;
+        }
+        else if(std::is_same<T,uint8_t>::value)
+        {
+            return MAT_GRAY_U8;
+        }
+        else
         {
             throw Exception(1,"[Mat_]: only u8/f32/f64 is supported! \n", __FILE__, __LINE__, __FUNCTION__);
         }
-        this->setVal(val);
-    }
+   }
 
     void setVal(const std::vector<T> &val)
     {
@@ -562,12 +582,9 @@ public:
     Mat_(const Mat &mat)  
 
     {
-        if(mat.getWidth()!=w || mat.getWidth()!=h || mat.getChannel()!=1)
+        if(mat.getWidth()!=w || mat.getHeight()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
-            if(mat.getMatType()!=MAT_GRAY_U8 && mat.getMatType()!=MAT_GRAY_F32 && mat.getMatType()!=MAT_GRAY_F64 )
-            {
-                throw Exception(1, "[Mat_] mat should be: channel==1 step==1/4/8 matType==MAT_GRAY_U8/F32/F64 w->" + std::to_string(w)+" , h->" + std::to_string(h) , __FILE__, __LINE__,__FUNCTION__);
-            }
+            throw Exception(1, "[Mat_] mat props should be equal." , __FILE__, __LINE__,__FUNCTION__);
         }
 
         release();
@@ -608,12 +625,9 @@ public:
 
     Mat_& operator= (const Mat &mat)
     {
-        if(mat.getWidth()!=w || mat.getWidth()!=h || mat.getChannel()!=1)
+        if(mat.getWidth()!=w || mat.getWidth()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
-            if(mat.getMatType()!=MAT_GRAY_U8 && mat.getMatType()!=MAT_GRAY_F32 && mat.getMatType()!=MAT_GRAY_F64 )
-            {
-                throw Exception(1, "[Mat_] mat should be: channel==1 step==1/4/8 matType==MAT_GRAY_U8/F32/F64 w->" + std::to_string(w)+" , h->" + std::to_string(h) , __FILE__, __LINE__,__FUNCTION__);
-            }
+            throw Exception(1, "[Mat_] mat props should be equal." , __FILE__, __LINE__,__FUNCTION__);
         }
         if(this!=&mat)
         {
@@ -653,6 +667,19 @@ public:
     {
         this->setRow_<T>(row,mat);
     }
+
+    static Mat_ eye()
+    {
+        if(w==h)
+        {
+            return Mat::eye(w,getMatTypeFromT());
+        }
+        else
+        {
+            throw Exception(1, "[Mat_] w!=h no eye matrix." , __FILE__, __LINE__,__FUNCTION__);
+        }
+    }
+
 };
 
 template<int w, typename T>
@@ -660,12 +687,9 @@ class MsnhNet_API Vector :public Mat_<w,1,T>
 {
 public:
 
-    Vector()
+    Vector():Mat_<w,1,T>()
     {
-        if(!std::is_same<T,double>::value && !std::is_same<T,float>::value && !std::is_same<T,uint8_t>::value)
-        {
-            throw Exception(1,"[Mat_]: only u8/f32/f64 is supported! \n", __FILE__, __LINE__, __FUNCTION__);
-        }
+
     }
 
     Vector(const std::vector<T> &val):Mat_<w,1,T>(val)
@@ -694,12 +718,9 @@ public:
     Vector(const Mat &mat) 
 
     {
-        if(mat.getWidth()!=w || mat.getWidth()!=1 || mat.getChannel()!=1)
+        if(mat.getWidth()!=w || mat.getWidth()!=1 || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
-            if(mat.getMatType()!=MAT_GRAY_U8 && mat.getMatType()!=MAT_GRAY_F32 && mat.getMatType()!=MAT_GRAY_F64 )
-            {
-                throw Exception(1, "[Vector] mat should be: channel==1 step==1/4/8 matType==MAT_GRAY_U8/F32/F64 w->" + std::to_string(w)+" , h->1" , __FILE__, __LINE__,__FUNCTION__);
-            }
+            throw Exception(1, "[Vector] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
         }
 
         this->release();
@@ -740,12 +761,9 @@ public:
 
     Vector& operator= (const Mat &mat)
     {
-        if(mat.getWidth()!=w || mat.getWidth()!=1 || mat.getChannel()!=1)
+        if(mat.getWidth()!=w || mat.getWidth()!=1 || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
-            if(mat.getMatType()!=MAT_GRAY_U8 && mat.getMatType()!=MAT_GRAY_F32 && mat.getMatType()!=MAT_GRAY_F64 )
-            {
-                throw Exception(1, "[Vector] mat should be: channel==1 step==1/4/8 matType==MAT_GRAY_U8/F32/F64 w->" + std::to_string(w)+" , h->1", __FILE__, __LINE__,__FUNCTION__);
-            }
+            throw Exception(1, "[Vector] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
         }
         if(this!=&mat)
         {
@@ -1009,6 +1027,7 @@ public:
 };
 
 typedef Mat_<3,3,double> RotationMatD;
+typedef Mat_<3,3,double> Matrix3x3D;
 typedef Vector<3,double> EulerD;
 typedef Vector<3,double> TransformD;
 typedef Vector<3,double> RotationVecD;
@@ -1061,6 +1080,8 @@ public:
 
     void print();
 
+    std::string toString();
+
     double operator[] (const uint8_t& index);
 
     QuaternionD& operator=(const QuaternionD& q);
@@ -1096,6 +1117,8 @@ public:
 
     void print();
 
+    std::string toString();
+
     float operator[] (const uint8_t& index);
 
     QuaternionF& operator=(const QuaternionF& q);
@@ -1120,6 +1143,7 @@ private:
 };
 
 typedef Mat_<3,3,float> RotationMatF;
+typedef Mat_<3,3,float> Matrix3x3F;
 typedef Vector<3,float> EulerF;
 typedef Vector<3,float> TransformF;
 typedef Vector<3,float> RotationVecF;

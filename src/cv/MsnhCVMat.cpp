@@ -378,9 +378,51 @@ Mat &Mat::operator = (const Mat &mat)
     return *this;
 }
 
-bool Mat::operator ==(const Mat &A)
+bool operator!=(const Mat &A, const Mat &B)
 {
-    if(this->_matType!=A.getMatType() || this->_width!=A.getWidth() || this->_height!=A.getHeight() || this->_channel!=A.getChannel())
+    if(A.getMatType()!=B.getMatType() || A.getWidth()!=B.getWidth() || A.getHeight()!=B.getHeight() || A.getChannel()!=B.getChannel())
+    {
+        return true;
+    }
+
+    if(A.isU8Mat())
+    {
+        for (size_t i = 0; i < A.getDataNum(); ++i)
+        {
+            if(A.getData().u8[i] != B.getData().u8[i])
+            {
+                return true;
+            }
+        }
+    }
+
+    if(A.isF32Mat())
+    {
+        for (size_t i = 0; i < A.getDataNum(); ++i)
+        {
+            if(fabsf(A.getData().f32[i] - B.getData().f32[i])>MSNH_F32_EPS)
+            {
+                return true;
+            }
+        }
+    }
+
+    if(A.isF64Mat())
+    {
+        for (size_t i = 0; i < A.getDataNum(); ++i)
+        {
+            if(std::fabs(A.getData().f64[i] - B.getData().f64[i])>MSNH_F64_EPS)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool operator==(const Mat &A, const Mat &B)
+{
+    if(A.getMatType()!=B.getMatType() || A.getWidth()!=B.getWidth() || A.getHeight()!=B.getHeight() || A.getChannel()!=B.getChannel())
     {
         return false;
     }
@@ -389,7 +431,7 @@ bool Mat::operator ==(const Mat &A)
     {
         for (size_t i = 0; i < A.getDataNum(); ++i)
         {
-            if(this->_data.u8[i] != A.getData().u8[i])
+            if(A.getData().u8[i] != B.getData().u8[i])
             {
                 return false;
             }
@@ -400,7 +442,7 @@ bool Mat::operator ==(const Mat &A)
     {
         for (size_t i = 0; i < A.getDataNum(); ++i)
         {
-            if(fabsf(this->_data.f32[i] - A.getData().f32[i])>MSNH_F32_EPS)
+            if(fabsf(A.getData().f32[i] - B.getData().f32[i])>MSNH_F32_EPS)
             {
                 return false;
             }
@@ -411,7 +453,7 @@ bool Mat::operator ==(const Mat &A)
     {
         for (size_t i = 0; i < A.getDataNum(); ++i)
         {
-            if(std::fabs(this->_data.f64[i] - A.getData().f64[i])>MSNH_F64_EPS)
+            if(std::fabs(A.getData().f64[i] - B.getData().f64[i])>MSNH_F64_EPS)
             {
                 return false;
             }
@@ -1942,17 +1984,24 @@ Mat Mat::invert(const DecompType &decompType) const
 
 void Mat::print()
 {
+    std::cout<<"{  width: "<<this->_width<<" , height: "<<this->_height<<" , channels: "<<this->_channel<<" , type: "<<getMatTypeStr()<<std::endl;
+
     if(isF32Mat())
     {
         for (int c = 0; c < this->_channel; ++c)
         {
-            std::cout<<"{"<<std::endl;
+            std::cout<<"    ["<<std::endl;
             for (int i = 0; i < this->_height; ++i)
             {
                 if(i<19|| (i==this->_height-1) )
                 {
                     for (int j = 0; j < this->_width; ++j)
                     {
+                        if(j==0)
+                        {
+                            std::cout<<"        ";
+                        }
+
                         if(j==19)
                         {
                             std::cout<<std::setiosflags(std::ios::left)<<std::setw(6)<<"...";
@@ -1966,28 +2015,31 @@ void Mat::print()
                 }
                 else if(i == 20)
                 {
-                    std::cout<<std::setiosflags(std::ios::left)<<std::setw(6)<<"...";
+                    std::cout<<"        "<<std::setiosflags(std::ios::left)<<std::setw(6)<<"...";
                     std::cout<<std::endl;
                 }
-
             }
-            std::cout<<"},"<<std::endl;
+            std::cout<<"    ],"<<std::endl;
         }
     }
     else if(isF64Mat())
     {
         for (int c = 0; c < this->_channel; ++c)
         {
-            std::cout<<"{"<<std::endl;
+            std::cout<<"    ["<<std::endl;
             for (int i = 0; i < this->_height; ++i)
             {
                 if(i<9|| (i==this->_height-1) )
                 {
                     for (int j = 0; j < this->_width; ++j)
                     {
+                        if(j==0)
+                        {
+                            std::cout<<"        ";
+                        }
+
                         if(j==9)
                         {
-
                             std::cout<<std::setiosflags(std::ios::left)<<std::setw(12)<<"...";
                         }
                         else if(j<9 || j==(this->_width-1) )
@@ -1999,25 +2051,30 @@ void Mat::print()
                 }
                 else if(i == 10)
                 {
-                    std::cout<<std::setiosflags(std::ios::left)<<std::setw(12)<<"...";
+                    std::cout<<"        "<<std::setiosflags(std::ios::left)<<std::setw(12)<<"...";
                     std::cout<<std::endl;
                 }
 
             }
-            std::cout<<"},"<<std::endl;
+            std::cout<<"    ],"<<std::endl;
         }
     }
     else
     {
         for (int c = 0; c < this->_channel; ++c)
         {
-            std::cout<<"{"<<std::endl;
+            std::cout<<"    ["<<std::endl;
             for (int i = 0; i < this->_height; ++i)
             {
                 if(i<19|| (i==this->_height-1) )
                 {
                     for (int j = 0; j < this->_width; ++j)
                     {
+                        if(j==0)
+                        {
+                            std::cout<<"        ";
+                        }
+
                         if(j==19)
                         {
                             std::cout<<std::setiosflags(std::ios::left)<<std::setw(6)<<" ... ";
@@ -2031,15 +2088,170 @@ void Mat::print()
                 }
                 else if(i == 20)
                 {
-                    std::cout<<std::setiosflags(std::ios::left)<<std::setw(6)<<" ... ";
+                    std::cout<<"        "<<std::setiosflags(std::ios::left)<<std::setw(6)<<" ... ";
                     std::cout<<std::endl;
                 }
             }
-            std::cout<<"},"<<std::endl;
+            std::cout<<"    ],"<<std::endl;
         }
     }
+    std::cout<<"}"<<std::endl<<std::endl;
+}
 
-    std::cout<<"width: "<<this->_width<<" , height: "<<this->_height<<" , channels: "<<this->_channel<<std::endl;
+string Mat::toString()
+{
+    std::stringstream buf;
+    buf<<"{  width: "<<this->_width<<" , height: "<<this->_height<<" , channels: "<<this->_channel<<" , type: "<<getMatTypeStr()<<std::endl;
+
+    if(isF32Mat())
+    {
+        for (int c = 0; c < this->_channel; ++c)
+        {
+            buf<<"    ["<<std::endl;
+            for (int i = 0; i < this->_height; ++i)
+            {
+                if(i<19|| (i==this->_height-1) )
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        if(j==0)
+                        {
+                            buf<<"        ";
+                        }
+
+                        if(j==19)
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setw(6)<<"...";
+                        }
+                        else if(j<19 || j==(this->_width-1) )
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setprecision(6)<<std::setw(6)<<std::setiosflags(std::ios::fixed)<<this->_data.f32[c*this->_width*this->_height + i*this->_width + j]<<" ";
+                        }
+                    }
+                    buf<<std::endl;
+                }
+                else if(i == 20)
+                {
+                    buf<<"      "<<std::setiosflags(std::ios::left)<<std::setw(6)<<"...";
+                    buf<<std::endl;
+                }
+
+            }
+            buf<<"    ],"<<std::endl;
+        }
+    }
+    else if(isF64Mat())
+    {
+        for (int c = 0; c < this->_channel; ++c)
+        {
+            buf<<"    ["<<std::endl;
+            for (int i = 0; i < this->_height; ++i)
+            {
+                if(i<9|| (i==this->_height-1) )
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        if(j==0)
+                        {
+                            buf<<"        ";
+                        }
+
+                        if(j==9)
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setw(12)<<"...";
+                        }
+                        else if(j<9 || j==(this->_width-1) )
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setw(12)<<std::setprecision(12)<<std::setiosflags(std::ios::fixed)<<this->_data.f64[c*this->_width*this->_height + i*this->_width + j]<<" ";
+                        }
+                    }
+                    buf<<std::endl;
+                }
+                else if(i == 10)
+                {
+                    buf<<"      "<<std::setiosflags(std::ios::left)<<std::setw(12)<<"...";
+                    buf<<std::endl;
+                }
+
+            }
+            buf<<"    ],"<<std::endl;
+        }
+    }
+    else
+    {
+        for (int c = 0; c < this->_channel; ++c)
+        {
+            buf<<"    ["<<std::endl;
+            for (int i = 0; i < this->_height; ++i)
+            {
+                if(i<19|| (i==this->_height-1) )
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        if(j==0)
+                        {
+                            buf<<"        ";
+                        }
+
+                        if(j==19)
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setw(6)<<" ... ";
+                        }
+                        else if(j<19 || j==(this->_width-1) )
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setw(6)<<static_cast<int>(this->_data.u8[c*this->_width*this->_height + i*this->_width + j])<<std::setw(1)<<" ";
+                        }
+                    }
+                    buf<<std::endl;
+                }
+                else if(i == 20)
+                {
+                    buf<<"      "<<std::setiosflags(std::ios::left)<<std::setw(6)<<" ... ";
+                    buf<<std::endl;
+                }
+            }
+            buf<<"    ],"<<std::endl;
+        }
+    }
+    buf<<"}"<<std::endl<<std::endl;
+    return buf.str();
+}
+
+string Mat::getMatTypeStr()
+{
+    switch (_matType)
+    {
+    case MAT_GRAY_U8:
+        return "MAT_GRAY_U8";
+        break;
+    case MAT_GRAY_F32:
+        return "MAT_GRAY_F32";
+        break;
+    case MAT_GRAY_F64:
+        return "MAT_GRAY_F64";
+        break;
+    case MAT_RGB_U8:
+        return "MAT_RGB_U8";
+        break;
+    case MAT_RGB_F32:
+        return "MAT_RGB_F32";
+        break;
+    case MAT_RGB_F64:
+        return "MAT_RGB_F64";
+        break;
+    case MAT_RGBA_U8:
+        return "MAT_RGBA_U8";
+        break;
+    case MAT_RGBA_F32:
+        return "MAT_RGBA_F32";
+        break;
+    case MAT_RGBA_F64:
+        return "MAT_RGBA_F64";
+        break;
+    default:
+		return "Unknown";
+		break;
+    }
 }
 
 bool Mat::isF32Mat() const
@@ -2307,6 +2519,43 @@ bool Mat::isFuzzyNull() const
             }
         }
         return true;
+    }
+}
+
+bool Mat::isNan() const
+{
+    if(this->isU8Mat())
+    {
+        for (size_t i = 0; i < this->getDataNum(); ++i)
+        {
+            if(std::isnan(static_cast<double>(this->getBytes()[i])))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    else if(this->isF32Mat())
+    {
+        for (size_t i = 0; i < this->getDataNum(); ++i)
+        {
+            if(std::isnan(static_cast<double>(this->getFloat32()[i])))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    else
+    {
+        for (size_t i = 0; i < this->getDataNum(); ++i)
+        {
+            if(std::isnan(this->getFloat64()[i]))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
@@ -2937,7 +3186,7 @@ Mat operator /(const Mat &A, const Mat &B)
             float val = A.getFloat32()[0]/B.getFloat32()[0];
             return Mat(1,1,MAT_GRAY_F32,&val);
         }
-        else if(A.isF64Mat())
+        else/* if(A.isF64Mat())*/
         {
             double val = A.getFloat64()[0]/B.getFloat64()[0];
             return Mat(1,1,MAT_GRAY_F64,&val);
@@ -2977,7 +3226,7 @@ Mat operator /(const double &a, const Mat &A)
             float val = static_cast<float>(a/A.getFloat32()[0]);
             return Mat(1,1,MAT_GRAY_F32,&val);
         }
-        else if(A.isF64Mat())
+        else/* if(A.isF64Mat())*/
         {
             double val = a/A.getFloat64()[0];
             return Mat(1,1,MAT_GRAY_F64,&val);
@@ -3076,6 +3325,13 @@ void QuaternionD::print()
     std::cout<<"[ "<<_q0<<", "<<_q1<<", "<<_q2<<", "<<_q3<<"] "<<std::endl;
 }
 
+string QuaternionD::toString()
+{
+    std::stringstream buf;
+    buf<<"[ "<<_q0<<", "<<_q1<<", "<<_q2<<", "<<_q3<<"] "<<std::endl;
+    return buf.str();
+}
+
 double QuaternionD::operator[](const uint8_t &index)
 {
     if(index >4)
@@ -3116,9 +3372,9 @@ QuaternionD &QuaternionD::operator=(const QuaternionD &q)
 bool QuaternionD::operator==(const QuaternionD &q)
 {
     if(abs(this->_q0-q.getQ0())<MSNH_F64_EPS&&
-       abs(this->_q1-q.getQ1())<MSNH_F64_EPS&&
-       abs(this->_q2-q.getQ2())<MSNH_F64_EPS&&
-       abs(this->_q3-q.getQ3())<MSNH_F64_EPS)
+            abs(this->_q1-q.getQ1())<MSNH_F64_EPS&&
+            abs(this->_q2-q.getQ2())<MSNH_F64_EPS&&
+            abs(this->_q3-q.getQ3())<MSNH_F64_EPS)
     {
         return true;
     }
@@ -3215,6 +3471,13 @@ void QuaternionF::print()
     std::cout<<"[ "<<_q0<<", "<<_q1<<", "<<_q2<<", "<<_q3<<"] "<<std::endl;
 }
 
+string QuaternionF::toString()
+{
+    std::stringstream buf;
+    buf<<"[ "<<_q0<<", "<<_q1<<", "<<_q2<<", "<<_q3<<"] "<<std::endl;
+    return buf.str();
+}
+
 float QuaternionF::operator[](const uint8_t &index)
 {
     if(index >4)
@@ -3255,9 +3518,9 @@ QuaternionF &QuaternionF::operator=(const QuaternionF &q)
 bool QuaternionF::operator ==(const QuaternionF &q)
 {
     if(abs(this->_q0-q.getQ0())<MSNH_F32_EPS&&
-       abs(this->_q1-q.getQ1())<MSNH_F32_EPS&&
-       abs(this->_q2-q.getQ2())<MSNH_F32_EPS&&
-       abs(this->_q3-q.getQ3())<MSNH_F32_EPS)
+            abs(this->_q1-q.getQ1())<MSNH_F32_EPS&&
+            abs(this->_q2-q.getQ2())<MSNH_F32_EPS&&
+            abs(this->_q3-q.getQ3())<MSNH_F32_EPS)
     {
         return true;
     }
@@ -3337,12 +3600,9 @@ Vector3D::Vector3D(const Vector3D &vec)
 
 Vector3D::Vector3D(const Mat &mat)
 {
-    if(mat.getWidth()!=3 || mat.getWidth()!=1 || mat.getChannel()!=1)
+    if(mat.getWidth()!=3 || mat.getHeight()!=1 || mat.getChannel()!=1 || mat.getMatType()!=MAT_GRAY_F64)
     {
-        if(mat.getMatType()!=MAT_GRAY_F64 )
-        {
-            throw Exception(1, "[Vector3D] mat should be: channel==1 step==8 matType==MAT_GRAY_F64 w->3 , h->1" , __FILE__, __LINE__,__FUNCTION__);
-        }
+        throw Exception(1, "[Vector3D] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
     }
 
     release();
@@ -3383,12 +3643,9 @@ Vector3D &Vector3D::operator=(const Vector3D &vec)
 
 Vector3D &Vector3D::operator=(const Mat &mat)
 {
-    if(mat.getWidth()!=3 || mat.getWidth()!=1 || mat.getChannel()!=1)
+    if(mat.getWidth()!=3 || mat.getHeight()!=1 || mat.getChannel()!=1 || mat.getMatType()!=MAT_GRAY_F64)
     {
-        if(mat.getMatType()!=MAT_GRAY_F64 )
-        {
-            throw Exception(1, "[Vector3D] mat should be: channel==1 step==8 matType==MAT_GRAY_F64 w->3 , h->1" , __FILE__, __LINE__,__FUNCTION__);
-        }
+        throw Exception(1, "[Vector3D] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
     }
     if(this!=&mat)
     {
@@ -3449,12 +3706,9 @@ Vector3F::Vector3F(const Vector3F &vec)
 
 Vector3F::Vector3F(const Mat &mat)
 {
-    if(mat.getWidth()!=3 || mat.getWidth()!=1 || mat.getChannel()!=1)
+    if(mat.getWidth()!=3 || mat.getHeight()!=1 || mat.getChannel()!=1 || mat.getMatType()!=MAT_GRAY_F32)
     {
-        if(mat.getMatType()!=MAT_GRAY_F32 )
-        {
-            throw Exception(1, "[Vector3F] mat should be: channel==1 step==4 matType==MAT_GRAY_F32 w->3 , h->1" , __FILE__, __LINE__,__FUNCTION__);
-        }
+        throw Exception(1, "[Vector3D] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
     }
 
     release();
@@ -3495,12 +3749,9 @@ Vector3F &Vector3F::operator=(const Vector3F &vec)
 
 Vector3F &Vector3F::operator=(const Mat &mat)
 {
-    if(mat.getWidth()!=3 || mat.getWidth()!=1 || mat.getChannel()!=1)
+    if(mat.getWidth()!=3 || mat.getHeight()!=1 || mat.getChannel()!=1 || mat.getMatType()!=MAT_GRAY_F32)
     {
-        if(mat.getMatType()!=MAT_GRAY_F32 )
-        {
-            throw Exception(1, "[Vector3F] mat should be: channel==1 step==4 matType==MAT_GRAY_F32 w->3 , h->1" , __FILE__, __LINE__,__FUNCTION__);
-        }
+        throw Exception(1, "[Vector3D] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
     }
     if(this!=&mat)
     {
