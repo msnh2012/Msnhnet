@@ -34,9 +34,9 @@ bool Geometry::isRealRotMat(Mat &R)
 RotationMatD Geometry::euler2RotMat(const EulerD &euler, const RotSequence &seq)
 {
 
-    double a = euler.getVal(0);
-    double b = euler.getVal(1);
-    double c = euler.getVal(2);
+    double a = euler[0];
+    double b = euler[1];
+    double c = euler[2];
 
     double sina = sin(a); 
 
@@ -95,9 +95,9 @@ RotationMatD Geometry::euler2RotMat(const EulerD &euler, const RotSequence &seq)
 RotationMatF Geometry::euler2RotMat(const EulerF &euler, const RotSequence &seq)
 {
 
-    float a = euler.getVal(0);
-    float b = euler.getVal(1);
-    float c = euler.getVal(2);
+    float a = euler[0];
+    float b = euler[1];
+    float c = euler[2];
 
     float sina = sinf(a); 
 
@@ -155,9 +155,9 @@ RotationMatF Geometry::euler2RotMat(const EulerF &euler, const RotSequence &seq)
 
 QuaternionD Geometry::euler2Quaternion(const EulerD &euler, const RotSequence &seq)
 {
-    double a = euler.getVal(0)/2.0;
-    double b = euler.getVal(1)/2.0;
-    double c = euler.getVal(2)/2.0;
+    double a = euler[0]/2.0;
+    double b = euler[1]/2.0;
+    double c = euler[2]/2.0;
 
     double sina = sin(a); 
 
@@ -197,9 +197,9 @@ QuaternionD Geometry::euler2Quaternion(const EulerD &euler, const RotSequence &s
 
 QuaternionF Geometry::euler2Quaternion(const EulerF &euler, const RotSequence &seq)
 {
-    float a = euler.getVal(0)/2.0f;
-    float b = euler.getVal(1)/2.0f;
-    float c = euler.getVal(2)/2.0f;
+    float a = euler[0]/2.0f;
+    float b = euler[1]/2.0f;
+    float c = euler[2]/2.0f;
 
     float sina = sinf(a); 
 
@@ -335,9 +335,7 @@ EulerD Geometry::rotMat2Euler(const RotationMatD &rotMat, const RotSequence &seq
         break;
     }
 
-    EulerD euler;
-    euler.setVal({x,y,z});
-    return euler;
+    return EulerD({x,y,z});
 }
 
 EulerF Geometry::rotMat2Euler(const RotationMatF &rotMat, const RotSequence &seq)
@@ -438,9 +436,7 @@ EulerF Geometry::rotMat2Euler(const RotationMatF &rotMat, const RotSequence &seq
         break;
     }
 
-    EulerF euler;
-    euler.setVal({x,y,z});
-    return euler;
+    return EulerF({x,y,z});
 }
 
 EulerD Geometry::quaternion2Euler(const QuaternionD &q, const RotSequence &seq)
@@ -628,20 +624,17 @@ QuaternionF Geometry::rotVec2Quaternion(const RotationVecF &rotVec)
 RotationVecD Geometry::quaternion2RotVec(const QuaternionD &q)
 {
     double theta = 2*acos(q.getQ0());
-    RotationVecD vec;
 
     if(theta==0)
     {
-        vec.setVal({0,0,0});
-        return vec;
+        return RotationVecD({0,0,0});
     }
 
     double kx    = q.getQ1()/std::sin(0.5*theta);
     double ky    = q.getQ2()/std::sin(0.5*theta);
     double kz    = q.getQ3()/std::sin(0.5*theta);
 
-    vec.setVal({kx*theta,ky*theta,kz*theta});
-    return vec;
+    return RotationVecD({kx*theta,ky*theta,kz*theta});
 }
 
 RotationVecF Geometry::quaternion2RotVec(const QuaternionF &q)
@@ -651,16 +644,14 @@ RotationVecF Geometry::quaternion2RotVec(const QuaternionF &q)
 
     if(theta==0)
     {
-        vec.setVal({0,0,0});
-        return vec;
+        return RotationVecF({0,0,0});
     }
 
     float kx    = q.getQ1()/sinf(0.5f*theta);
     float ky    = q.getQ2()/sinf(0.5f*theta);
     float kz    = q.getQ3()/sinf(0.5f*theta);
 
-    vec.setVal({kx*theta,ky*theta,kz*theta});
-    return vec;
+    return RotationVecF({kx*theta,ky*theta,kz*theta});
 }
 
 RotationMatD Geometry::rotVec2RotMat(const RotationVecD &rotVec)
@@ -860,13 +851,11 @@ RotationMatD Matrix4x4D::getRotationMat() const
 
 TransformD Matrix4x4D::getTransform() const
 {
-    TransformD trans;
-    trans.setVal({
-                     this->getValAtRowCol(0,3),
-                     this->getValAtRowCol(1,3),
-                     this->getValAtRowCol(2,3)
-                 });
-    return trans;
+    return TransformD({
+                          this->getValAtRowCol(0,3),
+                          this->getValAtRowCol(1,3),
+                          this->getValAtRowCol(2,3)
+                      });
 }
 
 void Matrix4x4D::setRotationMat(const RotationMatD &rotMat)
@@ -913,9 +902,9 @@ void Matrix4x4D::rotate(const double &angle, const Vector3D &vector)
 {
     Vector3D vec = vector;
     vec.normalize();
-    double x = vec.getVal(0);
-    double y = vec.getVal(1);
-    double z = vec.getVal(2);
+    double x = vec[0];
+    double y = vec[1];
+    double z = vec[2];
 
     RotationMatD rotMat = Geometry::euler2RotMat(EulerD({x*angle,y*angle,z*angle}),RotSequence::ROT_ZYX);
     this->setRotationMat(rotMat);
@@ -1032,32 +1021,32 @@ void Matrix4x4D::lookAt(const Vector3D &eye, const Vector3D &center, const Vecto
     this->getFloat64()[9]  = -forward[1];
     this->getFloat64()[10] = -forward[2];
 
-    this->getFloat64()[3]  = -(side*eye).getFloat64()[0];
-    this->getFloat64()[7]  = -(upVector*eye).getFloat64()[0];
-    this->getFloat64()[11] = (forward*eye).getFloat64()[0];
+    this->getFloat64()[3]  = -Vector3D::dotProduct(side,eye);
+    this->getFloat64()[7]  = -Vector3D::dotProduct(upVector,eye);
+    this->getFloat64()[11] = Vector3D::dotProduct(forward,eye);
 }
 
 Vector3D Matrix4x4D::mulVec3(const Vector3D &vec3)
 {
     double x = vec3[0]*this->getFloat64()[0] +
-               vec3[1]*this->getFloat64()[1] +
-               vec3[2]*this->getFloat64()[2] +
-               this->getFloat64()[3];
+            vec3[1]*this->getFloat64()[1] +
+            vec3[2]*this->getFloat64()[2] +
+            this->getFloat64()[3];
 
     double y = vec3[0]*this->getFloat64()[4] +
-               vec3[1]*this->getFloat64()[5] +
-               vec3[2]*this->getFloat64()[6] +
-               this->getFloat64()[7];
+            vec3[1]*this->getFloat64()[5] +
+            vec3[2]*this->getFloat64()[6] +
+            this->getFloat64()[7];
 
     double z = vec3[0]*this->getFloat64()[8] +
-               vec3[1]*this->getFloat64()[9] +
-               vec3[2]*this->getFloat64()[10] +
-               this->getFloat64()[11];
+            vec3[1]*this->getFloat64()[9] +
+            vec3[2]*this->getFloat64()[10] +
+            this->getFloat64()[11];
 
     double w = vec3[0]*this->getFloat64()[12] +
-               vec3[1]*this->getFloat64()[13] +
-               vec3[2]*this->getFloat64()[14] +
-               this->getFloat64()[15];
+            vec3[1]*this->getFloat64()[13] +
+            vec3[2]*this->getFloat64()[14] +
+            this->getFloat64()[15];
 
     if(w == 1.0)
     {
@@ -1219,13 +1208,11 @@ RotationMatF Matrix4x4F::getRotationMat() const
 
 TransformF Matrix4x4F::getTransform() const
 {
-    TransformF trans;
-    trans.setVal({
-                     this->getValAtRowCol(0,3),
-                     this->getValAtRowCol(1,3),
-                     this->getValAtRowCol(2,3)
-                 });
-    return trans;
+    return TransformF({
+                          this->getValAtRowCol(0,3),
+                          this->getValAtRowCol(1,3),
+                          this->getValAtRowCol(2,3)
+                      });
 }
 
 void Matrix4x4F::setRotationMat(const RotationMatF &rotMat)
@@ -1272,9 +1259,9 @@ void Matrix4x4F::rotate(const float &angle, const Vector3F &vector)
 {
     Vector3F vec = vector;
     vec.normalize();
-    float x = vec.getVal(0);
-    float y = vec.getVal(1);
-    float z = vec.getVal(2);
+    float x = vec[0];
+    float y = vec[1];
+    float z = vec[2];
 
     RotationMatF rotMat = Geometry::euler2RotMat(EulerF({x*angle,y*angle,z*angle}),RotSequence::ROT_ZYX);
     this->setRotationMat(rotMat);
@@ -1390,32 +1377,33 @@ void Matrix4x4F::lookAt(const Vector3F &eye, const Vector3F &center, const Vecto
     this->getFloat32()[9]  = -forward[1];
     this->getFloat32()[10] = -forward[2];
 
-    this->getFloat32()[3]  = -(side*eye).getFloat32()[0];
-    this->getFloat32()[7]  = -(upVector*eye).getFloat32()[0];
-    this->getFloat32()[11] = (forward*eye).getFloat32()[0];
+    this->getFloat32()[3]  = -Vector3F::dotProduct(side,eye);
+    this->getFloat32()[7]  = -Vector3F::dotProduct(upVector,eye);
+    this->getFloat32()[11] = Vector3F::dotProduct(forward,eye);
+
 }
 
 Vector3F Matrix4x4F::mulVec3(const Vector3F &vec3)
 {
     float x = vec3[0]*this->getFloat32()[0] +
-              vec3[1]*this->getFloat32()[1] +
-              vec3[2]*this->getFloat32()[2] +
-              this->getFloat32()[3];
+            vec3[1]*this->getFloat32()[1] +
+            vec3[2]*this->getFloat32()[2] +
+            this->getFloat32()[3];
 
     float y = vec3[0]*this->getFloat32()[4] +
-              vec3[1]*this->getFloat32()[5] +
-              vec3[2]*this->getFloat32()[6] +
-              this->getFloat32()[7];
+            vec3[1]*this->getFloat32()[5] +
+            vec3[2]*this->getFloat32()[6] +
+            this->getFloat32()[7];
 
     float z = vec3[0]*this->getFloat32()[8] +
-              vec3[1]*this->getFloat32()[9] +
-              vec3[2]*this->getFloat32()[10] +
-              this->getFloat32()[11];
+            vec3[1]*this->getFloat32()[9] +
+            vec3[2]*this->getFloat32()[10] +
+            this->getFloat32()[11];
 
     float w = vec3[0]*this->getFloat32()[12] +
-              vec3[1]*this->getFloat32()[13] +
-              vec3[2]*this->getFloat32()[14] +
-              this->getFloat32()[15];
+            vec3[1]*this->getFloat32()[13] +
+            vec3[2]*this->getFloat32()[14] +
+            this->getFloat32()[15];
 
     if(w == 1.0f)
     {

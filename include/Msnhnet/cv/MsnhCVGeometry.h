@@ -2,6 +2,7 @@
 #define MSNHCVGEOMTRY_H
 
 #include "Msnhnet/cv/MsnhCVMat.h"
+#include "Msnhnet/cv/MsnhCVVector.h"
 #include "Msnhnet/cv/MsnhCVMatOp.h"
 
 #ifndef M_PI
@@ -15,10 +16,10 @@
 namespace Msnhnet
 {
 
-double deg2rad(const double &val);
-float  deg2rad(const float  &val);
-double rad2deg(const double &val);
-float  rad2deg(const float  &val);
+MsnhNet_API double deg2rad(const double &val);
+MsnhNet_API float  deg2rad(const float  &val);
+MsnhNet_API double rad2deg(const double &val);
+MsnhNet_API float  rad2deg(const float  &val);
 
 class MsnhNet_API Geometry
 {

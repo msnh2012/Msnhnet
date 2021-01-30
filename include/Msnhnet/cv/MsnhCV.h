@@ -8,5 +8,6 @@
 #endif
 #include "Msnhnet/cv/MsnhCVGeometry.h"
 #include "Msnhnet/cv/MsnhCVVideo.h"
+#include "Msnhnet/cv/MsnhCVVector.h"
 #endif 
 

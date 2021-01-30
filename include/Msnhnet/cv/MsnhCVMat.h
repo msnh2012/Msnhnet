@@ -13,8 +13,7 @@
 
 namespace Msnhnet
 {
-#define MSNH_F32_EPS 1E-6
-#define MSNH_F64_EPS 1E-15
+
 class MsnhNet_API Mat
 {
 public:
@@ -27,7 +26,7 @@ public:
     ~Mat ();
 
     template<typename T>
-    T getPixel(const Vec2I32 &pos) const
+    inline T getPixel(const Vec2I32 &pos) const
     {
         int array   = DataType<T>::array;
         int fmt     = DataType<T>::fmt;
@@ -58,13 +57,13 @@ public:
     }
 
     template<typename T>
-    T getPixelAtRowCol(const Vec2I32 &pos)
+    inline T getPixelAtRowCol(const Vec2I32 &pos)
     {
         return getPixel<T>({pos.x2,pos.x1});
     }
 
     template<typename T>
-    void setPixel(const Vec2I32 &pos, const T &val)
+    inline void setPixel(const Vec2I32 &pos, const T &val)
     {
         int array   = DataType<T>::array;
         int fmt     = DataType<T>::fmt;
@@ -92,7 +91,7 @@ public:
     }
 
     template<typename T>
-    void fillPixel(const T &val)
+    inline void fillPixel(const T &val)
     {
         int array   = DataType<T>::array;
         int fmt     = DataType<T>::fmt;
@@ -124,7 +123,7 @@ public:
     }
 
     template<typename T>
-    static void createMat(const int &width, const int &height, const int &channel, Mat &mat, T* data=nullptr)
+    inline static void createMat(const int &width, const int &height, const int &channel, Mat &mat, T* data=nullptr)
     {
         if(!std::is_same<T,uint8_t>::value && !std::is_same<T,float>::value && !std::is_same<T,double>::value)
         {
@@ -179,7 +178,7 @@ public:
     }
 
     template<typename T>
-    Mat getCol_(const int& col)
+    inline Mat getCol_(const int& col)
     {
         if(col <0)
         {
@@ -200,7 +199,7 @@ public:
     }
 
     template<typename T>
-    void setCol_(const int& col, const Mat& mat)
+    inline void setCol_(const int& col, const Mat& mat)
     {
         if(col <0)
         {
@@ -225,7 +224,7 @@ public:
     }
 
     template<typename T>
-    Mat getRow_(const int& row)
+    inline Mat getRow_(const int& row)
     {
         if(row <0)
         {
@@ -248,7 +247,7 @@ public:
     }
 
     template<typename T>
-    void setRow_(const int& row, const Mat& mat)
+    inline void setRow_(const int& row, const Mat& mat)
     {
         if(row <0)
         {
@@ -428,6 +427,8 @@ public:
 
     static Mat eleWiseMul(const Mat &A, const Mat &B);
 
+    static double dotProduct(const Mat &A, const Mat &B);
+
     bool isNull() const;
 
     bool isFuzzyNull() const;
@@ -444,6 +445,7 @@ public:
     MsnhNet_API friend Mat operator+ (const Mat &A, const double &a);
 
     MsnhNet_API friend Mat operator- (const Mat &A, const Mat &B);
+    MsnhNet_API friend Mat operator- (const Mat &A);
     MsnhNet_API friend Mat operator- (const double &a, const Mat &A);
     MsnhNet_API friend Mat operator- (const Mat &A, const double &a);
 
@@ -454,6 +456,18 @@ public:
     MsnhNet_API friend Mat operator/ (const Mat &A, const Mat &B);
     MsnhNet_API friend Mat operator/ (const double &a, const Mat &A);
     MsnhNet_API friend Mat operator/ (const Mat &A, const double &a);
+
+    Mat &operator +=(const Mat &A);
+    Mat &operator +=(const double &a);
+
+    Mat &operator -=(const Mat &A);
+    Mat &operator -=(const double &a);
+
+    Mat &operator *=(const Mat &A);
+    Mat &operator *=(const double &a);
+
+    Mat &operator /=(const Mat &A);
+    Mat &operator /=(const double &a);
 protected:
 
     int _width          = 0;
@@ -481,7 +495,7 @@ public:
         this->setVal(val);
     }
 
-   static MatType getMatTypeFromT()
+   inline static MatType getMatTypeFromT()
    {
         if(std::is_same<T,double>::value)
         {
@@ -501,7 +515,7 @@ public:
         }
    }
 
-    void setVal(const std::vector<T> &val)
+    inline void setVal(const std::vector<T> &val)
     {
         if(val.size()!=this->getDataNum())
         {
@@ -511,7 +525,7 @@ public:
         memcpy(this->getBytes(), val.data(),val.size()*sizeof(T));
     }
 
-    void setVal(const size_t &index, const T &val)
+    inline void setVal(const size_t &index, const T &val)
     {
         if(index>getDataNum()-1)
         {
@@ -521,7 +535,7 @@ public:
         *((T*)this->getBytes()+index) = val;
     }
 
-    T getVal(const size_t &index) const
+    inline T getVal(const size_t &index) const
     {
         if(index>getDataNum()-1)
         {
@@ -530,7 +544,7 @@ public:
         return *((T*)this->getBytes()+index);
     }
 
-    T getVal(const int& width, const int& height) const
+    inline T getVal(const int& width, const int& height) const
     {
         size_t index = height*this->_width + width;
         if(index > getDataNum()-1)
@@ -541,7 +555,7 @@ public:
         return *((T*)this->getBytes()+index);
     }
 
-    T getValAtRowCol(const int& row, const int& col) const
+    inline T getValAtRowCol(const int& row, const int& col) const
     {
         size_t index = row*this->_width + col;
         if(index > getDataNum()-1)
@@ -551,7 +565,7 @@ public:
         return *((T*)this->getBytes()+index);
     }
 
-    void setValAtRowCol(const int& row, const int& col, const T& val)
+    inline void setValAtRowCol(const int& row, const int& col, const T& val)
     {
         size_t index = row*this->_width + col;
         if(index > getDataNum()-1)
@@ -561,7 +575,7 @@ public:
         *((T*)this->getBytes()+index) = val;
     }
 
-    Mat_(const Mat_ &mat) 
+    inline Mat_(const Mat_ &mat) 
 
     {
         release();
@@ -579,7 +593,7 @@ public:
         }
     }
 
-    Mat_(const Mat &mat)  
+    inline Mat_(const Mat &mat)  
 
     {
         if(mat.getWidth()!=w || mat.getHeight()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
@@ -602,7 +616,7 @@ public:
         }
     }
 
-    Mat_& operator= (const Mat_ &mat)
+    inline Mat_& operator= (const Mat_ &mat)
     {
         if(this!=&mat)
         {
@@ -623,7 +637,7 @@ public:
         return *this;
     }
 
-    Mat_& operator= (const Mat &mat)
+    inline Mat_& operator= (const Mat &mat)
     {
         if(mat.getWidth()!=w || mat.getWidth()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
@@ -648,27 +662,27 @@ public:
         return *this;
     }
 
-    Mat_ getCol(const int &col) const
+    inline Mat_ getCol(const int &col) const
     {
         return this->getCol_<T>(col);
     }
 
-    Mat_ getRow(const int &row) const
+    inline Mat_ getRow(const int &row) const
     {
         return this->getRow_<T>(row);
     }
 
-    void setCol(const int &col, const Mat_<h,1,T> &mat)
+    inline void setCol(const int &col, const Mat_<h,1,T> &mat)
     {
         this->setCol_<T>(col,mat);
     }
 
-    void setRow(const int &row, const Mat_<w,1,T> &mat)
+    inline void setRow(const int &row, const Mat_<w,1,T> &mat)
     {
         this->setRow_<T>(row,mat);
     }
 
-    static Mat_ eye()
+    inline static Mat_ eye()
     {
         if(w==h)
         {
@@ -680,382 +694,30 @@ public:
         }
     }
 
-};
-
-template<int w, typename T>
-class MsnhNet_API Vector :public Mat_<w,1,T>
-{
-public:
-
-    Vector():Mat_<w,1,T>()
+    inline T operator[] (const int &index) const
     {
-
+        if(index>getDataNum()-1)
+        {
+            throw Exception(1,"[Mat_]: index out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
+        return *((T*)this->getBytes()+index);
     }
 
-    Vector(const std::vector<T> &val):Mat_<w,1,T>(val)
+    inline T &operator[] (const int &index)
     {
-
+        if(index>getDataNum()-1)
+        {
+            throw Exception(1,"[Mat_]: index out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
+        return *((T*)this->getBytes()+index);
     }
 
-    Vector(const Vector &vec)
-
-    {
-        this->release();
-        this->_channel  = vec.getChannel();
-        this->_width    = vec.getWidth();
-        this->_height   = vec.getHeight();
-        this->_step     = vec.getStep();
-        this->_matType  = vec.getMatType();
-
-        if(vec.getBytes()!=nullptr)
-        {
-            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-            memcpy(u8Ptr, vec.getBytes(), this->_width*this->_height*this->_step);
-            this->_data.u8 =u8Ptr;
-        }
-    }
-
-    Vector(const Mat &mat) 
-
-    {
-        if(mat.getWidth()!=w || mat.getWidth()!=1 || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
-        {
-            throw Exception(1, "[Vector] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
-        }
-
-        this->release();
-        this->_channel  = mat.getChannel();
-        this->_width    = mat.getWidth();
-        this->_height   = mat.getHeight();
-        this->_step     = mat.getStep();
-        this->_matType  = mat.getMatType();
-
-        if(mat.getBytes()!=nullptr)
-        {
-            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-            memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
-            this->_data.u8 =u8Ptr;
-        }
-    }
-
-    Vector& operator= (const Vector &vec)
-    {
-        if(this!=&vec)
-        {
-            this->release();
-            this->_channel  = vec._channel;
-            this->_width    = vec._width;
-            this->_height   = vec._height;
-            this->_step     = vec._step;
-            this->_matType  = vec._matType;
-
-            if(vec._data.u8!=nullptr)
-            {
-                uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-                memcpy(u8Ptr, vec._data.u8, this->_width*this->_height*this->_step);
-                this->_data.u8 =u8Ptr;
-            }
-        }
-        return *this;
-    }
-
-    Vector& operator= (const Mat &mat)
-    {
-        if(mat.getWidth()!=w || mat.getWidth()!=1 || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
-        {
-            throw Exception(1, "[Vector] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
-        }
-        if(this!=&mat)
-        {
-            this->release();
-            this->_channel  = mat.getChannel();
-            this->_width    = mat.getWidth();
-            this->_height   = mat.getHeight();
-            this->_step     = mat.getStep();
-            this->_matType  = mat.getMatType();
-
-            if(mat.getBytes()!=nullptr)
-            {
-                uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-                memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
-                this->_data.u8 =u8Ptr;
-            }
-        }
-        return *this;
-    }
-
-    T operator[] (const int &index) const
-    {
-        return this->getVal(index);
-    }
-
-    void normalize()
-    {
-        if(this->isU8Mat())
-        {
-            throw Exception(1, "[Vector] u8 normalize is not supported!", __FILE__, __LINE__,__FUNCTION__);
-        }
-        else
-        {
-            if(this->isF32Mat())
-            {
-                float len = 0;
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:len)
-#endif
-                for (int i = 0; i < w; ++i)
-                {
-                    len += this->_data.f32[i]*this->_data.f32[i];
-                }
-
-                if(fabsf(len - 1.0f) < MSNH_F32_EPS || fabsf(len) < MSNH_F32_EPS)
-                {
-                    return;
-                }
-
-                len = sqrtf(len);
-
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
-#endif
-                for (int i = 0; i < w; ++i)
-                {
-                    this->_data.f32[i] = this->_data.f32[i] / len;
-                }
-            }
-            else if(this->isF64Mat())
-            {
-                double len = 0;
-
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:len)
-#endif
-                for (int i = 0; i < w; ++i)
-                {
-                    len += this->_data.f64[i]*this->_data.f64[i];
-                }
-
-                if(std::fabs(len - 1.0) < MSNH_F64_EPS || std::fabs(len) < MSNH_F64_EPS)
-                {
-                    return;
-                }
-
-                len = std::sqrt(len);
-
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
-#endif
-                for (int i = 0; i < w; ++i)
-                {
-                    this->_data.f64[i] = this->_data.f64[i]/len;
-                }
-            }
-        }
-    }
-
-    Vector normalized() const
-    {
-        if(this->isU8Mat())
-        {
-            throw Exception(1, "[Vector] u8 normalize is not supported!", __FILE__, __LINE__,__FUNCTION__);
-        }
-        else
-        {
-            if(this->isF32Mat())
-            {
-                float len = 0;
-
-                Vector vec;
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:len)
-#endif
-                for (int i = 0; i < w; ++i)
-                {
-                    len += this->_data.f32[i]*this->_data.f32[i];
-                }
-
-                if(fabsf(len - 1.0f) < MSNH_F32_EPS)
-                {
-                    return *this;
-                }
-
-                if(fabsf(len) < MSNH_F32_EPS)
-                {
-                    return vec;
-                }
-
-                len = sqrtf(len);
-
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
-#endif
-                for (int i = 0; i < w; ++i)
-                {
-                    vec.getData().f32[i] = this->_data.f32[i] / len;
-                }
-
-                return vec;
-            }
-            else if(this->isF64Mat())
-            {
-                double len = 0;
-
-                Vector vec;
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:len)
-#endif
-                for (int i = 0; i < w; ++i)
-                {
-                    len += this->_data.f64[i]*this->_data.f64[i];
-                }
-
-                if(std::fabs(len - 1.0) < MSNH_F64_EPS)
-                {
-                    return *this;
-                }
-
-                if(std::fabs(len) < MSNH_F64_EPS)
-                {
-                    return vec;
-                }
-
-                len = std::sqrt(len);
-
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
-#endif
-                for (int i = 0; i < w; ++i)
-                {
-                    vec.getData().f64[i] = this->_data.f64[i]/len;
-                }
-
-                return vec;
-            }
-        }
-    }
-
-    inline double length() const
-    {
-        double len = 0;
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:len)
-#endif
-        for (int i = 0; i < w; ++i)
-        {
-            len += this->getVal(i)*this->getVal(i);
-        }
-        return std::sqrt(len);
-    }
-
-    inline double lengthSquared() const
-    {
-        double len = 0;
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:len)
-#endif
-        for (int i = 0; i < w; ++i)
-        {
-            len += this->getVal(i)*this->getVal(i);
-        }
-        return len;
-    }
-
-    /* 点到点之间的距离
-     * .eg ^
-     *     |
-     *   A x       --> -->    --->
-     *     | \     OA - OB  = |BA|
-     *     |   \
-     *   O |-----x-->
-     *           B
-     */
-    inline double distanceToPoint(const Vector& point) const
-    {
-        return Vector(*this - point).length();
-    }
-
-    /* 点到线之间的距离
-     * .eg ^
-     *   \ |
-     *     x      x(A)
-     *     | \
-     *     |   x (point)
-     *     |     \
-     *   O |-------x--> B
-     *               \(direction)
-     *                 \LINE(point + direction)
-     */
-    inline double distanceToLine(const Vector& point, const Vector& direction) const
-    {
-        if(direction.getWidth()<2 || point.getWidth()<2)
-        {
-            throw Exception(1,"[Vector] only 2 dims+ is supported!",__FILE__,__LINE__,__FUNCTION__);
-        }
-
-        if(direction.isFuzzyNull())
-        {
-            return Vector(*this - point).length();
-        }
-
-        Vector p = point + Vector::eleWiseMul((*this - point)*direction,direction);
-        return (*this - p).length();
-    }
-
-    /*          点到线之间的距离
-     *          .eg ^
-     *          / \ |      *(normal)
-     *         /    x    *
-     *        /     | \
-     *       /      |   \    x(A)
-     *       \     *|     \
-     *         \  O |-------x--> B
-     *         * \ /       /
-     *        *   /\      /
-     *           /   \   / (plane)
-     *          /      \/
-     *
-     */
-    inline double distanceToPlane(const Vector& plane, const Vector& normal) const
-    {
-        if(plane.getWidth()<3 || normal.getWidth()<3)
-        {
-            throw Exception(1,"[Vector] only 3 dims+ is supported!",__FILE__,__LINE__,__FUNCTION__);
-        }
-
-        return (*this-plane)*normal;
-    }
 };
 
 typedef Mat_<3,3,double> RotationMatD;
 typedef Mat_<3,3,double> Matrix3x3D;
-typedef Vector<3,double> EulerD;
-typedef Vector<3,double> TransformD;
-typedef Vector<3,double> RotationVecD;
-typedef Vector<2,double> Vector2D;
-typedef Vector<4,double> Vector4D;
-
-class MsnhNet_API Vector3D : public Vector<3,double>
-{
-public:
-    Vector3D(){}
-
-    Vector3D(const std::vector<double> &val):Vector<3,double>(val){}
-
-    Vector3D(const Vector3D &vec);
-
-    Vector3D(const Mat &mat);  
-
-    Vector3D& operator= (const Vector3D &vec);
-
-    Vector3D& operator= (const Mat &mat);
-
-    static Vector3D crossProduct(const Vector3D &v1, const Vector3D &v2);
-
-    static Vector3D normal(const Vector3D &v1, const Vector3D &v2);
-
-    static Vector3D normal(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3);
-
-};
+typedef Mat_<3,3,float> RotationMatF;
+typedef Mat_<3,3,float> Matrix3x3F;
 
 class MsnhNet_API QuaternionD
 {
@@ -1142,36 +804,6 @@ private:
     float _q3 = 0;
 };
 
-typedef Mat_<3,3,float> RotationMatF;
-typedef Mat_<3,3,float> Matrix3x3F;
-typedef Vector<3,float> EulerF;
-typedef Vector<3,float> TransformF;
-typedef Vector<3,float> RotationVecF;
-typedef Vector<2,float> Vector2F;
-typedef Vector<4,float> Vector4F;
-
-class MsnhNet_API Vector3F : public Vector<3,float>
-{
-public:
-    Vector3F(){}
-
-    Vector3F(const std::vector<float> &val):Vector<3,float>(val){}
-
-    Vector3F(const Vector3F &vec);
-
-    Vector3F(const Mat &mat);  
-
-    Vector3F& operator= (const Vector3F &vec);
-
-    Vector3F& operator= (const Mat &mat);
-
-    static Vector3F crossProduct(const Vector3F &v1, const Vector3F &v2);
-
-    static Vector3F normal(const Vector3F &v1, const Vector3F &v2);
-
-    static Vector3F normal(const Vector3F &v1, const Vector3F &v2, const Vector3F &v3);
-
-};
 }
 
 #endif 

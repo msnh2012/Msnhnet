@@ -378,6 +378,54 @@ Mat &Mat::operator = (const Mat &mat)
     return *this;
 }
 
+Mat &Mat::operator +=(const Mat &A)
+{
+    *this = *this + A;
+    return *this;
+}
+
+Mat &Mat::operator +=(const double &a)
+{
+    *this = *this + a;
+    return *this;
+}
+
+Mat &Mat::operator -=(const Mat &A)
+{
+    *this = *this - A;
+    return *this;
+}
+
+Mat &Mat::operator -=(const double &a)
+{
+    *this = *this - a;
+    return *this;
+}
+
+Mat &Mat::operator *=(const Mat &A)
+{
+    *this = *this * A;
+    return *this;
+}
+
+Mat &Mat::operator *=(const double &a)
+{
+    *this = *this * a;
+    return *this;
+}
+
+Mat &Mat::operator /=(const Mat &A)
+{
+    *this = *this / A;
+    return *this;
+}
+
+Mat &Mat::operator /=(const double &a)
+{
+    *this = *this / a;
+    return *this;
+}
+
 bool operator!=(const Mat &A, const Mat &B)
 {
     if(A.getMatType()!=B.getMatType() || A.getWidth()!=B.getWidth() || A.getHeight()!=B.getHeight() || A.getChannel()!=B.getChannel())
@@ -2463,6 +2511,68 @@ Mat Mat::eleWiseMul(const Mat &A, const Mat &B)
     return tmpMat;
 }
 
+double Mat::dotProduct(const Mat &A, const Mat &B)
+{
+    if(A.isEmpty())
+    {
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(B.isEmpty())
+    {
+        throw Exception(1,"[Mat]: Mat B is empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
+       A._width != B._width || A._height != B._height)
+    {
+        throw Exception(1,"[Mat]: properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    size_t dataN = A.getDataNum();
+
+    if(A.isU8Mat())
+    {
+        uint8_t finalVal = 0;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+#endif
+        for (int i = 0; i < dataN; ++i)
+        {
+            int mul = A._data.u8[i] * B._data.u8[i];
+
+            finalVal += mul;
+        }
+        return finalVal;
+    }
+    else if(A.isF32Mat())
+    {
+        float finalVal = 0;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+#endif
+        for (int i = 0; i < dataN; ++i)
+        {
+            float mul= A._data.f32[i] * B._data.f32[i];
+            finalVal += mul;
+        }
+        return finalVal;
+    }
+    else if(A.isF64Mat())
+    {
+        double finalVal = 0;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+#endif
+        for (int i = 0; i < dataN; ++i)
+        {
+            double mul = A._data.f64[i] * B._data.f64[i];
+            finalVal += mul;
+        }
+        return finalVal;
+    }
+}
+
 bool Mat::isNull() const
 {
     if(this == nullptr)
@@ -2727,6 +2837,16 @@ Mat operator +(const Mat &A, const double &a)
         }
     }
     return tmpMat;
+}
+
+Mat operator-(const Mat &A)
+{
+    if(A.isEmpty())
+    {
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    return 0-A;
 }
 
 Mat operator -(const Mat &A, const Mat &B)
@@ -3579,218 +3699,6 @@ float QuaternionF::getQ2() const
 float QuaternionF::getQ3() const
 {
     return _q3;
-}
-
-Vector3D::Vector3D(const Vector3D &vec)
-{
-    release();
-    this->_channel  = vec.getChannel();
-    this->_width    = vec.getWidth();
-    this->_height   = vec.getHeight();
-    this->_step     = vec.getStep();
-    this->_matType  = vec.getMatType();
-
-    if(vec.getBytes()!=nullptr)
-    {
-        uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-        memcpy(u8Ptr, vec.getBytes(), this->_width*this->_height*this->_step);
-        this->_data.u8 =u8Ptr;
-    }
-}
-
-Vector3D::Vector3D(const Mat &mat)
-{
-    if(mat.getWidth()!=3 || mat.getHeight()!=1 || mat.getChannel()!=1 || mat.getMatType()!=MAT_GRAY_F64)
-    {
-        throw Exception(1, "[Vector3D] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
-    }
-
-    release();
-    this->_channel  = mat.getChannel();
-    this->_width    = mat.getWidth();
-    this->_height   = mat.getHeight();
-    this->_step     = mat.getStep();
-    this->_matType  = mat.getMatType();
-
-    if(mat.getBytes()!=nullptr)
-    {
-        uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-        memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
-        this->_data.u8 =u8Ptr;
-    }
-}
-
-Vector3D &Vector3D::operator=(const Vector3D &vec)
-{
-    if(this!=&vec)
-    {
-        release();
-        this->_channel  = vec._channel;
-        this->_width    = vec._width;
-        this->_height   = vec._height;
-        this->_step     = vec._step;
-        this->_matType  = vec._matType;
-
-        if(vec._data.u8!=nullptr)
-        {
-            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-            memcpy(u8Ptr, vec._data.u8, this->_width*this->_height*this->_step);
-            this->_data.u8 =u8Ptr;
-        }
-    }
-    return *this;
-}
-
-Vector3D &Vector3D::operator=(const Mat &mat)
-{
-    if(mat.getWidth()!=3 || mat.getHeight()!=1 || mat.getChannel()!=1 || mat.getMatType()!=MAT_GRAY_F64)
-    {
-        throw Exception(1, "[Vector3D] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
-    }
-    if(this!=&mat)
-    {
-        release();
-        this->_channel  = mat.getChannel();
-        this->_width    = mat.getWidth();
-        this->_height   = mat.getHeight();
-        this->_step     = mat.getStep();
-        this->_matType  = mat.getMatType();
-
-        if(mat.getBytes()!=nullptr)
-        {
-            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-            memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
-            this->_data.u8 =u8Ptr;
-        }
-    }
-    return *this;
-}
-
-Vector3D Vector3D::crossProduct(const Vector3D &v1, const Vector3D &v2)
-{
-    Vector3D vec;
-
-    vec.setVal({ v1[1]*v2[2] - v1[2]*v2[1],
-                 v1[2]*v2[0] - v1[0]*v2[2],
-                 v1[0]*v2[1] - v1[1]*v2[0]});
-
-    return vec;
-}
-
-Vector3D Vector3D::normal(const Vector3D &v1, const Vector3D &v2)
-{
-    return crossProduct(v1,v2).normalized();
-}
-
-Vector3D Vector3D::normal(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3)
-{
-    return crossProduct((v2-v1),(v3-v1)).normalized();
-}
-
-Vector3F::Vector3F(const Vector3F &vec)
-{
-    release();
-    this->_channel  = vec.getChannel();
-    this->_width    = vec.getWidth();
-    this->_height   = vec.getHeight();
-    this->_step     = vec.getStep();
-    this->_matType  = vec.getMatType();
-
-    if(vec.getBytes()!=nullptr)
-    {
-        uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-        memcpy(u8Ptr, vec.getBytes(), this->_width*this->_height*this->_step);
-        this->_data.u8 =u8Ptr;
-    }
-}
-
-Vector3F::Vector3F(const Mat &mat)
-{
-    if(mat.getWidth()!=3 || mat.getHeight()!=1 || mat.getChannel()!=1 || mat.getMatType()!=MAT_GRAY_F32)
-    {
-        throw Exception(1, "[Vector3D] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
-    }
-
-    release();
-    this->_channel  = mat.getChannel();
-    this->_width    = mat.getWidth();
-    this->_height   = mat.getHeight();
-    this->_step     = mat.getStep();
-    this->_matType  = mat.getMatType();
-
-    if(mat.getBytes()!=nullptr)
-    {
-        uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-        memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
-        this->_data.u8 =u8Ptr;
-    }
-}
-
-Vector3F &Vector3F::operator=(const Vector3F &vec)
-{
-    if(this!=&vec)
-    {
-        release();
-        this->_channel  = vec._channel;
-        this->_width    = vec._width;
-        this->_height   = vec._height;
-        this->_step     = vec._step;
-        this->_matType  = vec._matType;
-
-        if(vec._data.u8!=nullptr)
-        {
-            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-            memcpy(u8Ptr, vec._data.u8, this->_width*this->_height*this->_step);
-            this->_data.u8 =u8Ptr;
-        }
-    }
-    return *this;
-}
-
-Vector3F &Vector3F::operator=(const Mat &mat)
-{
-    if(mat.getWidth()!=3 || mat.getHeight()!=1 || mat.getChannel()!=1 || mat.getMatType()!=MAT_GRAY_F32)
-    {
-        throw Exception(1, "[Vector3D] vector props should be equal." , __FILE__, __LINE__,__FUNCTION__);
-    }
-    if(this!=&mat)
-    {
-        release();
-        this->_channel  = mat.getChannel();
-        this->_width    = mat.getWidth();
-        this->_height   = mat.getHeight();
-        this->_step     = mat.getStep();
-        this->_matType  = mat.getMatType();
-
-        if(mat.getBytes()!=nullptr)
-        {
-            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-            memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
-            this->_data.u8 =u8Ptr;
-        }
-    }
-    return *this;
-}
-
-Vector3F Vector3F::crossProduct(const Vector3F &v1, const Vector3F &v2)
-{
-    Vector3F vec;
-
-    vec.setVal({ v1[1]*v2[2] - v1[2]*v2[1],
-                 v1[2]*v2[0] - v1[0]*v2[2],
-                 v1[0]*v2[1] - v1[1]*v2[0]});
-
-    return vec;
-}
-
-Vector3F Vector3F::normal(const Vector3F &v1, const Vector3F &v2)
-{
-    return crossProduct(v1,v2).normalized();
-}
-
-Vector3F Vector3F::normal(const Vector3F &v1, const Vector3F &v2, const Vector3F &v3)
-{
-    return crossProduct((v2-v1),(v3-v1)).normalized();
 }
 
 }
