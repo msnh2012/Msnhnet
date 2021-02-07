@@ -2059,12 +2059,12 @@ void Mat::print()
                             std::cout<<std::setiosflags(std::ios::left)<<std::setprecision(6)<<std::setw(6)<<std::setiosflags(std::ios::fixed)<<this->_data.f32[c*this->_width*this->_height + i*this->_width + j]<<" ";
                         }
                     }
-                    std::cout<<std::endl;
+                    std::cout<<";"<<std::endl;
                 }
                 else if(i == 20)
                 {
                     std::cout<<"        "<<std::setiosflags(std::ios::left)<<std::setw(6)<<"...";
-                    std::cout<<std::endl;
+                    std::cout<<";"<<std::endl;
                 }
             }
             std::cout<<"    ],"<<std::endl;
@@ -2095,12 +2095,12 @@ void Mat::print()
                             std::cout<<std::setiosflags(std::ios::left)<<std::setw(12)<<std::setprecision(12)<<std::setiosflags(std::ios::fixed)<<this->_data.f64[c*this->_width*this->_height + i*this->_width + j]<<" ";
                         }
                     }
-                    std::cout<<std::endl;
+                    std::cout<<";"<<std::endl;
                 }
                 else if(i == 10)
                 {
                     std::cout<<"        "<<std::setiosflags(std::ios::left)<<std::setw(12)<<"...";
-                    std::cout<<std::endl;
+                    std::cout<<";"<<std::endl;
                 }
 
             }
@@ -2132,12 +2132,12 @@ void Mat::print()
                             std::cout<<std::setiosflags(std::ios::left)<<std::setw(6)<<static_cast<int>(this->_data.u8[c*this->_width*this->_height + i*this->_width + j])<<std::setw(1)<<" ";
                         }
                     }
-                    std::cout<<std::endl;
+                    std::cout<<";"<<std::endl;
                 }
                 else if(i == 20)
                 {
                     std::cout<<"        "<<std::setiosflags(std::ios::left)<<std::setw(6)<<" ... ";
-                    std::cout<<std::endl;
+                    std::cout<<";"<<std::endl;
                 }
             }
             std::cout<<"    ],"<<std::endl;
@@ -2176,12 +2176,12 @@ string Mat::toString()
                             buf<<std::setiosflags(std::ios::left)<<std::setprecision(6)<<std::setw(6)<<std::setiosflags(std::ios::fixed)<<this->_data.f32[c*this->_width*this->_height + i*this->_width + j]<<" ";
                         }
                     }
-                    buf<<std::endl;
+                    buf<<";"<<std::endl;
                 }
                 else if(i == 20)
                 {
                     buf<<"      "<<std::setiosflags(std::ios::left)<<std::setw(6)<<"...";
-                    buf<<std::endl;
+                    buf<<";"<<std::endl;
                 }
 
             }
@@ -2213,12 +2213,12 @@ string Mat::toString()
                             buf<<std::setiosflags(std::ios::left)<<std::setw(12)<<std::setprecision(12)<<std::setiosflags(std::ios::fixed)<<this->_data.f64[c*this->_width*this->_height + i*this->_width + j]<<" ";
                         }
                     }
-                    buf<<std::endl;
+                    buf<<";"<<std::endl;
                 }
                 else if(i == 10)
                 {
                     buf<<"      "<<std::setiosflags(std::ios::left)<<std::setw(12)<<"...";
-                    buf<<std::endl;
+                    buf<<";"<<std::endl;
                 }
 
             }
@@ -2250,18 +2250,137 @@ string Mat::toString()
                             buf<<std::setiosflags(std::ios::left)<<std::setw(6)<<static_cast<int>(this->_data.u8[c*this->_width*this->_height + i*this->_width + j])<<std::setw(1)<<" ";
                         }
                     }
-                    buf<<std::endl;
+                    buf<<";"<<std::endl;
                 }
                 else if(i == 20)
                 {
                     buf<<"      "<<std::setiosflags(std::ios::left)<<std::setw(6)<<" ... ";
-                    buf<<std::endl;
+                    buf<<";"<<std::endl;
                 }
             }
             buf<<"    ],"<<std::endl;
         }
     }
     buf<<"}"<<std::endl<<std::endl;
+    return buf.str();
+}
+
+string Mat::toHtmlString()
+{
+    std::stringstream buf;
+    buf<<"{  width: "<<this->_width<<" , height: "<<this->_height<<" , channels: "<<this->_channel<<" , type: "<<getMatTypeStr()<<"<br/>";
+
+    if(isF32Mat())
+    {
+        for (int c = 0; c < this->_channel; ++c)
+        {
+            buf<<"    ["<<"<br/>";
+            for (int i = 0; i < this->_height; ++i)
+            {
+                if(i<19|| (i==this->_height-1) )
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        if(j==0)
+                        {
+                            buf<<"        ";
+                        }
+
+                        if(j==19)
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setw(6)<<"...";
+                        }
+                        else if(j<19 || j==(this->_width-1) )
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setprecision(6)<<std::setw(6)<<std::setiosflags(std::ios::fixed)<<this->_data.f32[c*this->_width*this->_height + i*this->_width + j]<<" ";
+                        }
+                    }
+                    buf<<";"<<"<br/>";
+                }
+                else if(i == 20)
+                {
+                    buf<<"      "<<std::setiosflags(std::ios::left)<<std::setw(6)<<"...";
+                    buf<<";"<<"<br/>";
+                }
+
+            }
+            buf<<"    ],"<<"<br/>";
+        }
+    }
+    else if(isF64Mat())
+    {
+        for (int c = 0; c < this->_channel; ++c)
+        {
+            buf<<"    ["<<"<br/>";
+            for (int i = 0; i < this->_height; ++i)
+            {
+                if(i<9|| (i==this->_height-1) )
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        if(j==0)
+                        {
+                            buf<<"        ";
+                        }
+
+                        if(j==9)
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setw(12)<<"...";
+                        }
+                        else if(j<9 || j==(this->_width-1) )
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setw(12)<<std::setprecision(12)<<std::setiosflags(std::ios::fixed)<<this->_data.f64[c*this->_width*this->_height + i*this->_width + j]<<" ";
+                        }
+                    }
+                    buf<<";"<<"<br/>";
+                }
+                else if(i == 10)
+                {
+                    buf<<"      "<<std::setiosflags(std::ios::left)<<std::setw(12)<<"...";
+                    buf<<";"<<"<br/>";
+                }
+
+            }
+            buf<<"    ],"<<"<br/>";
+        }
+    }
+    else
+    {
+        for (int c = 0; c < this->_channel; ++c)
+        {
+            buf<<"    ["<<"<br/>";
+            for (int i = 0; i < this->_height; ++i)
+            {
+                if(i<19|| (i==this->_height-1) )
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        if(j==0)
+                        {
+                            buf<<"        ";
+                        }
+
+                        if(j==19)
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setw(6)<<" ... ";
+                        }
+                        else if(j<19 || j==(this->_width-1) )
+                        {
+                            buf<<std::setiosflags(std::ios::left)<<std::setw(6)<<static_cast<int>(this->_data.u8[c*this->_width*this->_height + i*this->_width + j])<<std::setw(1)<<" ";
+                        }
+                    }
+                    buf<<";"<<"<br/>";
+                }
+                else if(i == 20)
+                {
+                    buf<<"      "<<std::setiosflags(std::ios::left)<<std::setw(6)<<" ... ";
+                    buf<<";"<<"<br/>";
+                }
+            }
+            buf<<"    ],"<<"<br/>";
+        }
+    }
+    buf<<"}"<<"<br/>"<<"<br/>";
     return buf.str();
 }
 
@@ -2297,8 +2416,8 @@ string Mat::getMatTypeStr()
         return "MAT_RGBA_F64";
         break;
     default:
-		return "Unknown";
-		break;
+        return "Unknown";
+        break;
     }
 }
 
@@ -2524,7 +2643,7 @@ double Mat::dotProduct(const Mat &A, const Mat &B)
     }
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-       A._width != B._width || A._height != B._height)
+            A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -3452,6 +3571,13 @@ string QuaternionD::toString()
     return buf.str();
 }
 
+string QuaternionD::toHtmlString()
+{
+    std::stringstream buf;
+    buf<<"[ "<<_q0<<", "<<_q1<<", "<<_q2<<", "<<_q3<<"] "<<"<br/>";
+    return buf.str();
+}
+
 double QuaternionD::operator[](const uint8_t &index)
 {
     if(index >4)
@@ -3595,6 +3721,13 @@ string QuaternionF::toString()
 {
     std::stringstream buf;
     buf<<"[ "<<_q0<<", "<<_q1<<", "<<_q2<<", "<<_q3<<"] "<<std::endl;
+    return buf.str();
+}
+
+string QuaternionF::toHtmlString()
+{
+    std::stringstream buf;
+    buf<<"[ "<<_q0<<", "<<_q1<<", "<<_q2<<", "<<_q3<<"] "<<"<br/>";
     return buf.str();
 }
 

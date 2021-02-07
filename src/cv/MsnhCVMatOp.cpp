@@ -645,7 +645,7 @@ double MatOp::norm(Mat &mat, const NormType &normType)
                     tmpMax[omp_get_thread_num()] = v;
                 }
 #else
-                if(v>tmpMax[omp_get_thread_num()])
+                if(v > final)
                 {
                     final = v;
                 }
@@ -666,7 +666,7 @@ double MatOp::norm(Mat &mat, const NormType &normType)
                     tmpMax[omp_get_thread_num()] = v;
                 }
 #else
-                if(v>tmpMax[omp_get_thread_num()])
+                if(v > final)
                 {
                     final = v;
                 }

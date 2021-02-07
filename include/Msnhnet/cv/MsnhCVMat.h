@@ -388,6 +388,8 @@ public:
 
     std::string toString();
 
+    std::string toHtmlString();
+
     std::string getMatTypeStr();
 
     bool isF32Mat() const;  
@@ -487,7 +489,10 @@ class MsnhNet_API Mat_:public Mat
 public:
     Mat_():Mat(w,h,getMatTypeFromT())
     {
-
+        if(w == h)
+        {
+            *this = Mat_::eye();
+        }
     }
 
     Mat_(const std::vector<T> &val):Mat(w,h,getMatTypeFromT())
@@ -495,8 +500,8 @@ public:
         this->setVal(val);
     }
 
-   inline static MatType getMatTypeFromT()
-   {
+    inline static MatType getMatTypeFromT()
+    {
         if(std::is_same<T,double>::value)
         {
             return MAT_GRAY_F64;
@@ -513,7 +518,7 @@ public:
         {
             throw Exception(1,"[Mat_]: only u8/f32/f64 is supported! \n", __FILE__, __LINE__, __FUNCTION__);
         }
-   }
+    }
 
     inline void setVal(const std::vector<T> &val)
     {
@@ -712,6 +717,15 @@ public:
         return *((T*)this->getBytes()+index);
     }
 
+    inline const T* constData() const
+    {
+        return (T*)this->getBytes();
+    }
+
+    inline void fill(const T &t)
+    {
+        fillPixel<T>(t);
+    }
 };
 
 typedef Mat_<3,3,double> RotationMatD;
@@ -743,6 +757,8 @@ public:
     void print();
 
     std::string toString();
+
+    std::string toHtmlString();
 
     double operator[] (const uint8_t& index);
 
@@ -780,6 +796,8 @@ public:
     void print();
 
     std::string toString();
+
+    std::string toHtmlString();
 
     float operator[] (const uint8_t& index);
 

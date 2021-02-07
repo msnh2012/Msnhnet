@@ -75,6 +75,10 @@ public:
 
     Matrix4x4D(const Matrix4x4D& mat); 
 
+    Matrix4x4D(const RotationMatD& rotMat);
+
+    Matrix4x4D(const TransformD& trans);
+
     Matrix4x4D(const RotationMatD& rotMat, const TransformD& trans);
 
     Matrix4x4D(const std::vector<double> &val);
@@ -116,6 +120,8 @@ public:
     void lookAt(const Vector3D &eye, const Vector3D &center, const Vector3D &up);
 
     Vector3D mulVec3(const Vector3D &vec3);
+
+    Vector4D mulVec4(const Vector4D &vec4);
 
     Matrix3x3D normalMatrix();
 
@@ -171,6 +177,8 @@ public:
     void lookAt(const Vector3F &eye, const Vector3F &center, const Vector3F &up);
 
     Vector3F mulVec3(const Vector3F &vec3);
+
+    Vector4F mulVec4(const Vector4F &vec4);
 
     Matrix3x3F normalMatrix();
 };
