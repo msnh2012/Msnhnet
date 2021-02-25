@@ -709,14 +709,14 @@ private:
 };
 
 typedef Vector<3,double> EulerD;
-typedef Vector<3,double> TransformD;
+typedef Vector<3,double> TranslationD;
 typedef Vector<3,double> RotationVecD;
 typedef Vector<2,double> Vector2D;
 typedef Vector<3,double> Vector3D;
 typedef Vector<4,double> Vector4D;
 
 typedef Vector<3,float> EulerF;
-typedef Vector<3,float> TransformF;
+typedef Vector<3,float> TranslationF;
 typedef Vector<3,float> RotationVecF;
 typedef Vector<2,float> Vector2F;
 typedef Vector<3,float> Vector3F;

@@ -702,6 +702,41 @@ EulerF Geometry::rotVec2Euler(const RotationVecF &rotVec, const RotSequence &seq
     return quaternion2Euler(q,seq);
 }
 
+TranslationD Geometry::rotatePos(const RotationMatD &rotMat, const TranslationD &trans)
+{
+    return TranslationD({rotMat.getValAtRowCol(0,0)*trans[0]+rotMat.getValAtRowCol(0,1)*trans[1]+rotMat.getValAtRowCol(0,2)*trans[2],
+                         rotMat.getValAtRowCol(1,0)*trans[0]+rotMat.getValAtRowCol(1,1)*trans[1]+rotMat.getValAtRowCol(1,2)*trans[2],
+                         rotMat.getValAtRowCol(2,0)*trans[0]+rotMat.getValAtRowCol(2,1)*trans[1]+rotMat.getValAtRowCol(2,2)*trans[2]});
+
+}
+
+TranslationF Geometry::rotatePos(const RotationMatF &rotMat, const TranslationF &trans)
+{
+    return     TranslationF({rotMat.getValAtRowCol(0,0)*trans[0]+rotMat.getValAtRowCol(0,1)*trans[1]+rotMat.getValAtRowCol(0,2)*trans[2],
+                             rotMat.getValAtRowCol(1,0)*trans[0]+rotMat.getValAtRowCol(1,1)*trans[1]+rotMat.getValAtRowCol(1,2)*trans[2],
+                             rotMat.getValAtRowCol(2,0)*trans[0]+rotMat.getValAtRowCol(2,1)*trans[1]+rotMat.getValAtRowCol(2,2)*trans[2]});
+}
+
+TranslationD Geometry::transform(Matrix4x4D &tfMat, const TranslationD &trans)
+{
+    return tfMat.mulVec3(trans);
+}
+
+TranslationF Geometry::transform(Matrix4x4F &tfMat, const TranslationF &trans)
+{
+    return tfMat.mulVec3(trans);
+}
+
+Matrix4x4D Geometry::transform(const Matrix4x4D &tfMat, const Matrix4x4D &posture)
+{
+    return tfMat*posture;
+}
+
+Matrix4x4F Geometry::transform(const Matrix4x4F &tfMat, const Matrix4x4F &posture)
+{
+    return tfMat*posture;
+}
+
 double Geometry::clamp(const double &val, const double &min, const double &max)
 {
     if(val<min)
@@ -783,12 +818,12 @@ Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat)
     setRotationMat(rotMat);
 }
 
-Matrix4x4D::Matrix4x4D(const TransformD &trans)
+Matrix4x4D::Matrix4x4D(const TranslationD &trans)
 {
-    setTransform(trans);
+    setTranslation(trans);
 }
 
-Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat, const TransformD &trans):Mat_()
+Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat, const TranslationD &trans):Mat_()
 {
     this->setVal({
                      rotMat.getValAtRowCol(0,0), rotMat.getValAtRowCol(0,1), rotMat.getValAtRowCol(0,2), trans[0],
@@ -859,13 +894,13 @@ RotationMatD Matrix4x4D::getRotationMat() const
     return rotMat;
 }
 
-TransformD Matrix4x4D::getTransform() const
+TranslationD Matrix4x4D::getTranslation() const
 {
-    return TransformD({
-                          this->getValAtRowCol(0,3),
-                          this->getValAtRowCol(1,3),
-                          this->getValAtRowCol(2,3)
-                      });
+    return TranslationD({
+                            this->getValAtRowCol(0,3),
+                            this->getValAtRowCol(1,3),
+                            this->getValAtRowCol(2,3)
+                        });
 }
 
 void Matrix4x4D::setRotationMat(const RotationMatD &rotMat)
@@ -883,7 +918,7 @@ void Matrix4x4D::setRotationMat(const RotationMatD &rotMat)
     this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
 }
 
-void Matrix4x4D::setTransform(const TransformD &trans)
+void Matrix4x4D::setTranslation(const TranslationD &trans)
 {
     this->setValAtRowCol(0,3,trans[0]);
     this->setValAtRowCol(1,3,trans[1]);
@@ -1170,7 +1205,7 @@ Matrix4x4F::Matrix4x4F(const Matrix4x4F &mat)
     }
 }
 
-Matrix4x4F::Matrix4x4F(const RotationMatF &rotMat, const TransformF &trans)
+Matrix4x4F::Matrix4x4F(const RotationMatF &rotMat, const TranslationF &trans)
 {
     this->setVal({
                      rotMat.getValAtRowCol(0,0), rotMat.getValAtRowCol(0,1), rotMat.getValAtRowCol(0,2), trans[0],
@@ -1241,13 +1276,13 @@ RotationMatF Matrix4x4F::getRotationMat() const
     return rotMat;
 }
 
-TransformF Matrix4x4F::getTransform() const
+TranslationF Matrix4x4F::getTranslation() const
 {
-    return TransformF({
-                          this->getValAtRowCol(0,3),
-                          this->getValAtRowCol(1,3),
-                          this->getValAtRowCol(2,3)
-                      });
+    return TranslationF({
+                            this->getValAtRowCol(0,3),
+                            this->getValAtRowCol(1,3),
+                            this->getValAtRowCol(2,3)
+                        });
 }
 
 void Matrix4x4F::setRotationMat(const RotationMatF &rotMat)
@@ -1265,7 +1300,7 @@ void Matrix4x4F::setRotationMat(const RotationMatF &rotMat)
     this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
 }
 
-void Matrix4x4F::setTransform(const TransformF &trans)
+void Matrix4x4F::setTranslation(const TranslationF &trans)
 {
     this->setValAtRowCol(0,3,trans[0]);
     this->setValAtRowCol(1,3,trans[1]);
