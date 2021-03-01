@@ -15,8 +15,8 @@ public:
         err(err),
         errCode(errCode),
         errFile(errFile),
-        errLine(errLine),
-        errFun(errFun)
+        errFun(errFun),
+        errLine(errLine)
     {
     }
 
@@ -51,12 +51,11 @@ public:
     }
 
 private:
-
-    std::string err;
-    int         errCode;
-    std::string errFile;
-    std::string errFun;
-    int         errLine;
+    std::string err     = "";
+    int         errCode = 0 ;
+    std::string errFile = "";
+    std::string errFun  = "";
+    int         errLine = 0 ;
 };
 }
 #endif 

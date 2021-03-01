@@ -126,6 +126,7 @@ void Parser::clearParams()
             params[i] = nullptr;
         }
 
+
         if(i == (params.size()-1))
         {
             params.clear();
@@ -362,6 +363,7 @@ void Parser::readCfg(const std::string &path)
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
+
                             if(!ExString::strToInt(value, size))
                             {
                                 throw Exception(1,"[resblock] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
@@ -371,6 +373,7 @@ void Parser::readCfg(const std::string &path)
                         if(key == "activation")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
+
 
                             std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
@@ -419,6 +422,7 @@ void Parser::readCfg(const std::string &path)
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
+
                             if(!ExString::strToInt(value, size))
                             {
                                 throw Exception(1,"[res2block] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
@@ -428,6 +432,7 @@ void Parser::readCfg(const std::string &path)
                         if(key == "activation")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
+
 
                             std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
@@ -476,6 +481,7 @@ void Parser::readCfg(const std::string &path)
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
+
                             if(!ExString::strToInt(value, size))
                             {
                                 throw Exception(1,"[addblock] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
@@ -485,6 +491,7 @@ void Parser::readCfg(const std::string &path)
                         if(key == "activation")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
+
 
                             std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
@@ -529,6 +536,7 @@ void Parser::readCfg(const std::string &path)
                         {
                             std::string value   =   it2->second.as<std::string>(); 
 
+
                             if(!ExString::strToInt(value, size))
                             {
                                 throw Exception(1,"[concatblock] size can't convert to int", __FILE__, __LINE__, __FUNCTION__);
@@ -538,6 +546,7 @@ void Parser::readCfg(const std::string &path)
                         if(key == "activation")
                         {
                             std::string value   =   it2->second.as<std::string>(); 
+
 
                             std::vector<std::string> splits;
                             ExString::split(splits, value, ",");
@@ -904,6 +913,7 @@ void Parser::parseMaxPoolParams(MaxPoolParams *maxPoolParams, YAML::const_iterat
         }
     }
 
+
     if(maxPoolParams->paddingX < 0 || maxPoolParams->paddingY < 0)
     {
         if(maxPoolParams->paddingX < 0 )
@@ -1269,6 +1279,14 @@ void Parser::parseConvParams(ConvParams *convParams, YAML::const_iterator &iter)
             convParams->dilationY = 1;
         }
     }
+
+    
+
+    
+
+    
+
+    
 
 }
 
@@ -2085,6 +2103,7 @@ void Parser::parseAddBlockParams(AddBlockParams *addBlockParams, YAML::const_ite
                 addBlockParams->branchParams.push_back(tmpParams);
             }
 
+
         }
     }
 }
@@ -2341,6 +2360,7 @@ VariableOpParams::VarOpType VariableOpParams::getVarOpTypeFromStr(const string &
         throw Exception(1, "[varop] var op no supported : " + varOpStr, __FILE__, __LINE__, __FUNCTION__);
     }
 }
+
 
 void Parser::parseVariableOpParams(VariableOpParams *variableOpParams, YAML::const_iterator &iter)
 {
@@ -2656,6 +2676,7 @@ ConcatBlockParams::~ConcatBlockParams()
                     delete reinterpret_cast<PaddingParams*>(branchParams[i][j]);
                 }
 
+
                 branchParams[i][j] = nullptr;
             }
         }
@@ -2917,5 +2938,6 @@ string UpSampleParams::getStrFromUnsampleType(const UpSampleParams::UpsampleType
 
     }
 }
+
 
 }

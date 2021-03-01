@@ -38,9 +38,13 @@
 
 #define EFFCIENT_ALIGN 16
 
+#define MSNH_F32_EPS 1E-6
+
+#define MSNH_F64_EPS 1E-15
+
 enum ActivationType
 {
-    LOGISTIC,
+    LOGISTIC    =   0,
     RELU,
     RELU6,
     RELIE,
@@ -67,7 +71,7 @@ enum ActivationType
 
 enum LayerType
 {
-    CONVOLUTIONAL,
+    CONVOLUTIONAL   =   0,
     DECONVOLUTIONAL,
     CONNECTED,
     MAXPOOL,
@@ -132,20 +136,20 @@ enum Scientific
 
 enum ReductionType
 {
-    REDUCTION_SUM,
+    REDUCTION_SUM   =   0,
     REDUCTION_MEAN
 };
 
 enum WeightsType
 {
-    NO_WEIGHTS,
+    NO_WEIGHTS  =   0,
     PER_FEATURE,
     PER_CHANNEL
 };
 
 enum WeightsNorm
 {
-    NO_NORM,
+    NO_NORM =   0,
     RELU_NORM,
     SOFTMAX_NORM
 };

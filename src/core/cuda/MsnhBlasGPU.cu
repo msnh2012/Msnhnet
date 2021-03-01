@@ -2,6 +2,8 @@
 namespace Msnhnet
 {
 
+
+
 __global__ void copySimpleKernel(const int size,  float * const src, float * const dst)
 {
     int index = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
@@ -11,6 +13,7 @@ __global__ void copySimpleKernel(const int size,  float * const src, float * con
 
 void BlasGPU::gpuSimpleCopy(const int &n,  float * const &src, float * const &dst)
 {
+    
 
     copySimpleKernel<<<Cuda::getGrid(n), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(n, src, dst);
     CUDA_CHECK(cudaPeekAtLastError());
@@ -195,6 +198,7 @@ __global__ void  scientificKernel(const Scientific type, const int n, float * co
     }
 }
 
+
 void BlasGPU::gpuScientific(const Scientific &type, const int &n, float *const &x, const int &stepX, const float alpha, float *out, const int &stepOut)
 {
     scientificKernel<<<Cuda::getGrid(n), Cuda::blockThread, 0, Cuda::getCudaStream()>>>(type, n, x, stepX, alpha, out, stepOut);
@@ -229,6 +233,7 @@ __global__ void fastSumKernel(const int n, const float * in, float * sum, const 
     }
 
     __syncthreads(); 
+
 
     for (int s = blockDim.x/2; s >0 ; s>>=1)
     {
@@ -266,16 +271,19 @@ __global__ void sumKernelEx(const int n, const int axis, const int batch, const 
 
         if(axis == 0)
         {
+            
 
             atomicAdd(&output[b*height*width + h*width + w], input[b*channel*height*width + c*height*width + h*width + w]);
         }
         else if(axis == 1)
         {
+            
 
             atomicAdd(&output[b*channel*width + c*width + w], input[b*channel*height*width + c*height*width + h*width + w]);
         }
         else if(axis == 2)
         {
+            
 
             atomicAdd(&output[b*channel*height + c*height + h], input[b*channel*height*width + c*height*width + h*width + w]);
         }
@@ -316,6 +324,7 @@ void BlasGPU::gpuFastSum(const int &axis, const int &batch, const int &channel, 
         }
     }
 }
+
 
 __global__ void meanKernel(float *const x, const int batch, const int filters, const int outSize, float *const mean)
 {
@@ -374,8 +383,40 @@ void BlasGPU::gpuVariance(float *const &x, float *const &mean, const int &batch,
 __global__ void normKernel(const int n, float *const x, float *const mean, float *const variance,
                            const int batch, const int filters, const float eps, const int outSize)
 {
+    
 
     int index = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
 
     if(index < n)
     {
@@ -412,6 +453,7 @@ __global__ void smoothL1Kernel(const int n, float *const pred, float *const trut
         }
     }
 }
+
 
 void BlasGPU::gpuSmoothL1(const int &n, float *const &pred, float *const &truth, float *const &delta, float *const &error)
 {
@@ -482,9 +524,12 @@ __global__ void softmaxKernel(float *const input, const int num, const int batch
     int index = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
     if( index < batch*groups)
     {
+        
 
         int _batch = index / groups;
         int _group = index % groups;
+
+        
 
         _softmaxKernel(input + _batch*batchOff + _group*groupOff , num, temperature, stride, output + _batch*batchOff + _group*groupOff);
     }
@@ -557,6 +602,7 @@ __global__ void upSampleKernel(const size_t n,  float *const in, const int width
         i = i / channel;
         int _batch      = i % (batch); 
 
+
         int inW         = outW / strideX;
         int inH         = outH / strideY;
         int inC         = outC;
@@ -576,6 +622,7 @@ void BlasGPU::gpuUpSample(float *const &in, const int &width, const int &height,
                                                                                       strideY, scale, out);
     CUDA_CHECK(cudaPeekAtLastError());
 }
+
 
 __global__ void bilinearResizeKernel(const int n, float *const in, const int width, const int height, const int channel, const int batch,
                                      const size_t inSize, const int outSize, const float rHeight, const float rWidth,
@@ -629,6 +676,8 @@ __global__ void bilinearResizeKernel(const int n, float *const in, const int wid
         *(outPtr + c*outSize) = h0Lamd * (w0Lamd*(*inTmp) + w1Lamd*(*(inTmp + w1p)))
                                +h1Lamd * (w0Lamd*(*(inTmp + h1p*width))
                                +w1Lamd * (*(inTmp + h1p*width + w1p)));
+
+
 
     }
 }
@@ -708,4 +757,12 @@ void BlasGPU::gpuFixNanAndInf(float *const &input, const size_t &size)
 }
 
 }
+
+
+
+
+
+
+
+
 

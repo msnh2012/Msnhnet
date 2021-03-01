@@ -154,9 +154,14 @@ LocalAvgPoolLayer::~LocalAvgPoolLayer()
 {
 #ifdef USE_GPU
 #ifdef USE_CUDNN
-    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc));
-    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc));
-    CUDNN_CHECK(cudnnDestroyPoolingDescriptor(_localAvgPoolDesc));
+    if(_inputDesc)
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc));
+
+    if(_outputDesc)
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc));
+
+    if(_localAvgPoolDesc)
+        CUDNN_CHECK(cudnnDestroyPoolingDescriptor(_localAvgPoolDesc));
 #endif
 #endif
 }

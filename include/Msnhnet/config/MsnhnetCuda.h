@@ -11,6 +11,7 @@
 #include <math.h>
 
 #ifdef USE_CUDNN
+#include <cudnn_version.h>
 #include <cudnn.h>
 #endif
 

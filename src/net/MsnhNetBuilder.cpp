@@ -1043,6 +1043,7 @@ void NetBuilder::clearLayers()
 {
     for (size_t i = 0; i < _net->layers.size(); ++i)
     {
+        std::cout << i <<" "<<_net->layers[i]->type()<<std::endl<<std::flush;
         if(_net->layers[i]!=nullptr)
         {
             if(_net->layers[i]->type() == LayerType::CONVOLUTIONAL)

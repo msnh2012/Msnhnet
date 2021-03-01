@@ -10,11 +10,15 @@ int initMsnhnet()
 
 int buildMsnhnet(char **msg, const char *msnhnet, const char *msnhbin, int useFp16, int useCudaOnly)
 {
+
     try
     {
 #ifdef USE_GPU
         net->setUseFp16((useFp16>0));
         net->setForceUseCuda((useCudaOnly>0));
+#else
+        (void)useFp16;
+        (void)useCudaOnly;
 #endif
         net->buildNetFromMsnhNet(msnhnet);
         net->loadWeightsFromMsnhBin(msnhbin);
@@ -246,6 +250,7 @@ int getGpuForwardTime(float *time)
     *time = net->getGpuInferenceTime();
     return 1;
 #else
+    (void)time;
     return -1;
 #endif
 }
@@ -348,7 +353,7 @@ int runYoloFile(char **msg, const char *imagePath, BBoxContainer *bboxContainer,
             throw Msnhnet::Exception(1,"BBox buffer is not enough, please change MaxBBoxNum and rebuild", __FILE__, __LINE__, __FUNCTION__);
         }
 
-        *detectedNum = result[0].size();
+        *detectedNum = static_cast<int>(result[0].size());
         for (int i = 0; i < result[0].size(); ++i)
         {
             BBox box;
@@ -427,7 +432,7 @@ int runYoloList(char **msg, unsigned char *imageData, const int width, const int
             throw Msnhnet::Exception(1,"BBox buffer is not enough, please change MaxBBoxNum and rebuild", __FILE__, __LINE__, __FUNCTION__);
         }
 
-        *detectedNum = result[0].size();
+        *detectedNum = static_cast<int>(result[0].size());
         for (int i = 0; i < result[0].size(); ++i)
         {
             BBox box;

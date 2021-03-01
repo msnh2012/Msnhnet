@@ -9,7 +9,7 @@
 #include "Msnhnet/utils/MsnhExport.h"
 
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhBatchNorm.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhBatchNorm.h"
 #endif
 
 namespace Msnhnet

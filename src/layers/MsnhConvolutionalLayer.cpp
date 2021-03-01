@@ -145,10 +145,61 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 
     this->_fwAlgo16 = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
 
+#if CUDNN_MAJOR==7
+
     CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(Cuda::getCudnnHandle(), this->_inputDesc, this->_weightDesc, this->_convDesc, this->_outputDesc, CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
                                                     0,
 
                                                     &this->_fwAlgo));
+#elif CUDNN_MAJOR==8
+
+    size_t freeMemory   = 0;
+    size_t totalMemory  = 0;
+
+    int requestAlgoCnt  = 0;
+    int returnAlgoCnt   = 0;
+
+    int foundConvAlgo   = 0;
+    float minTime       = 1000000;
+
+    cudnnConvolutionFwdAlgoPerf_t convFwdResult[100]; 
+
+    CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithmMaxCount(Cuda::getCudnnHandle(), &requestAlgoCnt));
+
+    CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm_v7(Cuda::getCudnnHandle(),
+                                                       this->_inputDesc,
+                                                       this->_weightDesc,
+                                                       this->_convDesc,
+                                                       this->_outputDesc,
+                                                       requestAlgoCnt, 
+
+                                                       &returnAlgoCnt, 
+
+                                                       convFwdResult));
+
+    CUDA_CHECK(cudaMemGetInfo(&freeMemory, &totalMemory));
+
+    for (int i = 0; i < returnAlgoCnt; ++i)
+    {
+        if(convFwdResult[i].status == CUDNN_STATUS_SUCCESS &&
+                convFwdResult[i].algo   != CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED &&
+                convFwdResult[i].memory <  freeMemory &&
+                convFwdResult[i].memory <= _workSpaceSize &&
+                convFwdResult[i].time   < minTime)
+        {
+            foundConvAlgo = 1;
+            this->_fwAlgo = convFwdResult[i].algo;
+            minTime       = convFwdResult[i].time;
+        }
+    }
+
+    if(foundConvAlgo==0)
+    {
+        std::cout<<"ERROR: No fwd algo is found for conv in cudnn\n";
+        exit(0);
+    }
+#endif
+
     if (useFp16)
     {
         this->_gpuOutputFp16 = Cuda::mallocCudaArray(this->_outputNum * this->_batch);
@@ -284,17 +335,34 @@ ConvolutionalLayer::~ConvolutionalLayer()
 
 #ifdef USE_GPU
 #ifdef USE_CUDNN
-    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc));
-    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc));
-    CUDNN_CHECK(cudnnDestroyFilterDescriptor(_weightDesc));
-    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc16));
-    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc16));
-    CUDNN_CHECK(cudnnDestroyFilterDescriptor(_weightDesc16));
-    CUDNN_CHECK(cudnnDestroyConvolutionDescriptor(_convDesc));
+    if(_inputDesc)
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc));
+
+    if(_outputDesc)
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc));
+
+    if(_weightDesc)
+        CUDNN_CHECK(cudnnDestroyFilterDescriptor(_weightDesc));
+
+    if(_inputDesc16)
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc16));
+
+    if(_outputDesc16)
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc16));
+
+    if(_weightDesc16)
+        CUDNN_CHECK(cudnnDestroyFilterDescriptor(_weightDesc16));
+
+    if(_convDesc)
+        CUDNN_CHECK(cudnnDestroyConvolutionDescriptor(_convDesc));
+
     if (useFp16)
     {
-        Cuda::freeCuda(_gpuWeightsFp16);
-        Cuda::freeCuda(_gpuOutputFp16);
+        if(_gpuWeightsFp16)
+            Cuda::freeCuda(_gpuWeightsFp16);
+
+        if(_gpuOutputFp16)
+            Cuda::freeCuda(_gpuOutputFp16);
     }
 #endif
     Cuda::freeCuda(_gpuWeights);
@@ -1148,10 +1216,13 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
 
 #ifdef USE_GPU
             this->_gpuWeights    = this->_shareLayer->_gpuWeights;
+
+#ifdef USE_CUDNN
             if(useFp16)
             {
                 this->_gpuWeightsFp16   = this->_shareLayer->_gpuWeightsFp16;
             }
+#endif
 
             if(this->_batchNorm)
             {
