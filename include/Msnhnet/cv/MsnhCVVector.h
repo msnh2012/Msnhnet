@@ -7,7 +7,7 @@
 namespace Msnhnet
 {
 template<int N,typename T>
-class MsnhNet_API Vector
+class Vector
 {
 public:
     Vector(){}

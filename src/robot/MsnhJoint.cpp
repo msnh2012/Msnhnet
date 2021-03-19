@@ -142,6 +142,5 @@ Frame Joint::getPos(const double &q) const
     return Frame();
 }
 
-
 }
 

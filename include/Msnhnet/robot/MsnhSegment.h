@@ -7,12 +7,11 @@
 namespace Msnhnet
 {
 
-class Segment
+class MsnhNet_API Segment
 {
 public:
     Segment(const std::string &name, const Joint &joint=Joint(Joint::JOINT_FIXED), const Frame& endToTip=Frame());
     Segment(const Joint &joint=Joint(Joint::JOINT_FIXED), const Frame& endToTip=Frame());
-
 
     std::string getName() const;
 
@@ -29,4 +28,5 @@ private:
 };
 
 }
-#endif // SEGMENT_H
+#endif 
+

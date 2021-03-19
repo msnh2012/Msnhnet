@@ -73,7 +73,6 @@ void Draw::drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color)
         }
     }
 
-
 }
 
 void Draw::drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color, const int &width)
@@ -267,7 +266,6 @@ void Draw::drawLine(Mat &mat, Vec2I32 p1, Vec2I32 p2, const Vec3U8 &color, const
             }
         }
     }
-
 
 }
 
@@ -471,7 +469,6 @@ void Draw::drawEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const
         int x          = static_cast<int>(ellipseX + pos.x1);
         int negX       = static_cast<int>(-ellipseX + pos.x1);
 
-
         if(x<0)
         {
             ignoreP1 = true;
@@ -485,7 +482,6 @@ void Draw::drawEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const
             ignoreP2 = true;
             x = matW-1;
         }
-
 
         if(negX<0)
         {
@@ -514,7 +510,6 @@ void Draw::drawEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const
             ignoreP3 = true;
             y = matH-1;
         }
-
 
         if(negY<0)
         {
@@ -710,7 +705,6 @@ void Draw::fillEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const
         int y          = static_cast<int>(ellipseY + pos.x2);
         int negY       = static_cast<int>(-ellipseY + pos.x2);
 
-
         if(x<0)
         {
             x = 0;
@@ -720,7 +714,6 @@ void Draw::fillEllipse(Mat &mat, const Vec2I32 &pos, const int32_t &width, const
         {
             x = matW-1;
         }
-
 
         if(negX<0)
         {

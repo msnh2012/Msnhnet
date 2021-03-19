@@ -18,9 +18,9 @@ option(BUILD_SHARED_LIBS    "Build shared lib"          ON )
 option(BUILD_EXAMPLES       "Build examples"            ON )
 option(BUILD_USE_OPENCV     "Build with Opencv"         OFF)
 option(BUILD_VIEWER         "Build MsnhnetViewer"       OFF)
-option(BUILD_USE_GPU        "Use Gpu"                   OFF)
-option(BUILD_USE_CUDNN      "Use cuDnn"                 OFF)
-option(BUILD_USE_MSNHCV_GUI "Use msnhCV GUI"            ON)
+option(BUILD_USE_GPU        "Use Gpu"                   OFF )
+option(BUILD_USE_CUDNN      "Use cuDnn"                 OFF )
+option(BUILD_USE_MSNHCV_GUI "Use msnhCV GUI"            OFF)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_Release} -O3")
@@ -212,6 +212,11 @@ set(SRCS
     src/cv/MsnhCVMat.cpp 
     src/cv/MsnhCVMatOp.cpp 
     src/cv/MsnhCVVideo.cpp
+    src/robot/MsnhJoint.cpp
+    src/robot/MsnhFrame.cpp
+    src/robot/MsnhChain.cpp
+    src/robot/MsnhSegment.cpp
+    src/robot/MsnhChainFK.cpp
     src/utils/MsnhCVUtil.cpp
     )
 

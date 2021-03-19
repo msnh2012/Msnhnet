@@ -654,6 +654,95 @@ RotationVecF Geometry::quaternion2RotVec(const QuaternionF &q)
     return RotationVecF({kx*theta,ky*theta,kz*theta});
 }
 
+RotationMatD Geometry::rotZ(double angle)
+{
+
+    double cosc  = cos(angle);
+    double sinc  = sin(angle);
+
+    RotationMatD Rz;
+
+    Rz.setVal({
+                  cosc , -sinc , 0 ,
+                  sinc , cosc  , 0 ,
+                  0   ,  0    , 1
+              });
+    return Rz;
+}
+
+RotationMatD Geometry::rotY(double angle)
+{
+    double cosb  = cos(angle);
+    double sinb  = sin(angle);
+
+    RotationMatD Ry;
+    Ry.setVal({
+                  cosb , 0 , sinb ,
+                  0   , 1 ,   0  ,
+                  -sinb , 0 , cosb
+              });
+
+    return Ry;
+}
+
+RotationMatD Geometry::rotX(double angle)
+{
+    double cosa  = cos(angle);
+    double sina  = sin(angle);
+    RotationMatD Rx;
+    Rx.setVal({
+                  1 ,  0   ,   0   ,
+                  0 , cosa , -sina ,
+                  0 , sina ,  cosa
+              });
+    return Rx;
+}
+
+RotationMatF Geometry::rotZ(float angle)
+{
+
+    float cosc  = static_cast<float>(cos(angle));
+    float sinc  = static_cast<float>(sin(angle));
+
+    RotationMatF Rz;
+
+    Rz.setVal({
+                  cosc , -sinc , 0 ,
+                  sinc , cosc  , 0 ,
+                  0   ,  0    , 1
+              });
+    return Rz;
+}
+
+RotationMatF Geometry::rotY(float angle)
+{
+    float cosb  = static_cast<float>(cos(angle));
+    float sinb  = static_cast<float>(sin(angle));
+
+    RotationMatF Ry;
+    Ry.setVal({
+                  cosb , 0 , sinb ,
+                  0   , 1 ,   0  ,
+                  -sinb , 0 , cosb
+              });
+
+    return Ry;
+
+}
+
+RotationMatF Geometry::rotX(float angle)
+{
+    float cosa  = static_cast<float>(cos(angle));
+    float sina  = static_cast<float>(sin(angle));
+    RotationMatF Rx;
+    Rx.setVal({
+                  1 ,  0   ,   0   ,
+                  0 , cosa , -sina ,
+                  0 , sina ,  cosa
+              });
+    return Rx;
+}
+
 RotationMatD Geometry::rotVec2RotMat(const RotationVecD &rotVec)
 {
     QuaternionD q = rotVec2Quaternion(rotVec);

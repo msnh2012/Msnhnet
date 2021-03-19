@@ -6,23 +6,32 @@
 namespace Msnhnet
 {
 
-class Chain
+class MsnhNet_API Chain
 {
 public:
     Chain();
     Chain(const Chain& chain);
     Chain& operator= (const Chain &chain);
 
-
+    void addSegments(const Segment &segment);
 
     std::vector<Segment> segments;
-private:
-    unsigned int _numOfJoints;
-    unsigned int _numOfSegments;
 
+    uint32_t getNumOfJoints() const;
+
+    uint32_t getNumOfSegments() const;
+
+    const Segment& getSegment(uint32_t idx) const;
+
+    Segment& getSegment(uint32_t idx);
+
+private:
+    uint32_t _numOfJoints;
+    uint32_t _numOfSegments;
 
 };
 
 }
 
-#endif // CHAIN_H
+#endif 
+

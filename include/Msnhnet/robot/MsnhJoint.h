@@ -5,7 +5,7 @@
 #include "Msnhnet/robot/MsnhFrame.h"
 namespace Msnhnet
 {
-class Joint
+class MsnhNet_API Joint
 {
 public:
 
@@ -25,7 +25,7 @@ public:
     Joint(const std::string &name, const JointType &type, const double &scale=1, const double &offset=0,
           const double& inertia=0, const double& damping=0, const double& stiffness=0);
 
-    Joint(const JointType &type, const double &scale=0, const double &offset=0,
+    Joint(const JointType &type, const double &scale=1, const double &offset=0,
           const double &inertia=0, const double &damping=0, const double &stiffness=0);
 
     ~Joint(){}
@@ -46,12 +46,15 @@ private:
     std::string _name;
     JointType   _type;
 
-    double      _scale      = 0;//(默认：1)输入参数和实际几何之间的缩放关系
-    double      _offset     = 0;//(默认：0)输入参数和实际几何之间灯偏移
-    double      _interia    = 0;//(默认：0)关节惯性
-    double      _damping    = 0;//(默认：0)关节阻尼
-    double      _stiffness  = 0;//(默认：0)关节刚度
+    double      _scale      = 1;
 
+    double      _offset     = 0;
+
+    double      _interia    = 0;
+
+    double      _damping    = 0;
+
+    double      _stiffness  = 0;
 
     Vector3D    _axis;
     Vector3D    _origin;
@@ -60,4 +63,5 @@ private:
 
 }
 
-#endif // JOINT_H
+#endif 
+

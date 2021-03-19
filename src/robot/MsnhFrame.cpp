@@ -3,6 +3,28 @@
 namespace Msnhnet
 {
 
+Frame::Frame(const Mat &mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
+
+    {
+        throw Exception(1, "[Frame] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F64", __FILE__, __LINE__,__FUNCTION__);
+    }
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+
+    if(mat.getBytes()!=nullptr)
+    {
+        uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+        memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
+        this->_data.u8 =u8Ptr;
+    }
+}
+
 Frame::Frame(const RotationMatD &rotMat)
 {
     setRotationMat(rotMat);
@@ -75,6 +97,33 @@ Frame Frame::MDH(double a, double alpha, double d, double theta)
 QuaternionD Frame::getQuaternion() const
 {
     return Geometry::rotMat2Quaternion(getRotationMat());
+}
+
+Frame &Frame::operator=(const Mat &mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
+
+    {
+        throw Exception(1, "[Frame] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F64", __FILE__, __LINE__,__FUNCTION__);
+    }
+
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat.getChannel();
+        this->_width    = mat.getWidth();
+        this->_height   = mat.getHeight();
+        this->_step     = mat.getStep();
+        this->_matType  = mat.getMatType();
+
+        if(mat.getData().u8!=nullptr)
+        {
+            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
+            memcpy(u8Ptr, mat.getData().u8, this->_width*this->_height*this->_step);
+            this->_data.u8 =u8Ptr;
+        }
+    }
+    return *this;
 }
 
 }

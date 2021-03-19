@@ -167,6 +167,14 @@ public:
     static RotationVecD quaternion2RotVec(const QuaternionD& q);
     static RotationVecF quaternion2RotVec(const QuaternionF& q);
 
+    static RotationMatD rotZ(double angle);
+    static RotationMatD rotY(double angle);
+    static RotationMatD rotX(double angle);
+
+    static RotationMatF rotZ(float angle);
+    static RotationMatF rotY(float angle);
+    static RotationMatF rotX(float angle);
+
     static RotationMatD rotVec2RotMat(const RotationVecD& rotVec);
     static RotationMatF rotVec2RotMat(const RotationVecF& rotVec);
 
