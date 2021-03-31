@@ -11,6 +11,10 @@
 #include "Msnhnet/config/MsnhnetCuda.h"
 #endif
 
+#ifdef USE_OPENCL
+#include "Msnhnet/core/cl/clScheduler.h"
+#endif
+
 namespace Msnhnet
 {
 class NetworkState;
@@ -54,6 +58,11 @@ public:
     void recordCudaStop();
      static std::vector<float> getVecFromCuda(float* const data, const int &num);
 #endif
+
+#ifdef USE_OPENCL
+    virtual void forwardCL(NetworkState &netState);
+#endif 
+
     virtual void loadAllWeigths(std::vector<float> &weights);
 
     virtual void saveAllWeights(const int& mainIdx, const int& branchIdx=-1, const int& branchIdx1=-1);

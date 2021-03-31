@@ -25,6 +25,7 @@ public:
     virtual void forwardGPU(NetworkState &netState);
 #endif
 
+
 protected:
     float *_preluWeights    = nullptr;
 #ifdef USE_GPU

@@ -167,6 +167,10 @@ MaxPoolLayer::MaxPoolLayer(const int &batch,   const int &height, const int &wid
 
     this->_layerDetail       = msg;
 
+#ifdef USE_OPENCL
+    _kernel = clScheduler::get().buildKernel(this->_type, "maxPoolGeneral");
+#endif
+
 }
 
 void MaxPoolLayer::forward(NetworkState &netState)
@@ -614,6 +618,92 @@ void MaxPoolLayer::forwardAvx(float *const &src, float *const &dst, const int &k
     }
 }
 #endif
+
+void MaxPoolLayer::forwardCL(NetworkState &netState){
+
+    std::cout << "MaxPoolLayer forwardCL " << std::endl;
+
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerOutput     = this->_output; 
+
+        }
+        else 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+        else
+
+        {
+            layerOutput     = this->_output;
+        }
+    }
+
+    if(this->_maxPoolDepth)
+    {
+
+    } else {
+        for(int b = 0; b < this->_batch; ++b)                
+        {   
+            std::cout << "run maxPoolingGeneral" << std::endl;
+            layerInput += b * this->_width * this->_height * this->_channel;
+            layerOutput += b * this->_outWidth * this->_outHeight * this->_outChannel;
+            MaxPoolingCL::maxPoolingGeneral(layerInput, _width, _height, _channel, _kernel, _kSizeX, _kSizeY, layerOutput, 
+                                            _outWidth, _outHeight, _outChannel, _strideX, _strideY, _paddingX, _paddingY);
+        }
+    }
+}
 
 MaxPoolLayer::~MaxPoolLayer()
 {

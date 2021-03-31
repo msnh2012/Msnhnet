@@ -66,6 +66,19 @@ ConnectedLayer::ConnectedLayer(const int &batch, const int &steps, const int &in
 
     this->_maxOutputNum  = this->_batch*this->_outputNum;
 
+#ifdef USE_OPENCL
+    this->_kernel_con = clScheduler::get().buildKernel(LayerType::CONVOLUTIONAL, "IM2COL_GEMM_c");
+    if (this->_activation != ActivationType::NONE) {
+        this->_kernel_act = clScheduler::get().buildKernel(LayerType::ACTIVE, Activations::getActivationStr(this->_activation));
+    }
+    if (this->_batchNorm) {
+        // _kernel_bn = clScheduler::get().buildKernel(LayerType::BATCHNORM, "batch_norm");
+    }
+
+
+
+#endif
+
     char msg[100];
 #ifdef WIN32
     sprintf_s(msg, "connected                            %4d  ->  %4d\n", inputNum, outputNum);
@@ -489,6 +502,136 @@ void ConnectedLayer::forwardGPU(NetworkState &netState)
 }
 #endif
 
+#ifdef USE_OPENCL 
+
+void ConnectedLayer::forwardCL(NetworkState &netState) {
+    std::cout << "connected layer fowardCL" << std::endl;
+
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+    {
+        if(this->_isFirstBranch)
+        {
+            layerInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+        {
+            layerInput      = netState.input;
+        }
+        else 
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+            {
+                layerInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+    {
+        if(this->_isLastBranch)
+        {
+            layerOutput     = this->_output; 
+        }
+        else 
+        {
+            layerOutput     = netState.getOutput(); 
+            netState.shuffleInOut();
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+        {
+            layerOutput     = netState.getOutput(); 
+            netState.shuffleInOut();
+        }
+        else
+        {
+            layerOutput     = this->_output;
+        }
+    }
+
+
+    int m       =   this->_batch;
+    int k       =   this->_inputNum;
+    int n       =   this->_outputNum;
+    cl_mem inputMem = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->_batch * this->_inputNum * sizeof(float), layerInput, &status);
+    cl_mem dstMem = clCreateBuffer(clScheduler::get().context(), CL_MEM_WRITE_ONLY, m * n * sizeof(float), NULL, &status);
+    CHECKSTATUS(status, "create dst cl_mem");
+    CHECKSTATUS(status, "create im_im2col");
+
+    ConnectedCL::connectedCL(inputMem, m, n, k, this->_kernel_con, this->_clWeights, dstMem);
+    status |= clEnqueueReadBuffer(clScheduler::get().queue(), dstMem, CL_TRUE, 0, m * n * sizeof(float), layerOutput, 0, NULL, NULL);
+
+    std::cout << "m = " << m << "   \tn = " << n << "   \tk = " << k << std::endl;
+
+
+    
+
+    if(this->_batchNorm == 1)
+    {
+        std::cout << "do batchnorm, waiting for complete..." << std::endl;
+    } else {
+        if(this->_useBias)
+        {
+            for (int i = 0; i < this->_batch; ++i)
+            {
+                Blas::cpuAxpy(this->_outputNum, 1, this->_biases, 1, layerOutput + i * this->_outputNum, 1);
+            }
+        }
+
+        
+    }
+
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        Activations::activateArrayNormCh(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, layerOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,1);
+    }
+    else if(this->_activation == ActivationType::PRELU)
+
+    {
+        Activations::activatePRelu(layerOutput,this->_batch, this->_outChannel,this->_preluWeights, this->_outWidth*this->_outHeight, this->supportAvx);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {
+        if(_actParams.size() > 0)
+        {
+            ActivationsCL::activateArrayCL(layerOutput, this->_outputNum*this->_batch, this->_kernel_act, _actParams[0]);
+        }
+        else
+        {
+            ActivationsCL::activateArrayCL(layerOutput, this->_outputNum*this->_batch, this->_kernel_act);
+        }
+    }
+
+}
+
+#endif 
+
 void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
 {
 
@@ -504,6 +647,20 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
 
         loadWeights(weights.data(), _nWeights);
         offset += _nWeights;
+
+#ifdef USE_OPENCL
+        this->_clWeights           = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float) * this->_nWeights, NULL, &status);
+        if (status != CL_SUCCESS) { std::cout << "create clWeights failed" << std::endl; }
+        float* clWeightsPtr = (float*)clEnqueueMapBuffer(clScheduler::get().queue(), this->_clWeights, CL_TRUE, CL_MAP_WRITE, 0, sizeof(float) * this->_nWeights, 0, NULL, NULL, &status);
+        if (status != CL_SUCCESS) { std::cout << "map clWeights failed" << std::endl; }
+        
+        for (size_t i = 0; i < this->_nWeights; i++){
+            clWeightsPtr[i] = weights[i];
+        }
+        status = clEnqueueUnmapMemObject(clScheduler::get().queue(), this->_clWeights, clWeightsPtr, 0, NULL, NULL);
+        if (status != CL_SUCCESS) { std::cout << "unmap clWeights failed" << std::endl; }
+
+#endif 
 
         if(this->_batchNorm)
         {

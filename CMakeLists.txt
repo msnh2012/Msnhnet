@@ -20,7 +20,8 @@ option(BUILD_USE_OPENCV     "Build with Opencv"         OFF)
 option(BUILD_VIEWER         "Build MsnhnetViewer"       OFF)
 option(BUILD_USE_GPU        "Use Gpu"                   OFF)
 option(BUILD_USE_CUDNN      "Use cuDnn"                 OFF)
-option(BUILD_USE_MSNHCV_GUI "Use msnhCV GUI"            ON)
+option(BUILD_USE_MSNHCV_GUI "Use msnhCV GUI"            OFF)
+option(BUILD_USE_OPENCL     "Use OpenCL"                ON )
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_Release} -O3")
@@ -263,6 +264,58 @@ endif()
 
 set(CUDA_INC_DIR    )
 
+
+# config OPENCL
+if(BUILD_USE_OPENCL MATCHES ON)
+    add_definitions(-DUSE_OPENCL)#===============
+    
+    # enable_language(CUDA) 
+
+    set(USE_OPENCL_MACRO "#define USE_OPENCL\n")
+
+    # set(CXX_CUDA_SRCS 
+    #     src/config/MsnhnetCuda.cpp
+    # )
+
+    set(OPENCL_SRCS
+        src/core/cl/clScheduler.cpp
+        src/layers/opencl/MsnhActivationsCL.cpp
+        src/layers/opencl/MsnhBatchNormCL.cpp
+        src/layers/opencl/MsnhConvolutionSgemmCL.cpp
+        src/layers/opencl/MsnhMaxPoolingCL.cpp
+        src/layers/opencl/MsnhPaddingCL.cpp
+        src/layers/opencl/MsnhConnectedCL.cpp
+        )
+
+
+    # set(CUDA_SRCS
+    #     src/config/cuda/MsnhnetCuda.cu
+    #     src/core/cuda/MsnhBlasGPU.cu
+    #     src/core/cuda/MsnhGemmGPU.cu
+    #     src/layers/cuda/MsnhActivationsGPU.cu
+    #     src/layers/cuda/MsnhConvolutionalLayerGPU.cu
+    #     src/layers/cuda/MsnhMaxPoolLayerGPU.cu
+    #     src/layers/cuda/MsnhLocalAvgPoolLayerGPU.cu
+    #     src/layers/cuda/MsnhGlobalAvgPoolLayerGPU.cu
+    #     src/layers/cuda/MsnhPaddingLayerGPU.cu
+    #     src/layers/cuda/MsnhPermuteLayerGPU.cu
+    #     src/layers/cuda/MsnhPixelShuffleLayerGPU.cu
+    #     src/layers/cuda/MsnhYoloLayerGPU.cu
+    #     src/layers/cuda/MsnhYoloOutLayerGPU.cu
+    #     src/layers/cuda/MsnhSliceLayerGPU.cu
+    #     )
+    # set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+
+    
+
+else()
+    set(USE_OPENCL_MACRO )
+    #set(CUDA_SRCS )
+    #set(CXX_CUDA_SRCS )
+endif()
+
+set(OPENCL_INC_DIR    )
+
 # X86 config
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)|(x86)|(X86)|(amd64)|(AMD64)")
     add_definitions(-DUSE_X86)#===============
@@ -358,6 +411,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     ${CUDA_INC_DIR}
+    ${OPENCL_INC_DIR}
     )
 
 #source
@@ -366,6 +420,7 @@ target_sources(${PROJECT_NAME}
     ${SRCS}
     ${CXX_CUDA_SRCS}
     ${MSNHCV_GUI_SRC}
+    ${OPENCL_SRCS}
     )
 
 #openblas
@@ -398,6 +453,13 @@ if(BUILD_USE_GPU MATCHES ON)
     endif()
 else()
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB})
+endif()
+
+
+# opencl
+if(BUILD_USE_OPENCL MATCHES ON)
+    set(OPENCL_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.2")
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENCL_DIR}/lib/x64/OpenCL.lib)
 endif()
 
 
@@ -452,7 +514,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     )
 
 # Create cfg macro head file
-file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_OPENCV_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_GPU_MACRO}${USE_CUDNN_MACRO}${USE_MSNHCV_GUI_MACRO}#endif")
+file(WRITE MsnhnetTmp/MsnhnetMacro.h "#ifndef MSNHNETMACRO_H\n#define MSNHNETMACRO_H\n${USE_OMP_MACRO}${OMP_THREAD_MACRO}${USE_OPEN_BLAS_MACRO}${USE_X86_MACRO}${USE_ARM_MACRO}${USE_NEON_MACRO}${USE_OPENCV_MACRO}${USE_SHARED_MSNHNET_MACRO}${USE_GPU_MACRO}${USE_OPENCL_MACRO}${USE_CUDNN_MACRO}${USE_MSNHCV_GUI_MACRO}#endif")
 
 # Install macro head file
 install(FILES MsnhnetTmp/MsnhnetMacro.h

@@ -7,6 +7,10 @@
 #include "Msnhnet/layers/MsnhConvolutionalLayer.h"
 #include "Msnhnet/utils/MsnhExport.h"
 
+#ifdef USE_OPENCL
+#include "Msnhnet/layers/opencl/MsnhConnectedCL.h"
+#endif 
+
 namespace Msnhnet
 {
 
@@ -26,6 +30,10 @@ public:
 
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);
+#endif
+
+#ifdef USE_OPENCL
+    void forwardCL(NetworkState &netState);
 #endif
 
     void loadAllWeigths(std::vector<float> &weights);
@@ -94,6 +102,23 @@ protected:
     float       *_gpuRollMean        =   nullptr;
     float       *_gpuRollVariance    =   nullptr;
     float       *_gpuPreluWeights    =   nullptr;
+#endif
+
+#ifdef USE_OPENCL
+
+    cl_kernel   _kernel_con;
+    cl_kernel   _kernel_act;
+    cl_kernel   _kernel_bn;
+
+    cl_int      status;
+
+    cl_mem      _clWeights;
+    cl_mem      _clBiases;
+    cl_mem      _clScales;
+    cl_mem      _clRollMean;
+    cl_mem      _clRollVariance;
+    cl_mem      _clPreluWeights;
+
 #endif
 
     int         _nBiases             =   0;

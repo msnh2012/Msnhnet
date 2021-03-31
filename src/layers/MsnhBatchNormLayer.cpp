@@ -41,6 +41,16 @@ BatchNormLayer::BatchNormLayer(const int &batch, const int &width, const int &he
 
     this->_maxOutputNum  = this->_batch*this->_outputNum;
 
+#ifdef USE_OPENCL
+
+    this->_kernel       =   clScheduler::get().buildKernel(this->_type, "BatchNorm");
+    if (this->_activation != ActivationType::NONE) {
+        this->_kernel_act = clScheduler::get().buildKernel(LayerType::ACTIVE, Activations::getActivationStr(this->_activation));
+    }
+
+#endif
+
+
     char msg[100];
 #ifdef WIN32
     sprintf_s(msg, "Batch Normalization Layer:     %d x %d x %d image\n", this->_width, this->_height, this->_channel);
@@ -398,6 +408,144 @@ void BatchNormLayer::forwardGPU(NetworkState &netState)
 }
 #endif
 
+#ifdef USE_OPENCL
+void BatchNormLayer::forwardCL(NetworkState &netState){
+    std::cout << "connected layer fowardCL" << std::endl;
+
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerOutput     = this->_output; 
+
+        }
+        else 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+        else
+
+        {
+            layerOutput     = this->_output;
+        }
+    }
+
+
+
+    cl_mem srcMem = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this->_width * this->_height * this->_channel * sizeof(float), layerInput, &status);
+    cl_mem dstMem = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE, this->_width * this->_height * this->_channel * sizeof(float), NULL, &status);
+    BatchNormCL::batchNormCL(srcMem, dstMem, this->_clBiases, this->_clScales, this->_clRollMean, this->_clRollVariance, this->_width, this->_height, this->_channel, this->_kernel);
+    status |= clEnqueueReadBuffer(clScheduler::get().queue(), dstMem, CL_TRUE, 0, this->_width * this->_height * this->_channel * sizeof(float), layerOutput, 0, NULL, NULL);
+
+    //////////////////////////////////////////////////////////////////
+    ifstream fin("batch_norm_cl.txt");
+    if(!fin){
+        fin.close();
+        ofstream cFileIn("batch_norm_cl.txt");
+        for (size_t i = 0; i < this->_height; i++)
+        {
+            for (size_t j = 0; j < _height; j++)
+            {
+                cFileIn << layerOutput[i * _width + j] << "  ";
+            }
+            cFileIn << std::endl;                            
+        }
+        cFileIn.close();
+    } else {
+        fin.close();
+    }
+    //////////////////////////////////////////////////////////////////
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        Activations::activateArrayNormCh(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, layerOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,1);
+    }
+    else if(this->_activation == ActivationType::PRELU)
+
+    {
+        Activations::activatePRelu(layerOutput,this->_batch, this->_outChannel,this->_preluWeights, this->_outWidth*this->_outHeight, this->supportAvx);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {
+        if(_actParams.size() > 0)
+        {
+            ActivationsCL::activateArrayCL(layerOutput, this->_outputNum*this->_batch, this->_kernel_act, _actParams[0]);
+        }
+        else
+        {
+            ActivationsCL::activateArrayCL(layerOutput, this->_outputNum*this->_batch, this->_kernel_act);
+        }
+    }
+    
+
+}
+
+#endif 
+
 void BatchNormLayer::addBias(float *const &output, float *const &biases, const int &batch, const int &channel, const int &whSize)
 {
     for(int b=0; b<batch; ++b)      
@@ -511,6 +659,18 @@ void BatchNormLayer::loadAllWeigths(std::vector<float> &weights)
             }
         }
 #endif
+
+#ifdef USE_OPENCL
+        this->_clScales         = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->_nScales * sizeof(float), weights.data(), &status);
+        this->_clBiases         = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
+                                  this->_nScales * sizeof(float), weights.data() + this->_nScales, &status);
+        this->_clRollMean       = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
+                                  this->_nRollMean * sizeof(float), weights.data() + this->_nBiases + this->_nScales, &status);
+        this->_clRollVariance   = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
+                                  this->_nRollVariance * sizeof(float), weights.data() + this->_nBiases + this->_nScales + this->_nRollMean, &status);
+
+#endif
+
     }
 
     this->_weightsLoaded = true;

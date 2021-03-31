@@ -22,6 +22,10 @@
 #include "Msnhnet/layers/x86/MsnhConvolution3x3LayerX86.h"
 #endif
 
+#ifdef USE_OPENCL
+#include "Msnhnet/layers/opencl/MsnhConvolutionSgemmCL.h"
+#endif
+
 namespace Msnhnet
 {
 class MsnhNet_API ConvolutionalLayer:public BaseLayer
@@ -53,6 +57,11 @@ public:
 #ifdef USE_GPU
     void forwardGPU(NetworkState &netState);
 #endif
+
+#ifdef USE_OPENCL
+    void forwardCL(NetworkState &netState);
+#endif
+
     void loadAllWeigths(std::vector<float> &weights);
 
     virtual void saveAllWeights(const int &mainIdx, const int &branchIdx=-1, const int &branchIdx1=-1);
@@ -216,6 +225,40 @@ protected:
     float       *_gpuRollMean        =   nullptr;
     float       *_gpuRollVariance    =   nullptr;
     float       *_gpuPreluWeights    =   nullptr;
+
+#endif
+
+#ifdef USE_OPENCL
+
+    cl_kernel   _kernel_cov;
+    cl_kernel   _kernel_im2col;
+    cl_kernel   _kernel_act;
+    cl_kernel   _kernel_bn;
+    cl_kernel   _kernel_fil_tran;
+    cl_kernel   _kernel_pad;
+
+    cl_int      status;
+
+    cl_mem      _clWeights;
+    cl_mem      _clWeightsWino;
+
+    cl_mem      _clBiases;
+    cl_mem      _clScales;
+    cl_mem      _clRollMean;
+    cl_mem      _clRollVariance;
+    
+    cl_mem      _clPreluWeights;
+
+    int         winoFilterW         = 8;
+    int         winoFilterH         = 8;
+    int         _nWinoWeights;
+
+    
+    bool        use3x3S1CL           =   false;
+    bool        use3x3S2CL           =   false;
+
+    void selectOpenCLConv();
+
 
 #endif
 

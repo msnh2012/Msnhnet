@@ -7,6 +7,10 @@
 #include "Msnhnet/layers/cuda/MsnhMaxPoolLayerGPU.h"
 #endif
 
+#ifdef USE_OPENCL
+#include "Msnhnet/layers/opencl/MsnhMaxPoolingCL.h"
+#endif
+
 namespace Msnhnet
 {
 class MsnhNet_API MaxPoolLayer:public BaseLayer
@@ -28,6 +32,11 @@ public:
     void forwardAvx(float *const &src, float *const &dst, const int &kSizeX, const int &kSizeY, const int &width,
                     const int &height, const int &outWidth, const int &outHeight, const int &channel, const int &paddingX,
                     const int &paddingY, const int &stride, const int &batch);
+#endif
+
+#ifdef USE_OPENCL
+    virtual void forwardCL(NetworkState &netState);
+
 #endif
 
     ~MaxPoolLayer();
@@ -76,6 +85,11 @@ protected:
     cudnnTensorDescriptor_t         _outputDesc;
 #endif
 #endif
+
+#ifdef USE_OPENCL
+    cl_kernel   _kernel;
+#endif 
+
 };
 }
 

@@ -40,6 +40,10 @@ public:
     virtual void forwardGPU(NetworkState &netState);
 #endif
 
+#ifdef USE_OPENCL
+    virtual void forwardCL(NetworkState &netState);
+#endif
+
     ~ResBlockLayer();
 };
 }

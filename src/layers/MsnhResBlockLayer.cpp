@@ -232,7 +232,8 @@ void ResBlockLayer::forward(NetworkState &netState)
 
     netState.input      = inputX.data();
 
-    for (size_t i = 0; i < baseLayers.size(); ++i)
+    // for (size_t i = 0; i < baseLayers.size(); ++i)
+    for (size_t i = 0; i < 1; ++i)
     {
         baseLayers[i]->forward(netState);
 
@@ -390,6 +391,109 @@ void ResBlockLayer::forwardGPU(NetworkState &netState)
 
     Cuda::freeCuda(inputX);
 }
+#endif
+
+#ifdef USE_OPENCL
+
+void ResBlockLayer::forwardCL(NetworkState &netState)
+{
+    /* TODO: batch */
+
+    float *layerInput   = nullptr;
+    float *layerOutput  = nullptr;
+
+    if(netState.net->layers[this->_layerIndex-1]->getMemReUse() == 1)
+    {
+        layerInput      = netState.getInput();
+    }
+    else
+    {
+        layerInput      = netState.input;
+    }
+
+    std::vector<float> inputX{layerInput, layerInput + netState.inputNum};
+
+    netState.input      = inputX.data();
+
+    // for (size_t i = 0; i < baseLayers.size(); ++i)
+    for (size_t i = 0; i < 1; ++i)
+    {
+        baseLayers[i]->forwardCL(netState);
+
+        if(baseLayers[i]->getMemReUse() == 0) 
+
+        {
+            netState.input     =   baseLayers[i]->getOutput();
+        }
+        netState.inputNum  =   baseLayers[i]->getOutputNum();
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerOutput     = netState.getOutput(); 
+
+        netState.shuffleInOut();
+
+    }
+    else
+
+    {
+        layerOutput     = this->_output;
+    }
+
+    
+    // //////////////////////////////////////////////////////
+    // ofstream cFileOut("wino_output.txt");
+    // for (size_t i = 0; i < 200704; i++){
+    //     cFileOut << layerOutput[i] << std::endl;
+    // }
+    // cFileOut.close();
+    // //////////////////////////////////////////////////////
+
+    Blas::cpuAxpy(netState.inputNum, 1.f, inputX.data(), 1,netState.input, 1);
+    Blas::cpuCopy(netState.inputNum, netState.input, 1, layerOutput, 1);
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        Activations::activateArrayNormCh(layerOutput, this->_outputNum, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, layerOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {
+        if(_actParams.size() > 0)
+        {
+            Activations::activateArray(layerOutput, this->_outputNum, this->_activation, this->supportAvx, _actParams[0]);
+        }
+        else
+        {
+            Activations::activateArray(layerOutput, this->_outputNum, this->_activation, this->supportAvx);
+        }
+    }
+
+    this->_forwardTime = 0;
+
+    for (size_t i = 0; i < baseLayers.size(); ++i)
+    {
+        this->_forwardTime += baseLayers[i]->getForwardTime();
+    }
+
+}
+
 #endif
 
 ResBlockLayer::~ResBlockLayer()

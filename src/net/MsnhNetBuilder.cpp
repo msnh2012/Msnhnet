@@ -8,6 +8,12 @@ NetBuilder::NetBuilder()
     _netState        =   new NetworkState();
     _netState->net   =   _net;
 
+#ifdef USE_OPENCL
+    std::cout << "initial clScheduler" << std::endl;
+    // _clScheduler     =   new clScheduler();
+    clScheduler::get();
+#endif
+
     BaseLayer::initSimd();
 }
 
@@ -678,7 +684,8 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
                 std::to_string(img.size()),__FILE__,__LINE__, __FUNCTION__);
     }
 
-    for (size_t i = 0; i < _net->layers.size(); ++i)
+    // for (size_t i = 0; i < _net->layers.size(); ++i)
+    for (size_t i = 0; i < 4; ++i)
     {
         _net->layers[i]->forward(*_netState);
 
@@ -1001,6 +1008,77 @@ std::vector<std::vector<YoloBox>> NetBuilder::runYoloGPU(std::vector<float> img)
     }
 }
 
+#endif
+
+#ifdef USE_OPENCL
+
+std::vector<float> NetBuilder::runClassifyCL(std::vector<float> img)
+{
+    std::cout << "runClassifyCL" << std::endl;
+    if(BaseLayer::onlyUseGpu)
+    {
+        throw Exception(1, "Gpu mode , can not run with cpu",__FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(BaseLayer::isPreviewMode)
+    {
+        throw Exception(1, "Can not infer in preview mode !",__FILE__, __LINE__, __FUNCTION__); 
+    }
+
+    _netState->input     =   img.data();
+    _netState->inputNum  =   static_cast<int>(img.size());
+
+    //for (size_t i = 0; i < _net->layers.size(); ++i)
+    for (size_t i = 0; i < 4; ++i)
+    {   
+        std::cout << "forward " << i << " layer" << std::endl;
+        _net->layers[i]->forwardCL(*_netState);
+
+        if(_net->layers[i]->getMemReUse() == 0)
+        {
+            _netState->input   =   _net->layers[i]->getOutput();
+        }
+        _netState->inputNum  =   _net->layers[i]->getOutputNum();
+
+        if(i == _net->layers.size()-1)
+        {
+            this->_lastLayerOutHeight  = _net->layers[i]->getOutHeight();
+            this->_lastLayerOutWidth   = _net->layers[i]->getOutWidth();
+            this->_lastLayerOutChannel = _net->layers[i]->getOutChannel();
+            this->_lastLayerOutNum     = _net->layers[i]->getOutputNum();
+        }
+
+
+        if(this->_saveLayerOutput) {
+            std::cout<<"Saving layer outputs. Layer : "<<i<<std::endl;
+
+            if(_net->layers[i]->getMemReUse()==1)
+            {
+                std::vector<float> pred(_netState->getInput() , _netState->getInput() + _netState->inputNum);
+                std::string path = std::to_string(i)+"cl.txt";
+                IO::saveVector<float>(pred,path.data(),"\n");
+            }
+            else
+            {
+                std::vector<float> pred(_netState->input, _netState->input + _netState->inputNum);
+                std::string path = std::to_string(i)+"cl.txt";
+                IO::saveVector<float>(pred,path.data(),"\n");
+            }
+        }
+
+    }
+    
+    if(_net->layers[_net->layers.size()-1]->getMemReUse()==1)
+    {
+        std::vector<float> pred(_netState->getInput(), _netState->getInput() + _netState->inputNum);
+        return pred;
+    }
+    else
+    {
+        std::vector<float> pred(_netState->input, _netState->input + _netState->inputNum);
+        return pred;
+    }
+}
 #endif
 
 Point2I NetBuilder::getInputSize()

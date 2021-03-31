@@ -32,6 +32,10 @@
 #include "Msnhnet/io/MsnhIO.h"
 #include "Msnhnet/utils/MsnhExport.h"
 
+#ifdef USE_OPENCL
+#include "Msnhnet/core/cl/clScheduler.h"
+#endif
+
 namespace Msnhnet
 {
 class NetBuildParams
@@ -69,6 +73,12 @@ public:
 #ifdef USE_GPU
     std::vector<float> runClassifyGPU(std::vector<float> img);
     std::vector<std::vector<YoloBox>> runYoloGPU(std::vector<float> img);
+#endif
+
+#ifdef USE_OPENCL
+    std::vector<float> runClassifyCL(std::vector<float> img);
+    // std::vector<std::vector<YoloBox>> runYoloCL(std::vector<float> img);
+
 #endif
 
     Point2I getInputSize();

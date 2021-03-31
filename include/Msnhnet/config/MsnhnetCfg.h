@@ -26,6 +26,15 @@
 #include <Msnhnet/config/MsnhnetOpenGL.h>
 #endif
 
+#ifdef USE_OPENCL
+#include <CL/cl.h>
+#include <Msnhnet/core/cl/clScheduler.h>
+
+#ifdef USE_OPENCL
+#define CHECKSTATUS(status, str) if (status==CL_SUCCESS) std::cout << str << " success" << std::endl; else std::cout << str << " falied" << std::endl;
+#endif 
+#endif
+
 #ifndef OMP_THREAD
 #define OMP_THREAD omp_get_max_threads()
 #endif
@@ -37,6 +46,15 @@
 #define MSNHNET_VERSION 2000
 
 #define EFFCIENT_ALIGN 16
+
+#ifndef MSNH_F32_EPS
+#define MSNH_F32_EPS 1e-6
+#endif
+
+
+#ifndef MSNH_F64_EPS
+#define MSNH_F64_EPS 1e-14
+#endif
 
 enum ActivationType
 {

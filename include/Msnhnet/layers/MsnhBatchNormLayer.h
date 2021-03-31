@@ -12,6 +12,10 @@
 #include "Msnhnet/layers/arm/MsnhBatchNorm.h"
 #endif
 
+#ifdef USE_OPENCL
+#include "Msnhnet/layers/opencl/MsnhBatchNormCL.h"
+#endif
+
 namespace Msnhnet
 {
 class MsnhNet_API BatchNormLayer : public BaseLayer
@@ -24,6 +28,10 @@ public:
 
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);
+#endif
+
+#ifdef USE_OPENCL
+    virtual void forwardCL(NetworkState &netState);
 #endif
 
     static void addBias(float *const &output, float *const &biases, const int &batch, const int &channel, const int &whSize);
@@ -71,6 +79,18 @@ protected:
     float       *_gpuRollVariance    =   nullptr;
     float       *_gpuPreluWeights    =   nullptr;
 #endif
+
+#ifdef USE_OPENCL
+    cl_kernel   _kernel;
+    cl_kernel   _kernel_act;
+    
+    cl_int      status;
+    
+    cl_mem      _clBiases;
+    cl_mem      _clScales;
+    cl_mem      _clRollMean;
+    cl_mem      _clRollVariance;
+#endif 
 
     int         _nPreluWeights       =   0;
     int         _nBiases             =   0;

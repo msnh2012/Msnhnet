@@ -8,6 +8,10 @@
 #include "Msnhnet/layers/MsnhActivationsAvx.h"
 #endif
 
+#ifdef USE_OPENCL
+#include "Msnhnet/layers/opencl/MsnhActivationsCL.h"
+#endif
+
 #ifdef USE_GPU
 #include "Msnhnet/layers/cuda/MsnhActivationsGPU.h"
 #endif

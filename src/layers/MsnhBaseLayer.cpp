@@ -319,4 +319,14 @@ void BaseLayer::recordCudaStop()
 */
 }
 #endif
+
+#ifdef USE_OPENCL
+
+void BaseLayer::forwardCL(NetworkState &netState)
+{
+    (void) netState;    
+}
+
+#endif
+
 }
