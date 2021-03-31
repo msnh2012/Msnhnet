@@ -6,6 +6,7 @@
 #include "Msnhnet/utils/MsnhException.h"
 #include "Msnhnet/config/MsnhnetCfg.h"
 #include "Msnhnet/utils/MsnhExString.h"
+#include "Msnhnet/cv/MsnhCVVector.h"
 #include <iostream>
 #include <iomanip>
 #include <random>
@@ -725,6 +726,23 @@ public:
     inline void fill(const T &t)
     {
         fillPixel<T>(t);
+    }
+
+    inline Vector<w,T> mulVec(const Vector<w,T> &vec)
+    {
+        Vector<h,T> res;
+        for (int i = 0; i < h; ++i)
+        {
+            T val = 0;
+            for (int j = 0; j < w; ++j)
+            {
+                val += this->getValAtRowCol(i,j)*vec[j];
+            }
+
+            res[i] = val;
+        }
+
+        return res;
     }
 };
 

@@ -640,7 +640,6 @@ RotationVecD Geometry::quaternion2RotVec(const QuaternionD &q)
 RotationVecF Geometry::quaternion2RotVec(const QuaternionF &q)
 {
     float theta = 2*acosf(q.getQ0());
-    RotationVecF vec;
 
     if(theta==0)
     {
@@ -1192,31 +1191,6 @@ Vector3D Matrix4x4D::mulVec3(const Vector3D &vec3)
     }
 }
 
-Vector4D Matrix4x4D::mulVec4(const Vector4D &vec4)
-{
-    double x = vec4[0]*this->getFloat64()[0] +
-            vec4[1]*this->getFloat64()[1] +
-            vec4[2]*this->getFloat64()[2] +
-            vec4[3]*this->getFloat64()[3];
-
-    double y = vec4[0]*this->getFloat64()[4] +
-            vec4[1]*this->getFloat64()[5] +
-            vec4[2]*this->getFloat64()[6] +
-            vec4[3]*this->getFloat64()[7];
-
-    double z = vec4[0]*this->getFloat64()[8] +
-            vec4[1]*this->getFloat64()[9] +
-            vec4[2]*this->getFloat64()[10] +
-            vec4[3]*this->getFloat64()[11];
-
-    double w = vec4[0]*this->getFloat64()[12] +
-            vec4[1]*this->getFloat64()[13] +
-            vec4[2]*this->getFloat64()[14] +
-            vec4[3]*this->getFloat64()[15];
-
-    return Vector4D({x,y,z,w});
-}
-
 Matrix3x3D Matrix4x4D::normalMatrix()
 {
 
@@ -1573,32 +1547,6 @@ Vector3F Matrix4x4F::mulVec3(const Vector3F &vec3)
         return Vector3F({x/w,y/w,z/w});
     }
 }
-
-Vector4F Matrix4x4F::mulVec4(const Vector4F &vec4)
-{
-    float x = vec4[0]*this->getFloat32()[0] +
-            vec4[1]*this->getFloat32()[1] +
-            vec4[2]*this->getFloat32()[2] +
-            vec4[3]*this->getFloat32()[3];
-
-    float y = vec4[0]*this->getFloat32()[4] +
-            vec4[1]*this->getFloat32()[5] +
-            vec4[2]*this->getFloat32()[6] +
-            vec4[3]*this->getFloat32()[7];
-
-    float z = vec4[0]*this->getFloat32()[8] +
-            vec4[1]*this->getFloat32()[9] +
-            vec4[2]*this->getFloat32()[10] +
-            vec4[3]*this->getFloat32()[11];
-
-    float w = vec4[0]*this->getFloat32()[12] +
-            vec4[1]*this->getFloat32()[13] +
-            vec4[2]*this->getFloat32()[14] +
-            vec4[3]*this->getFloat32()[15];
-
-    return Vector4F({x,y,z,w});
-}
-
 Matrix3x3F Matrix4x4F::normalMatrix()
 {
 

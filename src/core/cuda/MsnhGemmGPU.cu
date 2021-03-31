@@ -3,69 +3,6 @@
 namespace Msnhnet
 {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 __global__ void im2ColExKernel(const int n, float *input,
                                   const int height, const int width,
                                   const int kernelH, const int kernelW,
@@ -83,7 +20,6 @@ __global__ void im2ColExKernel(const int n, float *input,
         const int hCol      =   hIndex % outColH;
         const int wCol      =   index % outColW;
         const int cIm       =   hIndex / outColH;
-
 
         const int cCol      =   cIm * kernelH *kernelW;
         const int hOff      =   hCol * strideH - padH;
@@ -127,125 +63,14 @@ void GemmGPU::gpuIm2ColEx(float *input, const int &channelNum,
                   float *output)
 {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     int outColH     =  (height + 2*padH - (dilationH * (kernelH - 1) + 1)) / strideH + 1;
     int outColW     =  (width  + 2*padW - (dilationW * (kernelW - 1) + 1)) / strideW + 1;
     int numKernel   =  channelNum * outColH * outColW;
     int blocks      =  (numKernel + Cuda::blockThread - 1)/Cuda::blockThread; 
 
-
     im2ColExKernel<<<blocks,Cuda::blockThread,0,Cuda::getCudaStream()>>>(numKernel,input,height,width,kernelH,kernelW,padH,padW,strideH,strideW,dilationH,dilationW,outColH,outColW,output);
     CUDA_CHECK(cudaPeekAtLastError());
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 __global__ void im2colKernel(const int n, float *const input,
                               const int height, const int width,
@@ -290,38 +115,7 @@ __global__ void im2colKernel(const int n, float *const input,
         }
     }
 
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void GemmGPU::gpuIm2col(float *const &input, const int &channelNum,
                      const int &height, const int &width,
@@ -335,11 +129,9 @@ void GemmGPU::gpuIm2col(float *const &input, const int &channelNum,
     int numKernel   =   channelNum * outColH * outColW;
     int blocks      =   (numKernel + Cuda::blockThread - 1)/Cuda::blockThread; 
 
-
     im2colKernel<<<blocks,Cuda::blockThread,0,Cuda::getCudaStream()>>>(numKernel,input,height,width,kSize,stride,padding,outColH,outColW,output);
     CUDA_CHECK(cudaPeekAtLastError());
 }
-
 
 void GemmGPU::gpuGemm(const int &TA, const int &TB, const int &M, const int &N, const int &K, const float &ALPHA,
                    float * const &A, const int &lda,
@@ -353,12 +145,4 @@ void GemmGPU::gpuGemm(const int &TA, const int &TB, const int &M, const int &N, 
 }
 
 }
-
-
-
-
-
-
-
-
 

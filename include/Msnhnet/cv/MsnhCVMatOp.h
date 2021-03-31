@@ -78,7 +78,9 @@ public:
             Mat::createMat<T>(src.getWidth(),src.getHeight(),1,B);
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getHeight()*src.getWidth();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getHeight(); ++i)
             {
@@ -106,7 +108,9 @@ public:
             Mat::createMat<T>(src.getWidth(),src.getHeight(),1,A);
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getHeight()*src.getWidth();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getHeight(); ++i)
             {
@@ -144,7 +148,9 @@ public:
             Mat::createMat<T>(width,height,3,dst);
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = width*height;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < height; ++i)
             {
@@ -161,7 +167,9 @@ public:
             Mat::createMat<T>(width,height,4,dst);
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = width*height;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < height; ++i)
             {

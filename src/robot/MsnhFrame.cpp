@@ -41,6 +41,18 @@ Frame::Frame(const RotationMatD &rotMat, const TranslationD &trans)
     setTranslation(trans);
 }
 
+Frame Frame::fastInvert()
+{
+    RotationMatD rotMat = getRotationMat();
+    TranslationD trans  = getTranslation();
+    trans = trans * -1;
+
+    rotMat = rotMat.transpose();
+    trans = rotMat.mulVec(trans);
+
+    return  Frame(rotMat,trans);
+}
+
 Frame Frame::SDH(double a, double alpha, double d, double theta)
 {
 

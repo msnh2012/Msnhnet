@@ -76,8 +76,6 @@ public:
 
     Vector3D mulVec3(const Vector3D &vec3);
 
-    Vector4D mulVec4(const Vector4D &vec4);
-
     Matrix3x3D normalMatrix();
 
 };
@@ -132,8 +130,6 @@ public:
     void lookAt(const Vector3F &eye, const Vector3F &center, const Vector3F &up);
 
     Vector3F mulVec3(const Vector3F &vec3);
-
-    Vector4F mulVec4(const Vector4F &vec4);
 
     Matrix3x3F normalMatrix();
 };

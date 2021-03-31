@@ -16,7 +16,9 @@ void BlasNCHW8::cpuNCHWToNCHW8(float * const &org, const int width, const int he
     for (int b = 0; b < batch; ++b)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = outChannel*outHeight*outWidth;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int oc = 0; oc < outChannel; ++oc)
         {
@@ -57,7 +59,9 @@ void BlasNCHW8::cpuNCHW8ToNCHW(float * const &orgNCHW8, const int width, const i
     for (int b = 0; b < batch; ++b)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = outChannel*outHeight*outWidth;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int oc = 0; oc < outChannel; ++oc)
         {
@@ -97,7 +101,9 @@ void BlasNCHW8::cpuAxpyNCHW8(const int &inputN, const float &alpha, float * cons
     __m256 mmAlpha = _mm256_set1_ps(alpha);
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = inputN;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < inputN/NCHW8_PACK; ++i)
     {
@@ -122,7 +128,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     if(type == Arithmetic::ARITH_ADD)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -135,7 +143,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     else if(type == Arithmetic::ARITH_SUB)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -148,7 +158,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     else if(type == Arithmetic::ARITH_SUB_INV)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -161,7 +173,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     else if(type == Arithmetic::ARITH_MUL)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -174,7 +188,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     else if(type == Arithmetic::ARITH_DIV)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -187,7 +203,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     else if(type == Arithmetic::ARITH_DIV_INV)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -212,7 +230,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     {
         __m256 mmAlpha = _mm256_set1_ps(alpha);
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -225,7 +245,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     {
         __m256 mmAlpha = _mm256_set1_ps(alpha);
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -238,7 +260,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     {
         __m256 mmAlpha = _mm256_set1_ps(alpha);
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -251,7 +275,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     {
         __m256 mmAlpha = _mm256_set1_ps(alpha);
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -264,7 +290,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     {
         __m256 mmAlpha = _mm256_set1_ps(alpha);
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -277,7 +305,9 @@ void BlasNCHW8::cpuArithmeticNCHW8(const Arithmetic &type, const int &inputN, fl
     {
         __m256 mmAlpha = _mm256_set1_ps(alpha);
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -295,7 +325,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     if(type == Scientific::SCI_ABS)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -305,7 +337,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_ACOS)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -316,7 +350,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_ASIN)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -326,7 +362,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_ATAN)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -336,7 +374,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_COS)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -348,7 +388,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_COSH)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -358,7 +400,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_SIN)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -370,7 +414,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_SINH)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -380,17 +426,21 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_TAN)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
-            for(int i=0; i<inputN; ++i)
-            {
-                outNCHW8[i]  = tanf(xNCHW8[i]);
-            }
+        for(int i=0; i<inputN; ++i)
+        {
+            outNCHW8[i]  = tanf(xNCHW8[i]);
+        }
     }
     else if(type == Scientific::SCI_TANH)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -400,7 +450,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_EXP)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -412,17 +464,21 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_POW)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
-            for(int i=0; i<inputN; ++i)
-            {
-                outNCHW8[i]  = powf(xNCHW8[i],alpha);
-            }
+        for(int i=0; i<inputN; ++i)
+        {
+            outNCHW8[i]  = powf(xNCHW8[i],alpha);
+        }
     }
     else if(type == Scientific::SCI_LOG)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -435,7 +491,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     else if(type == Scientific::SCI_LOG10)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -446,7 +504,9 @@ void BlasNCHW8::cpuScientificNCHW8(const Scientific &type, const int &inputN, fl
     {
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN/NCHW8_PACK; ++i)
         {
@@ -485,7 +545,7 @@ void BlasNCHW8::cpuNormNCHW8(float * const &xNCHW8, float * const &meanNCHW8, fl
 }
 
 void BlasNCHW8::cpuUpSampleNCHW8(float * const &inNCHW8, const int &width, const int &height, const int &channelNCHW8, const int &batch,
-                                   const int &strideX, const int &strideY, const float &scale, float * const &outNCHW8)
+                                 const int &strideX, const int &strideY, const float &scale, float * const &outNCHW8)
 {
     std::cout<<"not test"<<std::endl;
 
@@ -516,7 +576,7 @@ void BlasNCHW8::cpuUpSampleNCHW8(float * const &inNCHW8, const int &width, const
 }
 
 void BlasNCHW8::cpuSoftmaxNCHW8(float * const &input, const int &num, const int &batch, const int &batchOff, const int &groups,
-                                  const int &groupOff, const float &temperature, const int &stride, float * const &output)
+                                const int &groupOff, const float &temperature, const int &stride, float * const &output)
 {
     std::cout<<"not test"<<std::endl;
 
@@ -537,7 +597,7 @@ void BlasNCHW8::cpuSoftmaxNCHW8(float * const &input, const int &num, const int 
 }
 
 void BlasNCHW8::cpuBilinearResizeNCHW8(float * const &inNCHW8, const int &width, const int &height, const int &channelNCHW8,
-                                          const int &batch, const int &outWidth, const int &outHeight, const int &alignCorners, float * const &outNCHW8)
+                                       const int &batch, const int &outWidth, const int &outHeight, const int &alignCorners, float * const &outNCHW8)
 {
 
     std::cout<<"not test"<<std::endl;
@@ -554,7 +614,9 @@ void BlasNCHW8::cpuBilinearResizeNCHW8(float * const &inNCHW8, const int &width,
     const size_t outSize = outWidth*outHeight;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = outSize;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < outSize; ++i)
     {

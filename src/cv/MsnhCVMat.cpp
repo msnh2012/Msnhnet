@@ -549,7 +549,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*4]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -596,7 +598,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*4]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -649,7 +653,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*4]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -696,7 +702,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*4]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -748,7 +756,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             uint8_t* u8Ptr = new uint8_t[this->_width*this->_height*this->_channel]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -796,7 +806,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             uint8_t* u8Ptr = new uint8_t[this->_width*this->_height*this->_channel]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -850,7 +862,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             uint8_t* u8Ptr = new uint8_t[this->_width*this->_height*this->_channel]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -898,7 +912,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             uint8_t* u8Ptr = new uint8_t[this->_width*this->_height*this->_channel]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -953,7 +969,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*8]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -1000,7 +1018,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*8]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -1052,7 +1072,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*8]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -1099,7 +1121,9 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*8]();
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen = this->_height*this->_width*this->_channel;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < this->_height; ++i)
             {
@@ -1309,7 +1333,9 @@ Mat Mat::eye(const int &num, const MatType &matType)
     if(matType == MAT_GRAY_U8)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = tmp.getHeight();
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < tmp.getHeight(); ++i)
         {
@@ -1319,7 +1345,9 @@ Mat Mat::eye(const int &num, const MatType &matType)
     else if(matType == MAT_GRAY_F32)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = tmp.getHeight();
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < tmp.getHeight(); ++i)
         {
@@ -1329,7 +1357,9 @@ Mat Mat::eye(const int &num, const MatType &matType)
     else if(matType == MAT_GRAY_F64)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = tmp.getHeight();
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < tmp.getHeight(); ++i)
         {
@@ -1353,7 +1383,9 @@ Mat Mat::dense(const int &width, const int &height, const MatType &matType, cons
     if(matType == MAT_GRAY_U8)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = tmp.getHeight()*tmp.getWidth();;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < tmp.getHeight(); ++i)
         {
@@ -1366,7 +1398,9 @@ Mat Mat::dense(const int &width, const int &height, const MatType &matType, cons
     else if(matType == MAT_GRAY_F32)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = tmp.getHeight()*tmp.getWidth();;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < tmp.getHeight(); ++i)
         {
@@ -1379,7 +1413,9 @@ Mat Mat::dense(const int &width, const int &height, const MatType &matType, cons
     else if(matType == MAT_GRAY_F64)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = tmp.getHeight()*tmp.getWidth();
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < tmp.getHeight(); ++i)
         {
@@ -1404,7 +1440,9 @@ Mat Mat::diag(const int &num, const MatType &matType, const float &val)
     if(matType == MAT_GRAY_U8)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = tmp.getHeight();
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < tmp.getHeight(); ++i)
         {
@@ -1414,7 +1452,9 @@ Mat Mat::diag(const int &num, const MatType &matType, const float &val)
     else if(matType == MAT_GRAY_F32)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = tmp.getHeight();
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < tmp.getHeight(); ++i)
         {
@@ -1424,7 +1464,9 @@ Mat Mat::diag(const int &num, const MatType &matType, const float &val)
     else if(matType == MAT_GRAY_F64)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = tmp.getHeight();
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < tmp.getHeight(); ++i)
         {
@@ -1532,7 +1574,9 @@ Mat Mat::transpose()
     if(isU8Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = this->_height*this->_width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < this->_height; ++i)
         {
@@ -1545,7 +1589,9 @@ Mat Mat::transpose()
     else if(isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = this->_height*this->_width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < this->_height; ++i)
         {
@@ -1558,7 +1604,9 @@ Mat Mat::transpose()
     else if(isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = this->_height*this->_width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < this->_height; ++i)
         {
@@ -2526,7 +2574,9 @@ Mat Mat::eleWiseDiv(const Mat &A, const Mat &B)
     if(tmpMat.isU8Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2550,7 +2600,9 @@ Mat Mat::eleWiseDiv(const Mat &A, const Mat &B)
     else if(tmpMat.isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2560,7 +2612,9 @@ Mat Mat::eleWiseDiv(const Mat &A, const Mat &B)
     else if(tmpMat.isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2595,7 +2649,9 @@ Mat Mat::eleWiseMul(const Mat &A, const Mat &B)
     if(tmpMat.isU8Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2610,7 +2666,9 @@ Mat Mat::eleWiseMul(const Mat &A, const Mat &B)
     else if(tmpMat.isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2620,7 +2678,9 @@ Mat Mat::eleWiseMul(const Mat &A, const Mat &B)
     else if(tmpMat.isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2654,7 +2714,9 @@ double Mat::dotProduct(const Mat &A, const Mat &B)
     {
         uint8_t finalVal = 0;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum) reduction(+:finalVal)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2668,7 +2730,9 @@ double Mat::dotProduct(const Mat &A, const Mat &B)
     {
         float finalVal = 0;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum) reduction(+:finalVal)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2681,7 +2745,9 @@ double Mat::dotProduct(const Mat &A, const Mat &B)
     {
         double finalVal = 0;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum) reduction(+:finalVal)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2813,7 +2879,9 @@ Mat operator +(const Mat &A, const Mat &B)
     if(tmpMat.isU8Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2828,7 +2896,9 @@ Mat operator +(const Mat &A, const Mat &B)
     else if(tmpMat.isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2838,7 +2908,9 @@ Mat operator +(const Mat &A, const Mat &B)
     else if(tmpMat.isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2866,7 +2938,9 @@ Mat operator +(const double &a, const Mat &A)
         addVal = addVal>255?255:addVal;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2881,7 +2955,9 @@ Mat operator +(const double &a, const Mat &A)
     else if(tmpMat.isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2891,7 +2967,9 @@ Mat operator +(const double &a, const Mat &A)
     else if(tmpMat.isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2923,7 +3001,9 @@ Mat operator +(const Mat &A, const double &a)
         addVal = addVal>255?255:addVal;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2938,7 +3018,9 @@ Mat operator +(const Mat &A, const double &a)
     else if(tmpMat.isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2948,7 +3030,9 @@ Mat operator +(const Mat &A, const double &a)
     else if(tmpMat.isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -2993,7 +3077,9 @@ Mat operator -(const Mat &A, const Mat &B)
     if(tmpMat.isU8Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3007,7 +3093,9 @@ Mat operator -(const Mat &A, const Mat &B)
     else if(tmpMat.isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3017,7 +3105,9 @@ Mat operator -(const Mat &A, const Mat &B)
     else if(tmpMat.isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3048,7 +3138,9 @@ Mat operator -(const double &a, const Mat &A)
         int subVal = static_cast<int>(a);
         subVal = subVal>255?255:subVal;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3062,7 +3154,9 @@ Mat operator -(const double &a, const Mat &A)
     else if(tmpMat.isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3072,7 +3166,9 @@ Mat operator -(const double &a, const Mat &A)
     else if(tmpMat.isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3103,7 +3199,9 @@ Mat operator -(const Mat &A, const double &a)
         int subVal = static_cast<int>(a);
         subVal = subVal>255?255:subVal;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3117,7 +3215,9 @@ Mat operator -(const Mat &A, const double &a)
     else if(tmpMat.isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3127,7 +3227,9 @@ Mat operator -(const Mat &A, const double &a)
     else if(tmpMat.isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3202,7 +3304,9 @@ Mat operator *(const Mat &A, const Mat &B)
             {
                 uint8_t finalVal = 0;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+                uint64_t dataLen   = dataN;
+                uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)  reduction(+:finalVal)
 #endif
                 for (int i = 0; i < dataN; ++i)
                 {
@@ -3216,7 +3320,9 @@ Mat operator *(const Mat &A, const Mat &B)
             {
                 float finalVal = 0;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+                uint64_t dataLen   = dataN;
+                uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)  reduction(+:finalVal)
 #endif
                 for (int i = 0; i < dataN; ++i)
                 {
@@ -3229,7 +3335,9 @@ Mat operator *(const Mat &A, const Mat &B)
             {
                 double finalVal = 0;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+                uint64_t dataLen   = dataN;
+                uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)  reduction(+:finalVal)
 #endif
                 for (int i = 0; i < dataN; ++i)
                 {
@@ -3300,7 +3408,9 @@ Mat operator *(const double &a, const Mat &A)
     if(tmpMat.isU8Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3315,7 +3425,9 @@ Mat operator *(const double &a, const Mat &A)
     else if(tmpMat.isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3325,7 +3437,9 @@ Mat operator *(const double &a, const Mat &A)
     else if(tmpMat.isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3349,7 +3463,9 @@ Mat operator *(const Mat &A, const double &a)
     if(tmpMat.isU8Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3365,7 +3481,9 @@ Mat operator *(const Mat &A, const double &a)
     else if(tmpMat.isF32Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {
@@ -3375,7 +3493,9 @@ Mat operator *(const Mat &A, const double &a)
     else if(tmpMat.isF64Mat())
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = dataN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < dataN; ++i)
         {

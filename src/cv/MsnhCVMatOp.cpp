@@ -26,7 +26,9 @@ void MatOp::getROI(Mat &src, Mat &dst, const Vec2I32 &p1, const Vec2I32 &p2)
     }
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = height*width*step;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < height; ++i)
     {
@@ -74,7 +76,9 @@ void MatOp::setROI(Mat &srcDst, Mat &roi, const Vec2I32 &pos)
         finalHeight = srcHeight - pos.x2;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = finalHeight*finalWidth*roi.getStep();
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < finalHeight; ++i)
     {
@@ -148,7 +152,9 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         uint8_t *srcU8      =  src.getData().u8;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = outSize.x1*outSize.x2;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < outSize.x2; ++i)
         {
@@ -182,7 +188,9 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
             uint8_t* srcU8 = src.getData().u8;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = outSize.x1*outSize.x2;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < outSize.x2; ++i)
             {
@@ -213,7 +221,9 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         {
             float* srcF32 = src.getData().f32;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = outSize.x1*outSize.x2;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < outSize.x2; ++i)
             {
@@ -243,7 +253,9 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         {
             double* srcF64 = src.getData().f64;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = outSize.x1*outSize.x2;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < outSize.x2; ++i)
             {
@@ -273,7 +285,9 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         {
             uint8_t* srcU8 = src.getData().u8;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = outSize.x1*outSize.x2;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < outSize.x2; ++i)
             {
@@ -314,7 +328,9 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         {
             float* srcF32 = src.getData().f32;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = outSize.x1*outSize.x2;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < outSize.x2; ++i)
             {
@@ -352,7 +368,9 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         {
             double* srcF64 = src.getData().f64;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = outSize.x1*outSize.x2;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < outSize.x2; ++i)
             {
@@ -390,7 +408,9 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         {
             uint8_t* srcU8 = src.getData().u8;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = outSize.x1*outSize.x2;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < outSize.x2; ++i)
             {
@@ -436,7 +456,9 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         {
             float* srcF32 = src.getData().f32;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = outSize.x1*outSize.x2;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < outSize.x2; ++i)
             {
@@ -478,7 +500,9 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         {
             double* srcF64 = src.getData().f64;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = outSize.x1*outSize.x2;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < outSize.x2; ++i)
             {
@@ -573,7 +597,9 @@ double MatOp::norm(Mat &mat, const NormType &normType)
         if(mat.isF32Mat())
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+            uint64_t dataLen   = mat.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum) reduction(+:final)
 #endif
             for (int i = 0; i < mat.getDataNum(); ++i)
             {
@@ -583,7 +609,9 @@ double MatOp::norm(Mat &mat, const NormType &normType)
         else if(mat.isF64Mat())
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+            uint64_t dataLen   = mat.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum) reduction(+:final)
 #endif
             for (int i = 0; i < mat.getDataNum(); ++i)
             {
@@ -597,7 +625,9 @@ double MatOp::norm(Mat &mat, const NormType &normType)
         if(mat.isF32Mat())
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+            uint64_t dataLen   = mat.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum) reduction(+:final)
 #endif
             for (int i = 0; i < mat.getDataNum(); ++i)
             {
@@ -608,7 +638,9 @@ double MatOp::norm(Mat &mat, const NormType &normType)
         else if(mat.isF64Mat())
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+            uint64_t dataLen   = mat.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum) reduction(+:final)
 #endif
             for (int i = 0; i < mat.getDataNum(); ++i)
             {
@@ -785,7 +817,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         if(thType == THRESH_BINARY)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -802,7 +836,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         else if(thType == THRESH_BINARY_INV)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -819,7 +855,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         else if(thType == THRESH_TOZERO)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -832,7 +870,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         else if(thType == THRESH_TOZERO_INV)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -854,7 +894,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         if(thType == THRESH_BINARY)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -871,7 +913,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         else if(thType == THRESH_BINARY_INV)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -888,7 +932,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         else if(thType == THRESH_TOZERO)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -901,7 +947,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         else if(thType == THRESH_TOZERO_INV)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -923,7 +971,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         if(thType == THRESH_BINARY)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -940,7 +990,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         else if(thType == THRESH_BINARY_INV)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -957,7 +1009,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         else if(thType == THRESH_TOZERO)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -970,7 +1024,9 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
         else if(thType == THRESH_TOZERO_INV)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = src.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < src.getDataNum(); ++i)
             {
@@ -1064,11 +1120,16 @@ void MatOp::RGB2BGR(const Mat &src, Mat &dst)
     int width   = dst.getWidth();
     int height  = dst.getHeight();
 
+    uint64_t dataLen = 0;
+    uint16_t threadNum = 0;
+
     switch (dst.getMatType())
     {
     case MAT_RGB_U8:
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        dataLen   = height*width;
+        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1083,7 +1144,9 @@ void MatOp::RGB2BGR(const Mat &src, Mat &dst)
         break;
     case MAT_RGB_F32:
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+       dataLen   = height*width;
+       threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1098,7 +1161,9 @@ void MatOp::RGB2BGR(const Mat &src, Mat &dst)
         break;
     case MAT_RGB_F64:
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        dataLen   = height*width;
+        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1113,7 +1178,9 @@ void MatOp::RGB2BGR(const Mat &src, Mat &dst)
         break;
     case MAT_RGBA_U8:
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        dataLen   = height*width;
+        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1128,7 +1195,9 @@ void MatOp::RGB2BGR(const Mat &src, Mat &dst)
         break;
     case MAT_RGBA_F32:
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        dataLen   = height*width;
+        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1143,7 +1212,9 @@ void MatOp::RGB2BGR(const Mat &src, Mat &dst)
         break;
     case MAT_RGBA_F64:
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        dataLen   = height*width;
+        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1180,7 +1251,9 @@ void MatOp::RGB2GRAY(Mat &src, Mat &dst)
         uint8_t* srcU8 = src.getData().u8;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1210,7 +1283,9 @@ void MatOp::RGB2GRAY(Mat &src, Mat &dst)
         float* srcF32 = src.getData().f32;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1239,7 +1314,9 @@ void MatOp::RGB2GRAY(Mat &src, Mat &dst)
         double* srcF64 = src.getData().f64;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1280,7 +1357,9 @@ void MatOp::RGBA2GRAY(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height]();
         uint8_t* srcU8 = src.getData().u8;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1309,7 +1388,9 @@ void MatOp::RGBA2GRAY(Mat &src, Mat &dst)
         float* srcF32 = src.getData().f32;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1337,7 +1418,9 @@ void MatOp::RGBA2GRAY(Mat &src, Mat &dst)
         double* srcF64 = src.getData().f64;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1373,7 +1456,9 @@ void MatOp::GRAY2RGB(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*3]();
         uint8_t* srcU8 = src.getData().u8;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1398,7 +1483,9 @@ void MatOp::GRAY2RGB(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*12]();
         float* srcF32 = src.getData().f32;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1423,7 +1510,9 @@ void MatOp::GRAY2RGB(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*24]();
         double* srcF64 = src.getData().f64;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1461,7 +1550,9 @@ void MatOp::GRAY2RGBA(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*4]();
         uint8_t* srcU8 = src.getData().u8;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1487,7 +1578,9 @@ void MatOp::GRAY2RGBA(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*16]();
         float* srcF32 = src.getData().f32;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1513,7 +1606,9 @@ void MatOp::GRAY2RGBA(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*32]();
         double* srcF64 = src.getData().f64;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1552,7 +1647,9 @@ void MatOp::RGB2RGBA(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*4]();
         uint8_t* srcU8 = src.getData().u8;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1578,7 +1675,9 @@ void MatOp::RGB2RGBA(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*16]();
         float* srcF32 = src.getData().f32;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1604,7 +1703,9 @@ void MatOp::RGB2RGBA(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*32]();
         double* srcF64 = src.getData().f64;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1643,7 +1744,9 @@ void MatOp::RGBA2RGB(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*3]();
         uint8_t* srcU8 = src.getData().u8;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1668,7 +1771,9 @@ void MatOp::RGBA2RGB(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*12]();
         float* srcF32 = src.getData().f32;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {
@@ -1693,7 +1798,9 @@ void MatOp::RGBA2RGB(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*24]();
         double* srcF64 = src.getData().f64;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = height*width;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)
         {

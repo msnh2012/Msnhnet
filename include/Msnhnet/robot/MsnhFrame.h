@@ -16,6 +16,8 @@ namespace  Msnhnet
         Frame(const TranslationD &trans);
         Frame(const RotationMatD &rotMat, const TranslationD &trans);
 
+        Frame fastInvert();
+
         static Frame SDH(double a,double alpha,double d,double theta);
         static Frame MDH(double a,double alpha,double d,double theta);
 
