@@ -24,6 +24,8 @@
     add_subdirectory(yolov5s)
 
     add_subdirectory(yolov5m)
+    
+    add_subdirectory(puma560)
 
 endif()
 
