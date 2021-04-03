@@ -1189,8 +1189,8 @@ void ConvolutionalLayer::forwardCL(NetworkState &netState){
 
                 
                 // //////////////////////////////////////////////////////
-                // std::cout << "input width = " << this->_width << "\ninput height = " << this->_height << "\ninput channel = " << this->_channel 
-                // << "\noutput width = " << this->_outWidth << "\noutput height = " << this->_outWidth << "\noutput channel = " << this->_outChannel << std::endl;
+                std::cout << "input width = " << this->_width << "\ninput height = " << this->_height << "\ninput channel = " << this->_channel 
+                << "\noutput width = " << this->_outWidth << "\noutput height = " << this->_outWidth << "\noutput channel = " << this->_outChannel << std::endl;
 
                 // ofstream cFileIn("wino_input.txt");
                 // for (size_t i = 0; i < this->_width * this->_height * this->_channel; i++){
@@ -1292,24 +1292,7 @@ void ConvolutionalLayer::forwardCL(NetworkState &netState){
         }
     }
 
-    //////////////////////////////////////////////////////////////////
-    ifstream fin("c_opencl.txt");
-    if(!fin){
-        fin.close();
-        ofstream cFileIn("c_opencl.txt");
-        for (size_t i = 0; i < this->_num; i++)
-        {
-            for (size_t j = 0; j < this->_outHeight * this->_outWidth; j++)
-            {
-                cFileIn << layerOutput[i * this->_num + j] << "  ";
-            }
-            cFileIn << std::endl;                            
-        }
-        cFileIn.close();
-    } else {
-        fin.close();
-    }
-    //////////////////////////////////////////////////////////////////
+
 
     /* xnor and binary TODO: */
     if(this->_binary || this->_xnor)
@@ -1401,14 +1384,9 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
                 this->_clWeights = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float) * this->_nWeights, NULL, &status);
                 float* clWeightsPtr = (float*)clEnqueueMapBuffer(clScheduler::get().queue(), this->_clWeights, CL_TRUE, CL_MAP_WRITE, 0, sizeof(float) * this->_nWeights, 0, NULL, NULL, &status);
 
-                //////////////////////////////////////////////////////
-                // ofstream cFileIn("filter_weight.txt");
                 for (size_t i = 0; i < this->_nWeights; i++){
                     clWeightsPtr[i] = weights[i];
-                    // cFileIn << weights[i] << std::endl;
                 }
-                // cFileIn.close();
-                //////////////////////////////////////////////////////
 
 
                 status = clEnqueueUnmapMemObject(clScheduler::get().queue(), this->_clWeights, clWeightsPtr, 0, NULL, NULL);

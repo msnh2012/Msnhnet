@@ -115,6 +115,11 @@ LocalAvgPoolLayer::LocalAvgPoolLayer(const int &batch, const int &height, const 
 #endif
 #endif
 
+#ifdef USE_OPENCL
+    _kenrel_lap = clScheduler::get().buildKernel(this->_type, "localAverage");
+#endif
+
+
     this->_bFlops            = (this->_kSizeX*this->_kSizeY* this->_channel*this->_outHeight*this->_outWidth)/ 1000000000.f;
 
     this->_maxOutputNum  = this->_batch*this->_outputNum;
@@ -476,4 +481,101 @@ void LocalAvgPoolLayer::forwardGPU(NetworkState &netState)
 }
 #endif
 
+
+#ifdef USE_OPENCL
+
+void LocalAvgPoolLayer::forwardCL(NetworkState &netState)
+{
+
+    // auto st = TimeUtil::startRecord();
+
+    float* layerInput   = netState.getInput();
+    float* layerOutput  = nullptr;
+
+    /* 输入 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isFirstBranch)
+
+        {
+            layerInput      = netState.input;
+        }
+    }
+    else
+    {
+        if(this->_layerIndex == 0) 
+
+        {
+            layerInput      = netState.input;
+        }
+        else 
+
+        {
+            if(netState.net->layers[this->_layerIndex - 1]->getMemReUse() == 0)
+
+            {
+                layerInput  = netState.input;
+            }
+        }
+    }
+
+    /* 输出 */
+    if(this->_isBranchLayer) 
+
+    {
+        if(this->_isLastBranch)
+
+        {
+            layerOutput     = this->_output; 
+
+        }
+        else 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+    }
+    else
+    {
+        if(this->_memReUse==1) 
+
+        {
+            layerOutput     = netState.getOutput(); 
+
+            netState.shuffleInOut();
+
+        }
+        else
+
+        {
+            layerOutput     = this->_output;
+        }
+    }
+
+    int mHeight         =   this->_outHeight;
+    int mWidth          =   this->_outWidth;
+
+    int mChannel        =   this->_channel;
+
+    for(int b=0; b<this->_batch; ++b)
+    {
+        cl_mem inputMem = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->_width * this->_height * this->_channel * sizeof(float), layerInput, &status);
+        CHECKSTATUS(status, "create imMem");
+        cl_mem outputMem = clCreateBuffer(clScheduler::get().context(), CL_MEM_READ_WRITE, mHeight * mWidth * mChannel * sizeof(float), NULL, &status);
+        CHECKSTATUS(status, "create dst cl_mem");
+        LocalAvgPoolCL::localAvgPool(inputMem, this->_width, this->_height, this->_channel, _kenrel_lap, this->_kSizeX, this->_kSizeY, outputMem, mWidth, mHeight, mChannel, this->_strideX, this->_strideY, this->_paddingX, this->_paddingY);
+        status = clEnqueueReadBuffer(clScheduler::get().queue(), outputMem, CL_TRUE, 0, mHeight * mWidth * mChannel * sizeof(float), layerOutput, 0, NULL, NULL);
+
+
+    }
+
+    // this->_forwardTime =   TimeUtil::getElapsedTime(st);
+
+}
+
+#endif
 }

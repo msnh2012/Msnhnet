@@ -42,6 +42,7 @@ public:
 
 #ifdef USE_OPENCL
     virtual void forwardCL(NetworkState &netState);
+    cl_kernel _kernel_act;
 #endif
 
     ~ResBlockLayer();

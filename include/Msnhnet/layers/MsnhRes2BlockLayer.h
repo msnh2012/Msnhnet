@@ -44,6 +44,12 @@ public:
     virtual void forwardGPU(NetworkState &netState);
 #endif
 
+#ifdef USE_OPENCL
+    cl_kernel _kernel_act;
+
+    virtual void forwardCL(NetworkState &netState);
+#endif 
+
     ~Res2BlockLayer();
 };
 }

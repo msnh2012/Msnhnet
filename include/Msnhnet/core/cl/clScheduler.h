@@ -15,7 +15,7 @@ const std::map<int, std::string> OpenCLProgramMap = {
     {1, ""},
     {2, ""},
     {3, "H:\\projects\\Msnhnet_restart\\src\\layers\\opencl\\cl\\maxPool.cl"},
-    {4, ""},
+    {4, "H:\\projects\\Msnhnet_restart\\src\\layers\\opencl\\cl\\localAvgPool.cl"},
     {5, ""},
     {6, ""},
     {7, ""},

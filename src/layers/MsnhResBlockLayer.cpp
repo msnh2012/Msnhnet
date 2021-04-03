@@ -19,6 +19,9 @@ ResBlockLayer::ResBlockLayer(const int &batch, NetBuildParams &params, std::vect
     {
         throw Exception(1, "prelu activation is not supported by ResBlock ", __FILE__, __LINE__, __FUNCTION__);
     }
+    if (Activations::getActivationStr(this->_activation) != "none") {
+        _kernel_act = clScheduler::get().buildKernel(LayerType::ACTIVE, Activations::getActivationStr(this->_activation));
+    }
 
     BaseLayer *layer    =   nullptr;
     this->_layerDetail.append("================================  ResBlock ================================\n");
@@ -231,9 +234,7 @@ void ResBlockLayer::forward(NetworkState &netState)
     std::vector<float> inputX{layerInput, layerInput + netState.inputNum};
 
     netState.input      = inputX.data();
-
-    // for (size_t i = 0; i < baseLayers.size(); ++i)
-    for (size_t i = 0; i < 1; ++i)
+    for (size_t i = 0; i < baseLayers.size(); ++i)
     {
         baseLayers[i]->forward(netState);
 
@@ -299,6 +300,14 @@ void ResBlockLayer::forward(NetworkState &netState)
     {
         this->_forwardTime += baseLayers[i]->getForwardTime();
     }
+    
+    // //////////////////////////////////////////////////////////////////
+    // ofstream cFileOut("rb_output.txt");
+    // for (size_t i = 0; i < this->_outputNum; i++){
+    //     cFileOut << layerOutput[i] << std::endl;
+    // }
+    // cFileOut.close();
+    // //////////////////////////////////////////////////////////////////
 
 }
 
@@ -415,8 +424,7 @@ void ResBlockLayer::forwardCL(NetworkState &netState)
 
     netState.input      = inputX.data();
 
-    // for (size_t i = 0; i < baseLayers.size(); ++i)
-    for (size_t i = 0; i < 1; ++i)
+    for (size_t i = 0; i < baseLayers.size(); ++i)
     {
         baseLayers[i]->forwardCL(netState);
 
@@ -442,17 +450,9 @@ void ResBlockLayer::forwardCL(NetworkState &netState)
         layerOutput     = this->_output;
     }
 
-    
-    // //////////////////////////////////////////////////////
-    // ofstream cFileOut("wino_output.txt");
-    // for (size_t i = 0; i < 200704; i++){
-    //     cFileOut << layerOutput[i] << std::endl;
-    // }
-    // cFileOut.close();
-    // //////////////////////////////////////////////////////
-
     Blas::cpuAxpy(netState.inputNum, 1.f, inputX.data(), 1,netState.input, 1);
     Blas::cpuCopy(netState.inputNum, netState.input, 1, layerOutput, 1);
+
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
@@ -477,21 +477,29 @@ void ResBlockLayer::forwardCL(NetworkState &netState)
     {
         if(_actParams.size() > 0)
         {
-            Activations::activateArray(layerOutput, this->_outputNum, this->_activation, this->supportAvx, _actParams[0]);
+            ActivationsCL::activateArrayCL(layerOutput, this->_outputNum*this->_batch, this->_kernel_act, _actParams[0]);
         }
         else
         {
-            Activations::activateArray(layerOutput, this->_outputNum, this->_activation, this->supportAvx);
+            ActivationsCL::activateArrayCL(layerOutput, this->_outputNum*this->_batch, this->_kernel_act);
         }
     }
 
-    this->_forwardTime = 0;
+    
+    // //////////////////////////////////////////////////////////////////
+    // ofstream cFileOut("rb_output_cl.txt");
+    // for (size_t i = 0; i < this->_outputNum; i++){
+    //     cFileOut << layerOutput[i] << std::endl;
+    // }
+    // cFileOut.close();
+    // //////////////////////////////////////////////////////////////////
 
-    for (size_t i = 0; i < baseLayers.size(); ++i)
-    {
-        this->_forwardTime += baseLayers[i]->getForwardTime();
-    }
+    // this->_forwardTime = 0;
 
+    // for (size_t i = 0; i < baseLayers.size(); ++i)
+    // {
+    //     this->_forwardTime += baseLayers[i]->getForwardTime();
+    // }
 }
 
 #endif

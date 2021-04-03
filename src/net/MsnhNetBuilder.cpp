@@ -684,8 +684,8 @@ std::vector<float> NetBuilder::runClassify(std::vector<float> img)
                 std::to_string(img.size()),__FILE__,__LINE__, __FUNCTION__);
     }
 
-    // for (size_t i = 0; i < _net->layers.size(); ++i)
-    for (size_t i = 0; i < 4; ++i)
+    //for (size_t i = 0; i < _net->layers.size(); ++i)
+    for (size_t i = 0; i < 1; ++i)
     {
         _net->layers[i]->forward(*_netState);
 
@@ -1028,8 +1028,7 @@ std::vector<float> NetBuilder::runClassifyCL(std::vector<float> img)
     _netState->input     =   img.data();
     _netState->inputNum  =   static_cast<int>(img.size());
 
-    //for (size_t i = 0; i < _net->layers.size(); ++i)
-    for (size_t i = 0; i < 4; ++i)
+    for (size_t i = 0; i < _net->layers.size(); ++i)
     {   
         std::cout << "forward " << i << " layer" << std::endl;
         _net->layers[i]->forwardCL(*_netState);

@@ -20,6 +20,10 @@ Res2BlockLayer::Res2BlockLayer(const int &batch, NetBuildParams &params, std::ve
         throw Exception(1, "prelu activation is not supported by Res2Block ", __FILE__, __LINE__, __FUNCTION__);
     }
 
+    if (Activations::getActivationStr(this->_activation) != "none") {
+        _kernel_act = clScheduler::get().buildKernel(LayerType::ACTIVE, Activations::getActivationStr(this->_activation));
+    }
+
     BaseLayer *layer    =   nullptr;
 
     NetBuildParams  branchBuildParams = params;
@@ -556,6 +560,114 @@ void Res2BlockLayer::forwardGPU(NetworkState &netState)
 
     Cuda::freeCuda(inputX);
 }
+#endif
+
+#ifdef USE_OPENCL
+
+void Res2BlockLayer::forwardCL(NetworkState &netState){
+
+    float *layerInput   = nullptr;
+    float *layerOutput  = nullptr;
+
+    if(netState.net->layers[this->_layerIndex-1]->getMemReUse() == 1)
+    {
+        layerInput      = netState.getInput();
+    }
+    else
+    {
+        layerInput      = netState.input;
+    }
+
+    std::vector<float> inputX{layerInput, layerInput + netState.inputNum};
+
+    netState.input      = inputX.data();
+
+    for (size_t i = 0; i < baseLayers.size(); ++i)
+    {
+        baseLayers[i]->forwardCL(netState);
+        if(baseLayers[i]->getMemReUse() == 0) 
+
+        {
+            netState.input     =   baseLayers[i]->getOutput();
+        }
+        netState.inputNum  =   baseLayers[i]->getOutputNum();
+    }
+
+    netState.input         =    inputX.data();
+    netState.inputNum      =    static_cast<int>(inputX.size());
+
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        branchLayers[i]->forwardCL(netState);
+        if(branchLayers[i]->getMemReUse() == 0) 
+
+        {
+            netState.input     =   branchLayers[i]->getOutput();
+        }
+        netState.inputNum  =   branchLayers[i]->getOutputNum();
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerOutput     = netState.getOutput(); 
+
+        netState.shuffleInOut();
+
+    }
+    else
+
+    {
+        layerOutput     = this->_output;
+    }
+
+    Blas::cpuAxpy(netState.inputNum, 1.f, baseLayers[baseLayers.size()-1]->getOutput(), 1, branchLayers[branchLayers.size()-1]->getOutput(), 1);
+    Blas::cpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1]->getOutput(), 1, layerOutput, 1);
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        Activations::activateArrayNormCh(layerOutput, this->_outputNum, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, layerOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {
+        if(_actParams.size() > 0)
+        {
+            ActivationsCL::activateArrayCL(layerOutput, this->_outputNum, this->_kernel_act, _actParams[0]);
+        }
+        else
+        {
+            ActivationsCL::activateArrayCL(layerOutput, this->_outputNum, this->_kernel_act);
+        }
+    }
+
+    // this->_forwardTime = 0;
+
+    // for (size_t i = 0; i < baseLayers.size(); ++i)
+    // {
+    //     this->_forwardTime += baseLayers[i]->getForwardTime();
+    // }
+
+    // for (size_t i = 0; i < branchLayers.size(); ++i)
+    // {
+    //     this->_forwardTime += branchLayers[i]->getForwardTime();
+    // }
+}
+
 #endif
 
 Res2BlockLayer::~Res2BlockLayer()

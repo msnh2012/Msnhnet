@@ -285,6 +285,7 @@ if(BUILD_USE_OPENCL MATCHES ON)
         src/layers/opencl/MsnhMaxPoolingCL.cpp
         src/layers/opencl/MsnhPaddingCL.cpp
         src/layers/opencl/MsnhConnectedCL.cpp
+        src/layers/opencl/MsnhLocalAvgPoolCL.cpp
         )
 
 

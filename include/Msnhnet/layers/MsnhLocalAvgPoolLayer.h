@@ -7,6 +7,11 @@
 #include "Msnhnet/layers/cuda/MsnhLocalAvgPoolLayerGPU.h"
 #endif
 
+#ifdef USE_OPENCL
+#include "Msnhnet/layers/opencl/MsnhLocalAvgPoolCL.h"
+#endif 
+
+
 namespace Msnhnet
 {
 class MsnhNet_API LocalAvgPoolLayer : public BaseLayer
@@ -22,6 +27,12 @@ public:
 #ifdef USE_GPU
     virtual void forwardGPU(NetworkState &netState);
 #endif
+
+
+#ifdef USE_OPENCL
+    void virtual forwardCL(NetworkState &netState);
+#endif
+
 
     ~LocalAvgPoolLayer();
 
@@ -64,6 +75,12 @@ protected:
     cudnnTensorDescriptor_t         _outputDesc;
 #endif
 #endif
+
+#ifdef USE_OPENCL
+    cl_kernel   _kenrel_lap;
+    cl_int      status;
+#endif
+
 };
 }
 

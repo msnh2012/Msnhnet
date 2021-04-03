@@ -1,5 +1,11 @@
-__kernel void relu(const int N, __global float* X)
+__kernel void relu(__global float* X)
 {
     const int idx = get_global_id(0);
-    X[idx] = X[idx] < 0 ? 0 : X[idx];
+    X[idx] = fmax(X[idx], 0);
+}
+
+__kernel void relu6(__global float* X)
+{
+    const int idx = get_global_id(0);
+    X[idx] = fmin(fmax(X[idx], 0), 6);
 }

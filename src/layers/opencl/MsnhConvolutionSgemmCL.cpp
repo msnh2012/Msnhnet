@@ -168,7 +168,6 @@ namespace Msnhnet
         
         cl_int status = 0;
         cl_mem srcPad = clCreateBuffer(clScheduler::get().context(), CL_MEM_READ_WRITE, newInWidth * newInHeight * inChannel * sizeof(float), NULL, &status);
-        float* srcPadArr = (float*) malloc (newInWidth * newInHeight * inChannel * sizeof(float));
         
         CHECKSTATUS(status, "create srcPad");
 
@@ -201,8 +200,6 @@ namespace Msnhnet
         clReleaseEvent(eventPoint);
 
         PaddingCL::paddingCL(dstTemp, dstTempWidth, dstTempHeight, outChannel, kernel_pad, dst, 0,  outHeight - dstTempHeight, 0, outWidth - dstTempWidth, 0);
-
-
 
         return;
     }

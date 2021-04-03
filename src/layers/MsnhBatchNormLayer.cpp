@@ -222,6 +222,8 @@ void BatchNormLayer::forward(NetworkState &netState)
 #endif
     }
 
+
+
     if(this->_activation == ActivationType::NORM_CHAN)
     {
         Activations::activateArrayNormCh(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
@@ -258,6 +260,14 @@ void BatchNormLayer::forward(NetworkState &netState)
             Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
         }
     }
+
+    //////////////////////////////////////////////////////////////////
+    ofstream cFileOut("bn_output.txt");
+    for (size_t i = 0; i < this->_outWidth * this->_outHeight * this->_outChannel; i++){
+        cFileOut << layerOutput[i] << std::endl;
+    }
+    cFileOut.close();
+    //////////////////////////////////////////////////////////////////
 
     this->_forwardTime =   TimeUtil::getElapsedTime(st);
 
@@ -486,24 +496,6 @@ void BatchNormLayer::forwardCL(NetworkState &netState){
     BatchNormCL::batchNormCL(srcMem, dstMem, this->_clBiases, this->_clScales, this->_clRollMean, this->_clRollVariance, this->_width, this->_height, this->_channel, this->_kernel);
     status |= clEnqueueReadBuffer(clScheduler::get().queue(), dstMem, CL_TRUE, 0, this->_width * this->_height * this->_channel * sizeof(float), layerOutput, 0, NULL, NULL);
 
-    //////////////////////////////////////////////////////////////////
-    ifstream fin("batch_norm_cl.txt");
-    if(!fin){
-        fin.close();
-        ofstream cFileIn("batch_norm_cl.txt");
-        for (size_t i = 0; i < this->_height; i++)
-        {
-            for (size_t j = 0; j < _height; j++)
-            {
-                cFileIn << layerOutput[i * _width + j] << "  ";
-            }
-            cFileIn << std::endl;                            
-        }
-        cFileIn.close();
-    } else {
-        fin.close();
-    }
-    //////////////////////////////////////////////////////////////////
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
@@ -540,7 +532,14 @@ void BatchNormLayer::forwardCL(NetworkState &netState){
             ActivationsCL::activateArrayCL(layerOutput, this->_outputNum*this->_batch, this->_kernel_act);
         }
     }
-    
+    // //////////////////////////////////////////////////////////////////
+    // ofstream cFileOut("bn_output_cl.txt");
+    // for (size_t i = 0; i < this->_outWidth * this->_outHeight * this->_outChannel; i++){
+    //     cFileOut << layerOutput[i] << std::endl;
+    // }
+    // cFileOut.close();
+    // //////////////////////////////////////////////////////////////////
+
 
 }
 
