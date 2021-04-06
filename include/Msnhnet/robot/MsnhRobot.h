@@ -6,6 +6,7 @@
 #include "Msnhnet/robot/MsnhFrame.h"
 #include "Msnhnet/robot/MsnhJoint.h"
 #include "Msnhnet/robot/MsnhSegment.h"
+#include "Msnhnet/robot/MsnhSpatialMath.h"
 
 #define MSNH_PI   3.14159265453
 #define MSNH_PI_2 1.57079632726
