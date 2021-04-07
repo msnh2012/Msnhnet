@@ -217,13 +217,14 @@ set(SRCS
     src/robot/MsnhChain.cpp
     src/robot/MsnhSegment.cpp
     src/robot/MsnhChainFK.cpp
+    src/robot/MsnhSpatialMath.cpp
     src/utils/MsnhCVUtil.cpp
     )
 
 # config GPU
 if(BUILD_USE_GPU MATCHES ON)
     add_definitions(-DUSE_GPU)#===============
-    
+
     enable_language(CUDA) 
 
     set(USE_GPU_MACRO "#define USE_GPU\n")
@@ -250,7 +251,7 @@ if(BUILD_USE_GPU MATCHES ON)
         )
     set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
     find_package(cuBlas REQUIRED)
-    
+
     if(BUILD_USE_CUDNN MATCHES ON)
         add_definitions(-DUSE_CUDNN)#===============
         find_package(cuDnn REQUIRED)
@@ -300,7 +301,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(armv7l)")
     message(STATUS "Use arm arch")
 
     option(ENABLE_NEON "Use neon" OFF)
-    
+
     if(ENABLE_NEON MATCHES ON)
         add_definitions(-DUSE_NEON)
         set(USE_NEON_MACRO "#define USE_NEON\n")
@@ -394,7 +395,6 @@ if(BUILD_USE_OPENCV MATCHES ON)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
 endif()
 
-
 if(BUILD_USE_GPU MATCHES ON)
     if(BUILD_USE_CUDNN MATCHES ON)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} PRIVATE ${CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
@@ -404,7 +404,6 @@ if(BUILD_USE_GPU MATCHES ON)
 else()
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB})
 endif()
-
 
 if(BUILD_EXAMPLES MATCHES ON)
     add_subdirectory(examples)
