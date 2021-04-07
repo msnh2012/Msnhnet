@@ -360,9 +360,11 @@ public:
 #endif
     }
 
-    Mat transpose();
+    Mat transpose() const;
 
-    double det();
+    double det() const;
+
+    double trace() const;
 
     /*      [ 1 0 0 0 0 ]  [ U U U U U ]
      *      [ L 1 0 0 0 ]  [ 0 U U U U ]
@@ -417,6 +419,10 @@ public:
     bool isMatrix3x3() const;
 
     bool isMatrix4x4() const;
+
+    bool isRotMat() const;
+
+    bool isHomTransMatrix() const;
 
     static Mat add(const Mat &A, const Mat &B);
 

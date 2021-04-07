@@ -8,11 +8,5 @@
 #include "Msnhnet/robot/MsnhSegment.h"
 #include "Msnhnet/robot/MsnhSpatialMath.h"
 
-#define MSNH_PI   3.14159265453
-#define MSNH_PI_2 1.57079632726
-#define MSNH_PI_3 1.04719755151
-#define MSNH_PI_4 0.78539816363
-#define MSNH_PI_6 0.52359877575
-
 #endif 
 

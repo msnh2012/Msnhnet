@@ -5,7 +5,6 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-
 namespace Msnhnet
 {
 template<int N,typename T>
@@ -724,6 +723,43 @@ typedef Vector<2,float> Vector2F;
 typedef Vector<3,float> Vector3F;
 typedef Vector<4,float> Vector4F;
 
+/*此处允许w和v不为单位向量*/
+struct ScrewD
+{
+    ScrewD(){}
+    ScrewD(Vector<3,double> v, Vector<3,double> w)
+    {
+        this->v = v;
+        this->w = w;
+    }
+    Vector<3,double> v;
+    Vector<3,double> w;
+
+    void print()
+    {
+        v.print();
+        w.print();
+    }
+};
+
+/*此处允许w和v不为单位向量*/
+struct ScrewF
+{
+    ScrewF(){}
+    ScrewF(Vector<3,float> v, Vector<3,float> w)
+    {
+        this->v = v;
+        this->w = w;
+    }
+    Vector<3,float> v;
+    Vector<3,float> w;
+
+    void print()
+    {
+        v.print();
+        w.print();
+    }
+};
 }
 #endif 
 

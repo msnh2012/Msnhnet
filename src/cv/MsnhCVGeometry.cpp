@@ -3,26 +3,6 @@
 namespace Msnhnet
 {
 
-double deg2rad(const double &val)
-{
-    return val/180.0*M_PI;
-}
-
-float deg2rad(const float &val)
-{
-    return static_cast<float>(val/180.0*M_PI);
-}
-
-double rad2deg(const double &val)
-{
-    return val/M_PI*180.0;
-}
-
-float rad2deg(const float &val)
-{
-    return static_cast<float>(val/M_PI*180.0);
-}
-
 bool Geometry::isRealRotMat(Mat &R)
 {
     Mat Rt = R.transpose();
@@ -50,6 +30,7 @@ RotationMatD Geometry::euler2RotMat(const EulerD &euler, const RotSequence &seq)
 
     double cosc = cos(c); 
 
+    /*
     RotationMatD Rx;
     Rx.setVal({
                   1 ,  0   ,   0   ,
@@ -71,24 +52,61 @@ RotationMatD Geometry::euler2RotMat(const EulerD &euler, const RotSequence &seq)
                   sinc , cosc  , 0 ,
                   0   ,  0    , 1
               });
+    */
+    RotationMatD R;
 
-    /*TODO: exact all*/
     switch (seq)
     {
     case ROT_XYZ:
-        return Rx*Ry*Rz;
+         R.setVal({
+                      cosb*cosc,                   -sinc*cosb,                 sinb,
+                      sina*sinb*cosc + sinc*cosa, -sina*sinb*sinc + cosa*cosc, -sina*cosb,
+                      sina*sinc - sinb*cosa*cosc, sina*cosc + sinb*sinc*cosa, cosa*cosb
+                  });
+         return R;
     case ROT_XZY:
-        return Rx*Rz*Ry;
+        R.setVal({
+                     cosb*cosc,                  -sinc,                       sinb*cosc,
+                     sina*sinb + sinc*cosa*cosb, cosa*cosc, -sina*cosb + sinb*sinc*cosa,
+                     sina*sinc*cosb - sinb*cosa, sina*cosc, sina*sinb*sinc + cosa*cosb
+                 });
+        return R;
     case ROT_YXZ:
-        return Ry*Rx*Rz;
+        R.setVal({
+                     sina*sinb*sinc + cosb*cosc, sina*sinb*cosc - sinc*cosb, sinb*cosa,
+                     sinc*cosa, cosa*cosc, -sina,
+                     sina*sinc*cosb - sinb*cosc, sina*cosb*cosc + sinb*sinc, cosa*cosb
+                 });
+        return R;
     case ROT_YZX:
-        return Ry*Rz*Rx;
+        R.setVal({
+                     cosb*cosc, sina*sinb - sinc*cosa*cosb, sina*sinc*cosb + sinb*cosa,
+                     sinc,                     cosa*cosc,           -sina*cosc,
+                     -sinb*cosc, sina*cosb + sinb*sinc*cosa, -sina*sinb*sinc + cosa*cosb
+                 });
+        return R;
     case ROT_ZXY:
-        return Rz*Rx*Ry;
+        R.setVal({
+                     -sina*sinb*sinc + cosb*cosc, -sinc*cosa, sina*sinc*cosb + sinb*cosc,
+                     sina*sinb*cosc + sinc*cosb, cosa*cosc, -sina*cosb*cosc + sinb*sinc,
+                     -sinb*cosa,                  sina,                cosa*cosb
+                 });
+        return R;
     case ROT_ZYX:
-        return Rz*Ry*Rx;
+        R.setVal({
+                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
+                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
+                      -sinb,               sina*cosb,              cosa*cosb
+                 });
+        return R;
     default:
-        return Rz*Ry*Rx;
+
+        R.setVal({
+                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
+                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
+                      -sinb,               sina*cosb,              cosa*cosb
+                 });
+        return R;
     }
 }
 
@@ -111,6 +129,7 @@ RotationMatF Geometry::euler2RotMat(const EulerF &euler, const RotSequence &seq)
 
     float cosc = cosf(c); 
 
+    /*
     RotationMatF Rx;
     Rx.setVal({
                   1 ,  0   ,   0   ,
@@ -132,24 +151,61 @@ RotationMatF Geometry::euler2RotMat(const EulerF &euler, const RotSequence &seq)
                   sinc , cosc  , 0 ,
                   0   ,  0    , 1
               });
+    */
+    RotationMatF R;
 
-    /*TODO: exact all*/
     switch (seq)
     {
     case ROT_XYZ:
-        return Rx*Ry*Rz;
+         R.setVal({
+                      cosb*cosc,                   -sinc*cosb,                 sinb,
+                      sina*sinb*cosc + sinc*cosa, -sina*sinb*sinc + cosa*cosc, -sina*cosb,
+                      sina*sinc - sinb*cosa*cosc, sina*cosc + sinb*sinc*cosa, cosa*cosb
+                  });
+         return R;
     case ROT_XZY:
-        return Rx*Rz*Ry;
+        R.setVal({
+                     cosb*cosc,                  -sinc,                       sinb*cosc,
+                     sina*sinb + sinc*cosa*cosb, cosa*cosc, -sina*cosb + sinb*sinc*cosa,
+                     sina*sinc*cosb - sinb*cosa, sina*cosc, sina*sinb*sinc + cosa*cosb
+                 });
+        return R;
     case ROT_YXZ:
-        return Ry*Rx*Rz;
+        R.setVal({
+                     sina*sinb*sinc + cosb*cosc, sina*sinb*cosc - sinc*cosb, sinb*cosa,
+                     sinc*cosa, cosa*cosc, -sina,
+                     sina*sinc*cosb - sinb*cosc, sina*cosb*cosc + sinb*sinc, cosa*cosb
+                 });
+        return R;
     case ROT_YZX:
-        return Ry*Rz*Rx;
+        R.setVal({
+                     cosb*cosc, sina*sinb - sinc*cosa*cosb, sina*sinc*cosb + sinb*cosa,
+                     sinc,                     cosa*cosc,           -sina*cosc,
+                     -sinb*cosc, sina*cosb + sinb*sinc*cosa, -sina*sinb*sinc + cosa*cosb
+                 });
+        return R;
     case ROT_ZXY:
-        return Rz*Rx*Ry;
+        R.setVal({
+                     -sina*sinb*sinc + cosb*cosc, -sinc*cosa, sina*sinc*cosb + sinb*cosc,
+                     sina*sinb*cosc + sinc*cosb, cosa*cosc, -sina*cosb*cosc + sinb*sinc,
+                     -sinb*cosa,                  sina,                cosa*cosb
+                 });
+        return R;
     case ROT_ZYX:
-        return Rz*Ry*Rx;
+        R.setVal({
+                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
+                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
+                      -sinb,               sina*cosb,              cosa*cosb
+                 });
+        return R;
     default:
-        return Rz*Ry*Rx;
+
+        R.setVal({
+                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
+                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
+                      -sinb,               sina*cosb,              cosa*cosb
+                 });
+        return R;
     }
 }
 
@@ -653,11 +709,11 @@ RotationVecF Geometry::quaternion2RotVec(const QuaternionF &q)
     return RotationVecF({kx*theta,ky*theta,kz*theta});
 }
 
-RotationMatD Geometry::rotZ(double angle)
+RotationMatD Geometry::rotZ(double angleInRad)
 {
 
-    double cosc  = cos(angle);
-    double sinc  = sin(angle);
+    double cosc  = cos(angleInRad);
+    double sinc  = sin(angleInRad);
 
     RotationMatD Rz;
 
@@ -669,10 +725,10 @@ RotationMatD Geometry::rotZ(double angle)
     return Rz;
 }
 
-RotationMatD Geometry::rotY(double angle)
+RotationMatD Geometry::rotY(double angleInRad)
 {
-    double cosb  = cos(angle);
-    double sinb  = sin(angle);
+    double cosb  = cos(angleInRad);
+    double sinb  = sin(angleInRad);
 
     RotationMatD Ry;
     Ry.setVal({
@@ -684,10 +740,10 @@ RotationMatD Geometry::rotY(double angle)
     return Ry;
 }
 
-RotationMatD Geometry::rotX(double angle)
+RotationMatD Geometry::rotX(double angleInRad)
 {
-    double cosa  = cos(angle);
-    double sina  = sin(angle);
+    double cosa  = cos(angleInRad);
+    double sina  = sin(angleInRad);
     RotationMatD Rx;
     Rx.setVal({
                   1 ,  0   ,   0   ,
@@ -697,11 +753,11 @@ RotationMatD Geometry::rotX(double angle)
     return Rx;
 }
 
-RotationMatF Geometry::rotZ(float angle)
+RotationMatF Geometry::rotZ(float angleInRad)
 {
 
-    float cosc  = static_cast<float>(cos(angle));
-    float sinc  = static_cast<float>(sin(angle));
+    float cosc  = static_cast<float>(cos(angleInRad));
+    float sinc  = static_cast<float>(sin(angleInRad));
 
     RotationMatF Rz;
 
@@ -713,10 +769,10 @@ RotationMatF Geometry::rotZ(float angle)
     return Rz;
 }
 
-RotationMatF Geometry::rotY(float angle)
+RotationMatF Geometry::rotY(float angleInRad)
 {
-    float cosb  = static_cast<float>(cos(angle));
-    float sinb  = static_cast<float>(sin(angle));
+    float cosb  = static_cast<float>(cos(angleInRad));
+    float sinb  = static_cast<float>(sin(angleInRad));
 
     RotationMatF Ry;
     Ry.setVal({
@@ -729,10 +785,10 @@ RotationMatF Geometry::rotY(float angle)
 
 }
 
-RotationMatF Geometry::rotX(float angle)
+RotationMatF Geometry::rotX(float angleInRad)
 {
-    float cosa  = static_cast<float>(cos(angle));
-    float sina  = static_cast<float>(sin(angle));
+    float cosa  = static_cast<float>(cos(angleInRad));
+    float sina  = static_cast<float>(sin(angleInRad));
     RotationMatF Rx;
     Rx.setVal({
                   1 ,  0   ,   0   ,
@@ -991,8 +1047,31 @@ TranslationD Matrix4x4D::getTranslation() const
                         });
 }
 
-void Matrix4x4D::setRotationMat(const RotationMatD &rotMat)
+bool Matrix4x4D::setRotationMat(const RotationMatD &rotMat, bool forceIsRotMat)
 {
+    if(forceIsRotMat)
+    {
+        if(rotMat.isRotMat())
+        {
+            this->setValAtRowCol(0,0,rotMat.getValAtRowCol(0,0));
+            this->setValAtRowCol(0,1,rotMat.getValAtRowCol(0,1));
+            this->setValAtRowCol(0,2,rotMat.getValAtRowCol(0,2));
+
+            this->setValAtRowCol(1,0,rotMat.getValAtRowCol(1,0));
+            this->setValAtRowCol(1,1,rotMat.getValAtRowCol(1,1));
+            this->setValAtRowCol(1,2,rotMat.getValAtRowCol(1,2));
+
+            this->setValAtRowCol(2,0,rotMat.getValAtRowCol(2,0));
+            this->setValAtRowCol(2,1,rotMat.getValAtRowCol(2,1));
+            this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     this->setValAtRowCol(0,0,rotMat.getValAtRowCol(0,0));
     this->setValAtRowCol(0,1,rotMat.getValAtRowCol(0,1));
     this->setValAtRowCol(0,2,rotMat.getValAtRowCol(0,2));
@@ -1004,6 +1083,7 @@ void Matrix4x4D::setRotationMat(const RotationMatD &rotMat)
     this->setValAtRowCol(2,0,rotMat.getValAtRowCol(2,0));
     this->setValAtRowCol(2,1,rotMat.getValAtRowCol(2,1));
     this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
+    return true;
 }
 
 void Matrix4x4D::setTranslation(const TranslationD &trans)
@@ -1026,12 +1106,12 @@ void Matrix4x4D::translate(const double &x, const double &y, const double &z)
     this->getFloat64()[11] += z;
 }
 
-void Matrix4x4D::rotate(const double &angle, const double &x, const double &y, const double &z)
+void Matrix4x4D::rotate(const double &angleInRad, const double &x, const double &y, const double &z)
 {
-    rotate(angle,Vector3D({x,y,z}));
+    rotate(angleInRad,Vector3D({x,y,z}));
 }
 
-void Matrix4x4D::rotate(const double &angle, const Vector3D &vector)
+void Matrix4x4D::rotate(const double &angleInRad, const Vector3D &vector)
 {
     Vector3D vec = vector;
     vec.normalize();
@@ -1039,7 +1119,7 @@ void Matrix4x4D::rotate(const double &angle, const Vector3D &vector)
     double y = vec[1];
     double z = vec[2];
 
-    RotationMatD rotMat = Geometry::euler2RotMat(EulerD({x*angle,y*angle,z*angle}),RotSequence::ROT_ZYX);
+    RotationMatD rotMat = Geometry::euler2RotMat(EulerD({x*angleInRad,y*angleInRad,z*angleInRad}),RotSequence::ROT_ZYX);
     this->setRotationMat(rotMat);
 }
 
@@ -1348,8 +1428,31 @@ TranslationF Matrix4x4F::getTranslation() const
                         });
 }
 
-void Matrix4x4F::setRotationMat(const RotationMatF &rotMat)
+bool Matrix4x4F::setRotationMat(const RotationMatF &rotMat, bool forceIsRotMat)
 {
+    if(forceIsRotMat)
+    {
+        if(rotMat.isRotMat())
+        {
+            this->setValAtRowCol(0,0,rotMat.getValAtRowCol(0,0));
+            this->setValAtRowCol(0,1,rotMat.getValAtRowCol(0,1));
+            this->setValAtRowCol(0,2,rotMat.getValAtRowCol(0,2));
+
+            this->setValAtRowCol(1,0,rotMat.getValAtRowCol(1,0));
+            this->setValAtRowCol(1,1,rotMat.getValAtRowCol(1,1));
+            this->setValAtRowCol(1,2,rotMat.getValAtRowCol(1,2));
+
+            this->setValAtRowCol(2,0,rotMat.getValAtRowCol(2,0));
+            this->setValAtRowCol(2,1,rotMat.getValAtRowCol(2,1));
+            this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     this->setValAtRowCol(0,0,rotMat.getValAtRowCol(0,0));
     this->setValAtRowCol(0,1,rotMat.getValAtRowCol(0,1));
     this->setValAtRowCol(0,2,rotMat.getValAtRowCol(0,2));
@@ -1361,6 +1464,7 @@ void Matrix4x4F::setRotationMat(const RotationMatF &rotMat)
     this->setValAtRowCol(2,0,rotMat.getValAtRowCol(2,0));
     this->setValAtRowCol(2,1,rotMat.getValAtRowCol(2,1));
     this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
+    return true;
 }
 
 void Matrix4x4F::setTranslation(const TranslationF &trans)
@@ -1383,12 +1487,12 @@ void Matrix4x4F::translate(const float &x, const float &y, const float &z)
     this->getFloat32()[11] += z;
 }
 
-void Matrix4x4F::rotate(const float &angle, const float &x, const float &y, const float &z)
+void Matrix4x4F::rotate(const float &angleInRad, const float &x, const float &y, const float &z)
 {
-    rotate(angle,Vector3F({x,y,z}));
+    rotate(angleInRad,Vector3F({x,y,z}));
 }
 
-void Matrix4x4F::rotate(const float &angle, const Vector3F &vector)
+void Matrix4x4F::rotate(const float &angleInRad, const Vector3F &vector)
 {
     Vector3F vec = vector;
     vec.normalize();
@@ -1396,7 +1500,7 @@ void Matrix4x4F::rotate(const float &angle, const Vector3F &vector)
     float y = vec[1];
     float z = vec[2];
 
-    RotationMatF rotMat = Geometry::euler2RotMat(EulerF({x*angle,y*angle,z*angle}),RotSequence::ROT_ZYX);
+    RotationMatF rotMat = Geometry::euler2RotMat(EulerF({x*angleInRad,y*angleInRad,z*angleInRad}),RotSequence::ROT_ZYX);
     this->setRotationMat(rotMat);
 }
 

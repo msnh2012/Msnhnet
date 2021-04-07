@@ -1039,6 +1039,83 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
     }
 }
 
+Mat MatOp::hContact(const Mat &A, const Mat &B)
+{
+    if(A.isEmpty())
+    {
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(B.isEmpty())
+    {
+        throw Exception(1,"[Mat]: Mat B is empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(A.getMatType() != B.getMatType() || A.getChannel() != B.getChannel() || A.getStep() != B.getStep())
+    {
+        throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(A.getWidth() != B.getWidth())
+    {
+        throw Exception(1,"[Mat]: widths of mat A and B must be equal! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    Mat mat(A.getWidth(),A.getHeight()+B.getHeight(),A.getMatType());
+
+    memcpy(mat.getBytes(), A.getBytes(),A.getByteNum());
+    memcpy(mat.getBytes()+A.getByteNum(), B.getBytes(),B.getByteNum());
+
+    return mat;
+}
+
+Mat MatOp::vContact(const Mat &A, const Mat &B)
+{
+    if(A.isEmpty())
+    {
+        throw Exception(1,"[Mat]: Mat A is empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(B.isEmpty())
+    {
+        throw Exception(1,"[Mat]: Mat B is empty! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(A.getMatType() != B.getMatType() || A.getChannel() != B.getChannel() || A.getStep() != B.getStep())
+    {
+        throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(A.getHeight() != B.getHeight())
+    {
+        throw Exception(1,"[Mat]: heights of mat A and B must be equal! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    Mat mat(A.getWidth()+B.getWidth(),A.getHeight(),A.getMatType());
+
+    size_t matBytes  = mat.getByteNum();
+    int matWBytes = (int)(matBytes/mat.getHeight());
+
+    size_t ABytes  = A.getByteNum();
+    int AWBytes = (int)(ABytes/A.getHeight());
+
+    size_t BBytes  = B.getByteNum();
+    int BWBytes = (int)(BBytes/B.getHeight());
+
+#ifdef USE_OMP
+            uint64_t dataLen   = mat.getDataNum();
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
+#endif
+    for (int i = 0; i < A.getHeight(); ++i)
+    {
+        memcpy(mat.getBytes() + i*matWBytes, A.getBytes()+i*AWBytes,AWBytes);
+        memcpy(mat.getBytes() + i*matWBytes + AWBytes, B.getBytes()+i*BWBytes,BWBytes);
+    }
+
+    return mat;
+}
+
 std::vector<int> MatOp::histogram(Mat &src)
 {
     std::vector<int> hist(256,0);
@@ -1144,8 +1221,8 @@ void MatOp::RGB2BGR(const Mat &src, Mat &dst)
         break;
     case MAT_RGB_F32:
 #ifdef USE_OMP
-       dataLen   = height*width;
-       threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+        dataLen   = height*width;
+        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
 #pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < height; ++i)

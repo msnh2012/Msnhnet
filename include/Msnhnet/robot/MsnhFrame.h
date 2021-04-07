@@ -24,6 +24,7 @@ namespace  Msnhnet
         QuaternionD getQuaternion() const;
 
         Frame& operator= (const Mat &mat);
+
     };
 }
 

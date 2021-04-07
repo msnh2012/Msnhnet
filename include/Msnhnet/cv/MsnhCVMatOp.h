@@ -190,6 +190,10 @@ public:
 
     static void threshold(Mat &src, Mat &dst, const double& threshold, const double& maxVal, const int &thresholdType);
 
+    static Mat hContact(const Mat &A, const Mat &B);
+
+    static Mat vContact(const Mat &A, const Mat &B);
+
     static std::vector<int> histogram(Mat &src);
 
     static uint8_t getOtsu(Mat &src);

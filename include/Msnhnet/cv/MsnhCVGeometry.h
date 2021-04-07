@@ -16,11 +16,6 @@
 namespace Msnhnet
 {
 
-MsnhNet_API double deg2rad(const double &val);
-MsnhNet_API float  deg2rad(const float  &val);
-MsnhNet_API double rad2deg(const double &val);
-MsnhNet_API float  rad2deg(const float  &val);
-
 class MsnhNet_API Matrix4x4D : public Mat_<4,4,double>
 {
 public:
@@ -46,7 +41,7 @@ public:
 
     TranslationD getTranslation() const;
 
-    void setRotationMat(const RotationMatD& rotMat);
+    bool setRotationMat(const RotationMatD& rotMat, bool forceIsRotMat = false);
 
     void setTranslation(const TranslationD& trans);
 
@@ -54,9 +49,9 @@ public:
 
     void translate(const double &x, const double &y, const double &z);
 
-    void rotate(const double &angle, const double &x, const double &y, const double &z);
+    void rotate(const double &angleInRad, const double &x, const double &y, const double &z);
 
-    void rotate(const double &angle, const Vector3D& vector);
+    void rotate(const double &angleInRad, const Vector3D& vector);
 
     void rotate(const EulerD &euler);
 
@@ -101,7 +96,7 @@ public:
 
     TranslationF getTranslation() const;
 
-    void setRotationMat(const RotationMatF& rotMat);
+    bool setRotationMat(const RotationMatF& rotMat, bool forceIsRotMat = false);
 
     void setTranslation(const TranslationF& trans);
 
@@ -109,9 +104,9 @@ public:
 
     void translate(const float &x, const float &y, const float &z);
 
-    void rotate(const float &angle, const float &x, const float &y, const float &z);
+    void rotate(const float &angleInRad, const float &x, const float &y, const float &z);
 
-    void rotate(const float &angle, const Vector3F& vector);
+    void rotate(const float &angleInRad, const Vector3F& vector);
 
     void rotate(const EulerF &euler);
 
@@ -163,13 +158,13 @@ public:
     static RotationVecD quaternion2RotVec(const QuaternionD& q);
     static RotationVecF quaternion2RotVec(const QuaternionF& q);
 
-    static RotationMatD rotZ(double angle);
-    static RotationMatD rotY(double angle);
-    static RotationMatD rotX(double angle);
+    static RotationMatD rotZ(double angleInRad);
+    static RotationMatD rotY(double angleInRad);
+    static RotationMatD rotX(double angleInRad);
 
-    static RotationMatF rotZ(float angle);
-    static RotationMatF rotY(float angle);
-    static RotationMatF rotX(float angle);
+    static RotationMatF rotZ(float angleInRad);
+    static RotationMatF rotY(float angleInRad);
+    static RotationMatF rotX(float angleInRad);
 
     static RotationMatD rotVec2RotMat(const RotationVecD& rotVec);
     static RotationMatF rotVec2RotMat(const RotationVecF& rotVec);

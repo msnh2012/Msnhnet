@@ -1313,7 +1313,7 @@ size_t Mat::getDataNum() const
 
 size_t Mat::getByteNum() const
 {
-    return this->_width*this->_height*this->_channel*this->_step;
+    return this->_width*this->_height*this->_step;
 }
 
 uint8_t Mat::getPerDataByteNum() const
@@ -1557,7 +1557,7 @@ Mat Mat::randomDiag(const int &num, const MatType &matType)
     return tmp;
 }
 
-Mat Mat::transpose()
+Mat Mat::transpose() const
 {
     if(this->isEmpty())
     {
@@ -1619,7 +1619,7 @@ Mat Mat::transpose()
     return tmpMat;
 }
 
-double Mat::det()
+double Mat::det() const
 {
     if(this->_matType != MAT_GRAY_F32 && this->_matType != MAT_GRAY_F64)
     {
@@ -1642,7 +1642,7 @@ double Mat::det()
         else if(this->_height == 3)
         {
             val = this->_data.f32[0]*this->_data.f32[4]*this->_data.f32[8] + this->_data.f32[1]*this->_data.f32[5]*this->_data.f32[6] + this->_data.f32[2]*this->_data.f32[3]*this->_data.f32[7]
-                    -this->_data.f32[0]*this->_data.f32[7]*this->_data.f32[5] - this->_data.f32[3]*this->_data.f32[1]*this->_data.f32[8] - this->_data.f32[2]*this->_data.f32[4]*this->_data.f32[6];
+                -this->_data.f32[0]*this->_data.f32[7]*this->_data.f32[5] - this->_data.f32[3]*this->_data.f32[1]*this->_data.f32[8] - this->_data.f32[2]*this->_data.f32[4]*this->_data.f32[6];
         }
         else
         {
@@ -1709,7 +1709,7 @@ double Mat::det()
         else if(this->_height == 3)
         {
             val = this->_data.f64[0]*this->_data.f64[4]*this->_data.f64[8] + this->_data.f64[1]*this->_data.f64[5]*this->_data.f64[6] + this->_data.f64[2]*this->_data.f64[3]*this->_data.f64[7]
-                    -this->_data.f64[0]*this->_data.f64[7]*this->_data.f64[5] - this->_data.f64[3]*this->_data.f64[1]*this->_data.f64[8] - this->_data.f64[2]*this->_data.f64[4]*this->_data.f64[6];
+                -this->_data.f64[0]*this->_data.f64[7]*this->_data.f64[5] - this->_data.f64[3]*this->_data.f64[1]*this->_data.f64[8] - this->_data.f64[2]*this->_data.f64[4]*this->_data.f64[6];
         }
         else
         {
@@ -1769,6 +1769,35 @@ double Mat::det()
     }
 
     return val;
+}
+
+double Mat::trace() const
+{
+
+    if(this->_matType != MAT_GRAY_F32 && this->_matType != MAT_GRAY_F64)
+    {
+        throw Exception(1,"[Mat]: Only one channel F32/F64 Mat is supported! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    int tmp = std::min(_width,_height);
+
+    double tr = 0;
+
+    if(this->_matType == MAT_GRAY_F32)
+    {
+        for (int i = 0; i < tmp; ++i)
+        {
+            tr += getFloat32()[i*_width+i];
+        }
+    }
+    else
+    {
+        for (int i = 0; i < tmp; ++i)
+        {
+            tr += getFloat64()[i*_width+i];
+        }
+    }
+    return tr;
 }
 
 std::vector<Mat> Mat::LUDecomp(bool outLU) const
@@ -2529,6 +2558,96 @@ bool Mat::isMatrix4x4() const
     return (this->_width==4)&&(this->_height==4)&&(this->_channel==1);
 }
 
+bool Mat::isRotMat() const
+{
+    if(this->_width!=3 || this->_height!=3 || this->_channel!=1 ||(this->_matType!=MAT_GRAY_F32 && this->_matType!=MAT_GRAY_F64))
+    {
+        return false;
+    }
+
+    if(this->_matType == MAT_GRAY_F64)
+    {
+
+        return Mat::eye(3,MatType::MAT_GRAY_F64)==(transpose()*(*this)) && (det()-1)<MSNH_F64_EPS;
+    }
+    else
+    {
+
+        return Mat::eye(3,MatType::MAT_GRAY_F32)==(transpose()*(*this)) && (det()-1)<MSNH_F32_EPS;
+    }
+}
+
+bool Mat::isHomTransMatrix() const
+{
+
+    if(this->_width!=4 || this->_height!=4 || this->_channel!=1 ||(this->_matType!=MAT_GRAY_F32 && this->_matType!=MAT_GRAY_F64))
+    {
+        return false;
+    }
+
+    if(this->_matType == MAT_GRAY_F64)
+    {
+        if(abs(this->getFloat64()[12])>MSNH_F64_EPS || abs(this->getFloat64()[13])>MSNH_F64_EPS ||
+           abs(this->getFloat64()[14])>MSNH_F64_EPS || abs(this->getFloat64()[14]-1)>MSNH_F64_EPS)
+        {
+            return false;
+        }
+
+        Mat R(3,3,MAT_GRAY_F64);
+        R.getFloat64()[0] = this->getFloat64()[0];
+        R.getFloat64()[1] = this->getFloat64()[1];
+        R.getFloat64()[2] = this->getFloat64()[2];
+
+        R.getFloat64()[4] = this->getFloat64()[4];
+        R.getFloat64()[5] = this->getFloat64()[5];
+        R.getFloat64()[6] = this->getFloat64()[6];
+
+        R.getFloat64()[8] = this->getFloat64()[8];
+        R.getFloat64()[9] = this->getFloat64()[9];
+        R.getFloat64()[10] = this->getFloat64()[10];
+
+        if(!R.isRotMat())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+
+    }
+    else
+    {
+        if(abs(this->getFloat32()[12])>MSNH_F32_EPS || abs(this->getFloat32()[13])>MSNH_F32_EPS ||
+           abs(this->getFloat32()[14])>MSNH_F32_EPS || abs(this->getFloat32()[14]-1)>MSNH_F32_EPS)
+        {
+            return false;
+        }
+
+        Mat R(3,3,MAT_GRAY_F32);
+        R.getFloat32()[0] = this->getFloat32()[0];
+        R.getFloat32()[1] = this->getFloat32()[1];
+        R.getFloat32()[2] = this->getFloat32()[2];
+
+        R.getFloat32()[4] = this->getFloat32()[4];
+        R.getFloat32()[5] = this->getFloat32()[5];
+        R.getFloat32()[6] = this->getFloat32()[6];
+
+        R.getFloat32()[8] = this->getFloat32()[8];
+        R.getFloat32()[9] = this->getFloat32()[9];
+        R.getFloat32()[10] = this->getFloat32()[10];
+
+        if(!R.isRotMat())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+}
+
 Mat Mat::add(const Mat &A, const Mat &B)
 {
     return A+B;
@@ -2564,7 +2683,7 @@ Mat Mat::eleWiseDiv(const Mat &A, const Mat &B)
     Mat tmpMat = A;
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-            A._width != B._width || A._height != B._height)
+        A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -2639,7 +2758,7 @@ Mat Mat::eleWiseMul(const Mat &A, const Mat &B)
     Mat tmpMat = A;
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-            A._width != B._width || A._height != B._height)
+        A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -2703,7 +2822,7 @@ double Mat::dotProduct(const Mat &A, const Mat &B)
     }
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-            A._width != B._width || A._height != B._height)
+        A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -2869,7 +2988,7 @@ Mat operator +(const Mat &A, const Mat &B)
     Mat tmpMat = A;
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-            A._width != B._width || A._height != B._height)
+        A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -3067,7 +3186,7 @@ Mat operator -(const Mat &A, const Mat &B)
     Mat tmpMat = A;
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-            A._width != B._width || A._height != B._height)
+        A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -3293,7 +3412,7 @@ Mat operator *(const Mat &A, const Mat &B)
         {
 
             if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-                    A._width != B._width || A._height != B._height)
+                A._width != B._width || A._height != B._height)
             {
                 throw Exception(1,"[Mat]: properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
             }
@@ -3618,9 +3737,9 @@ QuaternionD::QuaternionD(const QuaternionD &q)
 
 QuaternionD::QuaternionD(const double &q0, const double &q1, const double &q2, const double &q3)
     :_q0(q0),
-      _q1(q1),
-      _q2(q2),
-      _q3(q3)
+    _q1(q1),
+    _q2(q2),
+    _q3(q3)
 {
 
 }
@@ -3738,9 +3857,9 @@ QuaternionD &QuaternionD::operator=(const QuaternionD &q)
 bool QuaternionD::operator==(const QuaternionD &q)
 {
     if(abs(this->_q0-q.getQ0())<MSNH_F64_EPS&&
-            abs(this->_q1-q.getQ1())<MSNH_F64_EPS&&
-            abs(this->_q2-q.getQ2())<MSNH_F64_EPS&&
-            abs(this->_q3-q.getQ3())<MSNH_F64_EPS)
+        abs(this->_q1-q.getQ1())<MSNH_F64_EPS&&
+        abs(this->_q2-q.getQ2())<MSNH_F64_EPS&&
+        abs(this->_q3-q.getQ3())<MSNH_F64_EPS)
     {
         return true;
     }
@@ -3758,27 +3877,27 @@ QuaternionD operator/(const QuaternionD &A, const QuaternionD &B)
 QuaternionD operator*(const QuaternionD &A, const QuaternionD &B)
 {
     return QuaternionD(
-                A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
-                A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
-                A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
-                A.getQ0()*B.getQ3()+A.getQ1()*B.getQ2()-A.getQ2()*B.getQ1()+A.getQ3()*B.getQ0()
-                );
+        A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
+        A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
+        A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
+        A.getQ0()*B.getQ3()+A.getQ1()*B.getQ2()-A.getQ2()*B.getQ1()+A.getQ3()*B.getQ0()
+        );
 }
 
 QuaternionD operator+(const QuaternionD &A, const QuaternionD &B)
 {
     return QuaternionD(A.getQ0()+B.getQ0(),
-                       A.getQ1()+B.getQ1(),
-                       A.getQ2()+B.getQ2(),
-                       A.getQ3()+B.getQ3());
+        A.getQ1()+B.getQ1(),
+        A.getQ2()+B.getQ2(),
+        A.getQ3()+B.getQ3());
 }
 
 QuaternionD operator-(const QuaternionD &A, const QuaternionD &B)
 {
     return QuaternionD(A.getQ0()-B.getQ0(),
-                       A.getQ1()-B.getQ1(),
-                       A.getQ2()-B.getQ2(),
-                       A.getQ3()-B.getQ3());
+        A.getQ1()-B.getQ1(),
+        A.getQ2()-B.getQ2(),
+        A.getQ3()-B.getQ3());
 }
 
 QuaternionF::QuaternionF(const QuaternionF &q)
@@ -3791,9 +3910,9 @@ QuaternionF::QuaternionF(const QuaternionF &q)
 
 QuaternionF::QuaternionF(const float &q0, const float &q1, const float &q2, const float &q3)
     :_q0(q0),
-      _q1(q1),
-      _q2(q2),
-      _q3(q3)
+    _q1(q1),
+    _q2(q2),
+    _q3(q3)
 {
 
 }
@@ -3828,7 +3947,7 @@ float QuaternionF::mod() const
 
 QuaternionF QuaternionF::invert() const
 {
-    double mod = this->mod();
+    float mod = (float)this->mod();
     return QuaternionF(this->_q0/mod, this->_q1/mod, this->_q2/mod, this->_q3/mod);
 }
 
@@ -3891,9 +4010,9 @@ QuaternionF &QuaternionF::operator=(const QuaternionF &q)
 bool QuaternionF::operator ==(const QuaternionF &q)
 {
     if(abs(this->_q0-q.getQ0())<MSNH_F32_EPS&&
-            abs(this->_q1-q.getQ1())<MSNH_F32_EPS&&
-            abs(this->_q2-q.getQ2())<MSNH_F32_EPS&&
-            abs(this->_q3-q.getQ3())<MSNH_F32_EPS)
+        abs(this->_q1-q.getQ1())<MSNH_F32_EPS&&
+        abs(this->_q2-q.getQ2())<MSNH_F32_EPS&&
+        abs(this->_q3-q.getQ3())<MSNH_F32_EPS)
     {
         return true;
     }
@@ -3906,27 +4025,27 @@ bool QuaternionF::operator ==(const QuaternionF &q)
 QuaternionF operator-(const QuaternionF &A, const QuaternionF &B)
 {
     return QuaternionF(A.getQ0()-B.getQ0(),
-                       A.getQ1()-B.getQ1(),
-                       A.getQ2()-B.getQ2(),
-                       A.getQ3()-B.getQ3());
+        A.getQ1()-B.getQ1(),
+        A.getQ2()-B.getQ2(),
+        A.getQ3()-B.getQ3());
 }
 
 QuaternionF operator+(const QuaternionF &A, const QuaternionF &B)
 {
     return QuaternionF(A.getQ0()+B.getQ0(),
-                       A.getQ1()+B.getQ1(),
-                       A.getQ2()+B.getQ2(),
-                       A.getQ3()+B.getQ3());
+        A.getQ1()+B.getQ1(),
+        A.getQ2()+B.getQ2(),
+        A.getQ3()+B.getQ3());
 }
 
 QuaternionF operator*(const QuaternionF &A, const QuaternionF &B)
 {
     return QuaternionF(
-                A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
-                A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
-                A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
-                A.getQ0()*B.getQ3()+A.getQ1()*B.getQ2()-A.getQ2()*B.getQ1()+A.getQ3()*B.getQ0()
-                );
+        A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
+        A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
+        A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
+        A.getQ0()*B.getQ3()+A.getQ1()*B.getQ2()-A.getQ2()*B.getQ1()+A.getQ3()*B.getQ0()
+        );
 }
 
 QuaternionF operator/(const QuaternionF &A, const QuaternionF &B)

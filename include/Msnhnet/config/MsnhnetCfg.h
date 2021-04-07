@@ -40,7 +40,33 @@
 
 #define MSNH_F32_EPS 1E-6
 
-#define MSNH_F64_EPS 1E-15
+#define MSNH_F64_EPS 1E-12
+
+#define MSNH_PI   3.14159265453
+
+#define MSNH_PI_2 1.57079632726
+
+#define MSNH_PI_3 1.04719755151
+
+#define MSNH_PI_4 0.78539816363
+
+#define MSNH_PI_6 0.52359877575
+
+#define clip(x,a,b) ((x<a)?a:(x>b)?b:x)
+
+#define m_swap(a,b) (a=(a)+(b),b=(a)-(b),a=(a)-(b))
+
+#define deg2radf(deg) ((float)(deg/180.f*MSNH_PI))
+
+#define deg2radd(deg) ((double)(deg/180.0*MSNH_PI))
+
+#define rad2degf(deg) ((float)(deg/MSNH_PI*180.f))
+
+#define rad2degd(deg) ((double)(deg/MSNH_PI*180.0))
+
+#define closeToZeroD(x) (abs(x)<MSNH_F64_EPS)
+
+#define closeToZeroF(x) (fabsf(x)<MSNH_F32_EPS)
 
 enum ActivationType
 {

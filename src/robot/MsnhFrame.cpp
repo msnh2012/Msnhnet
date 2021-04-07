@@ -23,6 +23,7 @@ Frame::Frame(const Mat &mat)
         memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
         this->_data.u8 =u8Ptr;
     }
+
 }
 
 Frame::Frame(const RotationMatD &rotMat)
