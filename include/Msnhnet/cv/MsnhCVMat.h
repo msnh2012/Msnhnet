@@ -614,7 +614,6 @@ public:
 
     inline Mat_(Mat_&& mat)
     {
-        std::cout << "_cp&&";
         release();
         this->_channel  = mat.getChannel();
         this->_width    = mat.getWidth();
@@ -628,7 +627,6 @@ public:
     inline Mat_(const Mat &mat)  
 
     {
-        std::cout << "cp";
         if(mat.getWidth()!=w || mat.getHeight()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
             throw Exception(1, "[Mat_] mat props should be equal." , __FILE__, __LINE__,__FUNCTION__);
@@ -652,7 +650,6 @@ public:
     inline Mat_(Mat &&mat)  
 
     {
-        std::cout << "cp&&";
         if(mat.getWidth()!=w || mat.getHeight()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
             throw Exception(1, "[Mat_] mat props should be equal." , __FILE__, __LINE__,__FUNCTION__);
@@ -706,7 +703,6 @@ public:
 
     inline Mat_& operator= (const Mat &mat)
     {
-        std::cout << "=";
         if(mat.getWidth()!=w || mat.getWidth()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
             throw Exception(1, "[Mat_] mat props should be equal." , __FILE__, __LINE__,__FUNCTION__);
@@ -732,7 +728,6 @@ public:
 
     inline Mat_& operator= (Mat&& mat)
     {
-        std::cout << "=&&";
         if(mat.getWidth()!=w || mat.getWidth()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
             throw Exception(1, "[Mat_] mat props should be equal." , __FILE__, __LINE__,__FUNCTION__);

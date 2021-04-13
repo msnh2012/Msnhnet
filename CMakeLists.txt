@@ -103,6 +103,7 @@ endif()
 set(SRCS
     src/core/MsnhBlas.cpp
     src/core/MsnhGemm.cpp
+    src/core/MsnhSimd.cpp
     src/core/MsnhMemoryManager.cpp
     src/io/MsnhIO.cpp
     src/io/MsnhParser.cpp
@@ -217,8 +218,8 @@ set(SRCS
     src/robot/MsnhChain.cpp
     src/robot/MsnhSegment.cpp
     src/robot/MsnhChainFK.cpp
-    src/robot/MsnhSpatialMath.cpp
     src/utils/MsnhCVUtil.cpp
+    src/robot/MsnhSpatialMath.cpp
     )
 
 # config GPU

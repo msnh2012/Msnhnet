@@ -7,17 +7,21 @@
 namespace Msnhnet
 {
 
-class SO3D:public RotationMatD
+class MsnhNet_API SO3D:public RotationMatD
 {
 public:
     SO3D(){}
 
     SO3D(const Mat &mat); 
 
+    SO3D(Mat&& mat);
     SO3D(const SO3D& mat); 
 
+    SO3D(SO3D&& mat);
     SO3D &operator= (Mat &mat);
+    SO3D &operator= (Mat&& mat);
     SO3D &operator= (SO3D &mat);
+    SO3D &operator= (SO3D&& mat);
 
     RotationMatD &toRotMat();
     QuaternionD  toQuaternion();
@@ -48,17 +52,21 @@ public:
     static bool forceCheckSO3;
 };
 
-class SO3F:public RotationMatF
+class MsnhNet_API SO3F:public RotationMatF
 {
 public:
     SO3F(){}
 
     SO3F(const Mat &mat); 
 
+    SO3F(Mat&& mat);
     SO3F(const SO3F& mat); 
 
+    SO3F(SO3F&& mat);
     SO3F &operator= (Mat &mat);
+    SO3F &operator= (Mat&& mat);
     SO3F &operator= (SO3F &mat);
+    SO3F &operator= (SO3F&& mat);
 
     RotationMatF &toRotMat();
     QuaternionF  toQuaternion();
@@ -89,17 +97,21 @@ public:
     static bool forceCheckSO3;
 };
 
-class SE3D:public Matrix4x4D
+class MsnhNet_API SE3D:public Matrix4x4D
 {
 public:
 
     SE3D(){}
     SE3D(const Mat &mat); 
 
+    SE3D(Mat&& mat);
     SE3D(const SE3D& mat); 
 
+    SE3D(SE3D&& mat);
     SE3D &operator= (Mat &mat);
+    SE3D &operator= (Mat&& mat);
     SE3D &operator= (SE3D &mat);
+    SE3D &operator= (SE3D&& mat);
 
     Matrix4x4D &toMatrix4x4();
 
@@ -114,6 +126,39 @@ public:
     static SE3D exp(const ScrewD &screw, double theta);
 
     static SE3D exp(const ScrewD &screw);
+
+    static bool isSE3(const Mat &mat);
+
+    static bool forceCheckSE3;
+};
+
+class MsnhNet_API SE3F:public Matrix4x4F
+{
+public:
+
+    SE3F(){}
+    SE3F(const Mat &mat);
+    SE3F(Mat&& mat);
+    SE3F(const SE3F& mat);
+    SE3F(SE3F&& mat);
+    SE3F &operator= (Mat &mat);
+    SE3F &operator= (Mat&& mat);
+    SE3F &operator= (SE3F &mat);
+    SE3F &operator= (SE3F&& mat);
+
+    Matrix4x4F &toMatrix4x4();
+
+    Mat adjoint();
+
+    static Matrix4x4F wedge(const ScrewF &screw, bool needCalUnit=false);
+
+    static ScrewF vee(const Matrix4x4F &wed, bool needCalUnit=false);
+
+    ScrewF log();
+
+    static SE3F exp(const ScrewF &screw, float theta);
+
+    static SE3F exp(const ScrewF &screw);
 
     static bool isSE3(const Mat &mat);
 
