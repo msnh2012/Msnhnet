@@ -12,6 +12,8 @@ namespace  Msnhnet
         Frame(){}
         Frame(const Mat &mat); 
 
+        Frame(Mat&& mat); 
+
         Frame(const RotationMatD &rotMat);
         Frame(const TranslationD &trans);
         Frame(const RotationMatD &rotMat, const TranslationD &trans);

@@ -1521,7 +1521,6 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
 void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc)
 {
 #ifdef USE_X86
-
 #ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
     uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;

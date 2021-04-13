@@ -23,7 +23,11 @@ public:
 
     Matrix4x4D(const Mat &mat); 
 
+    Matrix4x4D(Mat&& mat); 
+
     Matrix4x4D(const Matrix4x4D& mat); 
+
+    Matrix4x4D(Matrix4x4D&& mat);
 
     Matrix4x4D(const RotationMatD& rotMat);
 
@@ -33,9 +37,13 @@ public:
 
     Matrix4x4D(const std::vector<double> &val);
 
-    Matrix4x4D& operator= (Matrix4x4D &mat);
+    Matrix4x4D& operator= (const Matrix4x4D &mat);
+
+    Matrix4x4D& operator= (Matrix4x4D &&mat);
 
     Matrix4x4D& operator= (const Mat &mat);
+
+    Matrix4x4D& operator= (Mat&& mat);
 
     RotationMatD getRotationMat() const;
 
@@ -82,15 +90,23 @@ public:
 
     Matrix4x4F(const Mat &mat); 
 
+    Matrix4x4F(Mat&& mat); 
+
     Matrix4x4F(const Matrix4x4F& mat); 
+
+    Matrix4x4F(Matrix4x4F&& mat); 
 
     Matrix4x4F(const RotationMatF& rotMat, const TranslationF& trans);
 
     Matrix4x4F(const std::vector<float> &val);
 
-    Matrix4x4F& operator= (Matrix4x4F &mat);
+    Matrix4x4F& operator= (const Matrix4x4F &mat);
+
+    Matrix4x4F& operator= (Matrix4x4F&& mat); 
 
     Matrix4x4F& operator= (const Mat &mat);
+
+    Matrix4x4F& operator= (Mat&& mat); 
 
     RotationMatF getRotationMat() const;
 

@@ -4,7 +4,6 @@
 #include <Msnhnet/config/MsnhnetCfg.h>
 #include <iostream>
 #include <sstream>
-#include <iomanip>
 namespace Msnhnet
 {
 template<int N,typename T>

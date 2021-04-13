@@ -26,6 +26,23 @@ Frame::Frame(const Mat &mat)
 
 }
 
+Frame::Frame(Mat &&mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
+
+    {
+        throw Exception(1, "[Frame] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F64", __FILE__, __LINE__,__FUNCTION__);
+    }
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+    this->_data.u8  = mat.getBytes();
+    mat.setDataNull();
+}
+
 Frame::Frame(const RotationMatD &rotMat)
 {
     setRotationMat(rotMat);

@@ -33,6 +33,18 @@ Mat::Mat(const Mat &mat)
     }
 }
 
+Mat::Mat(Mat&& mat)
+{
+
+    this->_channel  = mat._channel;
+    this->_height   = mat._height;
+    this->_width    = mat._width;
+    this->_matType  = mat._matType;
+    this->_step     = mat._step;
+    this->_data.u8  = mat._data.u8;
+    mat.setDataNull();
+}
+
 Mat::Mat(const std::string &path)
 {
     readImage(path);
@@ -374,6 +386,22 @@ Mat &Mat::operator = (const Mat &mat)
             memcpy(u8Ptr, mat._data.u8, this->_width*this->_height*this->_step);
             this->_data.u8 =u8Ptr;
         }
+    }
+    return *this;
+}
+
+Mat &Mat::operator=(Mat &&mat)
+{
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat._channel;
+        this->_width    = mat._width;
+        this->_height   = mat._height;
+        this->_step     = mat._step;
+        this->_matType  = mat._matType;
+        this->_data.u8  = mat._data.u8;
+        mat.setDataNull();
     }
     return *this;
 }
@@ -1250,6 +1278,16 @@ void Mat::setMatType(const MatType &matType)
 void Mat::setU8Ptr(uint8_t * const &ptr)
 {
     this->_data.u8 = ptr;
+}
+
+void Mat::setDataNull()
+{
+    this->_width    = 0;
+    this->_height   = 0;
+    this->_channel  = 0;
+    this->_step     = 0;
+    this->_matType  = MatType::MAT_RGB_U8;
+    this->_data.u8  = nullptr;
 }
 
 uint8_t *Mat::getBytes() const
@@ -3485,14 +3523,14 @@ Mat operator *(const Mat &A, const Mat &B)
                 throw Exception(1,"[Mat]: Mat A'W != B'H ! \n", __FILE__, __LINE__, __FUNCTION__);
             }
 
-            SimdInfo simdInfo;
+            SimdInfo::checkSimd();
 
             if(A.isF32Mat())
             {
 
                 Mat C(B.getWidth(),A.getHeight(),MatType::MAT_GRAY_F32);
 #ifdef USE_X86
-                Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f32,A.getWidth(),B.getData().f32,B.getWidth(),1,C.getData().f32,C.getWidth(), simdInfo.getSupportAVX2());
+                Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f32,A.getWidth(),B.getData().f32,B.getWidth(),1,C.getData().f32,C.getWidth(), SimdInfo::supportAVX2);
 #else
                 Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f32,A.getWidth(),B.getData().f32,B.getWidth(),1,C.getData().f32,C.getWidth(), false);
 #endif
@@ -3502,7 +3540,7 @@ Mat operator *(const Mat &A, const Mat &B)
             {
                 Mat C(B.getWidth(),A.getHeight(),MatType::MAT_GRAY_F64);
 #ifdef USE_X86
-                Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f64,A.getWidth(),B.getData().f64,B.getWidth(),1,C.getData().f64,C.getWidth(), simdInfo.getSupportAVX2());
+                Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f64,A.getWidth(),B.getData().f64,B.getWidth(),1,C.getData().f64,C.getWidth(), SimdInfo::supportAVX2);
 #else
                 Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f64,A.getWidth(),B.getData().f64,B.getWidth(),1,C.getData().f64,C.getWidth(), false);
 #endif

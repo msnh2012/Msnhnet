@@ -7,7 +7,7 @@
 namespace Msnhnet
 {
 
-class MsnhNet_API SO3D:public RotationMatD
+class SO3D:public RotationMatD
 {
 public:
     SO3D(){}
@@ -48,7 +48,7 @@ public:
     static bool forceCheckSO3;
 };
 
-class MsnhNet_API SO3F:public RotationMatF
+class SO3F:public RotationMatF
 {
 public:
     SO3F(){}
@@ -89,7 +89,7 @@ public:
     static bool forceCheckSO3;
 };
 
-class MsnhNet_API SE3D:public Matrix4x4D
+class SE3D:public Matrix4x4D
 {
 public:
 
@@ -114,37 +114,6 @@ public:
     static SE3D exp(const ScrewD &screw, double theta);
 
     static SE3D exp(const ScrewD &screw);
-
-    static bool isSE3(const Mat &mat);
-
-    static bool forceCheckSE3;
-};
-
-class MsnhNet_API SE3F:public Matrix4x4F
-{
-public:
-
-    SE3F(){}
-    SE3F(const Mat &mat); 
-
-    SE3F(const SE3F& mat); 
-
-    SE3F &operator= (Mat &mat);
-    SE3F &operator= (SE3F &mat);
-
-    Matrix4x4F &toMatrix4x4();
-
-    Mat adjoint();
-
-    static Matrix4x4F wedge(const ScrewF &screw, bool needCalUnit=false);
-
-    static ScrewF vee(const Matrix4x4F &wed, bool needCalUnit=false);
-
-    ScrewF log();
-
-    static SE3F exp(const ScrewF &screw, float theta);
-
-    static SE3F exp(const ScrewF &screw);
 
     static bool isSE3(const Mat &mat);
 

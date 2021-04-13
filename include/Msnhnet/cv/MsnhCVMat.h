@@ -20,6 +20,8 @@ class MsnhNet_API Mat
 public:
 
     Mat (const Mat& mat);
+
+    Mat (Mat&& mat);
     Mat (const std::string &path);  
 
     Mat (const int &width, const int &height, const MatType &matType, void *data=nullptr);
@@ -318,6 +320,9 @@ public:
 
     void setU8Ptr(uint8_t *const &ptr);
 
+    /* must with && or std::move */
+    void setDataNull();
+
     uint8_t *getBytes() const;
 
     float *getFloat32() const;
@@ -445,6 +450,8 @@ public:
     bool isNan() const;
 
     Mat &operator= (const Mat &mat);
+
+    Mat &operator= (Mat&& mat);
 
     MsnhNet_API friend bool operator== (const Mat &A, const Mat &B);
     MsnhNet_API friend bool operator!= (const Mat &A, const Mat &B);
@@ -605,9 +612,23 @@ public:
         }
     }
 
+    inline Mat_(Mat_&& mat)
+    {
+        std::cout << "_cp&&";
+        release();
+        this->_channel  = mat.getChannel();
+        this->_width    = mat.getWidth();
+        this->_height   = mat.getHeight();
+        this->_step     = mat.getStep();
+        this->_matType  = mat.getMatType();
+        this->_data.u8  = mat._data.u8;
+        mat.setDataNull();
+    }
+
     inline Mat_(const Mat &mat)  
 
     {
+        std::cout << "cp";
         if(mat.getWidth()!=w || mat.getHeight()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
             throw Exception(1, "[Mat_] mat props should be equal." , __FILE__, __LINE__,__FUNCTION__);
@@ -628,6 +649,24 @@ public:
         }
     }
 
+    inline Mat_(Mat &&mat)  
+
+    {
+        std::cout << "cp&&";
+        if(mat.getWidth()!=w || mat.getHeight()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
+        {
+            throw Exception(1, "[Mat_] mat props should be equal." , __FILE__, __LINE__,__FUNCTION__);
+        }
+
+        release();
+        this->_channel  = mat.getChannel();
+        this->_width    = mat.getWidth();
+        this->_height   = mat.getHeight();
+        this->_step     = mat.getStep();
+        this->_matType  = mat.getMatType();
+        this->_data.u8  = mat.getData().u8;
+        mat.setDataNull();
+    }
     inline Mat_& operator= (const Mat_ &mat)
     {
         if(this!=&mat)
@@ -649,8 +688,25 @@ public:
         return *this;
     }
 
+    inline Mat_& operator= (Mat_&& mat)
+    {
+        if(this!=&mat)
+        {
+            release();
+            this->_channel  = mat._channel;
+            this->_width    = mat._width;
+            this->_height   = mat._height;
+            this->_step     = mat._step;
+            this->_matType  = mat._matType;
+            this->_data.u8  = mat._data.u8;
+            mat.setDataNull();
+        }
+        return *this;
+    }
+
     inline Mat_& operator= (const Mat &mat)
     {
+        std::cout << "=";
         if(mat.getWidth()!=w || mat.getWidth()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
         {
             throw Exception(1, "[Mat_] mat props should be equal." , __FILE__, __LINE__,__FUNCTION__);
@@ -670,6 +726,27 @@ public:
                 memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
                 this->_data.u8 =u8Ptr;
             }
+        }
+        return *this;
+    }
+
+    inline Mat_& operator= (Mat&& mat)
+    {
+        std::cout << "=&&";
+        if(mat.getWidth()!=w || mat.getWidth()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
+        {
+            throw Exception(1, "[Mat_] mat props should be equal." , __FILE__, __LINE__,__FUNCTION__);
+        }
+        if(this!=&mat)
+        {
+            release();
+            this->_channel  = mat.getChannel();
+            this->_width    = mat.getWidth();
+            this->_height   = mat.getHeight();
+            this->_step     = mat.getStep();
+            this->_matType  = mat.getMatType();
+            this->_data.u8  = mat.getData().u8;
+            mat.setDataNull();
         }
         return *this;
     }

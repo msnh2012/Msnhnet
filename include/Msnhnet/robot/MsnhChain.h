@@ -28,7 +28,6 @@ public:
 private:
     uint32_t _numOfJoints;
     uint32_t _numOfSegments;
-
 };
 
 }

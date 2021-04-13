@@ -940,6 +940,23 @@ Matrix4x4D::Matrix4x4D(const Mat &mat)
     }
 }
 
+Matrix4x4D::Matrix4x4D(Mat &&mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
+
+    {
+        throw Exception(1, "[Matrix4x4] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F64", __FILE__, __LINE__,__FUNCTION__);
+    }
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+    this->_data.u8  = mat.getBytes();
+    mat.setDataNull();
+}
+
 Matrix4x4D::Matrix4x4D(const Matrix4x4D &mat)
 {
     release();
@@ -955,6 +972,18 @@ Matrix4x4D::Matrix4x4D(const Matrix4x4D &mat)
         memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
         this->_data.u8 =u8Ptr;
     }
+}
+
+Matrix4x4D::Matrix4x4D(Matrix4x4D &&mat)
+{
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+    this->_data.u8  = mat.getBytes();
+    mat.setDataNull();
 }
 
 Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat)
@@ -979,7 +1008,7 @@ Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat, const TranslationD &trans):Ma
 
 Matrix4x4D::Matrix4x4D(const std::vector<double> &val):Mat_<4,4,double>(val){}
 
-Matrix4x4D &Matrix4x4D::operator=(Matrix4x4D &mat)
+Matrix4x4D &Matrix4x4D::operator=(const Matrix4x4D &mat)
 {
     if(this!=&mat)
     {
@@ -996,6 +1025,22 @@ Matrix4x4D &Matrix4x4D::operator=(Matrix4x4D &mat)
             memcpy(u8Ptr, mat._data.u8, this->_width*this->_height*this->_step);
             this->_data.u8 =u8Ptr;
         }
+    }
+    return *this;
+}
+
+Matrix4x4D &Matrix4x4D::operator=(Matrix4x4D&& mat)
+{
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat._channel;
+        this->_width    = mat._width;
+        this->_height   = mat._height;
+        this->_step     = mat._step;
+        this->_matType  = mat._matType;
+        this->_data.u8  = mat.getBytes();
+        mat.setDataNull();
     }
     return *this;
 }
@@ -1023,6 +1068,28 @@ Matrix4x4D &Matrix4x4D::operator=(const Mat &mat)
             memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
             this->_data.u8 =u8Ptr;
         }
+    }
+    return *this;
+}
+
+Matrix4x4D &Matrix4x4D::operator=(Mat&& mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
+
+    {
+        throw Exception(1, "[Matrix4x4] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F64", __FILE__, __LINE__,__FUNCTION__);
+    }
+
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat.getChannel();
+        this->_width    = mat.getWidth();
+        this->_height   = mat.getHeight();
+        this->_step     = mat.getStep();
+        this->_matType  = mat.getMatType();
+        this->_data.u8  = mat.getBytes();
+        mat.setDataNull();
     }
     return *this;
 }
@@ -1331,6 +1398,23 @@ Matrix4x4F::Matrix4x4F(const Mat &mat)
     }
 }
 
+Matrix4x4F::Matrix4x4F(Mat &&mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=4 || mat.getMatType()!= MatType::MAT_GRAY_F32) 
+
+    {
+        throw Exception(1, "[Matrix4x4F] mat should be: wxh==4x4 channel==1 step==4 matType==MAT_GRAY_F32", __FILE__, __LINE__,__FUNCTION__);
+    }
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+    this->_data.u8  = mat.getBytes();
+    mat.setDataNull();
+}
+
 Matrix4x4F::Matrix4x4F(const Matrix4x4F &mat)
 {
     release();
@@ -1348,6 +1432,18 @@ Matrix4x4F::Matrix4x4F(const Matrix4x4F &mat)
     }
 }
 
+Matrix4x4F::Matrix4x4F(Matrix4x4F &&mat)
+{
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+    this->_data.u8  = mat.getBytes();
+    mat.setDataNull();
+}
+
 Matrix4x4F::Matrix4x4F(const RotationMatF &rotMat, const TranslationF &trans)
 {
     this->setVal({
@@ -1360,7 +1456,7 @@ Matrix4x4F::Matrix4x4F(const RotationMatF &rotMat, const TranslationF &trans)
 
 Matrix4x4F::Matrix4x4F(const std::vector<float> &val):Mat_<4,4,float>(val){}
 
-Matrix4x4F &Matrix4x4F::operator=(Matrix4x4F &mat)
+Matrix4x4F &Matrix4x4F::operator=(const Matrix4x4F &mat)
 {
     if(this!=&mat)
     {
@@ -1377,6 +1473,22 @@ Matrix4x4F &Matrix4x4F::operator=(Matrix4x4F &mat)
             memcpy(u8Ptr, mat._data.u8, this->_width*this->_height*this->_step);
             this->_data.u8 =u8Ptr;
         }
+    }
+    return *this;
+}
+
+Matrix4x4F &Matrix4x4F::operator=(Matrix4x4F&& mat)
+{
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat._channel;
+        this->_width    = mat._width;
+        this->_height   = mat._height;
+        this->_step     = mat._step;
+        this->_matType  = mat._matType;
+        this->_data.u8  = mat.getBytes();
+        mat.setDataNull();
     }
     return *this;
 }
@@ -1404,6 +1516,28 @@ Matrix4x4F &Matrix4x4F::operator=(const Mat &mat)
             memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
             this->_data.u8 =u8Ptr;
         }
+    }
+    return *this;
+}
+
+Matrix4x4F &Matrix4x4F::operator=(Mat&& mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=4 || mat.getMatType()!= MatType::MAT_GRAY_F32)
+
+    {
+        throw Exception(1, "[Matrix4x4F] mat should be: wxh==4x4 channel==1 step==4 matType==MAT_GRAY_F32", __FILE__, __LINE__,__FUNCTION__);
+    }
+
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat.getChannel();
+        this->_width    = mat.getWidth();
+        this->_height   = mat.getHeight();
+        this->_step     = mat.getStep();
+        this->_matType  = mat.getMatType();
+        this->_data.u8  = mat.getBytes();
+        mat.setDataNull();
     }
     return *this;
 }
