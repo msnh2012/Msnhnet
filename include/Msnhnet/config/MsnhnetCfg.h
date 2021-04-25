@@ -68,6 +68,8 @@
 
 #define closeToZeroF(x) (fabsf(x)<MSNH_F32_EPS)
 
+#define USE_R_VALUE_REF 1
+
 enum ActivationType
 {
     LOGISTIC    =   0,

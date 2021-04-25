@@ -23,11 +23,16 @@ public:
 
     Matrix4x4D(const Mat &mat); 
 
+#ifdef USE_R_VALUE_REF
     Matrix4x4D(Mat&& mat); 
+
+#endif
 
     Matrix4x4D(const Matrix4x4D& mat); 
 
+#ifdef USE_R_VALUE_REF
     Matrix4x4D(Matrix4x4D&& mat);
+#endif
 
     Matrix4x4D(const RotationMatD& rotMat);
 
@@ -39,11 +44,15 @@ public:
 
     Matrix4x4D& operator= (const Matrix4x4D &mat);
 
+#ifdef USE_R_VALUE_REF
     Matrix4x4D& operator= (Matrix4x4D &&mat);
+#endif
 
     Matrix4x4D& operator= (const Mat &mat);
 
+#ifdef USE_R_VALUE_REF
     Matrix4x4D& operator= (Mat&& mat);
+#endif
 
     RotationMatD getRotationMat() const;
 
@@ -70,10 +79,10 @@ public:
     void scale(const Vector3D& vector);
 
     void perspective(const double &verticalAngle, const double &aspectRatio,
-                      const double &nearPlane, const double &farPlane);
+                     const double &nearPlane, const double &farPlane);
 
     void ortho(const double &left, const double &right, const double &bottom, const double &top,
-                const double &nearPlane, const double &farPlane);
+               const double &nearPlane, const double &farPlane);
 
     void lookAt(const Vector3D &eye, const Vector3D &center, const Vector3D &up);
 
@@ -90,11 +99,17 @@ public:
 
     Matrix4x4F(const Mat &mat); 
 
+#ifdef USE_R_VALUE_REF
     Matrix4x4F(Mat&& mat); 
+
+#endif
 
     Matrix4x4F(const Matrix4x4F& mat); 
 
+#ifdef USE_R_VALUE_REF
     Matrix4x4F(Matrix4x4F&& mat); 
+
+#endif
 
     Matrix4x4F(const RotationMatF& rotMat, const TranslationF& trans);
 
@@ -102,11 +117,17 @@ public:
 
     Matrix4x4F& operator= (const Matrix4x4F &mat);
 
+#ifdef USE_R_VALUE_REF
     Matrix4x4F& operator= (Matrix4x4F&& mat); 
+
+#endif
 
     Matrix4x4F& operator= (const Mat &mat);
 
+#ifdef USE_R_VALUE_REF
     Matrix4x4F& operator= (Mat&& mat); 
+
+#endif
 
     RotationMatF getRotationMat() const;
 
@@ -133,10 +154,10 @@ public:
     void scale(const Vector3F& vector);
 
     void perspective(const float &verticalAngle, const float &aspectRatio,
-                      const float &nearPlane, const float &farPlane);
+                     const float &nearPlane, const float &farPlane);
 
     void ortho(const float &left, const float &right, const float &bottom, const float &top,
-                const float &nearPlane, const float &farPlane);
+               const float &nearPlane, const float &farPlane);
 
     void lookAt(const Vector3F &eye, const Vector3F &center, const Vector3F &up);
 

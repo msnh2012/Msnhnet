@@ -33,6 +33,7 @@ Mat::Mat(const Mat &mat)
     }
 }
 
+#ifdef USE_R_VALUE_REF
 Mat::Mat(Mat&& mat)
 {
 
@@ -44,6 +45,7 @@ Mat::Mat(Mat&& mat)
     this->_data.u8  = mat._data.u8;
     mat.setDataNull();
 }
+#endif
 
 Mat::Mat(const std::string &path)
 {
@@ -301,6 +303,37 @@ void Mat::saveImage(const std::string &path, const int &quality)
     }
 }
 
+Mat Mat::rowRange(int startCol, int cnts)
+{
+    if(startCol < 0 || cnts < 0 || startCol >= this->_height || (startCol + cnts) > this->_height)
+    {
+        throw Exception(1,"[Mat]: out of memory!\n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    Mat tmp(this->_width,cnts,this->_matType);
+    memcpy(tmp.getBytes(), this->_data.u8+ startCol*this->_width*this->_step, cnts*this->_width*this->_step);
+    return tmp;
+}
+
+Mat Mat::colRange(int startRow, int cnts)
+{
+    if(startRow < 0 || cnts < 0 || startRow >= this->_width || (startRow + cnts) > this->_width)
+    {
+        throw Exception(1,"[Mat]: out of memory!\n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    Mat tmp(cnts ,this->_height,this->_matType);
+
+    std::cout<<this->getByteNum()<<std::endl;
+
+    for (int i = 0; i < this->_height; ++i)
+    {
+        memcpy(tmp.getBytes() + i*cnts*this->_step, this->_data.u8 + (i*this->_width + startRow)*this->_step, cnts*this->_step);
+    }
+
+    return tmp;
+}
+
 std::vector<char> Mat::encodeToMemory(const MatEncodeType &encodeType, const int &jpgQuality)
 {
     if(this->isEmpty())
@@ -390,6 +423,7 @@ Mat &Mat::operator = (const Mat &mat)
     return *this;
 }
 
+#ifdef USE_R_VALUE_REF
 Mat &Mat::operator=(Mat &&mat)
 {
     if(this!=&mat)
@@ -405,6 +439,7 @@ Mat &Mat::operator=(Mat &&mat)
     }
     return *this;
 }
+#endif
 
 Mat &Mat::operator +=(const Mat &A)
 {
@@ -1680,7 +1715,7 @@ double Mat::det() const
         else if(this->_height == 3)
         {
             val = this->_data.f32[0]*this->_data.f32[4]*this->_data.f32[8] + this->_data.f32[1]*this->_data.f32[5]*this->_data.f32[6] + this->_data.f32[2]*this->_data.f32[3]*this->_data.f32[7]
-                -this->_data.f32[0]*this->_data.f32[7]*this->_data.f32[5] - this->_data.f32[3]*this->_data.f32[1]*this->_data.f32[8] - this->_data.f32[2]*this->_data.f32[4]*this->_data.f32[6];
+                    -this->_data.f32[0]*this->_data.f32[7]*this->_data.f32[5] - this->_data.f32[3]*this->_data.f32[1]*this->_data.f32[8] - this->_data.f32[2]*this->_data.f32[4]*this->_data.f32[6];
         }
         else
         {
@@ -1721,6 +1756,11 @@ double Mat::det() const
                 {
                     float alpha = tmpMat.getData().f32[j*m + i]*d;
 
+                    if(abs(alpha)<MSNH_F32_EPS)
+                    {
+                        continue;
+                    }
+
                     for( k = i; k < m; k++ )
                     {
                         tmpMat.getData().f32[j*m + k] += alpha*tmpMat.getData().f32[i*m + k];
@@ -1747,7 +1787,7 @@ double Mat::det() const
         else if(this->_height == 3)
         {
             val = this->_data.f64[0]*this->_data.f64[4]*this->_data.f64[8] + this->_data.f64[1]*this->_data.f64[5]*this->_data.f64[6] + this->_data.f64[2]*this->_data.f64[3]*this->_data.f64[7]
-                -this->_data.f64[0]*this->_data.f64[7]*this->_data.f64[5] - this->_data.f64[3]*this->_data.f64[1]*this->_data.f64[8] - this->_data.f64[2]*this->_data.f64[4]*this->_data.f64[6];
+                    -this->_data.f64[0]*this->_data.f64[7]*this->_data.f64[5] - this->_data.f64[3]*this->_data.f64[1]*this->_data.f64[8] - this->_data.f64[2]*this->_data.f64[4]*this->_data.f64[6];
         }
         else
         {
@@ -1787,6 +1827,11 @@ double Mat::det() const
                 for(int j = i+1; j < m; j++ )
                 {
                     double alpha = tmpMat.getData().f64[j*m + i]*d;
+
+                    if(abs(alpha)<MSNH_F64_EPS)
+                    {
+                        continue;
+                    }
 
                     for( k = i; k < m; k++ )
                     {
@@ -1897,6 +1942,11 @@ std::vector<Mat> Mat::LUDecomp(bool outLU) const
             {
                 float alpha = A.getData().f32[j*m + i]*d;
 
+                if(abs(alpha)<MSNH_F32_EPS)
+                {
+                    continue;
+                }
+
                 if(!outLU)
                 {
 
@@ -1965,19 +2015,25 @@ std::vector<Mat> Mat::LUDecomp(bool outLU) const
 
             if( k != i )
             {
-                for(int j = i; j < m; j++ )
+                for(int j = i; j < m; j++ ) 
+
                 {
                     std::swap(A.getData().f64[i*m + j], A.getData().f64[k*m + j]);
                 }
 
                 if(!outLU)
+
                 {
                     for(int j = 0; j < m; j++ )
+
                     {
                         std::swap(B.getData().f64[i*m + j], B.getData().f64[k*m + j]);
                     }
                 }
 
+                A.print();
+                B.print();
+                std::cout<<"swap -----------------"<<std::endl;
             }
 
             double d = -1/A.getData().f64[i*m + i];
@@ -1985,6 +2041,11 @@ std::vector<Mat> Mat::LUDecomp(bool outLU) const
             for(int j = i+1; j < m; j++ )
             {
                 double alpha = A.getData().f64[j*m + i]*d;
+
+                if(abs(alpha)<MSNH_F64_EPS)
+                {
+                    continue;
+                }
 
                 if(!outLU)
                 {
@@ -2045,10 +2106,8 @@ std::vector<Mat> Mat::LUDecomp(bool outLU) const
     }
 }
 
-std::vector<Mat> Mat::CholeskyDeComp(bool outChols) const
+std::vector<Mat> Mat::choleskyDeComp(bool outChols) const
 {
-    (void)outChols;
-
     if(this->_matType != MAT_GRAY_F32 && this->_matType != MAT_GRAY_F64)
     {
         throw Exception(1,"[Mat]: Only one channel F32/F64 Mat is supported! \n", __FILE__, __LINE__, __FUNCTION__);
@@ -2059,8 +2118,10 @@ std::vector<Mat> Mat::CholeskyDeComp(bool outChols) const
         throw Exception(1,"[Mat]: Height must equal width! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    Mat A = *this;
-    int m = A.getWidth();
+    Mat A   = *this;
+    Mat L   = Mat::eye(A.getWidth(), A.getMatType());
+    Mat eye = Mat::eye(A.getWidth(), A.getMatType());
+    int m   = A.getWidth();
 
     if(this->_matType == MAT_GRAY_F32)
     {
@@ -2076,6 +2137,7 @@ std::vector<Mat> Mat::CholeskyDeComp(bool outChols) const
                     s -= A.getData().f32[i*m + k]*A.getData().f32[j*m + k];
                 }
                 A.getData().f32[i*m + j] = s/A.getData().f32[j*m + j];
+                L.getData().f32[i*m + j] = s/A.getData().f32[j*m + j];
             }
 
             s = A.getData().f32[i*m + i];
@@ -2087,6 +2149,42 @@ std::vector<Mat> Mat::CholeskyDeComp(bool outChols) const
             if( s < std::numeric_limits<float>::epsilon() )
                 throw Exception(1,"[Mat]: Not a good matrix for cholesky! \n", __FILE__, __LINE__, __FUNCTION__);
             A.getData().f32[i*m + i] = std::sqrt(s);
+            L.getData().f32[i*m + i] = std::sqrt(s);
+
+            if(!outChols)
+            {
+                L.getData().f64[i*m + i] = 1/L.getData().f64[i*m + i];
+            }
+        }
+
+        if(!outChols)
+        {
+
+            for(int i = 0; i < m; i++ )
+            {
+                for(int j = 0; j < m; j++ )
+                {
+                    float s = eye.getData().f32[i*m + j];
+                    for( int k = 0; k < i; k++ )
+                    {
+                        s -= L.getData().f32[i*m + k]*eye.getData().f32[k*m + j];
+                    }
+                    eye.getData().f32[i*m + j] = s*L.getData().f32[i*m + i];
+                }
+            }
+
+            for(int i = m-1; i >=0; i-- )
+            {
+                for(int j = 0; j < m; j++ )
+                {
+                    float s = eye.getData().f32[i*m + j];
+                    for( int k = m-1; k > i; k-- )
+                    {
+                        s -= L.getData().f32[k*m + i]*eye.getData().f32[k*m + j];
+                    }
+                    eye.getData().f32[i*m + j] = s*L.getData().f32[i*m + i];
+                }
+            }
         }
     }
     else
@@ -2103,6 +2201,7 @@ std::vector<Mat> Mat::CholeskyDeComp(bool outChols) const
                     s -= A.getData().f64[i*m + k]*A.getData().f64[j*m + k];
                 }
                 A.getData().f64[i*m + j] = s/A.getData().f64[j*m + j];
+                L.getData().f64[i*m + j] = s/A.getData().f64[j*m + j];
             }
 
             s = A.getData().f64[i*m + i];
@@ -2114,11 +2213,600 @@ std::vector<Mat> Mat::CholeskyDeComp(bool outChols) const
             if( s < std::numeric_limits<double>::epsilon() )
                 throw Exception(1,"[Mat]: Not a good matrix for cholesky! \n", __FILE__, __LINE__, __FUNCTION__);
             A.getData().f64[i*m + i] = std::sqrt(s);
+            L.getData().f64[i*m + i] = std::sqrt(s);
+
+            if(!outChols)
+            {
+                L.getData().f64[i*m + i] = 1/L.getData().f64[i*m + i];
+            }
+        }
+
+        if(!outChols)
+        {
+
+            for(int i = 0; i < m; i++ )
+            {
+                for(int j = 0; j < m; j++ )
+                {
+                    double s = eye.getData().f64[i*m + j];
+                    for( int k = 0; k < i; k++ )
+                    {
+                        s -= L.getData().f64[i*m + k]*eye.getData().f64[k*m + j];
+                    }
+                    eye.getData().f64[i*m + j] = s*L.getData().f64[i*m + i];
+                }
+            }
+
+            for(int i = m-1; i >=0; i-- )
+            {
+                for(int j = 0; j < m; j++ )
+                {
+                    double s = eye.getData().f64[i*m + j];
+                    for( int k = m-1; k > i; k-- )
+                    {
+                        s -= L.getData().f64[k*m + i]*eye.getData().f64[k*m + j];
+                    }
+                    eye.getData().f64[i*m + j] = s*L.getData().f64[i*m + i];
+                }
+            }
         }
     }
 
-    std::vector<Mat> tmpMatVec{A,A.transpose()};
-    return tmpMatVec;
+    if(outChols)
+    {
+        std::vector<Mat> tmpMatVec{L,L.transpose()};
+        return tmpMatVec;
+    }
+    else
+    {
+
+        std::vector<Mat> tmpMatVec{eye};
+        return tmpMatVec;
+    }
+}
+
+std::vector<Mat> Mat::eigen(bool sort, bool forceCheckSymmetric)
+{
+    if(this->getWidth()!=this->getHeight())
+    {
+        throw Exception(1,"[Mat]: mat must be square and should be a symmetric matrix! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    if(forceCheckSymmetric)
+    {
+        if(this->getMatType() == MAT_GRAY_F32)
+        {
+            for (int i = 0; i < this->getHeight(); ++i)
+            {
+                for (int j = i+1; j < this->getWidth(); ++j)
+                {
+                    if(this->getFloat32()[i*this->getWidth()+j]!=this->getFloat32()[j*this->getWidth()+i])
+                    {
+                        throw Exception(1,"[Mat]: not a symmetric matrix! \n", __FILE__, __LINE__, __FUNCTION__);
+                    }
+                }
+            }
+        }
+        else if(this->getMatType() == MAT_GRAY_F64)
+        {
+            for (int i = 0; i < this->getHeight(); ++i)
+            {
+                for (int j = i+1; j < this->getWidth(); ++j)
+                {
+                    if(this->getFloat64()[i*this->getWidth()+j]!=this->getFloat64()[j*this->getWidth()+i])
+                    {
+                        throw Exception(1,"[Mat]: not a symmetric matrix! \n", __FILE__, __LINE__, __FUNCTION__);
+                    }
+                }
+            }
+        }
+    }
+
+    int n           = this->getWidth(); 
+
+    MatType matType = this->getMatType();
+
+    Mat eigenvalues(n,1,matType);
+    Mat V = Mat::eye(n,matType);
+    Mat A = (*this);
+    std::vector<int> indR(n, 0);
+    std::vector<int> indC(n, 0);
+    int maxIters = n*n*30; 
+
+    if(this->getMatType() == MAT_GRAY_F32)
+    {
+        float maxVal = 0;
+
+        for (int i = 0; i < n; ++i)
+        {
+            eigenvalues.getFloat32()[i] = this->getFloat32()[i*n+i];
+        }
+
+        for (int k = 0; k < n; ++k)
+        {
+            int maxIdx   = 0;
+            int i   = 0;
+
+            if (k < n - 1)
+            {
+                for (maxIdx = k + 1, maxVal = std::abs(A.getFloat32()[n*k + maxIdx]), i = k + 2; i < n; i++)
+                {
+                    float val = std::abs(A.getFloat32()[n*k + i]);
+                    if (maxVal < val)
+                    {
+                        maxVal = val;
+                        maxIdx = i;
+                    }
+                }
+                indR[k] = maxIdx;
+            }
+
+            if (k > 0)
+            {
+                for (maxIdx = 0, maxVal = std::abs(A.getFloat32()[k]), i = 1; i < k; i++)
+                {
+                    float val = std::abs(A.getFloat32()[n*i + k]);
+                    if (maxVal < val)
+                    {
+                        maxVal = val;
+                        maxIdx = i;
+                    }
+                }
+
+                indC[k] = maxIdx;
+            }
+        }
+
+        if (n > 1)
+        {
+            for (int iters = 0; iters < maxIters; iters++)
+            {
+                int k   =   0;
+                int i   =   0;
+                int m   =   0;
+
+                for (k = 0, maxVal = std::abs(A.getFloat32()[indR[0]]), i = 1; i < n - 1; i++)
+                {
+                    float val = std::abs(A.getFloat32()[n*i + indR[i]]);
+                    if (maxVal < val)
+                    {
+                        maxVal = val;
+                        k      = i;
+                    }
+                }
+
+                int l = indR[k];
+                for (i = 1; i < n; i++)
+                {
+                    float val = std::abs(A.getFloat32()[n*indC[i] + i]);
+                    if (maxVal < val)
+                    {
+                        maxVal = val;
+                        k = indC[i];
+                        l = i;
+                    }
+                }
+
+                float p = A.getFloat32()[n*k + l];
+
+                if (std::abs(p) <= MSNH_F32_EPS)
+                    break;
+                float y = ((eigenvalues.getFloat32()[l] - eigenvalues.getFloat32()[k])*0.5f);
+                float t = std::abs(y) + hypot(p, y);
+                float s = hypot(p, t);
+                float c = t / s;
+
+                s = p / s;
+                t = (p / t)*p;
+
+                if (y < 0)
+                {
+                    s = -s;
+                    t = -t;
+                }
+
+                A.getFloat32()[n*k + l] = 0;
+
+                eigenvalues.getFloat32()[k] -= t;
+                eigenvalues.getFloat32()[l] += t;
+
+                float a0    =   0;
+                float b0    =   0;
+
+#undef rotate
+#define rotate(v0, v1) (a0 = v0, b0 = v1, v0 = a0*c - b0*s, v1 = a0*s + b0*c)
+
+                for (i = 0; i < k; i++)
+                {
+                    rotate(A.getFloat32()[n*i + k], A.getFloat32()[n*i + l]);
+                }
+
+                for (i = k + 1; i < l; i++)
+                {
+                    rotate(A.getFloat32()[n*k + i], A.getFloat32()[n*i + l]);
+                }
+
+                for (i = l + 1; i < n; i++)
+                {
+                    rotate(A.getFloat32()[n*k + i], A.getFloat32()[n*l + i]);
+                }
+
+                for (i = 0; i < n; i++)
+                {
+                    rotate(V.getFloat32()[n*k + i], V.getFloat32()[n*l + i]);
+                }
+
+#undef rotate
+
+                for (int j = 0; j < 2; j++)
+                {
+                    int idx = j == 0 ? k : l;
+                    if (idx < n - 1)
+                    {
+                        for (m = idx + 1, maxVal = std::abs(A.getFloat32()[n*idx + m]), i = idx + 2; i < n; i++)
+                        {
+                            float val = std::abs(A.getFloat32()[n*idx + i]);
+
+                            if (maxVal < val)
+                            {
+                                maxVal = val;
+                                m = i;
+                            }
+                        }
+                        indR[idx] = m;
+                    }
+                    if (idx > 0)
+                    {
+                        for (m = 0, maxVal = std::abs(A.getFloat32()[idx]), i = 1; i < idx; i++)
+                        {
+                            float val = std::abs(A.getFloat32()[n*i + idx]);
+
+                            if (maxVal < val)
+                            {
+                                maxVal = val;
+                                m = i;
+                            }
+                        }
+                        indC[idx] = m;
+                    }
+                }
+            }
+        }
+
+        if (sort)
+        {
+            for (int k = 0; k < n - 1; k++)
+            {
+                int m = k;
+                for (int i = k + 1; i < n; i++)
+                {
+                    if (std::abs(eigenvalues.getFloat32()[m]) < std::abs(eigenvalues.getFloat32()[i]))
+                        m = i;
+                }
+
+                if (k != m)
+                {
+                    std::swap(eigenvalues.getFloat32()[m], eigenvalues.getFloat32()[k]);
+
+                    for (int i = 0; i < n; i++)
+                    {
+                        std::swap(V.getFloat32()[n*m + i], V.getFloat32()[n*k + i]);
+                    }
+                }
+            }
+        }
+
+        return std::vector<Mat>{eigenvalues,V.transpose()};
+    }
+    else if(this->getMatType() == MAT_GRAY_F64)
+    {
+        double maxVal = 0;
+
+        for (int i = 0; i < n; ++i)
+        {
+            eigenvalues.getFloat64()[i] = this->getFloat64()[i*n+i];
+        }
+
+        for (int k = 0; k < n; ++k)
+        {
+            int maxIdx   = 0;
+            int i   = 0;
+
+            if (k < n - 1)
+            {
+                for (maxIdx = k + 1, maxVal = std::abs(A.getFloat64()[n*k + maxIdx]), i = k + 2; i < n; i++)
+                {
+                    double val = std::abs(A.getFloat64()[n*k + i]);
+                    if (maxVal < val)
+                    {
+                        maxVal = val;
+                        maxIdx = i;
+                    }
+                }
+                indR[k] = maxIdx;
+            }
+
+            if (k > 0)
+            {
+                for (maxIdx = 0, maxVal = std::abs(A.getFloat64()[k]), i = 1; i < k; i++)
+                {
+                    double val = std::abs(A.getFloat64()[n*i + k]);
+                    if (maxVal < val)
+                    {
+                        maxVal = val;
+                        maxIdx = i;
+                    }
+                }
+
+                indC[k] = maxIdx;
+            }
+        }
+
+        if (n > 1)
+        {
+            for (int iters = 0; iters < maxIters; iters++)
+            {
+                int k   =   0;
+                int i   =   0;
+                int m   =   0;
+
+                for (k = 0, maxVal = std::abs(A.getFloat64()[indR[0]]), i = 1; i < n - 1; i++)
+                {
+                    double val = std::abs(A.getFloat64()[n*i + indR[i]]);
+                    if (maxVal < val)
+                    {
+                        maxVal = val;
+                        k      = i;
+                    }
+                }
+
+                int l = indR[k];
+                for (i = 1; i < n; i++)
+                {
+                    double val = std::abs(A.getFloat64()[n*indC[i] + i]);
+                    if (maxVal < val)
+                    {
+                        maxVal = val;
+                        k = indC[i];
+                        l = i;
+                    }
+                }
+
+                double p = A.getFloat64()[n*k + l];
+
+                if (std::abs(p) <= MSNH_F64_EPS)
+                    break;
+                double y = ((eigenvalues.getFloat64()[l] - eigenvalues.getFloat64()[k])*0.5);
+                double t = std::abs(y) + hypot(p, y);
+                double s = hypot(p, t);
+                double c = t / s;
+
+                s = p / s;
+                t = (p / t)*p;
+
+                if (y < 0)
+                {
+                    s = -s;
+                    t = -t;
+                }
+
+                A.getFloat64()[n*k + l] = 0;
+
+                eigenvalues.getFloat64()[k] -= t;
+                eigenvalues.getFloat64()[l] += t;
+
+                double a0    =   0;
+                double b0    =   0;
+
+#undef rotate
+#define rotate(v0, v1) (a0 = v0, b0 = v1, v0 = a0*c - b0*s, v1 = a0*s + b0*c)
+
+                for (i = 0; i < k; i++)
+                {
+                    rotate(A.getFloat64()[n*i + k], A.getFloat64()[n*i + l]);
+                }
+
+                for (i = k + 1; i < l; i++)
+                {
+                    rotate(A.getFloat64()[n*k + i], A.getFloat64()[n*i + l]);
+                }
+
+                for (i = l + 1; i < n; i++)
+                {
+                    rotate(A.getFloat64()[n*k + i], A.getFloat64()[n*l + i]);
+                }
+
+                for (i = 0; i < n; i++)
+                {
+                    rotate(V.getFloat64()[n*k + i], V.getFloat64()[n*l + i]);
+                }
+
+#undef rotate
+
+                for (int j = 0; j < 2; j++)
+                {
+                    int idx = j == 0 ? k : l;
+                    if (idx < n - 1)
+                    {
+                        for (m = idx + 1, maxVal = std::abs(A.getFloat64()[n*idx + m]), i = idx + 2; i < n; i++)
+                        {
+                            double val = std::abs(A.getFloat64()[n*idx + i]);
+
+                            if (maxVal < val)
+                            {
+                                maxVal = val;
+                                m = i;
+                            }
+                        }
+                        indR[idx] = m;
+                    }
+                    if (idx > 0)
+                    {
+                        for (m = 0, maxVal = std::abs(A.getFloat64()[idx]), i = 1; i < idx; i++)
+                        {
+                            double val = std::abs(A.getFloat64()[n*i + idx]);
+
+                            if (maxVal < val)
+                            {
+                                maxVal = val;
+                                m = i;
+                            }
+                        }
+                        indC[idx] = m;
+                    }
+                }
+            }
+        }
+
+        if (sort)
+        {
+            for (int k = 0; k < n - 1; k++)
+            {
+                int m = k;
+                for (int i = k + 1; i < n; i++)
+                {
+                    if (std::abs(eigenvalues.getFloat64()[m]) < std::abs(eigenvalues.getFloat64()[i]))
+                        m = i;
+                }
+
+                if (k != m)
+                {
+                    std::swap(eigenvalues.getFloat64()[m], eigenvalues.getFloat64()[k]);
+
+                    for (int i = 0; i < n; i++)
+                    {
+                        std::swap(V.getFloat64()[n*m + i], V.getFloat64()[n*k + i]);
+                    }
+                }
+            }
+        }
+
+        return std::vector<Mat>{eigenvalues,V.transpose()};
+    }
+
+}
+
+std::vector<Mat> Mat::svd()
+{
+
+    if(this->getMatType() != MAT_GRAY_F32 && this->getMatType()!=MAT_GRAY_F64)
+    {
+        throw Exception(1,"[Mat]: Only one channel F32/F64 Mat is supported! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    int n = this->getWidth(); 
+
+    int m = this->getHeight();
+
+    bool at = false;
+
+    if(m<n)
+    {
+        at = true;
+        std::swap(m, n);
+    }
+
+    Mat U(m,m, this->getMatType());
+    Mat D(1,n,this->getMatType());
+    Mat Vt(n,n,this->getMatType());
+
+    Mat AMat;
+
+    if(!at)
+    {
+        AMat = this->transpose();
+    }
+    else
+    {
+        AMat = (*this);
+    }
+
+    Mat AMatNew; 
+
+    if(m == n)
+    {
+        AMatNew = AMat;
+    }
+    else
+    {
+        /*     x x x   ->  x x x
+         *     x x x       x x x
+         *                 0 0 0
+         * */
+
+        AMatNew = Mat(m,m,AMat.getMatType()); 
+
+        memcpy(AMatNew.getBytes(), AMat.getBytes(), AMat.getByteNum());
+    }
+
+    if(this->isF32Mat())
+    {
+        jacobiSVD<float>(AMatNew, D, Vt);
+    }
+    else
+    {
+        jacobiSVD<double>(AMatNew, D, Vt);
+    }
+
+    if(!at)
+    {
+        U   = AMatNew.transpose();
+    }
+    else
+    {
+        U   = Vt.transpose();
+        Vt  = AMatNew;
+    }
+    return std::vector<Mat>{U,D,Vt};
+}
+
+Mat Mat::pseudoInvert()
+{
+
+    if(this->_matType != MAT_GRAY_F32 && this->_matType != MAT_GRAY_F64)
+    {
+        throw Exception(1,"[Mat]: Only one channel F32/F64 Mat is supported! \n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    int m   = this->_height;
+    int n   = this->_width;
+
+    auto UDVT = this->svd();
+
+    Mat V   = UDVT[2].transpose();
+    Mat UT  = UDVT[0].transpose();
+
+    if(m < n)
+    {
+        std::swap(m,n);
+    }
+
+    Mat Drecip(m,n,this->_matType);
+
+    if(this->_matType == MAT_GRAY_F32)
+    {
+        for (int i = 0; i < n; ++i)
+        {
+            if(UDVT[1].getFloat32()[i]>MSNH_F32_EPS)
+                Drecip.getFloat32()[i*m+i] = 1.0f/UDVT[1].getFloat32()[i];
+        }
+    }
+    else
+    {
+        for (int i = 0; i < n; ++i)
+        {
+            if(UDVT[1].getFloat64()[i]>MSNH_F64_EPS)
+                Drecip.getFloat64()[i*m+i] = 1.0/UDVT[1].getFloat64()[i];
+        }
+    }
+
+    if(this->_height < this->_width)
+    {
+        Drecip = Drecip.transpose();
+    }
+
+    return V*Drecip*UT;
+
 }
 
 Mat Mat::invert(const DecompType &decompType) const
@@ -2137,10 +2825,10 @@ Mat Mat::invert(const DecompType &decompType) const
     {
     case DECOMP_LU:
         return LUDecomp(false)[0];
-        break;
     case DECOMP_CHOLESKY:
-        throw Exception(1,"[Mat]: Not supported yet!", __FILE__, __LINE__, __FUNCTION__);
-        break;
+        return choleskyDeComp(false)[0];
+    default:
+        return LUDecomp(false)[0];
     }
 
 }
@@ -2626,7 +3314,7 @@ bool Mat::isHomTransMatrix() const
     if(this->_matType == MAT_GRAY_F64)
     {
         if(abs(this->getFloat64()[12])>MSNH_F64_EPS || abs(this->getFloat64()[13])>MSNH_F64_EPS ||
-           abs(this->getFloat64()[14])>MSNH_F64_EPS || abs(this->getFloat64()[14]-1)>MSNH_F64_EPS)
+                abs(this->getFloat64()[14])>MSNH_F64_EPS || abs(this->getFloat64()[14]-1)>MSNH_F64_EPS)
         {
             return false;
         }
@@ -2657,7 +3345,7 @@ bool Mat::isHomTransMatrix() const
     else
     {
         if(abs(this->getFloat32()[12])>MSNH_F32_EPS || abs(this->getFloat32()[13])>MSNH_F32_EPS ||
-           abs(this->getFloat32()[14])>MSNH_F32_EPS || abs(this->getFloat32()[14]-1)>MSNH_F32_EPS)
+                abs(this->getFloat32()[14])>MSNH_F32_EPS || abs(this->getFloat32()[14]-1)>MSNH_F32_EPS)
         {
             return false;
         }
@@ -2721,7 +3409,7 @@ Mat Mat::eleWiseDiv(const Mat &A, const Mat &B)
     Mat tmpMat = A;
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-        A._width != B._width || A._height != B._height)
+            A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -2796,7 +3484,7 @@ Mat Mat::eleWiseMul(const Mat &A, const Mat &B)
     Mat tmpMat = A;
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-        A._width != B._width || A._height != B._height)
+            A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -2860,7 +3548,7 @@ double Mat::dotProduct(const Mat &A, const Mat &B)
     }
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-        A._width != B._width || A._height != B._height)
+            A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -3026,7 +3714,7 @@ Mat operator +(const Mat &A, const Mat &B)
     Mat tmpMat = A;
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-        A._width != B._width || A._height != B._height)
+            A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -3224,7 +3912,7 @@ Mat operator -(const Mat &A, const Mat &B)
     Mat tmpMat = A;
 
     if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-        A._width != B._width || A._height != B._height)
+            A._width != B._width || A._height != B._height)
     {
         throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -3450,7 +4138,7 @@ Mat operator *(const Mat &A, const Mat &B)
         {
 
             if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-                A._width != B._width || A._height != B._height)
+                    A._width != B._width || A._height != B._height)
             {
                 throw Exception(1,"[Mat]: properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
             }
@@ -3775,9 +4463,9 @@ QuaternionD::QuaternionD(const QuaternionD &q)
 
 QuaternionD::QuaternionD(const double &q0, const double &q1, const double &q2, const double &q3)
     :_q0(q0),
-    _q1(q1),
-    _q2(q2),
-    _q3(q3)
+      _q1(q1),
+      _q2(q2),
+      _q3(q3)
 {
 
 }
@@ -3895,9 +4583,9 @@ QuaternionD &QuaternionD::operator=(const QuaternionD &q)
 bool QuaternionD::operator==(const QuaternionD &q)
 {
     if(abs(this->_q0-q.getQ0())<MSNH_F64_EPS&&
-        abs(this->_q1-q.getQ1())<MSNH_F64_EPS&&
-        abs(this->_q2-q.getQ2())<MSNH_F64_EPS&&
-        abs(this->_q3-q.getQ3())<MSNH_F64_EPS)
+            abs(this->_q1-q.getQ1())<MSNH_F64_EPS&&
+            abs(this->_q2-q.getQ2())<MSNH_F64_EPS&&
+            abs(this->_q3-q.getQ3())<MSNH_F64_EPS)
     {
         return true;
     }
@@ -3915,27 +4603,27 @@ QuaternionD operator/(const QuaternionD &A, const QuaternionD &B)
 QuaternionD operator*(const QuaternionD &A, const QuaternionD &B)
 {
     return QuaternionD(
-        A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
-        A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
-        A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
-        A.getQ0()*B.getQ3()+A.getQ1()*B.getQ2()-A.getQ2()*B.getQ1()+A.getQ3()*B.getQ0()
-        );
+                A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
+                A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
+                A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
+                A.getQ0()*B.getQ3()+A.getQ1()*B.getQ2()-A.getQ2()*B.getQ1()+A.getQ3()*B.getQ0()
+                );
 }
 
 QuaternionD operator+(const QuaternionD &A, const QuaternionD &B)
 {
     return QuaternionD(A.getQ0()+B.getQ0(),
-        A.getQ1()+B.getQ1(),
-        A.getQ2()+B.getQ2(),
-        A.getQ3()+B.getQ3());
+                       A.getQ1()+B.getQ1(),
+                       A.getQ2()+B.getQ2(),
+                       A.getQ3()+B.getQ3());
 }
 
 QuaternionD operator-(const QuaternionD &A, const QuaternionD &B)
 {
     return QuaternionD(A.getQ0()-B.getQ0(),
-        A.getQ1()-B.getQ1(),
-        A.getQ2()-B.getQ2(),
-        A.getQ3()-B.getQ3());
+                       A.getQ1()-B.getQ1(),
+                       A.getQ2()-B.getQ2(),
+                       A.getQ3()-B.getQ3());
 }
 
 QuaternionF::QuaternionF(const QuaternionF &q)
@@ -3948,9 +4636,9 @@ QuaternionF::QuaternionF(const QuaternionF &q)
 
 QuaternionF::QuaternionF(const float &q0, const float &q1, const float &q2, const float &q3)
     :_q0(q0),
-    _q1(q1),
-    _q2(q2),
-    _q3(q3)
+      _q1(q1),
+      _q2(q2),
+      _q3(q3)
 {
 
 }
@@ -4048,9 +4736,9 @@ QuaternionF &QuaternionF::operator=(const QuaternionF &q)
 bool QuaternionF::operator ==(const QuaternionF &q)
 {
     if(abs(this->_q0-q.getQ0())<MSNH_F32_EPS&&
-        abs(this->_q1-q.getQ1())<MSNH_F32_EPS&&
-        abs(this->_q2-q.getQ2())<MSNH_F32_EPS&&
-        abs(this->_q3-q.getQ3())<MSNH_F32_EPS)
+            abs(this->_q1-q.getQ1())<MSNH_F32_EPS&&
+            abs(this->_q2-q.getQ2())<MSNH_F32_EPS&&
+            abs(this->_q3-q.getQ3())<MSNH_F32_EPS)
     {
         return true;
     }
@@ -4063,27 +4751,27 @@ bool QuaternionF::operator ==(const QuaternionF &q)
 QuaternionF operator-(const QuaternionF &A, const QuaternionF &B)
 {
     return QuaternionF(A.getQ0()-B.getQ0(),
-        A.getQ1()-B.getQ1(),
-        A.getQ2()-B.getQ2(),
-        A.getQ3()-B.getQ3());
+                       A.getQ1()-B.getQ1(),
+                       A.getQ2()-B.getQ2(),
+                       A.getQ3()-B.getQ3());
 }
 
 QuaternionF operator+(const QuaternionF &A, const QuaternionF &B)
 {
     return QuaternionF(A.getQ0()+B.getQ0(),
-        A.getQ1()+B.getQ1(),
-        A.getQ2()+B.getQ2(),
-        A.getQ3()+B.getQ3());
+                       A.getQ1()+B.getQ1(),
+                       A.getQ2()+B.getQ2(),
+                       A.getQ3()+B.getQ3());
 }
 
 QuaternionF operator*(const QuaternionF &A, const QuaternionF &B)
 {
     return QuaternionF(
-        A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
-        A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
-        A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
-        A.getQ0()*B.getQ3()+A.getQ1()*B.getQ2()-A.getQ2()*B.getQ1()+A.getQ3()*B.getQ0()
-        );
+                A.getQ0()*B.getQ0()-A.getQ1()*B.getQ1()-A.getQ2()*B.getQ2()-A.getQ3()*B.getQ3(),
+                A.getQ0()*B.getQ1()+A.getQ1()*B.getQ0()+A.getQ2()*B.getQ3()-A.getQ3()*B.getQ2(),
+                A.getQ0()*B.getQ2()-A.getQ1()*B.getQ3()+A.getQ2()*B.getQ0()+A.getQ3()*B.getQ1(),
+                A.getQ0()*B.getQ3()+A.getQ1()*B.getQ2()-A.getQ2()*B.getQ1()+A.getQ3()*B.getQ0()
+                );
 }
 
 QuaternionF operator/(const QuaternionF &A, const QuaternionF &B)

@@ -940,6 +940,7 @@ Matrix4x4D::Matrix4x4D(const Mat &mat)
     }
 }
 
+#ifdef USE_R_VALUE_REF
 Matrix4x4D::Matrix4x4D(Mat &&mat)
 {
     if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
@@ -956,6 +957,7 @@ Matrix4x4D::Matrix4x4D(Mat &&mat)
     this->_data.u8  = mat.getBytes();
     mat.setDataNull();
 }
+#endif
 
 Matrix4x4D::Matrix4x4D(const Matrix4x4D &mat)
 {
@@ -974,6 +976,7 @@ Matrix4x4D::Matrix4x4D(const Matrix4x4D &mat)
     }
 }
 
+#ifdef USE_R_VALUE_REF
 Matrix4x4D::Matrix4x4D(Matrix4x4D &&mat)
 {
     release();
@@ -985,6 +988,7 @@ Matrix4x4D::Matrix4x4D(Matrix4x4D &&mat)
     this->_data.u8  = mat.getBytes();
     mat.setDataNull();
 }
+#endif
 
 Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat)
 {
@@ -1029,6 +1033,7 @@ Matrix4x4D &Matrix4x4D::operator=(const Matrix4x4D &mat)
     return *this;
 }
 
+#ifdef USE_R_VALUE_REF
 Matrix4x4D &Matrix4x4D::operator=(Matrix4x4D&& mat)
 {
     if(this!=&mat)
@@ -1044,6 +1049,7 @@ Matrix4x4D &Matrix4x4D::operator=(Matrix4x4D&& mat)
     }
     return *this;
 }
+#endif
 
 Matrix4x4D &Matrix4x4D::operator=(const Mat &mat)
 {
@@ -1072,6 +1078,7 @@ Matrix4x4D &Matrix4x4D::operator=(const Mat &mat)
     return *this;
 }
 
+#ifdef USE_R_VALUE_REF
 Matrix4x4D &Matrix4x4D::operator=(Mat&& mat)
 {
     if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
@@ -1093,6 +1100,7 @@ Matrix4x4D &Matrix4x4D::operator=(Mat&& mat)
     }
     return *this;
 }
+#endif
 
 RotationMatD Matrix4x4D::getRotationMat() const
 {
@@ -1398,6 +1406,7 @@ Matrix4x4F::Matrix4x4F(const Mat &mat)
     }
 }
 
+#ifdef USE_R_VALUE_REF
 Matrix4x4F::Matrix4x4F(Mat &&mat)
 {
     if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=4 || mat.getMatType()!= MatType::MAT_GRAY_F32) 
@@ -1414,6 +1423,7 @@ Matrix4x4F::Matrix4x4F(Mat &&mat)
     this->_data.u8  = mat.getBytes();
     mat.setDataNull();
 }
+#endif
 
 Matrix4x4F::Matrix4x4F(const Matrix4x4F &mat)
 {
@@ -1432,6 +1442,7 @@ Matrix4x4F::Matrix4x4F(const Matrix4x4F &mat)
     }
 }
 
+#ifdef USE_R_VALUE_REF
 Matrix4x4F::Matrix4x4F(Matrix4x4F &&mat)
 {
     release();
@@ -1443,6 +1454,7 @@ Matrix4x4F::Matrix4x4F(Matrix4x4F &&mat)
     this->_data.u8  = mat.getBytes();
     mat.setDataNull();
 }
+#endif
 
 Matrix4x4F::Matrix4x4F(const RotationMatF &rotMat, const TranslationF &trans)
 {
@@ -1477,6 +1489,7 @@ Matrix4x4F &Matrix4x4F::operator=(const Matrix4x4F &mat)
     return *this;
 }
 
+#ifdef USE_R_VALUE_REF
 Matrix4x4F &Matrix4x4F::operator=(Matrix4x4F&& mat)
 {
     if(this!=&mat)
@@ -1492,6 +1505,7 @@ Matrix4x4F &Matrix4x4F::operator=(Matrix4x4F&& mat)
     }
     return *this;
 }
+#endif
 
 Matrix4x4F &Matrix4x4F::operator=(const Mat &mat)
 {
@@ -1520,6 +1534,7 @@ Matrix4x4F &Matrix4x4F::operator=(const Mat &mat)
     return *this;
 }
 
+#ifdef USE_R_VALUE_REF
 Matrix4x4F &Matrix4x4F::operator=(Mat&& mat)
 {
     if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=4 || mat.getMatType()!= MatType::MAT_GRAY_F32)
@@ -1541,6 +1556,7 @@ Matrix4x4F &Matrix4x4F::operator=(Mat&& mat)
     }
     return *this;
 }
+#endif
 
 RotationMatF Matrix4x4F::getRotationMat() const
 {

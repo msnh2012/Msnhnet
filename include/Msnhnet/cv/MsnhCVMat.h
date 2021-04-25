@@ -21,7 +21,9 @@ public:
 
     Mat (const Mat& mat);
 
+#ifdef USE_R_VALUE_REF
     Mat (Mat&& mat);
+#endif
     Mat (const std::string &path);  
 
     Mat (const int &width, const int &height, const MatType &matType, void *data=nullptr);
@@ -282,6 +284,10 @@ public:
 
     void saveImage(const std::string& path, const int &quality=100);
 
+    Mat rowRange(int startCol, int cnts);
+
+    Mat colRange(int startRow, int cnts);
+
     std::vector<char> encodeToMemory(const MatEncodeType &encodeType=MAT_ENCODE_JPG, const int &jpgQuality=100);
 
     void decodeFromMemory(char *data, const size_t &dataLen);
@@ -385,7 +391,224 @@ public:
      *      [ g h i j 0 ]  [ 0 0 0 j n ]
      *      [ k l m n o ]  [ 0 0 0 0 o ]
      * */
-    std::vector<Mat> CholeskyDeComp(bool outChols=true) const;
+    std::vector<Mat> choleskyDeComp(bool outChols=true) const;
+
+    template<typename T>
+    static inline T hypot(T a, T b)
+    {
+        a = std::abs(a);
+        b = std::abs(b);
+        if (a > b) {
+            b /= a;
+            return a*std::sqrt(1 + b*b);
+        }
+        if (b > 0) {
+            a /= b;
+            return b*std::sqrt(1 + a*a);
+        }
+        return 0;
+    }
+
+    std::vector<Mat> eigen(bool sort = true, bool forceCheckSymmetric = false);
+
+    template<typename T>
+    void jacobiSVD(Mat &At, Mat &_W, Mat &Vt)
+    {
+
+        double minval = FLT_MIN;
+        T eps = (T)(FLT_EPSILON * 2);
+        const int m = At.getWidth();  
+
+        const int n = _W.getHeight(); 
+
+        const int n1 = m; 
+
+        std::vector<double> W(n, 0.);
+
+        Vt = Mat::eye(n, Vt.getMatType());
+
+        for (int i = 0; i < n; i++)
+        {
+            double sd = 0;
+            for (int k = 0; k < m; k++)
+            {
+                T t = ((T*)At.getBytes())[i*m+k];
+                sd += (double)t*t;
+            }
+            W[i] = sd;
+        }
+
+        int maxIter = std::max(m, 30);
+
+        for (int iter = 0; iter < maxIter; iter++)
+        {
+            bool changed = false;
+
+            T c =   0;
+            T s =   0;
+
+            for (int i = 0; i < n - 1; i++)
+            {
+                for (int j = i + 1; j < n; j++)
+                {
+                    T *Ai = ((T*)At.getBytes()) + i*m;
+                    T *Aj = ((T*)At.getBytes()) + j*m;
+
+                    double a = W[i], p = 0, b = W[j];
+
+                    for (int k = 0; k < m; k++)
+                        p += (double)Ai[k] * Aj[k];
+
+                    if (std::abs(p) <= eps * std::sqrt((double)a*b))
+                        continue;
+
+                    p *= 2;
+                    double beta = a - b, gamma = hypot((double)p, beta);
+                    if (beta < 0) {
+                        double delta = (gamma - beta)*0.5;
+                        s = (T)std::sqrt(delta / gamma);
+                        c = (T)(p / (gamma*s * 2));
+                    }
+                    else {
+                        c = (T)std::sqrt((gamma + beta) / (gamma * 2));
+                        s = (T)(p / (gamma*c * 2));
+                    }
+
+                    a = b = 0;
+                    for (int k = 0; k < m; k++) {
+                        T t0 = c*Ai[k] + s*Aj[k];
+                        T t1 = -s*Ai[k] + c*Aj[k];
+                        Ai[k] = t0; Aj[k] = t1;
+
+                        a += (double)t0*t0; b += (double)t1*t1;
+                    }
+                    W[i] = a; W[j] = b;
+
+                    changed = true;
+
+                    T *Vi = ((T*)Vt.getBytes()) + i*n;
+                    T *Vj = ((T*)Vt.getBytes()) + j*n;
+
+                    for (int k = 0; k < n; k++) {
+                        T t0 = c*Vi[k] + s*Vj[k];
+                        T t1 = -s*Vi[k] + c*Vj[k];
+                        Vi[k] = t0; Vj[k] = t1;
+                    }
+                }
+            }
+
+            if (!changed)
+                break;
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            double sd = 0;
+            for (int k = 0; k < m; k++)
+            {
+                T t = ((T*)At.getBytes())[i*m+k];
+                sd += (double)t*t;
+            }
+            W[i] = std::sqrt(sd);
+        }
+
+        for (int i = 0; i < n - 1; i++)
+        {
+            int j = i;
+            for (int k = i + 1; k < n; k++)
+            {
+                if (W[j] < W[k])
+                    j = k;
+            }
+
+            if (i != j)
+            {
+                std::swap(W[i], W[j]);
+
+                for (int k = 0; k < m; k++)
+                {
+                    std::swap(((T*)At.getBytes())[i*m+k], ((T*)At.getBytes())[j*m+k]);
+                }
+
+                for (int k = 0; k < n; k++)
+                {
+                    std::swap(((T*)Vt.getBytes())[i*n+k], ((T*)Vt.getBytes())[j*n+k]);
+                }
+            }
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            ((T*)_W.getBytes())[i] = (T)W[i];
+        }
+
+        srand(time(nullptr));
+
+        for (int i = 0; i < n1; i++)
+        {
+            double sd = i < n ? W[i] : 0;
+
+            for (int ii = 0; ii < 100 && sd <= minval; ii++)
+            {
+
+                const T val0 = (T)(1. / m);
+                for (int k = 0; k < m; k++)
+                {
+                    unsigned int rng = rand() % 4294967295; 
+
+                    T val = (rng & 256) != 0 ? val0 : -val0;
+                    ((T*)At.getBytes())[i*m+k]= val;
+                }
+
+                for (int iter = 0; iter < 2; iter++)
+                {
+                    for (int j = 0; j < i; j++)
+                    {
+                        sd = 0;
+
+                        for (int k = 0; k < m; k++)
+                        {
+                            sd += ((T*)At.getBytes())[i*m+k] * ((T*)At.getBytes())[j*m+k];
+                        }
+
+                        T asum = 0;
+
+                        for (int k = 0; k < m; k++)
+                        {
+                            T t = (T)(((T*)At.getBytes())[i*m+k]- sd*((T*)At.getBytes())[j*m+k]);
+                            ((T*)At.getBytes())[i*m+k] = t;
+                            asum += std::abs(t);
+                        }
+                        asum = asum > eps * 100 ? 1 / asum : 0;
+
+                        for (int k = 0; k < m; k++)
+                        {
+                            ((T*)At.getBytes())[i*m+k] *= asum;
+                        }
+                    }
+                }
+
+                sd = 0;
+                for (int k = 0; k < m; k++)
+                {
+                    T t = ((T*)At.getBytes())[i*m+k];
+                    sd += (double)t*t;
+                }
+                sd = std::sqrt(sd);
+            }
+
+            T s = (T)(sd > minval ? 1 / sd : 0.);
+
+            for (int k = 0; k < m; ++k)
+            {
+                ((T*)At.getBytes())[i*m+k] *= s;
+            }
+        }
+    }
+
+    std::vector<Mat> svd();
+
+    Mat pseudoInvert();
 
     Mat invert(const DecompType &decompType=DECOMP_LU) const;
 
@@ -451,8 +674,9 @@ public:
 
     Mat &operator= (const Mat &mat);
 
+#ifdef USE_R_VALUE_REF
     Mat &operator= (Mat&& mat);
-
+#endif
     MsnhNet_API friend bool operator== (const Mat &A, const Mat &B);
     MsnhNet_API friend bool operator!= (const Mat &A, const Mat &B);
 
@@ -612,6 +836,7 @@ public:
         }
     }
 
+#ifdef USE_R_VALUE_REF
     inline Mat_(Mat_&& mat)
     {
         release();
@@ -623,6 +848,7 @@ public:
         this->_data.u8  = mat._data.u8;
         mat.setDataNull();
     }
+#endif
 
     inline Mat_(const Mat &mat)  
 
@@ -647,6 +873,7 @@ public:
         }
     }
 
+#ifdef USE_R_VALUE_REF
     inline Mat_(Mat &&mat)  
 
     {
@@ -664,6 +891,8 @@ public:
         this->_data.u8  = mat.getData().u8;
         mat.setDataNull();
     }
+#endif
+
     inline Mat_& operator= (const Mat_ &mat)
     {
         if(this!=&mat)
@@ -685,6 +914,7 @@ public:
         return *this;
     }
 
+#ifdef USE_R_VALUE_REF
     inline Mat_& operator= (Mat_&& mat)
     {
         if(this!=&mat)
@@ -700,6 +930,7 @@ public:
         }
         return *this;
     }
+#endif
 
     inline Mat_& operator= (const Mat &mat)
     {
@@ -726,6 +957,7 @@ public:
         return *this;
     }
 
+#ifdef USE_R_VALUE_REF
     inline Mat_& operator= (Mat&& mat)
     {
         if(mat.getWidth()!=w || mat.getWidth()!=h || mat.getChannel()!=1 || mat.getMatType()!=getMatTypeFromT())
@@ -745,6 +977,7 @@ public:
         }
         return *this;
     }
+#endif
 
     inline Mat_ getCol(const int &col) const
     {
