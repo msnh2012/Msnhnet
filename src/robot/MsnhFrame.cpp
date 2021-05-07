@@ -156,5 +156,30 @@ Frame &Frame::operator=(const Mat &mat)
     return *this;
 }
 
+Twist::Twist(const Twist &twist)
+{
+    this->v     = twist.v;
+    this->omg   = twist.omg;
+}
+
+Twist &Twist::operator=(const Twist &twist)
+{
+    this->omg = twist.omg;
+    this->v   = twist.v;
+    return *this;
+}
+
+void Twist::zero()
+{
+    v.zero();
+    omg.zero();
+}
+
+void Twist::reverseSign()
+{
+    v.reverseSign();
+    omg.reverseSign();
+}
+
 }
 

@@ -2030,10 +2030,6 @@ std::vector<Mat> Mat::LUDecomp(bool outLU) const
                         std::swap(B.getData().f64[i*m + j], B.getData().f64[k*m + j]);
                     }
                 }
-
-                A.print();
-                B.print();
-                std::cout<<"swap -----------------"<<std::endl;
             }
 
             double d = -1/A.getData().f64[i*m + i];
@@ -3246,7 +3242,7 @@ bool Mat::isOneChannel() const
 
 bool Mat::isVector() const
 {
-    return (this->_channel==1 && this->_width>1 && this->_height==1);
+    return this->_channel==1 && (this->_width>1 && this->_height==1) || (this->_width==1 && this->_height>1);
 }
 
 bool Mat::isNum() const
@@ -3257,21 +3253,6 @@ bool Mat::isNum() const
 bool Mat::isMatrix() const
 {
     return (this->_width>1)&&(this->_height>1);
-}
-
-bool Mat::isVector2D() const
-{
-    return (this->_width==2)&&(this->_height==1)&&(this->_channel==1);
-}
-
-bool Mat::isVector3D() const
-{
-    return (this->_width==3)&&(this->_height==1)&&(this->_channel==1);
-}
-
-bool Mat::isVector4D() const
-{
-    return (this->_width==4)&&(this->_height==1)&&(this->_channel==1);
 }
 
 bool Mat::isMatrix3x3() const
@@ -3314,7 +3295,7 @@ bool Mat::isHomTransMatrix() const
     if(this->_matType == MAT_GRAY_F64)
     {
         if(abs(this->getFloat64()[12])>MSNH_F64_EPS || abs(this->getFloat64()[13])>MSNH_F64_EPS ||
-                abs(this->getFloat64()[14])>MSNH_F64_EPS || abs(this->getFloat64()[14]-1)>MSNH_F64_EPS)
+                abs(this->getFloat64()[14])>MSNH_F64_EPS || abs(this->getFloat64()[15]-1)>MSNH_F64_EPS)
         {
             return false;
         }
@@ -3324,13 +3305,13 @@ bool Mat::isHomTransMatrix() const
         R.getFloat64()[1] = this->getFloat64()[1];
         R.getFloat64()[2] = this->getFloat64()[2];
 
-        R.getFloat64()[4] = this->getFloat64()[4];
-        R.getFloat64()[5] = this->getFloat64()[5];
-        R.getFloat64()[6] = this->getFloat64()[6];
+        R.getFloat64()[3] = this->getFloat64()[4];
+        R.getFloat64()[4] = this->getFloat64()[5];
+        R.getFloat64()[5] = this->getFloat64()[6];
 
-        R.getFloat64()[8] = this->getFloat64()[8];
-        R.getFloat64()[9] = this->getFloat64()[9];
-        R.getFloat64()[10] = this->getFloat64()[10];
+        R.getFloat64()[6] = this->getFloat64()[8];
+        R.getFloat64()[7] = this->getFloat64()[9];
+        R.getFloat64()[8] = this->getFloat64()[10];
 
         if(!R.isRotMat())
         {
@@ -3345,7 +3326,7 @@ bool Mat::isHomTransMatrix() const
     else
     {
         if(abs(this->getFloat32()[12])>MSNH_F32_EPS || abs(this->getFloat32()[13])>MSNH_F32_EPS ||
-                abs(this->getFloat32()[14])>MSNH_F32_EPS || abs(this->getFloat32()[14]-1)>MSNH_F32_EPS)
+                abs(this->getFloat32()[14])>MSNH_F32_EPS || abs(this->getFloat32()[15]-1)>MSNH_F32_EPS)
         {
             return false;
         }
@@ -3355,13 +3336,13 @@ bool Mat::isHomTransMatrix() const
         R.getFloat32()[1] = this->getFloat32()[1];
         R.getFloat32()[2] = this->getFloat32()[2];
 
-        R.getFloat32()[4] = this->getFloat32()[4];
-        R.getFloat32()[5] = this->getFloat32()[5];
-        R.getFloat32()[6] = this->getFloat32()[6];
+        R.getFloat32()[3] = this->getFloat32()[4];
+        R.getFloat32()[4] = this->getFloat32()[5];
+        R.getFloat32()[5] = this->getFloat32()[6];
 
-        R.getFloat32()[8] = this->getFloat32()[8];
-        R.getFloat32()[9] = this->getFloat32()[9];
-        R.getFloat32()[10] = this->getFloat32()[10];
+        R.getFloat32()[6] = this->getFloat32()[8];
+        R.getFloat32()[7] = this->getFloat32()[9];
+        R.getFloat32()[8] = this->getFloat32()[10];
 
         if(!R.isRotMat())
         {

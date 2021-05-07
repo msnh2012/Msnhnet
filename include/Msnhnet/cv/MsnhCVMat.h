@@ -216,14 +216,14 @@ public:
             throw Exception(1, "[Mat] col should < width col-width:(" + std::to_string(col) + ":" + std::to_string(this->_width) + ")" , __FILE__, __LINE__,__FUNCTION__);
         }
 
-        if(mat.getHeight()!=1 || mat.getWidth()!=this->_height)
+        if(mat.getHeight()!=this->_height || mat.getWidth()!=1)
         {
-            throw Exception(1, "[Mat] input height should == 1 && input width should equal mat height.  in.height-height:(" + std::to_string(mat.getHeight()) + ":" + std::to_string(this->_height) + ")" , __FILE__, __LINE__,__FUNCTION__);
+            throw Exception(1, "[Mat] input width should == 1 && input height should equal mat height.  in.height-height:(" + std::to_string(mat.getHeight()) + ":" + std::to_string(this->_height) + ")" , __FILE__, __LINE__,__FUNCTION__);
         }
 
         for (int i = 0; i < this->_height; ++i)
         {
-            T val = mat.getPixel<T>({i,0});
+            T val = mat.getPixel<T>({0,i});
             this->setPixel<T>({col,i},val);
         }
     }
@@ -638,12 +638,6 @@ public:
 
     bool isMatrix() const;
 
-    bool isVector2D() const;
-
-    bool isVector3D() const;
-
-    bool isVector4D() const;
-
     bool isMatrix3x3() const;
 
     bool isMatrix4x4() const;
@@ -722,7 +716,7 @@ protected:
 void bufferFromCallback(void* context, void* data, int size);
 
 template<int w,int h,typename T>
-class MsnhNet_API Mat_:public Mat
+class Mat_:public Mat
 {
 public:
     Mat_():Mat(w,h,getMatTypeFromT())
@@ -979,17 +973,17 @@ public:
     }
 #endif
 
-    inline Mat_ getCol(const int &col) const
+    inline Mat_ getCol(const int &col)
     {
         return this->getCol_<T>(col);
     }
 
-    inline Mat_ getRow(const int &row) const
+    inline Mat_ getRow(const int &row)
     {
         return this->getRow_<T>(row);
     }
 
-    inline void setCol(const int &col, const Mat_<h,1,T> &mat)
+    inline void setCol(const int &col, const Mat_<1,h,T> &mat)
     {
         this->setCol_<T>(col,mat);
     }
@@ -1039,7 +1033,7 @@ public:
         fillPixel<T>(t);
     }
 
-    inline Vector<w,T> mulVec(const Vector<w,T> &vec)
+    inline Vector<h,T> mulVec(const Vector<w,T> &vec)
     {
         Vector<h,T> res;
         for (int i = 0; i < h; ++i)
@@ -1153,5 +1147,5 @@ private:
 
 }
 
-#endif 
+#endif
 

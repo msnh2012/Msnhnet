@@ -42,6 +42,8 @@
 
 #define MSNH_F64_EPS 1E-12
 
+#define MSNH_2_PI 6.28318530906
+
 #define MSNH_PI   3.14159265453
 
 #define MSNH_PI_2 1.57079632726

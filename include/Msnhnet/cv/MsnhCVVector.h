@@ -164,6 +164,22 @@ public:
         this->_value[index] = val;
     }
 
+    inline void zero()
+    {
+        for (int i = 0; i < N; ++i)
+        {
+            this->_value[i] = 0;
+        }
+    }
+
+    inline void reverseSign()
+    {
+        for (int i = 0; i < N; ++i)
+        {
+            this->_value[i] = 0 - this->_value[i];
+        }
+    }
+
     bool isFuzzyNull() const
     {
         if(isF32Vec()) 
@@ -714,7 +730,10 @@ typedef Vector<3,double> TranslationD;
 typedef Vector<3,double> RotationVecD;
 typedef Vector<2,double> Vector2D;
 typedef Vector<3,double> Vector3D;
+typedef Vector<5,double> Vector5D;
 typedef Vector<4,double> Vector4D;
+typedef Vector<6,double> Vector6D;
+typedef Vector<7,double> Vector7D;
 
 typedef Vector<3,float> EulerF;
 typedef Vector<3,float> TranslationF;
@@ -722,44 +741,10 @@ typedef Vector<3,float> RotationVecF;
 typedef Vector<2,float> Vector2F;
 typedef Vector<3,float> Vector3F;
 typedef Vector<4,float> Vector4F;
+typedef Vector<5,float> Vector5F;
+typedef Vector<6,float> Vector6F;
+typedef Vector<7,float> Vector7F;
 
-/*此处允许w和v不为单位向量*/
-struct ScrewD
-{
-    ScrewD(){}
-    ScrewD(Vector<3,double> v, Vector<3,double> w)
-    {
-        this->v = v;
-        this->w = w;
-    }
-    Vector<3,double> v;
-    Vector<3,double> w;
-
-    void print()
-    {
-        v.print();
-        w.print();
-    }
-};
-
-/*此处允许w和v不为单位向量*/
-struct ScrewF
-{
-    ScrewF(){}
-    ScrewF(Vector<3,float> v, Vector<3,float> w)
-    {
-        this->v = v;
-        this->w = w;
-    }
-    Vector<3,float> v;
-    Vector<3,float> w;
-
-    void print()
-    {
-        v.print();
-        w.print();
-    }
-};
 }
 #endif 
 

@@ -7,6 +7,7 @@
 #include "Msnhnet/robot/MsnhJoint.h"
 #include "Msnhnet/robot/MsnhSegment.h"
 #include "Msnhnet/robot/MsnhSpatialMath.h"
+#include "Msnhnet/robot/MsnhModernRobot.h"
 
 #endif 
 

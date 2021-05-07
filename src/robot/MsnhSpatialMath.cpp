@@ -94,7 +94,7 @@ SO3D::SO3D(SO3D &&mat)
     mat.setDataNull();
 }
 
-SO3D &SO3D::operator=(Mat &mat)
+SO3D &SO3D::operator=(const Mat &mat)
 {
     if(mat.getWidth()!=3 || mat.getHeight()!=3 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
 
@@ -159,7 +159,7 @@ SO3D &SO3D::operator=(Mat&& mat)
     return *this;
 }
 
-SO3D &SO3D::operator=(SO3D &mat)
+SO3D &SO3D::operator=(const SO3D &mat)
 {
     if(this!=&mat)
     {
@@ -259,6 +259,11 @@ SO3D SO3D::fromEuler(const EulerD &euler, const RotSequence &rotSeq)
 SO3D SO3D::fromRotVec(const RotationVecD &rotVec)
 {
     return Geometry::rotVec2RotMat(rotVec);
+}
+
+SO3D SO3D::fastInvert()
+{
+    return this->transpose();
 }
 
 Matrix3x3D SO3D::wedge(const Vector3D &omg, bool needCalUnit)
@@ -462,7 +467,7 @@ SO3F::SO3F(SO3F &&mat)
     mat.setDataNull();
 }
 
-SO3F &SO3F::operator=(Mat &mat)
+SO3F &SO3F::operator=(const Mat &mat)
 {
     if(mat.getWidth()!=3 || mat.getHeight()!=3 || mat.getChannel()!=1 || mat.getStep()!=4 || mat.getMatType()!= MatType::MAT_GRAY_F32)
 
@@ -527,7 +532,7 @@ SO3F &SO3F::operator=(Mat&& mat)
     return *this;
 }
 
-SO3F &SO3F::operator=(SO3F &mat)
+SO3F &SO3F::operator=(const SO3F &mat)
 {
     if(this!=&mat)
     {
@@ -627,6 +632,11 @@ SO3F SO3F::fromEuler(const EulerF &euler, const RotSequence &rotSeq)
 SO3F SO3F::fromRotVec(const RotationVecF &rotVec)
 {
     return Geometry::rotVec2RotMat(rotVec);
+}
+
+SO3F SO3F::fastInvert()
+{
+    return this->transpose();
 }
 
 Matrix3x3F SO3F::wedge(const Vector3F &omg, bool needCalUnit)
@@ -829,7 +839,7 @@ SE3D::SE3D(SE3D &&mat)
     mat.setDataNull();
 }
 
-SE3D &SE3D::operator=(Mat &mat)
+SE3D &SE3D::operator=(const Mat &mat)
 {
     if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
 
@@ -894,7 +904,7 @@ SE3D &SE3D::operator=(Mat&& mat)
     return *this;
 }
 
-SE3D &SE3D::operator=(SE3D &mat)
+SE3D &SE3D::operator=(const SE3D &mat)
 {
     if(this!=&mat)
     {
@@ -931,6 +941,12 @@ SE3D &SE3D::operator=(SE3D&& mat)
     return *this;
 }
 
+SE3D::SE3D(const SO3D &rotMat, const Vector3D &trans)
+{
+    setRotationMat(rotMat);
+    setTranslation(trans);
+}
+
 Matrix4x4D &SE3D::toMatrix4x4()
 {
     return *this;
@@ -948,6 +964,18 @@ Mat SE3D::adjoint()
     Mat down    = MatOp::vContact(zeros3x3,R);
 
     return MatOp::hContact(up,down);
+}
+
+SE3D SE3D::fastInvert()
+{
+    RotationMatD rotMat = getRotationMat();
+    TranslationD trans  = getTranslation();
+    trans = trans * -1;
+
+    rotMat = rotMat.transpose();
+    trans = rotMat.mulVec(trans);
+
+    return  SE3D(rotMat,trans);
 }
 
 Matrix4x4D SE3D::wedge(const ScrewD &screw, bool needCalUnit)
@@ -1021,20 +1049,13 @@ ScrewD SE3D::log()
         return ScrewD(p, Vector3D({0,0,0}));
     }
 
-    R.print();
     Vector3D w        = R.log();
-
-    w.print();
 
     Matrix3x3D wWedge = SO3D::wedge(w);
 
     double theta      = w.length();
 
-    std::cout << theta;
-
     Matrix3x3D GInv   = Mat::eye(3,MAT_GRAY_F64) - 0.5*wWedge + wWedge*wWedge*(1/theta - 0.5*1/tan(0.5*theta))/theta;
-
-    GInv.print();
 
     Vector3D v        = GInv.mulVec(p);
 
@@ -1174,7 +1195,7 @@ SE3F::SE3F(SE3F &&mat)
     mat.setDataNull();
 }
 
-SE3F &SE3F::operator=(Mat &mat)
+SE3F &SE3F::operator=(const Mat &mat)
 {
     if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=4 || mat.getMatType()!= MatType::MAT_GRAY_F32)
 
@@ -1239,7 +1260,7 @@ SE3F &SE3F::operator=(Mat&& mat)
     return *this;
 }
 
-SE3F &SE3F::operator=(SE3F &mat)
+SE3F &SE3F::operator=(const SE3F &mat)
 {
     if(this!=&mat)
     {
@@ -1276,6 +1297,12 @@ SE3F &SE3F::operator=(SE3F&& mat)
     return *this;
 }
 
+SE3F::SE3F(const SO3F &rotMat, const Vector3F &trans)
+{
+    setRotationMat(rotMat);
+    setTranslation(trans);
+}
+
 Matrix4x4F &SE3F::toMatrix4x4()
 {
     return *this;
@@ -1293,6 +1320,18 @@ Mat SE3F::adjoint()
     Mat down    = MatOp::vContact(zeros3x3,R);
 
     return MatOp::hContact(up,down);
+}
+
+SE3F SE3F::fastInvert()
+{
+    RotationMatF rotMat = getRotationMat();
+    TranslationF trans  = getTranslation();
+    trans = trans * -1;
+
+    rotMat = rotMat.transpose();
+    trans = rotMat.mulVec(trans);
+
+    return  SE3F(rotMat,trans);
 }
 
 Matrix4x4F SE3F::wedge(const ScrewF &screw, bool needCalUnit)
@@ -1365,21 +1404,13 @@ ScrewF SE3F::log()
 
         return ScrewF(p, Vector3F({0,0,0}));
     }
-
-    R.print();
     Vector3F w        = R.log();
-
-    w.print();
 
     Matrix3x3F wWedge = SO3F::wedge(w);
 
     float theta      = (float)(w.length());
 
-    std::cout << theta;
-
     Matrix3x3F GInv   = Mat::eye(3,MAT_GRAY_F32) - 0.5f*wWedge + wWedge*wWedge*(1/theta - 0.5f*1/tanf(0.5f*theta))/theta;
-
-    GInv.print();
 
     Vector3F v        = GInv.mulVec(p);
 
