@@ -7,6 +7,7 @@
 #include <map>
 #include <mutex>
 
+
 namespace Msnhnet
 {
 
@@ -47,6 +48,7 @@ const std::map<int, std::string> OpenCLProgramMap = {
     {33, ""}
 };
 
+
 class clScheduler 
 {
 public:
@@ -57,6 +59,7 @@ public:
 
     static clScheduler& get();
     void init();
+
 
     cl_context& context();
     cl_command_queue& queue();
@@ -80,6 +83,7 @@ private:
     // std::map<std::pair<std::string, std::string>, cl_program> programMap;
 
 };
+
 }
 
 #endif

@@ -44,6 +44,7 @@ clScheduler& clScheduler::get(){
     return scheduler;
 }
 
+
 cl_context& clScheduler::context(){
     return _context;
 }
@@ -146,6 +147,7 @@ cl_kernel clScheduler::buildKernel(const int &layerType, const std::string &kern
     
     return kernel;
 }
+
 
 
 
