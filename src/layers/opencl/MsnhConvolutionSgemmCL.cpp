@@ -25,19 +25,20 @@ namespace Msnhnet
         const int &paddingX, 
         const int &paddingY, 
         const int &dilationW, 
-        const int &dilationH)
+        const int &dilationH,
+        const int &groups)
     {
 
         std::cout << "convolutionIm2colSgemmCL" << std::endl;
 
         int m       =  outChannel; 
         int n       =  outWidth * outHeight;
-        int k       =  filterW * filterH * inChannel;
+        int k       =  filterW * filterH * inChannel / groups;
 
         cl_int status = 0;
         // cl_mem imMem = clCreateBuffer(clScheduler::get().context(), CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, inWidth * inHeight * inChannel * sizeof(float), src, &status);
         // CHECKSTATUS(status, "create imMem");
-        cl_mem im_im2col = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE, n * k * sizeof(float), NULL, &status);
+        cl_mem im_im2col = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE, n * k * groups * sizeof(float), NULL, &status);
         CHECKSTATUS(status, "create im_im2col");
         
         status = clSetKernelArg(kernel_im2col, 0, sizeof(int), (void*) &inWidth);
@@ -122,11 +123,11 @@ namespace Msnhnet
 
         cl_event eventPoint;
         size_t global[2] = {m, n};
-        status |= clEnqueueNDRangeKernel(clScheduler::get().queue(), kernel_cov, 2, NULL, global, NULL, 0, NULL, &eventPoint);
+        status = clEnqueueNDRangeKernel(clScheduler::get().queue(), kernel_cov, 2, NULL, global, NULL, 0, NULL, &eventPoint);
+        CHECKSTATUS(status, "calc matrix mul");
         clWaitForEvents(1, &eventPoint);
         clReleaseEvent(eventPoint);
 
-        CHECKSTATUS(status, "calc matrix mul");
         // status |= clEnqueueReadBuffer(clScheduler::get().queue(), dst, CL_TRUE, 0, m * n * sizeof(float), dest, 0, NULL, NULL);
 
     }
@@ -163,6 +164,11 @@ namespace Msnhnet
         const int &paddingX, 
         const int &paddingY)
     {
+
+        
+        printf("kernel_cov: %p\n", &kernel_cov); 
+        printf("kernel_pad: %p\n", &kernel_pad); 
+
         int newInWidth = (inWidth + 2 * paddingX - 2 + 5) / 6 * 6 + 2;
         int newInHeight = (inHeight + 2 * paddingY - 2 + 5) / 6 * 6 + 2;
         
@@ -177,20 +183,28 @@ namespace Msnhnet
         int down = newInHeight - top - inHeight;
         PaddingCL::paddingCL(src, inWidth, inHeight, inChannel, kernel_pad, srcPad, top, down, left, right, 0);
 
-        int dstTempWidth = newInWidth - 2;
-        int dstTempHeight = newInHeight - 2;
+        const int dstTempWidth = newInWidth - 2;
+        const int dstTempHeight = newInHeight - 2;
+        
 
         cl_mem dstTemp = clCreateBuffer(clScheduler::get().context(), CL_MEM_READ_WRITE, dstTempWidth * dstTempHeight * outChannel * sizeof(float), NULL, &status);
 
         status = clSetKernelArg(kernel_cov, 0, sizeof(cl_int), (void*)&newInWidth);
-        status |= clSetKernelArg(kernel_cov, 1, sizeof(cl_int), (void*)&newInHeight);
-        status |= clSetKernelArg(kernel_cov, 2, sizeof(cl_int), (void*)&inChannel);
-        status |= clSetKernelArg(kernel_cov, 3, sizeof(cl_int), (void*)&dstTempWidth);
-        status |= clSetKernelArg(kernel_cov, 4, sizeof(cl_int), (void*)&dstTempHeight);
-        status |= clSetKernelArg(kernel_cov, 5, sizeof(cl_mem), (void*)&srcPad);
-        status |= clSetKernelArg(kernel_cov, 6, sizeof(cl_mem), (void*)&filter);
-        status |= clSetKernelArg(kernel_cov, 7, sizeof(cl_mem), (void*)&dstTemp);
-        if (status != CL_SUCCESS) { std::cout << "set arg failed" << std::endl; }
+        if (status != CL_SUCCESS) { std::cout << "set arg failed 0" << std::endl; }
+        status = clSetKernelArg(kernel_cov, 1, sizeof(cl_int), (void*)&newInHeight);
+        if (status != CL_SUCCESS) { std::cout << "set arg failed 1" << std::endl; }
+        status = clSetKernelArg(kernel_cov, 2, sizeof(cl_int), (void*)&inChannel);
+        if (status != CL_SUCCESS) { std::cout << "set arg failed 2" << std::endl; }
+        status = clSetKernelArg(kernel_cov, 3, sizeof(cl_int), (void*)&dstTempWidth);
+        if (status != CL_SUCCESS) { std::cout << "set arg failed 3" << "  status = " << status << std::endl; }
+        status = clSetKernelArg(kernel_cov, 4, sizeof(cl_int), (void*)&dstTempHeight);
+        if (status != CL_SUCCESS) { std::cout << "set arg failed 4" << std::endl; }
+        status = clSetKernelArg(kernel_cov, 5, sizeof(cl_mem), (void*)&srcPad);
+        if (status != CL_SUCCESS) { std::cout << "set arg failed 5" << std::endl; }
+        status = clSetKernelArg(kernel_cov, 6, sizeof(cl_mem), (void*)&filter);
+        if (status != CL_SUCCESS) { std::cout << "set arg failed 6" << std::endl; }
+        status = clSetKernelArg(kernel_cov, 7, sizeof(cl_mem), (void*)&dstTemp);
+        if (status != CL_SUCCESS) { std::cout << "set arg failed 7" << std::endl; }
 
         size_t global[1] = {outChannel};
         size_t local[1] = {1};

@@ -576,6 +576,27 @@ void ConvolutionalLayer::forward(NetworkState &netState)
         netState.input = this->_binaryInputs;
     }
 
+    if (this->_width == 112 && this->_channel == 96 && this->_outHeight == 56 && this->_outChannel == 96) {
+        float sum = 0;
+        for (size_t i = 0; i < 3; i++)
+        {
+            for (size_t j = 0; j < 3; j++)
+            {
+                printf("%f\t", layerInput[(i + 1) * 112 + j + 1 + 112 * 112]);
+            }
+            printf("\n");
+        }
+        printf("\n");
+        for (size_t i = 0; i < 3; i++)
+        {
+            for (size_t j = 0; j < 3; j++)
+            {
+                printf("%f\t", this->_weights[i * 3 + j + 9]);
+            }
+            printf("\n");
+        }
+    }
+
     for (int i = 0; i < this->_batch; ++i)
     {
 
@@ -695,6 +716,17 @@ TempARRCH64:
 
     }
 
+    //////////////////////////////////////////////////////
+    ofstream outFileOut("cpu_output.txt");
+    for (size_t i = 0; i < this->_outputNum; i++){
+        outFileOut << layerOutput[i] << std::endl;
+    }
+    outFileOut.close();
+    //////////////////////////////////////////////////////
+    if (this->_width == 56 && this->_channel == 96 && this->_outHeight == 56 && this->_outChannel == 24) {
+        printf("%f\t", layerOutput[56 + 56 * 56 + 1]);    
+    }
+
     if(this->_batchNorm==1)
     {
         for (int b = 0; b < this->_batch; ++b)
@@ -791,6 +823,7 @@ TempARRCH64:
         if(_useBias == 1)
             addBias(layerOutput, this->_biases, this->_batch, this->_num, this->_outHeight * this->_outWidth);
     }
+
 
     if(this->_activation == ActivationType::NORM_CHAN)
     {
@@ -1170,81 +1203,103 @@ void ConvolutionalLayer::forwardCL(NetworkState &netState){
     }
 
 
-    int m       =  this->_num / this->_groups; 
-    int k       =  this->_kSizeX * this->_kSizeY *this->_channel / this->_groups; 
-    int n       =  this->_outHeight * this->_outWidth; 
+    // int m       =  this->_outChannel; 
+    // int k       =  this->_kSizeX * this->_kSizeY *this->_channel; 
+    // int n       =  this->_outHeight * this->_outWidth; 
 
-    std::cout << "m = " << m << std::endl << "k = " << k << std::endl << "n = " << n << std::endl;
+    // std::cout << "m = " << m << std::endl << "k = " << k << std::endl << "n = " << n << std::endl;
 
 
-    for (int i = 0; i < this->_batch; ++i)
-    {
-        for (int j = 0; j < this->_groups; ++j)
+    float *im = layerInput;
+
+    float *c    =  layerOutput;
+
+    // //////////////////////////////////////////////////////
+    std::cout << "input width = " << this->_width << "\ninput height = " << this->_height << "\ninput channel = " << this->_channel 
+    << "\noutput width = " << this->_outWidth << "\noutput height = " << this->_outWidth << "\noutput channel = " << this->_outChannel << std::endl;
+    if (this->_width == 56 && this->_channel == 96 && this->_outHeight == 56 && this->_outChannel == 96) {
+        float sum = 0;
+        for (size_t i = 0; i < 3; i++)
         {
-            float *im = layerInput+ (i*this->_groups + j)*(this->_channel / this->_groups)*this->_height*this->_width;
-
-            float *c    =  layerOutput+ (i*this->_groups +j)*n*m;
-
-            if (use3x3S1CL) {
-
-                
-                // //////////////////////////////////////////////////////
-                std::cout << "input width = " << this->_width << "\ninput height = " << this->_height << "\ninput channel = " << this->_channel 
-                << "\noutput width = " << this->_outWidth << "\noutput height = " << this->_outWidth << "\noutput channel = " << this->_outChannel << std::endl;
-
-                // ofstream cFileIn("wino_input.txt");
-                // for (size_t i = 0; i < this->_width * this->_height * this->_channel; i++){
-                //     cFileIn << im[i] << std::endl;
-                // }
-                // cFileIn.close();
-                // //////////////////////////////////////////////////////
-
-                
-                cl_mem inputMem = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->_width * this->_height * this->_channel * sizeof(float), im, &status);
-                CHECKSTATUS(status, "create imMem");
-
-
-
-                cl_mem dst = clCreateBuffer(clScheduler::get().context(), CL_MEM_WRITE_ONLY, m * n * sizeof(float), NULL, &status);
-                CHECKSTATUS(status, "create dst cl_mem");
-
-                ConvolutionSgemmCL::conv3x3s1WinogradCL(inputMem, this->_width, this->_height, this->_channel, this->_clWeightsWino, this->_kernel_cov, _kernel_pad,
-                                                        dst, this->_outWidth, this->_outHeight, this->_outChannel, this->_paddingX, this->_paddingY);
-
-                status |= clEnqueueReadBuffer(clScheduler::get().queue(), dst, CL_TRUE, 0, m * n * sizeof(float), c, 0, NULL, NULL);
-
-                
-
-
-                
-            } else if (use3x3S2CL) {
-
-            } else {
-                cl_mem src = clCreateBuffer(clScheduler::get().context(), CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this->_width * this->_height * this->_channel * sizeof(float), im, &status);
-                cl_mem dst = clCreateBuffer(clScheduler::get().context(), CL_MEM_WRITE_ONLY, m * n * sizeof(float), NULL, &status);
-                CHECKSTATUS(status, "create dst cl_mem");
-                
-                ConvolutionSgemmCL::convolutionIm2colSgemmCL(src, this->_width, this->_height, this->_channel, this->_clWeights, this->_kernel_cov, this->_kernel_im2col,
-                                                                  this->_kSizeX, this->_kSizeY, dst, this->_outWidth, this->_outHeight, this->_outChannel,
-                                                                  this->_strideX, this->_strideY, this->_paddingX, this->_paddingY, this->_dilationX, this->_dilationY);
-                status |= clEnqueueReadBuffer(clScheduler::get().queue(), dst, CL_TRUE, 0, m * n * sizeof(float), c, 0, NULL, NULL);
-
+            for (size_t j = 0; j < 3; j++)
+            {
+                printf("%f\t", layerInput[(i + 1) * 112 + j + 1 + 112 * 112]);
             }
+            printf("\n");
+        }
+        printf("\n");
+        for (size_t i = 0; i < 3; i++)
+        {
+            for (size_t j = 0; j < 3; j++)
+            {
+                printf("%f\t", this->_weights[i * 3 + j + 9]);
+            }
+            printf("\n");
         }
     }
+    
 
-    // //////////////////////////////////////////////////////
-    // ofstream outFileOut("wino_output.txt");
-    // for (size_t i = 0; i < this->_outputNum; i++){
-    //     outFileOut << layerOutput[i] << std::endl;
-    // }
-    // outFileOut.close();
-    // //////////////////////////////////////////////////////
+    if (use3x3S1CL) {
 
+        
+
+        // ofstream cFileIn("wino_input.txt");
+        // for (size_t i = 0; i < this->_width * this->_height * this->_channel; i++){
+        //     cFileIn << im[i] << std::endl;
+        // }
+        // cFileIn.close();
+        // //////////////////////////////////////////////////////
+
+        
+        cl_mem inputMem = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->_width * this->_height * this->_channel * sizeof(float), im, &status);
+        CHECKSTATUS(status, "create imMem");
+
+
+
+        cl_mem dst = clCreateBuffer(clScheduler::get().context(), CL_MEM_WRITE_ONLY, this->_outHeight * this->_outWidth * this->_outChannel * sizeof(float), NULL, &status);
+        CHECKSTATUS(status, "create dst cl_mem");
+
+        ConvolutionSgemmCL::conv3x3s1WinogradCL(inputMem, this->_width, this->_height, this->_channel, this->_clWeightsWino, this->_kernel_cov, _kernel_pad,
+                                                dst, this->_outWidth, this->_outHeight, this->_outChannel, this->_paddingX, this->_paddingY);
+
+        status |= clEnqueueReadBuffer(clScheduler::get().queue(), dst, CL_TRUE, 0, this->_outHeight * this->_outWidth * this->_outChannel * sizeof(float), c, 0, NULL, NULL);
+
+        
+
+
+        
+    } else if (use3x3S2CL) {
+
+    } else {
+        cl_mem src = clCreateBuffer(clScheduler::get().context(), CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this->_width * this->_height * this->_channel * sizeof(float), im, &status);
+        cl_mem dst = clCreateBuffer(clScheduler::get().context(), CL_MEM_WRITE_ONLY, this->_outHeight * this->_outWidth * this->_outChannel * sizeof(float), NULL, &status);
+        CHECKSTATUS(status, "create dst cl_mem");
+        
+        ConvolutionSgemmCL::convolutionIm2colSgemmCL(src, this->_width, this->_height, this->_channel, this->_clWeights, this->_kernel_cov, this->_kernel_im2col,
+                                                            this->_kSizeX, this->_kSizeY, dst, this->_outWidth, this->_outHeight, this->_outChannel,
+                                                            this->_strideX, this->_strideY, this->_paddingX, this->_paddingY, this->_dilationX, this->_dilationY, this->_groups);
+        status |= clEnqueueReadBuffer(clScheduler::get().queue(), dst, CL_TRUE, 0, this->_outHeight * this->_outWidth * this->_outChannel * sizeof(float), c, 0, NULL, NULL);
+
+    }
+
+    //////////////////////////////////////////////////////
+    ofstream outFileOut("cl_output.txt");
+    for (size_t i = 0; i < this->_outputNum; i++){
+        outFileOut << layerOutput[i] << std::endl;
+    }
+    outFileOut.close();
+    //////////////////////////////////////////////////////
+    if (this->_width == 56 && this->_channel == 96 && this->_outHeight == 56 && this->_outChannel == 24) {
+        float sum = 0;
+    }
 
     if(this->_batchNorm==1)
     {
-        std::cout << "do batchnorm, waiting for complete..." << std::endl;
+        cl_mem src = clCreateBuffer(clScheduler::get().context(), CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this->_outWidth * this->_outHeight * this->_outChannel * sizeof(float), layerOutput, &status);
+        cl_mem dst = clCreateBuffer(clScheduler::get().context(), CL_MEM_WRITE_ONLY, this->_outHeight * this->_outWidth * this->_outChannel *  sizeof(float), NULL, &status);
+        CHECKSTATUS(status, "create dst cl_mem");
+        BatchNormCL::batchNormCL(src, dst, this->_clBiases, this->_clScales, this->_clRollMean, this->_clRollVariance, this->_outWidth, this->_outHeight, this->_outChannel, this->_kernel_bn);
+        status |= clEnqueueReadBuffer(clScheduler::get().queue(), dst, CL_TRUE, 0, this->_outWidth * this->_outHeight * this->_outChannel * sizeof(float), layerOutput, 0, NULL, NULL);
     } else {
         if(_useBias == 1)
         {
@@ -1378,14 +1433,18 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
 #ifdef USE_OPENCL
 
             std::cout << "convolutional layer load weights " << std::endl;
+            
+            std::cout << "groups : " << this->_groups << "   stride : " << this->_stride << "    stridex : " << this->_strideX << "    strideY : " << this->_strideY << std::endl;
 
             if (use3x3S1CL) {
 
+                // this->_clWeights = clCreateBuffer(clScheduler::get().context(), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(float) * this->_nWeights, weights.data(), &status);
                 this->_clWeights = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float) * this->_nWeights, NULL, &status);
                 float* clWeightsPtr = (float*)clEnqueueMapBuffer(clScheduler::get().queue(), this->_clWeights, CL_TRUE, CL_MAP_WRITE, 0, sizeof(float) * this->_nWeights, 0, NULL, NULL, &status);
+                if (status != CL_SUCCESS) { std::cout << "map clWeights failed, status = " << status << std::endl; }
 
                 for (size_t i = 0; i < this->_nWeights; i++){
-                    clWeightsPtr[i] = weights[i];
+                   clWeightsPtr[i] = weights[i];
                 }
 
 
@@ -1393,17 +1452,20 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
 
                 this->_nWinoWeights = this->winoFilterH * this->winoFilterW * this->_channel * this->_outChannel;
                 this->_clWeightsWino = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE, sizeof(float) * this->_nWinoWeights, NULL, &status);
-                ConvolutionSgemmCL::conv3x3s1WinogradTransformKenelCL(this->_kernel_fil_tran, this->_clWeights, this->_clWeightsWino, this->_channel, this->_outChannel);
-
+                ConvolutionSgemmCL::conv3x3s1WinogradTransformKenelCL(this->_kernel_fil_tran, this->_clWeights, this->_clWeightsWino, this->_channel / this->_groups, this->_outChannel);
+                clReleaseMemObject(this->_clWeights);
                 
             } 
             else if (use3x3S2CL) {
                 
             } else {
+                // this->_clWeights           = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(float) * this->_nWeights, weights.data(), &status);
+
                 this->_clWeights           = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float) * this->_nWeights, NULL, &status);
                 if (status != CL_SUCCESS) { std::cout << "create clWeights failed" << std::endl; }
+                cl_command_queue& a = clScheduler::get().queue();
                 float* clWeightsPtr = (float*)clEnqueueMapBuffer(clScheduler::get().queue(), this->_clWeights, CL_TRUE, CL_MAP_WRITE, 0, sizeof(float) * this->_nWeights, 0, NULL, NULL, &status);
-                if (status != CL_SUCCESS) { std::cout << "map clWeights failed" << std::endl; }
+                if (status != CL_SUCCESS) { std::cout << "map clWeights failed, status = " << status << std::endl; }
                 // memcpy(this->_clWeights, weights.data(), this->_nWeights);
                 
                 for (size_t i = 0; i < this->_nWeights; i++){
@@ -1557,6 +1619,25 @@ void ConvolutionalLayer::loadAllWeigths(std::vector<float> &weights)
             }
 
 #endif
+
+#ifdef USE_OPENCL
+            if(this->_batchNorm) {
+                this->_clScales         = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->_nScales * sizeof(float), weights.data() + _nWeights, &status);
+                this->_clBiases         = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
+                                        this->_nScales * sizeof(float), weights.data() + _nWeights + this->_nScales, &status);
+                this->_clRollMean       = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
+                                        this->_nRollMean * sizeof(float), weights.data() + _nWeights + this->_nBiases + this->_nScales, &status);
+                this->_clRollVariance   = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
+                                        this->_nRollVariance * sizeof(float), weights.data() + _nWeights + this->_nBiases + this->_nScales + this->_nRollMean, &status);
+            } else {
+                if(this->_useBias)
+                {
+                    // TODO : load bias weight
+                }
+            }
+#endif 
+
+
         }
 
         /* TODO
@@ -2008,30 +2089,47 @@ void ConvolutionalLayer::selectX86Conv()
 
 #ifdef USE_OPENCL
 void ConvolutionalLayer::selectOpenCLConv(){
+
+
+
+
     if (this->_kSizeX == 3 && this->_kSizeY == 3 && this->_strideX == 1 && this->_strideY == 1 && this->_dilationX == 1 && this->_dilationY == 1) {
-        use3x3S1CL = true;
+    // if (false) {
+        this->use3x3S1CL = true;
         // std::cout << "create convolution winograd 3x3s1 kernel " << std::endl;
         this->winoFilterH = 8;
         this->winoFilterW = 8;
-
-        _kernel_cov = clScheduler::get().buildKernel(this->_type, "convWinograd");
-        _kernel_fil_tran = clScheduler::get().buildKernel(this->_type, "FilterTransform");
-        _kernel_pad = clScheduler::get().buildKernel(LayerType::PADDING, "padding");       
         
-        return;
-    }
-    if (false) {
+        if (this->_groups == this->_outChannel) {
+            _kernel_cov = clScheduler::get().buildKernel(this->_type, "convWinograd_depthwise");
+        } else {
+            _kernel_cov = clScheduler::get().buildKernel(this->_type, "convWinograd");
+        }
+
+        _kernel_fil_tran = clScheduler::get().buildKernel(this->_type, "FilterTransform");
+        _kernel_pad = clScheduler::get().buildKernel(LayerType::PADDING, "padding");
+        
+    } else if (false) {
         use3x3S2CL = true;
         return;
     } else {
-
+        
         std::cout << "create convolution sgemm kernel " << std::endl;
-        _kernel_cov = clScheduler::get().buildKernel(this->_type, "IM2COL_GEMM");
+        if (this->_groups == this->_outChannel) {
+            _kernel_cov = clScheduler::get().buildKernel(this->_type, "IM2COL_GEMM_group");
+        } else {
+            _kernel_cov = clScheduler::get().buildKernel(this->_type, "IM2COL_GEMM");
+        }
         _kernel_im2col = clScheduler::get().buildKernel(this->_type, "im2col");
     }
     // 加上 activation 是否为 NONE 的判断
     if (Activations::getActivationStr(this->_activation) != "none") {
         _kernel_act = clScheduler::get().buildKernel(LayerType::ACTIVE, Activations::getActivationStr(this->_activation));
+
+    }
+    if (this->_batchNorm == 1) {
+        _kernel_bn = clScheduler::get().buildKernel(LayerType::BATCHNORM, "BatchNorm");
+
     }
 
 }

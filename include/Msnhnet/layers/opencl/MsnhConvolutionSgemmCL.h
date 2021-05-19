@@ -31,7 +31,8 @@ public:
         const int &paddingX, 
         const int &paddingY, 
         const int &dilationW, 
-        const int &dilationH);
+        const int &dilationH,
+        const int &groups);
 
     static void conv3x3s1WinogradTransformKenelCL(cl_kernel &kernel, cl_mem &filter, cl_mem &filterWino,const int &inChannel, const int &outChannel);
     static void conv3x3s1WinogradCL(

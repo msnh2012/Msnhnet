@@ -464,6 +464,107 @@ void AddBlockLayer::forwardGPU(NetworkState &netState)
 }
 #endif
 
+void AddBlockLayer::forwardCL(NetworkState &netState){
+    
+    float *layerInput   = nullptr;
+    float *layerOutput  = nullptr;
+
+    if(netState.net->layers[this->_layerIndex-1]->getMemReUse() == 1)
+    {
+        layerInput      = netState.getInput();
+    }
+    else
+    {
+        layerInput      = netState.input;
+    }
+
+    std::vector<float> inputX{layerInput, layerInput + netState.inputNum};
+
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        netState.input         =    inputX.data();
+        netState.inputNum      =    static_cast<int>(inputX.size());
+
+        for (size_t j = 0; j < branchLayers[i].size(); ++j)
+        {
+            branchLayers[i][j]->forwardCL(netState);
+
+            if(branchLayers[i][j]->getMemReUse()==0)
+
+            {
+                netState.input     =   branchLayers[i][j]->getOutput();
+            }
+
+            netState.inputNum  =   branchLayers[i][j]->getOutputNum();
+        }
+
+    }
+
+    if(this->_memReUse==1) 
+
+    {
+        layerOutput     = netState.getOutput(); 
+
+        netState.shuffleInOut();
+
+    }
+    else
+
+    {
+        layerOutput     = this->_output;
+    }
+
+    for (size_t i = 1; i < branchLayers.size(); ++i)
+    {
+
+        Blas::cpuAxpy(netState.inputNum, 1.f, branchLayers[i-1][branchLayers[i-1].size()-1]->getOutput(),
+                1, branchLayers[i][branchLayers[i].size()-1]->getOutput(), 1);
+
+    }
+    Blas::cpuCopy(netState.inputNum, branchLayers[branchLayers.size()-1][branchLayers[branchLayers.size()-1].size()-1]->getOutput(), 1, layerOutput, 1);
+
+    if(this->_activation == ActivationType::NORM_CHAN)
+    {
+        Activations::activateArrayNormCh(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                         this->_outWidth*this->_outHeight, layerOutput);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX)
+    {
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,0);
+    }
+    else if(this->_activation == ActivationType::NORM_CHAN_SOFTMAX_MAXVAL)
+    {
+        Activations::activateArrayNormChSoftMax(layerOutput, this->_outputNum*this->_batch, this->_batch, this->_outChannel,
+                                                this->_outWidth*this->_outHeight, layerOutput,1);
+    }
+    else if(this->_activation == ActivationType::NONE)
+    {
+
+    }
+    else
+    {
+        if(_actParams.size() > 0)
+        {
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx, _actParams[0]);
+        }
+        else
+        {
+            Activations::activateArray(layerOutput, this->_outputNum*this->_batch, this->_activation, this->supportAvx);
+        }
+    }
+
+    this->_forwardTime = 0;
+
+    for (size_t i = 0; i < branchLayers.size(); ++i)
+    {
+        for (size_t j = 0; j < branchLayers[i].size(); ++j)
+        {
+            this->_forwardTime += branchLayers[i][j]->getForwardTime();
+        }
+    }
+}
+
 AddBlockLayer::~AddBlockLayer()
 {
     for (size_t i = 0; i < branchLayers.size(); ++i)

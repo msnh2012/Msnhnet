@@ -649,6 +649,10 @@ void ConnectedLayer::loadAllWeigths(std::vector<float> &weights)
         offset += _nWeights;
 
 #ifdef USE_OPENCL
+
+
+        // this->_clWeights = clCreateBuffer(clScheduler::get().context(), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(float) * this->_nWeights, weights.data(), &status);
+
         this->_clWeights           = clCreateBuffer(clScheduler::get().context(),  CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float) * this->_nWeights, NULL, &status);
         if (status != CL_SUCCESS) { std::cout << "create clWeights failed" << std::endl; }
         float* clWeightsPtr = (float*)clEnqueueMapBuffer(clScheduler::get().queue(), this->_clWeights, CL_TRUE, CL_MAP_WRITE, 0, sizeof(float) * this->_nWeights, 0, NULL, NULL, &status);
