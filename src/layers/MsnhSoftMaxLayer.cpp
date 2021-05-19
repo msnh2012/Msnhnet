@@ -41,8 +41,11 @@ SoftMaxLayer::~SoftMaxLayer()
 {
 #ifdef USE_GPU
 #ifdef USE_CUDNN
-    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc));
-    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc));
+    if(_inputDesc)
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc));
+
+    if(_outputDesc)
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc));
 #endif
 #endif
 }

@@ -36,66 +36,11 @@ using namespace std;
 class SimdInfo
 {
 public:
-    SimdInfo()
-    {
-
-    }
-
-    ~SimdInfo(){}
-
 #ifdef USE_X86
-    bool getSupportSSE() const
+    static bool checkSimd()
     {
-        return supportSSE;
-    }
-
-    bool getSupportSSE2() const
-    {
-        return supportSSE2;
-    }
-
-    bool getSupportSSE3() const
-    {
-        return supportSSE3;
-    }
-
-    bool getSupportSSSE3() const
-    {
-        return supportSSSE3;
-    }
-
-    bool getSupportSSE4_1() const
-    {
-        return supportSSE4_1;
-    }
-
-    bool getSupportSSE4_2() const
-    {
-        return supportSSE4_2;
-    }
-
-    bool getSupportAVX() const
-    {
-        return supportAVX;
-    }
-
-    bool getSupportAVX2() const
-    {
-        return supportAVX2;
-    }
-
-    bool getSupportAVX512() const
-    {
-        return supportAVX512;
-    }
-
-    bool getSupportFMA3() const
-    {
-        return supportFMA3;
-    }
-
-    bool checkSimd()
-    {
+        if(checked)
+            return true;
 #ifdef linux
         char buf[10240] = {0};
         FILE *pf = NULL;
@@ -171,7 +116,7 @@ public:
         {
             supportAVX2 = true;
         }
-
+        checked         = true;
         return true;
 #endif
 
@@ -185,41 +130,40 @@ public:
         supportFMA3     = cpuHasFMA3();
         supportAVX      = cpuHasAVX();
         supportAVX2     = cpuHasAVX2();
+        checked         = true;
         return true;
 #endif
     }
-
-private:
-    bool supportSSE    = false;
-    bool supportSSE2   = false;
-    bool supportSSE3   = false;
-    bool supportSSSE3  = false;
-    bool supportSSE4_1 = false;
-    bool supportSSE4_2 = false;
-    bool supportFMA3   = false;
-    bool supportAVX    = false;
-    bool supportAVX2   = false;
-    bool supportAVX512 = false;
-
+    static bool supportSSE   ;
+    static bool supportSSE2  ;
+    static bool supportSSE3  ;
+    static bool supportSSSE3 ;
+    static bool supportSSE4_1;
+    static bool supportSSE4_2;
+    static bool supportFMA3  ;
+    static bool supportAVX   ;
+    static bool supportAVX2  ;
+    static bool supportAVX512;
+    static bool checked;
 #ifdef WIN32
-    inline std::array<unsigned int,4> cpuid(int function_id)
+    static inline std::array<unsigned int,4> cpuid(int function_id)
     {
         std::array<unsigned int,4> info;
 
         __cpuid((int*)info.data(), function_id);
         return info;
     }
-    inline bool cpuHasSSE()     {return 0!=(cpuid(1)[3]&(1<<25));}
-    inline bool cpuHasSSE2()    { return 0!=(cpuid(1)[3]&(1<<26)); }
-    inline bool cpuHasSSE3()    { return 0!=(cpuid(1)[2]&(1<<0));  }
-    inline bool cpuHasSSSE3()   { return 0!=(cpuid(1)[2]&(1<<9));  }
-    inline bool cpuHasSSE4_1()  { return 0!=(cpuid(1)[2]&(1<<19)); }
-    inline bool cpuHasSSE4_2()  { return 0!=(cpuid(1)[2]&(1<<20)); }
-    inline bool cpuHasFMA3()    { return 0!=(cpuid(1)[2]&(1<<12)); }
+    static inline bool cpuHasSSE()     {return 0!=(cpuid(1)[3]&(1<<25));}
+    static inline bool cpuHasSSE2()    { return 0!=(cpuid(1)[3]&(1<<26)); }
+    static inline bool cpuHasSSE3()    { return 0!=(cpuid(1)[2]&(1<<0));  }
+    static inline bool cpuHasSSSE3()   { return 0!=(cpuid(1)[2]&(1<<9));  }
+    static inline bool cpuHasSSE4_1()  { return 0!=(cpuid(1)[2]&(1<<19)); }
+    static inline bool cpuHasSSE4_2()  { return 0!=(cpuid(1)[2]&(1<<20)); }
+    static inline bool cpuHasFMA3()    { return 0!=(cpuid(1)[2]&(1<<12)); }
 
-    inline bool cpuHasAVX()     { return 0!=(cpuid(1)[2]&(1<<28)); }
-    inline bool cpuHasAVX2()    { return 0!=(cpuid(7)[1]&(1<<5));  }
-    inline bool cpuHasAVX512()  { return 0!=(cpuid(7)[1]&(1<<16)); }
+    static inline bool cpuHasAVX()     { return 0!=(cpuid(1)[2]&(1<<28)); }
+    static inline bool cpuHasAVX2()    { return 0!=(cpuid(7)[1]&(1<<5));  }
+    static inline bool cpuHasAVX512()  { return 0!=(cpuid(7)[1]&(1<<16)); }
 #endif
 #endif
 

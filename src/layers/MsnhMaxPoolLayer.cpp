@@ -709,9 +709,14 @@ MaxPoolLayer::~MaxPoolLayer()
 {
 #ifdef USE_GPU
 #ifdef USE_CUDNN
-    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc));
-    CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc));
-    CUDNN_CHECK(cudnnDestroyPoolingDescriptor(_maxPoolDesc));
+    if(_inputDesc)
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(_inputDesc));
+
+    if(_outputDesc)
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(_outputDesc));
+
+    if(_maxPoolDesc)
+        CUDNN_CHECK(cudnnDestroyPoolingDescriptor(_maxPoolDesc));
 #endif
 #endif
 }

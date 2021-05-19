@@ -91,7 +91,7 @@ void ConvolutionalLayerArmV8_3x3s1::conv3x3s1Neon(float *const &src, const int &
 
                         //sum0
                         "prfm   pldl1keep, [%1, #128]       \n"
-                        "ld1    {v6.4s}, [%1]               \n"
+                        "ld1    {v6.4s}, [1]               \n"
 
                         //sum1
                         "prfm   pldl1keep, [%2, #128]       \n"

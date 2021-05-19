@@ -3,10 +3,12 @@
 
 #include <Msnhnet/config/MsnhnetCfg.h>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 namespace Msnhnet
 {
 template<int N,typename T>
-class MsnhNet_API Vector
+class Vector
 {
 public:
     Vector(){}
@@ -32,6 +34,12 @@ public:
     Vector &operator= (const Vector &vec)
     {
         memcpy(this->_value,vec._value,sizeof(T)*N);
+        return *this;
+    }
+
+    Vector &operator= (const std::vector<T> &val)
+    {
+        memcpy(this->_value,val.data(),sizeof(T)*N);
         return *this;
     }
 
@@ -68,7 +76,69 @@ public:
             }
         }
 
-        std::cout<<"\n}"<<std::endl;
+        std::cout<<";\n}"<<std::endl;
+    }
+
+    inline std::string toString() const
+    {
+
+        std::stringstream buf;
+
+        buf<<"{ Vector: "<<N<<std::endl;
+        if(isF32Vec())
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                buf<<std::setiosflags(std::ios::left)<<std::setprecision(6)<<std::setw(6)<<_value[i]<<" ";
+            }
+        }
+        else if(isF64Vec())
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                buf<<std::setiosflags(std::ios::left)<<std::setprecision(12)<<std::setw(12)<<_value[i]<<" ";
+            }
+        }
+        else
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                buf<<_value[i]<<" ";
+            }
+        }
+
+        buf<<";\n}"<<std::endl;
+    }
+
+    inline std::string toHtmlString() const
+    {
+
+        std::stringstream buf;
+
+        buf<<"{ Vector: "<<N<<"<br/>";
+        if(isF32Vec())
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                buf<<std::setiosflags(std::ios::left)<<std::setprecision(6)<<std::setw(6)<<_value[i]<<" ";
+            }
+        }
+        else if(isF64Vec())
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                buf<<std::setiosflags(std::ios::left)<<std::setprecision(12)<<std::setw(12)<<_value[i]<<" ";
+            }
+        }
+        else
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                buf<<_value[i]<<" ";
+            }
+        }
+
+        buf<<";\n}"<<"<br/>";
     }
 
     void setVal(const std::vector<T> &val)
@@ -92,6 +162,22 @@ public:
         }
 
         this->_value[index] = val;
+    }
+
+    inline void zero()
+    {
+        for (int i = 0; i < N; ++i)
+        {
+            this->_value[i] = 0;
+        }
+    }
+
+    inline void reverseSign()
+    {
+        for (int i = 0; i < N; ++i)
+        {
+            this->_value[i] = 0 - this->_value[i];
+        }
     }
 
     bool isFuzzyNull() const
@@ -490,6 +576,16 @@ public:
         return tmp;
     }
 
+    inline friend Vector operator/ (const Vector &A, const Vector &B)
+    {
+        Vector tmp;
+        for (int i = 0; i < N; ++i)
+        {
+            tmp[i] = A[i] / B[i];
+        }
+        return tmp;
+    }
+
     inline friend bool operator== (const Vector &A, const Vector &B)
     {
         if(A.isF32Vec())
@@ -618,9 +714,6 @@ public:
 
     inline Vector &operator /=(T A)
     {
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:len)
-#endif
         for (int i = 0; i < N; ++i)
         {
             this->_value[i]/=A;
@@ -629,22 +722,28 @@ public:
     }
 
 private:
-    T _value[N];
+    T _value[N] = {0};
 };
 
 typedef Vector<3,double> EulerD;
-typedef Vector<3,double> TransformD;
+typedef Vector<3,double> TranslationD;
 typedef Vector<3,double> RotationVecD;
 typedef Vector<2,double> Vector2D;
 typedef Vector<3,double> Vector3D;
+typedef Vector<5,double> Vector5D;
 typedef Vector<4,double> Vector4D;
+typedef Vector<6,double> Vector6D;
+typedef Vector<7,double> Vector7D;
 
 typedef Vector<3,float> EulerF;
-typedef Vector<3,float> TransformF;
+typedef Vector<3,float> TranslationF;
 typedef Vector<3,float> RotationVecF;
 typedef Vector<2,float> Vector2F;
 typedef Vector<3,float> Vector3F;
 typedef Vector<4,float> Vector4F;
+typedef Vector<5,float> Vector5F;
+typedef Vector<6,float> Vector6F;
+typedef Vector<7,float> Vector7F;
 
 }
 #endif 

@@ -55,7 +55,9 @@ void Gemm::cpuIm2col(float * const &input, const int &channelNum, const int &hei
 
     const int chCols     = channelNum * kSize * kSize;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = chCols*heightCol*widthCol;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int ch = 0; ch < chCols; ++ch)
     {
@@ -149,7 +151,9 @@ NEXT:
 
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = kernelH*kernelW*outputH*outputW;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int kernelRow = 0; kernelRow < kernelH; kernelRow++)   
 
@@ -270,7 +274,9 @@ void Gemm::cpuIm2colWithAvx(float * const &input, const int &channelNum, const i
         if(heightCol == height && widthCol == width && stride == 1 && padding == 1)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = chCols*(heightCol - padding)*(widthCol - padding - 8);
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int ch = 0; ch < chCols; ++ch)
             {
@@ -399,7 +405,9 @@ void Gemm::cpuIm2colBinWithAvx(float * const &input, const int &channelNum, cons
             __m256  floatZero256  = _mm256_set1_ps(0.00);
             int newLdb            = bitAlign;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = chCols*(heightCol - padding)*(widthCol - padding - 8);
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int ch = 0; ch < chCols; ++ch)
             {
@@ -595,9 +603,7 @@ void Gemm::cpuGemm(const int &TA, const int &TB, const int &M, const int &N, con
     }
     else
     {
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
-#endif
+
         for (int m = 0; m < M; ++m)
         {
             if(TA!=1 && TB!=1)
@@ -628,7 +634,7 @@ void Gemm::cpuGemm(const int &TA, const int &TB, const int &M, const int &N, con
 #ifdef USE_ARM
 #ifndef USE_OPEN_BLAS
     (void)supportAvxAndFma;
-#pragma omp parallel for num_threads(OMP_THREAD)
+
     for (int m = 0; m < M; ++m)
     {
         if(TA!=1 && TB!=1)
@@ -688,9 +694,7 @@ void Gemm::cpuGemm(const int &TA, const int &TB, const int &M, const int &N, con
     }
     else
     {
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
-#endif
+
         for (int m = 0; m < M; ++m)
         {
             if(TA!=1 && TB!=1)
@@ -721,7 +725,7 @@ void Gemm::cpuGemm(const int &TA, const int &TB, const int &M, const int &N, con
 #ifdef USE_ARM
 #ifndef USE_OPEN_BLAS
     (void)supportAvxAndFma;
-#pragma omp parallel for num_threads(OMP_THREAD)
+
     for (int m = 0; m < M; ++m)
     {
         if(TA!=1 && TB!=1)
@@ -763,7 +767,9 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
     if(supportAvxAndFma)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = M*K*N;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < M; ++i)         
 
@@ -804,7 +810,9 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
     {
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = M*K*N;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < M; ++i)   
 
@@ -829,7 +837,9 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
 #ifdef USE_NEON
     (void) supportAvxAndFma;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -867,7 +877,9 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
 #else
     (void) supportAvxAndFma;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -896,7 +908,9 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const double &ALP
     if(supportAvxAndFma)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = M*K*N;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < M; ++i)         
 
@@ -937,7 +951,9 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const double &ALP
     {
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = M*K*N;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < M; ++i)   
 
@@ -961,7 +977,9 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const double &ALP
 
     (void) supportAvxAndFma;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -993,7 +1011,9 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPH
     if(supportAvxAndFma)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = M*K*N;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < M; ++i)         
 
@@ -1032,7 +1052,9 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPH
     else
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = M*K*N;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < M; ++i)   
 
@@ -1057,7 +1079,9 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPH
 #ifdef USE_NEON
     (void) supportAvxAndFma;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -1095,7 +1119,9 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPH
 #else
     (void) supportAvxAndFma;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -1125,7 +1151,9 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const double &ALP
     if(supportAvxAndFma)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = M*K*N;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < M; ++i)         
 
@@ -1164,7 +1192,9 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const double &ALP
     else
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = M*K*N;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < M; ++i)   
 
@@ -1187,7 +1217,9 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const double &ALP
 #ifdef USE_ARM
     (void) supportAvxAndFma;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -1216,7 +1248,9 @@ void Gemm::cpuGemmNT(const int &M, const int &N, const int &K, const float &ALPH
 
     (void)supportAvxAndFma;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < M; ++i)
     {
@@ -1239,7 +1273,9 @@ void Gemm::cpuGemmNT(const int &M, const int &N, const int &K, const double &ALP
 
     (void)supportAvxAndFma;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < M; ++i)
     {
@@ -1266,7 +1302,9 @@ void Gemm::cpuGemmTT(const int &M, const int &N, const int &K, const float &ALPH
 
     (void)supportAvxAndFma;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < M; ++i)
     {
@@ -1289,7 +1327,9 @@ void Gemm::cpuGemmTT(const int &M, const int &N, const int &K, const double &ALP
 
     (void)supportAvxAndFma;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < M; ++i)
     {
@@ -1345,7 +1385,9 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
 #ifdef USE_X86
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < (M / TILE_F32_M)*TILE_F32_M; i += TILE_F32_M)
     {
@@ -1479,9 +1521,10 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
 void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc)
 {
 #ifdef USE_X86
-
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < (M / TILE_F64_M)*TILE_F64_M; i += TILE_F64_M)
     {
@@ -1617,7 +1660,9 @@ void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const float &
 #ifdef USE_X86
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < (M / TILE_F32_M)*TILE_F32_M; i += TILE_F32_M)
     {
@@ -1753,7 +1798,9 @@ void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const double 
 #ifdef USE_X86
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < (M / TILE_F64_M)*TILE_F64_M; i += TILE_F64_M)
     {
@@ -1949,7 +1996,9 @@ void Gemm::transposeBinary(uint32_t * const &A, uint32_t * const &B, const int &
 {
     (void)blockSize;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = m*n;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < n; i+=32)
     {
@@ -2018,7 +2067,9 @@ void Gemm::gemmNNBinMeanTrans(int M, int N, int K, float ALPHA_UNUSED, unsigned 
 
     (void) ALPHA_UNUSED;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = M*K*N;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < (M/2)*2; i += 2)
     {

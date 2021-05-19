@@ -10,7 +10,9 @@ void Blas::cpuCopy(const int &inputN, float *const &input, const int &inputStep,
     cblas_scopy(inputN, input, inputStep, output, outputStep);
 #else
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = inputN;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for(int i=0; i < inputN ; ++i)
     {
@@ -24,7 +26,9 @@ void Blas::cpuFill(const int &inputN, const float &alpha, float *const &x, const
 {
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = inputN;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for(int i=0; i<inputN; ++i)
     {
@@ -45,7 +49,9 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
 #ifdef USE_NEON
         int i=0;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(i=0; i<inputN/4; ++i)
         {
@@ -65,7 +71,9 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
 #else
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -77,7 +85,9 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
     else
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -92,7 +102,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     if(type == Arithmetic::ARITH_ADD)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -102,7 +114,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     else if(type == Arithmetic::ARITH_SUB)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -112,7 +126,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     else if(type == Arithmetic::ARITH_SUB_INV)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -122,7 +138,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     else if(type == Arithmetic::ARITH_MUL)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -132,7 +150,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     else if(type == Arithmetic::ARITH_DIV)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -142,7 +162,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     else if(type == Arithmetic::ARITH_DIV_INV)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -157,7 +179,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     if(type == Arithmetic::ARITH_ADD)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -167,7 +191,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     else if(type == Arithmetic::ARITH_SUB)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -177,7 +203,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     else if(type == Arithmetic::ARITH_SUB_INV)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -187,7 +215,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     else if(type == Arithmetic::ARITH_MUL)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -197,7 +227,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     else if(type == Arithmetic::ARITH_DIV)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -207,7 +239,9 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
     else if(type == Arithmetic::ARITH_DIV_INV)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -222,7 +256,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
     if(type == Scientific::SCI_ABS)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -232,7 +268,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
     else if(type == Scientific::SCI_ACOS)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -242,7 +280,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
     else if(type == Scientific::SCI_ASIN)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -252,7 +292,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
     else if(type == Scientific::SCI_ATAN)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -265,7 +307,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/8; ++i)
             {
@@ -282,7 +326,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -297,7 +343,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #ifdef USE_NEON
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/4; ++i)
             {
@@ -314,7 +362,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #else
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -325,7 +375,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -337,7 +389,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
     else if(type == Scientific::SCI_COSH)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -350,7 +404,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/8; ++i)
             {
@@ -367,7 +423,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -382,7 +440,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #ifdef USE_NEON
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/4; ++i)
             {
@@ -399,7 +459,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #else
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -410,7 +472,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -422,7 +486,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
     else if(type == Scientific::SCI_SINH)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -435,7 +501,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/8; ++i)
             {
@@ -452,7 +520,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -467,7 +537,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #ifdef USE_NEON
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/4; ++i)
             {
@@ -490,7 +562,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #else
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -501,7 +575,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -513,7 +589,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
     else if(type == Scientific::SCI_TANH)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -526,7 +604,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/8; ++i)
             {
@@ -543,7 +623,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -558,7 +640,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #ifdef USE_NEON
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/4; ++i)
             {
@@ -575,7 +659,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #else
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -586,7 +672,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -601,7 +689,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/8; ++i)
             {
@@ -618,7 +708,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -633,7 +725,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #ifdef USE_NEON
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/4; ++i)
             {
@@ -650,7 +744,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #else
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -661,7 +757,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -676,7 +774,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/8; ++i)
             {
@@ -693,7 +793,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -708,7 +810,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #ifdef USE_NEON
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/4; ++i)
             {
@@ -725,7 +829,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #else
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -736,7 +842,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -748,7 +856,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
     else if(type == Scientific::SCI_LOG10)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = inputN;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<inputN; ++i)
         {
@@ -761,7 +871,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/8; ++i)
             {
@@ -778,7 +890,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -793,7 +907,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #ifdef USE_NEON
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < inputN/4; ++i)
             {
@@ -815,7 +931,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #else
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -826,7 +944,9 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         else
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = inputN;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for(int i=0; i<inputN; ++i)
             {
@@ -844,7 +964,9 @@ void Blas::cpuScale(const int &inputN, const float &alpha, float *const &x, cons
     cblas_sscal(inputN, alpha, x, stepX);
 #else
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = inputN;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for(int i=0; i<inputN; ++i)
     {
@@ -858,7 +980,9 @@ void Blas::cpuMean(float *const &x, const int &batch, const int &filters, const 
     float scale  =  1.f/(batch * outSize); 
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = filters*batch*outSize;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for(int i=0; i<filters; ++i) 
 
@@ -888,7 +1012,9 @@ void Blas::cpuVariance(float *const &x, float *const &mean, const int &batch,
     float scale  =  1.f/(batch * outSize -1);
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = filters*batch*outSize;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for(int i=0; i<filters; ++i)
     {
@@ -915,7 +1041,9 @@ void Blas::cpuNorm(float *const &x, float *const &mean, float *const &variance,
     for(int b=0; b<batch; ++b)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = filters*outSize;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int f=0; f<filters; ++f)
         {
@@ -932,7 +1060,9 @@ void Blas::cpuNorm(float *const &x, float *const &mean, float *const &variance,
 void Blas::cpuSmoothL1(const int &n, float * const &pred, float * const &truth, float * const &delta, float * const &error)
 {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = n;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < n; ++i)
     {
@@ -955,7 +1085,9 @@ void Blas::cpuSmoothL1(const int &n, float * const &pred, float * const &truth, 
 void Blas::cpuL1(const int &n, float * const &pred, float * const &truth, float * const &delta, float * const &error)
 {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = n;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < n; ++i)
     {
@@ -968,7 +1100,9 @@ void Blas::cpuL1(const int &n, float * const &pred, float * const &truth, float 
 void Blas::cpuL2(const int &n, float * const &pred, float * const &truth, float * const &delta, float * const &error)
 {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = n;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < n; ++i)
     {
@@ -1054,7 +1188,9 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
             __m256 sumNN = _mm256_broadcast_ss(&sum);
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = num;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < num/8; ++i)
             {
@@ -1079,7 +1215,9 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
             }
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = num;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int i = 0; i < num; ++i)
             {
@@ -1166,7 +1304,9 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
         float32x4_t sumNN       = vdupq_n_f32(sum);
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = num;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < num/4; ++i)
         {
@@ -1192,7 +1332,9 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
         }
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = num;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < num; ++i)
         {
@@ -1206,7 +1348,9 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
     else
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = num;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < num; ++i)
         {
@@ -1224,7 +1368,9 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
         }
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        dataLen   = num;
+        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int i = 0; i < num; ++i)
         {
@@ -1270,13 +1416,15 @@ void Blas::cpuLogisticCorssEntropy(const int &num, float * const &pred, float * 
 }
 
 void Blas::cpuUpSample(float * const &in, const int &width, const int &height, const int &channel, const int &batch, const int &strideX,
-                        const int &strideY, const float &scale, float * const &out)
+                       const int &strideY, const float &scale, float * const &out)
 {
 
     for (int b = 0; b < batch; ++b)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = channel * height * strideY * width * strideX;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int k = 0; k < channel; ++k)
         {
@@ -1295,7 +1443,7 @@ void Blas::cpuUpSample(float * const &in, const int &width, const int &height, c
 }
 
 void Blas::cpuBilinearResize(float * const &in, const int &width, const int &height, const int &channel, const int &batch, const int &outWidth,
-                              const int &outHeight, const int &alignCorners, float * const &out)
+                             const int &outHeight, const int &alignCorners, float * const &out)
 {
 
     if(height<1 || outHeight<1 || width <1 || outWidth <1)
@@ -1310,7 +1458,9 @@ void Blas::cpuBilinearResize(float * const &in, const int &width, const int &hei
     const size_t outSize = outWidth*outHeight;
 
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = outWidth;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < outSize; ++i)
     {

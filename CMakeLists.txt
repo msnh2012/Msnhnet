@@ -18,10 +18,12 @@ option(BUILD_SHARED_LIBS    "Build shared lib"          ON )
 option(BUILD_EXAMPLES       "Build examples"            ON )
 option(BUILD_USE_OPENCV     "Build with Opencv"         OFF)
 option(BUILD_VIEWER         "Build MsnhnetViewer"       OFF)
+
 option(BUILD_USE_GPU        "Use Gpu"                   OFF)
 option(BUILD_USE_CUDNN      "Use cuDnn"                 OFF)
 option(BUILD_USE_MSNHCV_GUI "Use msnhCV GUI"            OFF)
 option(BUILD_USE_OPENCL     "Use OpenCL"                ON )
+
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_Release} -O3")
@@ -104,6 +106,7 @@ endif()
 set(SRCS
     src/core/MsnhBlas.cpp
     src/core/MsnhGemm.cpp
+    src/core/MsnhSimd.cpp
     src/core/MsnhMemoryManager.cpp
     src/io/MsnhIO.cpp
     src/io/MsnhParser.cpp
@@ -213,13 +216,19 @@ set(SRCS
     src/cv/MsnhCVMat.cpp 
     src/cv/MsnhCVMatOp.cpp 
     src/cv/MsnhCVVideo.cpp
+    src/robot/MsnhJoint.cpp
+    src/robot/MsnhFrame.cpp
+    src/robot/MsnhChain.cpp
+    src/robot/MsnhSegment.cpp
+    src/robot/MsnhChainFK.cpp
     src/utils/MsnhCVUtil.cpp
+    src/robot/MsnhSpatialMath.cpp
     )
 
 # config GPU
 if(BUILD_USE_GPU MATCHES ON)
     add_definitions(-DUSE_GPU)#===============
-    
+
     enable_language(CUDA) 
 
     set(USE_GPU_MACRO "#define USE_GPU\n")
@@ -246,7 +255,7 @@ if(BUILD_USE_GPU MATCHES ON)
         )
     set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
     find_package(cuBlas REQUIRED)
-    
+
     if(BUILD_USE_CUDNN MATCHES ON)
         add_definitions(-DUSE_CUDNN)#===============
         find_package(cuDnn REQUIRED)
@@ -349,7 +358,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(armv7l)")
     message(STATUS "Use arm arch")
 
     option(ENABLE_NEON "Use neon" OFF)
-    
+
     if(ENABLE_NEON MATCHES ON)
         add_definitions(-DUSE_NEON)
         set(USE_NEON_MACRO "#define USE_NEON\n")
@@ -445,7 +454,6 @@ if(BUILD_USE_OPENCV MATCHES ON)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
 endif()
 
-
 if(BUILD_USE_GPU MATCHES ON)
     if(BUILD_USE_CUDNN MATCHES ON)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${OMP_LIB} PRIVATE ${CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
@@ -457,11 +465,13 @@ else()
 endif()
 
 
+
 # opencl
 if(BUILD_USE_OPENCL MATCHES ON)
     set(OPENCL_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.2")
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENCL_DIR}/lib/x64/OpenCL.lib)
 endif()
+
 
 
 if(BUILD_EXAMPLES MATCHES ON)

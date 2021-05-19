@@ -12,10 +12,10 @@
 #endif
 
 #ifdef USE_ARM
-#include "Msnhnet/layers/arm/MsnhConvolution3x3s1.h"
-#include "Msnhnet/layers/arm/MsnhConvolution3x3s2.h"
-#include "Msnhnet/layers/arm/MsnhConvolutionSgemm.h"
-#include "Msnhnet/layers/arm/MsnhConvolution3x3s1Winograd.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhConvolution3x3s1.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhConvolution3x3s2.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhConvolutionSgemm.h"
+#include "Msnhnet/layers/arm/armv7a/MsnhConvolution3x3s1Winograd.h"
 #endif
 
 #ifdef USE_X86
@@ -171,10 +171,9 @@ protected:
 
     void selectX86Conv();
 
+#ifdef USE_X86
     bool        use3x3S1             =   false;
     bool        use3x3S2             =   false;
-#ifdef USE_X86
-
 #endif
 
     float       *_weights            =   nullptr;

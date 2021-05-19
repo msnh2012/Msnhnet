@@ -167,7 +167,7 @@ void Gui::wait(int i)
             if (_kbhit())
             {
 
-                ch = getchar();
+                ch = getch();
 
                 if (ch == 27){ break; }
 

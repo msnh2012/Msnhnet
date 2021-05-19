@@ -107,7 +107,14 @@ void GlobalAvgPoolLayer::forwardGPU(NetworkState &netState)
 
 void GlobalAvgPoolLayer::forward(NetworkState &netState)
 {
+    /* {1 2 3 4 5}\\
+     * {1 2 3 4 5} \\
+     * {1 2 3 4 5}  sum/(5*5)
+     * {1 2 3 4 5} 
 
+     * {1 2 3 4 5}
+
+     */
     auto st = TimeUtil::startRecord();
 
     float* layerInput   = netState.getInput();

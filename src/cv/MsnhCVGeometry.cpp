@@ -3,26 +3,6 @@
 namespace Msnhnet
 {
 
-double deg2rad(const double &val)
-{
-    return val/180.0*M_PI;
-}
-
-float deg2rad(const float &val)
-{
-    return static_cast<float>(val/180.0*M_PI);
-}
-
-double rad2deg(const double &val)
-{
-    return val/M_PI*180.0;
-}
-
-float rad2deg(const float &val)
-{
-    return static_cast<float>(val/M_PI*180.0);
-}
-
 bool Geometry::isRealRotMat(Mat &R)
 {
     Mat Rt = R.transpose();
@@ -50,6 +30,7 @@ RotationMatD Geometry::euler2RotMat(const EulerD &euler, const RotSequence &seq)
 
     double cosc = cos(c); 
 
+    /*
     RotationMatD Rx;
     Rx.setVal({
                   1 ,  0   ,   0   ,
@@ -71,24 +52,61 @@ RotationMatD Geometry::euler2RotMat(const EulerD &euler, const RotSequence &seq)
                   sinc , cosc  , 0 ,
                   0   ,  0    , 1
               });
+    */
+    RotationMatD R;
 
-    /*TODO: exact all*/
     switch (seq)
     {
     case ROT_XYZ:
-        return Rx*Ry*Rz;
+         R.setVal({
+                      cosb*cosc,                   -sinc*cosb,                 sinb,
+                      sina*sinb*cosc + sinc*cosa, -sina*sinb*sinc + cosa*cosc, -sina*cosb,
+                      sina*sinc - sinb*cosa*cosc, sina*cosc + sinb*sinc*cosa, cosa*cosb
+                  });
+         return R;
     case ROT_XZY:
-        return Rx*Rz*Ry;
+        R.setVal({
+                     cosb*cosc,                  -sinc,                       sinb*cosc,
+                     sina*sinb + sinc*cosa*cosb, cosa*cosc, -sina*cosb + sinb*sinc*cosa,
+                     sina*sinc*cosb - sinb*cosa, sina*cosc, sina*sinb*sinc + cosa*cosb
+                 });
+        return R;
     case ROT_YXZ:
-        return Ry*Rx*Rz;
+        R.setVal({
+                     sina*sinb*sinc + cosb*cosc, sina*sinb*cosc - sinc*cosb, sinb*cosa,
+                     sinc*cosa, cosa*cosc, -sina,
+                     sina*sinc*cosb - sinb*cosc, sina*cosb*cosc + sinb*sinc, cosa*cosb
+                 });
+        return R;
     case ROT_YZX:
-        return Ry*Rz*Rx;
+        R.setVal({
+                     cosb*cosc, sina*sinb - sinc*cosa*cosb, sina*sinc*cosb + sinb*cosa,
+                     sinc,                     cosa*cosc,           -sina*cosc,
+                     -sinb*cosc, sina*cosb + sinb*sinc*cosa, -sina*sinb*sinc + cosa*cosb
+                 });
+        return R;
     case ROT_ZXY:
-        return Rz*Rx*Ry;
+        R.setVal({
+                     -sina*sinb*sinc + cosb*cosc, -sinc*cosa, sina*sinc*cosb + sinb*cosc,
+                     sina*sinb*cosc + sinc*cosb, cosa*cosc, -sina*cosb*cosc + sinb*sinc,
+                     -sinb*cosa,                  sina,                cosa*cosb
+                 });
+        return R;
     case ROT_ZYX:
-        return Rz*Ry*Rx;
+        R.setVal({
+                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
+                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
+                      -sinb,               sina*cosb,              cosa*cosb
+                 });
+        return R;
     default:
-        return Rz*Ry*Rx;
+
+        R.setVal({
+                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
+                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
+                      -sinb,               sina*cosb,              cosa*cosb
+                 });
+        return R;
     }
 }
 
@@ -111,6 +129,7 @@ RotationMatF Geometry::euler2RotMat(const EulerF &euler, const RotSequence &seq)
 
     float cosc = cosf(c); 
 
+    /*
     RotationMatF Rx;
     Rx.setVal({
                   1 ,  0   ,   0   ,
@@ -132,24 +151,61 @@ RotationMatF Geometry::euler2RotMat(const EulerF &euler, const RotSequence &seq)
                   sinc , cosc  , 0 ,
                   0   ,  0    , 1
               });
+    */
+    RotationMatF R;
 
-    /*TODO: exact all*/
     switch (seq)
     {
     case ROT_XYZ:
-        return Rx*Ry*Rz;
+         R.setVal({
+                      cosb*cosc,                   -sinc*cosb,                 sinb,
+                      sina*sinb*cosc + sinc*cosa, -sina*sinb*sinc + cosa*cosc, -sina*cosb,
+                      sina*sinc - sinb*cosa*cosc, sina*cosc + sinb*sinc*cosa, cosa*cosb
+                  });
+         return R;
     case ROT_XZY:
-        return Rx*Rz*Ry;
+        R.setVal({
+                     cosb*cosc,                  -sinc,                       sinb*cosc,
+                     sina*sinb + sinc*cosa*cosb, cosa*cosc, -sina*cosb + sinb*sinc*cosa,
+                     sina*sinc*cosb - sinb*cosa, sina*cosc, sina*sinb*sinc + cosa*cosb
+                 });
+        return R;
     case ROT_YXZ:
-        return Ry*Rx*Rz;
+        R.setVal({
+                     sina*sinb*sinc + cosb*cosc, sina*sinb*cosc - sinc*cosb, sinb*cosa,
+                     sinc*cosa, cosa*cosc, -sina,
+                     sina*sinc*cosb - sinb*cosc, sina*cosb*cosc + sinb*sinc, cosa*cosb
+                 });
+        return R;
     case ROT_YZX:
-        return Ry*Rz*Rx;
+        R.setVal({
+                     cosb*cosc, sina*sinb - sinc*cosa*cosb, sina*sinc*cosb + sinb*cosa,
+                     sinc,                     cosa*cosc,           -sina*cosc,
+                     -sinb*cosc, sina*cosb + sinb*sinc*cosa, -sina*sinb*sinc + cosa*cosb
+                 });
+        return R;
     case ROT_ZXY:
-        return Rz*Rx*Ry;
+        R.setVal({
+                     -sina*sinb*sinc + cosb*cosc, -sinc*cosa, sina*sinc*cosb + sinb*cosc,
+                     sina*sinb*cosc + sinc*cosb, cosa*cosc, -sina*cosb*cosc + sinb*sinc,
+                     -sinb*cosa,                  sina,                cosa*cosb
+                 });
+        return R;
     case ROT_ZYX:
-        return Rz*Ry*Rx;
+        R.setVal({
+                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
+                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
+                      -sinb,               sina*cosb,              cosa*cosb
+                 });
+        return R;
     default:
-        return Rz*Ry*Rx;
+
+        R.setVal({
+                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
+                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
+                      -sinb,               sina*cosb,              cosa*cosb
+                 });
+        return R;
     }
 }
 
@@ -640,7 +696,6 @@ RotationVecD Geometry::quaternion2RotVec(const QuaternionD &q)
 RotationVecF Geometry::quaternion2RotVec(const QuaternionF &q)
 {
     float theta = 2*acosf(q.getQ0());
-    RotationVecF vec;
 
     if(theta==0)
     {
@@ -652,6 +707,95 @@ RotationVecF Geometry::quaternion2RotVec(const QuaternionF &q)
     float kz    = q.getQ3()/sinf(0.5f*theta);
 
     return RotationVecF({kx*theta,ky*theta,kz*theta});
+}
+
+RotationMatD Geometry::rotZ(double angleInRad)
+{
+
+    double cosc  = cos(angleInRad);
+    double sinc  = sin(angleInRad);
+
+    RotationMatD Rz;
+
+    Rz.setVal({
+                  cosc , -sinc , 0 ,
+                  sinc , cosc  , 0 ,
+                  0   ,  0    , 1
+              });
+    return Rz;
+}
+
+RotationMatD Geometry::rotY(double angleInRad)
+{
+    double cosb  = cos(angleInRad);
+    double sinb  = sin(angleInRad);
+
+    RotationMatD Ry;
+    Ry.setVal({
+                  cosb , 0 , sinb ,
+                  0   , 1 ,   0  ,
+                  -sinb , 0 , cosb
+              });
+
+    return Ry;
+}
+
+RotationMatD Geometry::rotX(double angleInRad)
+{
+    double cosa  = cos(angleInRad);
+    double sina  = sin(angleInRad);
+    RotationMatD Rx;
+    Rx.setVal({
+                  1 ,  0   ,   0   ,
+                  0 , cosa , -sina ,
+                  0 , sina ,  cosa
+              });
+    return Rx;
+}
+
+RotationMatF Geometry::rotZ(float angleInRad)
+{
+
+    float cosc  = static_cast<float>(cos(angleInRad));
+    float sinc  = static_cast<float>(sin(angleInRad));
+
+    RotationMatF Rz;
+
+    Rz.setVal({
+                  cosc , -sinc , 0 ,
+                  sinc , cosc  , 0 ,
+                  0   ,  0    , 1
+              });
+    return Rz;
+}
+
+RotationMatF Geometry::rotY(float angleInRad)
+{
+    float cosb  = static_cast<float>(cos(angleInRad));
+    float sinb  = static_cast<float>(sin(angleInRad));
+
+    RotationMatF Ry;
+    Ry.setVal({
+                  cosb , 0 , sinb ,
+                  0   , 1 ,   0  ,
+                  -sinb , 0 , cosb
+              });
+
+    return Ry;
+
+}
+
+RotationMatF Geometry::rotX(float angleInRad)
+{
+    float cosa  = static_cast<float>(cos(angleInRad));
+    float sina  = static_cast<float>(sin(angleInRad));
+    RotationMatF Rx;
+    Rx.setVal({
+                  1 ,  0   ,   0   ,
+                  0 , cosa , -sina ,
+                  0 , sina ,  cosa
+              });
+    return Rx;
 }
 
 RotationMatD Geometry::rotVec2RotMat(const RotationVecD &rotVec)
@@ -700,6 +844,41 @@ EulerF Geometry::rotVec2Euler(const RotationVecF &rotVec, const RotSequence &seq
 {
     QuaternionF q = rotVec2Quaternion(rotVec);
     return quaternion2Euler(q,seq);
+}
+
+TranslationD Geometry::rotatePos(const RotationMatD &rotMat, const TranslationD &trans)
+{
+    return TranslationD({rotMat.getValAtRowCol(0,0)*trans[0]+rotMat.getValAtRowCol(0,1)*trans[1]+rotMat.getValAtRowCol(0,2)*trans[2],
+                         rotMat.getValAtRowCol(1,0)*trans[0]+rotMat.getValAtRowCol(1,1)*trans[1]+rotMat.getValAtRowCol(1,2)*trans[2],
+                         rotMat.getValAtRowCol(2,0)*trans[0]+rotMat.getValAtRowCol(2,1)*trans[1]+rotMat.getValAtRowCol(2,2)*trans[2]});
+
+}
+
+TranslationF Geometry::rotatePos(const RotationMatF &rotMat, const TranslationF &trans)
+{
+    return     TranslationF({rotMat.getValAtRowCol(0,0)*trans[0]+rotMat.getValAtRowCol(0,1)*trans[1]+rotMat.getValAtRowCol(0,2)*trans[2],
+                             rotMat.getValAtRowCol(1,0)*trans[0]+rotMat.getValAtRowCol(1,1)*trans[1]+rotMat.getValAtRowCol(1,2)*trans[2],
+                             rotMat.getValAtRowCol(2,0)*trans[0]+rotMat.getValAtRowCol(2,1)*trans[1]+rotMat.getValAtRowCol(2,2)*trans[2]});
+}
+
+TranslationD Geometry::transform(Matrix4x4D &tfMat, const TranslationD &trans)
+{
+    return tfMat.mulVec3(trans);
+}
+
+TranslationF Geometry::transform(Matrix4x4F &tfMat, const TranslationF &trans)
+{
+    return tfMat.mulVec3(trans);
+}
+
+Matrix4x4D Geometry::transform(const Matrix4x4D &tfMat, const Matrix4x4D &posture)
+{
+    return tfMat*posture;
+}
+
+Matrix4x4F Geometry::transform(const Matrix4x4F &tfMat, const Matrix4x4F &posture)
+{
+    return tfMat*posture;
 }
 
 double Geometry::clamp(const double &val, const double &min, const double &max)
@@ -761,6 +940,25 @@ Matrix4x4D::Matrix4x4D(const Mat &mat)
     }
 }
 
+#ifdef USE_R_VALUE_REF
+Matrix4x4D::Matrix4x4D(Mat &&mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
+
+    {
+        throw Exception(1, "[Matrix4x4] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F64", __FILE__, __LINE__,__FUNCTION__);
+    }
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+    this->_data.u8  = mat.getBytes();
+    mat.setDataNull();
+}
+#endif
+
 Matrix4x4D::Matrix4x4D(const Matrix4x4D &mat)
 {
     release();
@@ -778,7 +976,31 @@ Matrix4x4D::Matrix4x4D(const Matrix4x4D &mat)
     }
 }
 
-Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat, const TransformD &trans):Mat_()
+#ifdef USE_R_VALUE_REF
+Matrix4x4D::Matrix4x4D(Matrix4x4D &&mat)
+{
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+    this->_data.u8  = mat.getBytes();
+    mat.setDataNull();
+}
+#endif
+
+Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat)
+{
+    setRotationMat(rotMat);
+}
+
+Matrix4x4D::Matrix4x4D(const TranslationD &trans)
+{
+    setTranslation(trans);
+}
+
+Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat, const TranslationD &trans):Mat_()
 {
     this->setVal({
                      rotMat.getValAtRowCol(0,0), rotMat.getValAtRowCol(0,1), rotMat.getValAtRowCol(0,2), trans[0],
@@ -790,7 +1012,7 @@ Matrix4x4D::Matrix4x4D(const RotationMatD &rotMat, const TransformD &trans):Mat_
 
 Matrix4x4D::Matrix4x4D(const std::vector<double> &val):Mat_<4,4,double>(val){}
 
-Matrix4x4D &Matrix4x4D::operator=(Matrix4x4D &mat)
+Matrix4x4D &Matrix4x4D::operator=(const Matrix4x4D &mat)
 {
     if(this!=&mat)
     {
@@ -810,6 +1032,24 @@ Matrix4x4D &Matrix4x4D::operator=(Matrix4x4D &mat)
     }
     return *this;
 }
+
+#ifdef USE_R_VALUE_REF
+Matrix4x4D &Matrix4x4D::operator=(Matrix4x4D&& mat)
+{
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat._channel;
+        this->_width    = mat._width;
+        this->_height   = mat._height;
+        this->_step     = mat._step;
+        this->_matType  = mat._matType;
+        this->_data.u8  = mat.getBytes();
+        mat.setDataNull();
+    }
+    return *this;
+}
+#endif
 
 Matrix4x4D &Matrix4x4D::operator=(const Mat &mat)
 {
@@ -838,6 +1078,30 @@ Matrix4x4D &Matrix4x4D::operator=(const Mat &mat)
     return *this;
 }
 
+#ifdef USE_R_VALUE_REF
+Matrix4x4D &Matrix4x4D::operator=(Mat&& mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
+
+    {
+        throw Exception(1, "[Matrix4x4] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F64", __FILE__, __LINE__,__FUNCTION__);
+    }
+
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat.getChannel();
+        this->_width    = mat.getWidth();
+        this->_height   = mat.getHeight();
+        this->_step     = mat.getStep();
+        this->_matType  = mat.getMatType();
+        this->_data.u8  = mat.getBytes();
+        mat.setDataNull();
+    }
+    return *this;
+}
+#endif
+
 RotationMatD Matrix4x4D::getRotationMat() const
 {
     RotationMatD rotMat;
@@ -849,17 +1113,40 @@ RotationMatD Matrix4x4D::getRotationMat() const
     return rotMat;
 }
 
-TransformD Matrix4x4D::getTransform() const
+TranslationD Matrix4x4D::getTranslation() const
 {
-    return TransformD({
-                          this->getValAtRowCol(0,3),
-                          this->getValAtRowCol(1,3),
-                          this->getValAtRowCol(2,3)
-                      });
+    return TranslationD({
+                            this->getValAtRowCol(0,3),
+                            this->getValAtRowCol(1,3),
+                            this->getValAtRowCol(2,3)
+                        });
 }
 
-void Matrix4x4D::setRotationMat(const RotationMatD &rotMat)
+bool Matrix4x4D::setRotationMat(const RotationMatD &rotMat, bool forceIsRotMat)
 {
+    if(forceIsRotMat)
+    {
+        if(rotMat.isRotMat())
+        {
+            this->setValAtRowCol(0,0,rotMat.getValAtRowCol(0,0));
+            this->setValAtRowCol(0,1,rotMat.getValAtRowCol(0,1));
+            this->setValAtRowCol(0,2,rotMat.getValAtRowCol(0,2));
+
+            this->setValAtRowCol(1,0,rotMat.getValAtRowCol(1,0));
+            this->setValAtRowCol(1,1,rotMat.getValAtRowCol(1,1));
+            this->setValAtRowCol(1,2,rotMat.getValAtRowCol(1,2));
+
+            this->setValAtRowCol(2,0,rotMat.getValAtRowCol(2,0));
+            this->setValAtRowCol(2,1,rotMat.getValAtRowCol(2,1));
+            this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     this->setValAtRowCol(0,0,rotMat.getValAtRowCol(0,0));
     this->setValAtRowCol(0,1,rotMat.getValAtRowCol(0,1));
     this->setValAtRowCol(0,2,rotMat.getValAtRowCol(0,2));
@@ -871,9 +1158,10 @@ void Matrix4x4D::setRotationMat(const RotationMatD &rotMat)
     this->setValAtRowCol(2,0,rotMat.getValAtRowCol(2,0));
     this->setValAtRowCol(2,1,rotMat.getValAtRowCol(2,1));
     this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
+    return true;
 }
 
-void Matrix4x4D::setTransform(const TransformD &trans)
+void Matrix4x4D::setTranslation(const TranslationD &trans)
 {
     this->setValAtRowCol(0,3,trans[0]);
     this->setValAtRowCol(1,3,trans[1]);
@@ -893,12 +1181,12 @@ void Matrix4x4D::translate(const double &x, const double &y, const double &z)
     this->getFloat64()[11] += z;
 }
 
-void Matrix4x4D::rotate(const double &angle, const double &x, const double &y, const double &z)
+void Matrix4x4D::rotate(const double &angleInRad, const double &x, const double &y, const double &z)
 {
-    rotate(angle,Vector3D({x,y,z}));
+    rotate(angleInRad,Vector3D({x,y,z}));
 }
 
-void Matrix4x4D::rotate(const double &angle, const Vector3D &vector)
+void Matrix4x4D::rotate(const double &angleInRad, const Vector3D &vector)
 {
     Vector3D vec = vector;
     vec.normalize();
@@ -906,7 +1194,7 @@ void Matrix4x4D::rotate(const double &angle, const Vector3D &vector)
     double y = vec[1];
     double z = vec[2];
 
-    RotationMatD rotMat = Geometry::euler2RotMat(EulerD({x*angle,y*angle,z*angle}),RotSequence::ROT_ZYX);
+    RotationMatD rotMat = Geometry::euler2RotMat(EulerD({x*angleInRad,y*angleInRad,z*angleInRad}),RotSequence::ROT_ZYX);
     this->setRotationMat(rotMat);
 }
 
@@ -1118,6 +1406,25 @@ Matrix4x4F::Matrix4x4F(const Mat &mat)
     }
 }
 
+#ifdef USE_R_VALUE_REF
+Matrix4x4F::Matrix4x4F(Mat &&mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=4 || mat.getMatType()!= MatType::MAT_GRAY_F32) 
+
+    {
+        throw Exception(1, "[Matrix4x4F] mat should be: wxh==4x4 channel==1 step==4 matType==MAT_GRAY_F32", __FILE__, __LINE__,__FUNCTION__);
+    }
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+    this->_data.u8  = mat.getBytes();
+    mat.setDataNull();
+}
+#endif
+
 Matrix4x4F::Matrix4x4F(const Matrix4x4F &mat)
 {
     release();
@@ -1135,7 +1442,21 @@ Matrix4x4F::Matrix4x4F(const Matrix4x4F &mat)
     }
 }
 
-Matrix4x4F::Matrix4x4F(const RotationMatF &rotMat, const TransformF &trans)
+#ifdef USE_R_VALUE_REF
+Matrix4x4F::Matrix4x4F(Matrix4x4F &&mat)
+{
+    release();
+    this->_channel  = mat.getChannel();
+    this->_width    = mat.getWidth();
+    this->_height   = mat.getHeight();
+    this->_step     = mat.getStep();
+    this->_matType  = mat.getMatType();
+    this->_data.u8  = mat.getBytes();
+    mat.setDataNull();
+}
+#endif
+
+Matrix4x4F::Matrix4x4F(const RotationMatF &rotMat, const TranslationF &trans)
 {
     this->setVal({
                      rotMat.getValAtRowCol(0,0), rotMat.getValAtRowCol(0,1), rotMat.getValAtRowCol(0,2), trans[0],
@@ -1147,7 +1468,7 @@ Matrix4x4F::Matrix4x4F(const RotationMatF &rotMat, const TransformF &trans)
 
 Matrix4x4F::Matrix4x4F(const std::vector<float> &val):Mat_<4,4,float>(val){}
 
-Matrix4x4F &Matrix4x4F::operator=(Matrix4x4F &mat)
+Matrix4x4F &Matrix4x4F::operator=(const Matrix4x4F &mat)
 {
     if(this!=&mat)
     {
@@ -1167,6 +1488,24 @@ Matrix4x4F &Matrix4x4F::operator=(Matrix4x4F &mat)
     }
     return *this;
 }
+
+#ifdef USE_R_VALUE_REF
+Matrix4x4F &Matrix4x4F::operator=(Matrix4x4F&& mat)
+{
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat._channel;
+        this->_width    = mat._width;
+        this->_height   = mat._height;
+        this->_step     = mat._step;
+        this->_matType  = mat._matType;
+        this->_data.u8  = mat.getBytes();
+        mat.setDataNull();
+    }
+    return *this;
+}
+#endif
 
 Matrix4x4F &Matrix4x4F::operator=(const Mat &mat)
 {
@@ -1195,6 +1534,30 @@ Matrix4x4F &Matrix4x4F::operator=(const Mat &mat)
     return *this;
 }
 
+#ifdef USE_R_VALUE_REF
+Matrix4x4F &Matrix4x4F::operator=(Mat&& mat)
+{
+    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=4 || mat.getMatType()!= MatType::MAT_GRAY_F32)
+
+    {
+        throw Exception(1, "[Matrix4x4F] mat should be: wxh==4x4 channel==1 step==4 matType==MAT_GRAY_F32", __FILE__, __LINE__,__FUNCTION__);
+    }
+
+    if(this!=&mat)
+    {
+        release();
+        this->_channel  = mat.getChannel();
+        this->_width    = mat.getWidth();
+        this->_height   = mat.getHeight();
+        this->_step     = mat.getStep();
+        this->_matType  = mat.getMatType();
+        this->_data.u8  = mat.getBytes();
+        mat.setDataNull();
+    }
+    return *this;
+}
+#endif
+
 RotationMatF Matrix4x4F::getRotationMat() const
 {
     RotationMatF rotMat;
@@ -1206,17 +1569,40 @@ RotationMatF Matrix4x4F::getRotationMat() const
     return rotMat;
 }
 
-TransformF Matrix4x4F::getTransform() const
+TranslationF Matrix4x4F::getTranslation() const
 {
-    return TransformF({
-                          this->getValAtRowCol(0,3),
-                          this->getValAtRowCol(1,3),
-                          this->getValAtRowCol(2,3)
-                      });
+    return TranslationF({
+                            this->getValAtRowCol(0,3),
+                            this->getValAtRowCol(1,3),
+                            this->getValAtRowCol(2,3)
+                        });
 }
 
-void Matrix4x4F::setRotationMat(const RotationMatF &rotMat)
+bool Matrix4x4F::setRotationMat(const RotationMatF &rotMat, bool forceIsRotMat)
 {
+    if(forceIsRotMat)
+    {
+        if(rotMat.isRotMat())
+        {
+            this->setValAtRowCol(0,0,rotMat.getValAtRowCol(0,0));
+            this->setValAtRowCol(0,1,rotMat.getValAtRowCol(0,1));
+            this->setValAtRowCol(0,2,rotMat.getValAtRowCol(0,2));
+
+            this->setValAtRowCol(1,0,rotMat.getValAtRowCol(1,0));
+            this->setValAtRowCol(1,1,rotMat.getValAtRowCol(1,1));
+            this->setValAtRowCol(1,2,rotMat.getValAtRowCol(1,2));
+
+            this->setValAtRowCol(2,0,rotMat.getValAtRowCol(2,0));
+            this->setValAtRowCol(2,1,rotMat.getValAtRowCol(2,1));
+            this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     this->setValAtRowCol(0,0,rotMat.getValAtRowCol(0,0));
     this->setValAtRowCol(0,1,rotMat.getValAtRowCol(0,1));
     this->setValAtRowCol(0,2,rotMat.getValAtRowCol(0,2));
@@ -1228,9 +1614,10 @@ void Matrix4x4F::setRotationMat(const RotationMatF &rotMat)
     this->setValAtRowCol(2,0,rotMat.getValAtRowCol(2,0));
     this->setValAtRowCol(2,1,rotMat.getValAtRowCol(2,1));
     this->setValAtRowCol(2,2,rotMat.getValAtRowCol(2,2));
+    return true;
 }
 
-void Matrix4x4F::setTransform(const TransformF &trans)
+void Matrix4x4F::setTranslation(const TranslationF &trans)
 {
     this->setValAtRowCol(0,3,trans[0]);
     this->setValAtRowCol(1,3,trans[1]);
@@ -1250,12 +1637,12 @@ void Matrix4x4F::translate(const float &x, const float &y, const float &z)
     this->getFloat32()[11] += z;
 }
 
-void Matrix4x4F::rotate(const float &angle, const float &x, const float &y, const float &z)
+void Matrix4x4F::rotate(const float &angleInRad, const float &x, const float &y, const float &z)
 {
-    rotate(angle,Vector3F({x,y,z}));
+    rotate(angleInRad,Vector3F({x,y,z}));
 }
 
-void Matrix4x4F::rotate(const float &angle, const Vector3F &vector)
+void Matrix4x4F::rotate(const float &angleInRad, const Vector3F &vector)
 {
     Vector3F vec = vector;
     vec.normalize();
@@ -1263,7 +1650,7 @@ void Matrix4x4F::rotate(const float &angle, const Vector3F &vector)
     float y = vec[1];
     float z = vec[2];
 
-    RotationMatF rotMat = Geometry::euler2RotMat(EulerF({x*angle,y*angle,z*angle}),RotSequence::ROT_ZYX);
+    RotationMatF rotMat = Geometry::euler2RotMat(EulerF({x*angleInRad,y*angleInRad,z*angleInRad}),RotSequence::ROT_ZYX);
     this->setRotationMat(rotMat);
 }
 
@@ -1414,7 +1801,6 @@ Vector3F Matrix4x4F::mulVec3(const Vector3F &vec3)
         return Vector3F({x/w,y/w,z/w});
     }
 }
-
 Matrix3x3F Matrix4x4F::normalMatrix()
 {
 

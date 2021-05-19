@@ -1327,6 +1327,7 @@ torch.log       =   Hook(torch.log,_log)
 torch.log10     =   Hook(torch.log10,_log10)
 torch.cat       =   Hook(torch.cat,_cat)
 torch.reshape   =   Hook(torch.reshape,_reshape)
+torch.sigmoid   =   Hook(torch.sigmoid,_sigmoid)
 
 # =====  Activation ======
 F.elu           =   Hook(F.elu,_elu)

@@ -109,7 +109,9 @@ void Activations::activateArrayNormCh(float * const &x, const int &numX, const i
     (void) batch;
     int size = numX/channels;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = size;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < size; ++i)
     {
@@ -154,7 +156,9 @@ void Activations::activateArrayNormChSoftMax(float * const &x, const int &numX, 
     (void) batch;
     int size = numX/channels;
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = size;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
     for (int i = 0; i < size; ++i)
     {
@@ -206,7 +210,9 @@ void Activations::activateArray(float *const &x, const int &numX, const Activati
     if(useAVX)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = numX;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<numX/8;++i)
         {
@@ -221,7 +227,9 @@ void Activations::activateArray(float *const &x, const int &numX, const Activati
     else
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = numX;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for(int i=0; i<numX;++i)
         {
@@ -233,25 +241,29 @@ void Activations::activateArray(float *const &x, const int &numX, const Activati
 #ifdef USE_ARM
 #ifdef USE_NEON
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = numX;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
-        for(int i=0; i<numX/4;++i)
-        {
-            ActivationsNeon::activateNeon4(x+i*4,actType,param);
-        }
+    for(int i=0; i<numX/4;++i)
+    {
+        ActivationsNeon::activateNeon4(x+i*4,actType,param);
+    }
 
-        for(int i=(numX/4)*4 ; i<numX;++i)
-        {
-            x[i] = activate(x[i],actType, param);
-        }
+    for(int i=(numX/4)*4 ; i<numX;++i)
+    {
+        x[i] = activate(x[i],actType, param);
+    }
 #else
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+    uint64_t dataLen   = numX;
+    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
-        for(int i=0; i<numX;++i)
-        {
-            x[i] = activate(x[i],actType, param);
-        }
+    for(int i=0; i<numX;++i)
+    {
+        x[i] = activate(x[i],actType, param);
+    }
 #endif
 #endif
 }
@@ -266,7 +278,9 @@ void Activations::activatePRelu(float * const &x, const int &batch, const int &c
         for (int i = 0; i < batch; ++i)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = channels*whStep;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int c = 0; c < channels; ++c)
             {
@@ -287,7 +301,9 @@ void Activations::activatePRelu(float * const &x, const int &batch, const int &c
         for (int i = 0; i < batch; ++i)
         {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+            uint64_t dataLen   = channels*whStep;
+            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
             for (int c = 0; c < channels; ++c)
             {
@@ -307,7 +323,9 @@ void Activations::activatePRelu(float * const &x, const int &batch, const int &c
     for (int i = 0; i < batch; ++i)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = channels*whStep;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int c = 0; c < channels; ++c)
         {
@@ -326,7 +344,9 @@ void Activations::activatePRelu(float * const &x, const int &batch, const int &c
     for (int i = 0; i < batch; ++i)
     {
 #ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)
+        uint64_t dataLen   = channels*whStep;
+        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
+#pragma omp parallel for num_threads(threadNum)
 #endif
         for (int c = 0; c < channels; ++c)
         {
