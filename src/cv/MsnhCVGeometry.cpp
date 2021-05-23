@@ -528,8 +528,8 @@ QuaternionD Geometry::rotMat2Quaternion(const RotationMatD &rotMat)
         double t = 2*sqrt(1+rotMat.getValAtRowCol(0,0)-rotMat.getValAtRowCol(1,1)-rotMat.getValAtRowCol(2,2));
         q[0]     = (rotMat.getValAtRowCol(2,1) - rotMat.getValAtRowCol(1,2))/t;
         q[1]     = 0.25*t;
-        q[2]     = (rotMat.getValAtRowCol(0,2) + rotMat.getValAtRowCol(2,0))/t;
-        q[3]     = (rotMat.getValAtRowCol(0,1) + rotMat.getValAtRowCol(1,0))/t;
+        q[2]     = (rotMat.getValAtRowCol(0,1) + rotMat.getValAtRowCol(1,0))/t;
+        q[3]     = (rotMat.getValAtRowCol(0,2) + rotMat.getValAtRowCol(2,0))/t;
     }
     else if(rotMat.getValAtRowCol(1,1)>rotMat.getValAtRowCol(0,0) && rotMat.getValAtRowCol(1,1)>rotMat.getValAtRowCol(2,2))
     {
@@ -570,8 +570,8 @@ QuaternionF Geometry::rotMat2Quaternion(const RotationMatF &rotMat)
         float t = 2*sqrtf(1+rotMat.getValAtRowCol(0,0)-rotMat.getValAtRowCol(1,1)-rotMat.getValAtRowCol(2,2));
         q[0]     = (rotMat.getValAtRowCol(2,1) - rotMat.getValAtRowCol(1,2))/t;
         q[1]     = 0.25f*t;
-        q[2]     = (rotMat.getValAtRowCol(0,2) + rotMat.getValAtRowCol(2,0))/t;
-        q[3]     = (rotMat.getValAtRowCol(0,1) + rotMat.getValAtRowCol(1,0))/t;
+        q[2]     = (rotMat.getValAtRowCol(0,1) + rotMat.getValAtRowCol(1,0))/t;
+        q[3]     = (rotMat.getValAtRowCol(0,2) + rotMat.getValAtRowCol(2,0))/t;
     }
     else if(rotMat.getValAtRowCol(1,1)>rotMat.getValAtRowCol(0,0) && rotMat.getValAtRowCol(1,1)>rotMat.getValAtRowCol(2,2))
     {

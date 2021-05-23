@@ -1,4 +1,4 @@
-#ifndef JOINT_H
+﻿#ifndef JOINT_H
 #define JOINT_H
 
 #include <string>
@@ -12,14 +12,24 @@ public:
     enum JointType
     {
         JOINT_FIXED,
-        JOINT_ROT_XYZ,
+        JOINT_ROT_XYZ,  
+
         JOINT_ROT_X,
         JOINT_ROT_Y,
         JOINT_ROT_Z,
-        JOINT_TRANS_XYZ,
+        JOINT_TRANS_XYZ,  
+
         JOINT_TRANS_X,
         JOINT_TRANS_Y,
         JOINT_TRANS_Z
+    };
+
+    enum MoveType
+    {
+        CAN_NOT_MOVE,
+        ROT_LIMIT_MOVE,
+        ROT_CONTINUOUS_MOVE,
+        TRANS_MOVE
     };
 
     Joint(const std::string &name, const JointType &type, const double &scale=1, const double &offset=0,
@@ -36,11 +46,13 @@ public:
 
     const std::string getTypeName() const;
 
-    Vector3D getJointAxis() const;
+    Vector3DS getJointAxis() const;
 
-    const Vector3D getOrigin() const;
+    const Vector3DS getOrigin() const;
 
     Frame getPos(const double &q) const;
+
+    Twist getTwist(const double& qdot)const;
 
 private:
     std::string _name;
@@ -56,8 +68,8 @@ private:
 
     double      _stiffness  = 0;
 
-    Vector3D    _axis;
-    Vector3D    _origin;
+    Vector3DS    _axis;
+    Vector3DS    _origin;
     Frame       _jointPos;
 };
 

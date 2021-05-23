@@ -1,4 +1,4 @@
-#include "Msnhnet/robot/MsnhJoint.h"
+﻿#include "Msnhnet/robot/MsnhJoint.h"
 
 namespace Msnhnet
 {
@@ -50,96 +50,104 @@ const std::string Joint::getTypeName() const
     {
     case JOINT_FIXED:
         return "Fixed";
-        break;
     case JOINT_ROT_XYZ:
         return "RotXYZ";
-        break;
     case JOINT_ROT_X:
         return "RotX";
-        break;
     case JOINT_ROT_Y:
         return "RotY";
-        break;
     case JOINT_ROT_Z:
         return "RotZ";
-        break;
     case JOINT_TRANS_XYZ:
         return "TransXYZ";
-        break;
     case JOINT_TRANS_X:
         return "TransX";
-        break;
     case JOINT_TRANS_Y:
         return "TransY";
-        break;
     case JOINT_TRANS_Z:
         return "TransZ";
-        break;
     default:
         return "Fixed";
-        break;
     }
 }
 
-Vector3D Joint::getJointAxis() const
+Vector3DS Joint::getJointAxis() const
 {
     switch (_type)
     {
     case JOINT_ROT_XYZ:
         return _axis;
     case JOINT_ROT_X:
-        return Vector3D({1,0,0});
+        return Vector3DS(1,0,0);
     case JOINT_ROT_Y:
-        return Vector3D({0,1,0});
+        return Vector3DS(0,1,0);
     case JOINT_ROT_Z:
-        return Vector3D({0,0,1});
+        return Vector3DS(0,0,1);
     case JOINT_TRANS_XYZ:
         return _axis;
     case JOINT_TRANS_X:
-        return Vector3D({1,0,0});
+        return Vector3DS(1,0,0);
     case JOINT_TRANS_Y:
-        return Vector3D({0,1,0});
+        return Vector3DS(0,1,0);
     case JOINT_TRANS_Z:
-        return Vector3D({0,0,1});
+        return Vector3DS(0,0,1);
     case JOINT_FIXED:
-        return Vector3D({0,0,0});
+        return Vector3DS(0,0,0);
     }
-    return Vector3D({0,0,0});
+    return Vector3DS(0,0,0);
 }
 
-const Vector3D Joint::getOrigin() const
+const Vector3DS Joint::getOrigin() const
 {
     return _origin;
 }
 
 Frame Joint::getPos(const double &q) const
 {
+
     switch (_type)
     {
     case JOINT_FIXED:
         return Frame();
-        break;
     case JOINT_ROT_X:
-        return Frame(Geometry::rotX(_scale*q + _offset));
-        break;
+        return Frame(GeometryS::rotX(_scale*q + _offset));
     case JOINT_ROT_Y:
-        return Frame(Geometry::rotY(_scale*q + _offset));
-        break;
+        return Frame(GeometryS::rotY(_scale*q + _offset));
     case JOINT_ROT_Z:
-        return Frame(Geometry::rotZ(_scale*q + _offset));
-        break;
+        return Frame(GeometryS::rotZ(_scale*q + _offset));
     case JOINT_TRANS_X:
-        return Frame(Vector3D({_scale*q + _offset,0,0}));
-        break;
+        return Frame(TranslationDS(_scale*q + _offset,0,0));
     case JOINT_TRANS_Y:
-        return Frame(Vector3D({0,_scale*q + _offset,0}));
-        break;
+        return Frame(TranslationDS(0,_scale*q + _offset,0));
     case JOINT_TRANS_Z:
-        return Frame(Vector3D({0,0,_scale*q + _offset}));
-        break;
+        return Frame(TranslationDS(0,0,_scale*q + _offset));
+    default:
+        return Frame();
     }
+}
 
-    return Frame();
+Twist Joint::getTwist(const double &qdot) const
+{
+
+    switch (_type)
+    {
+    case JOINT_FIXED:
+        return Twist();
+    case JOINT_ROT_X:
+        return Twist(LinearVelDS(0,0,0),AngularVelDS(_scale*qdot,0,0));
+    case JOINT_ROT_Y:
+        return Twist(LinearVelDS(0,0,0),AngularVelDS(0,_scale*qdot,0));
+    case JOINT_ROT_Z:
+        return Twist(LinearVelDS(0,0,0),AngularVelDS(0,0,_scale*qdot));
+    case JOINT_TRANS_X:
+        return Twist(LinearVelDS(_scale*qdot,0,0),AngularVelDS(0,0,0));
+    case JOINT_TRANS_Y:
+        return Twist(LinearVelDS(0,_scale*qdot,0),AngularVelDS(0,0,0));
+    case JOINT_TRANS_Z:
+        return Twist(LinearVelDS(0,0,_scale*qdot),AngularVelDS(0,0,0));
+    default:
+        return Twist();
+    }
 }
 
 }

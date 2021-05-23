@@ -9,6 +9,7 @@
 #include "Msnhnet/config/MsnhnetMacro.h"
 #include <math.h>
 #include <string.h>
+#include <assert.h>
 
 #ifdef USE_OMP
 #include <omp.h>
@@ -70,8 +71,17 @@
 
 #define closeToZeroF(x) (fabsf(x)<MSNH_F32_EPS)
 
-#define USE_R_VALUE_REF 1
+#ifndef M_PI
+#define M_PI 3.14159265453
+#endif
 
+#ifndef ROT_EPS
+#define ROT_EPS 0.00001
+#endif
+
+#define USE_R_VALUE_REF 1
+namespace Msnhnet
+{
 enum ActivationType
 {
     LOGISTIC    =   0,
@@ -183,6 +193,18 @@ enum WeightsNorm
     RELU_NORM,
     SOFTMAX_NORM
 };
+
+enum RotSequence
+{
+    ROT_XYZ,
+    ROT_XZY,
+    ROT_YXZ,
+    ROT_YZX,
+    ROT_ZXY,
+    ROT_ZYX,
+};
+
+}
 
 #endif 
 

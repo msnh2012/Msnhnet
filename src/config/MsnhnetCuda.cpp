@@ -127,12 +127,12 @@ std::string Cuda::getDeviceInfo()
 dim3 Cuda::getGrid(const size_t &n)
 {
 
-    size_t k = (n-1)/blockThread + 1; 
+    size_t k = (n-1)/blockThread + 1;
 
     int x = 1;
     int y = 1;
 
-    if(k > 65536) 
+    if(k > 65536)
 
     {
         x = static_cast<int>(ceil(sqrt(k)));

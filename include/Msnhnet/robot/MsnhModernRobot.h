@@ -1,4 +1,4 @@
-#ifndef MODERNROBOT_H
+﻿#ifndef MODERNROBOT_H
 #define MODERNROBOT_H
 
 #include <Msnhnet/robot/MsnhSpatialMath.h>
@@ -110,7 +110,7 @@ public:
             while (!ok && i < _ikMaxIter)
             {
                i++;
-               Mat_<6,jointNum,double> jacPinv = jacobi(joint0).pseudoInvert();
+               Mat_<jointNum,6,double> jacPinv = jacobi(joint0).pseudoInvert();
                joint0 = joint0 + jacPinv.mulVec(Vs.toVector());
                for (int i = 0; i < jointNum; ++i)
                {
@@ -123,7 +123,6 @@ public:
                Vs.fromVector(Vs1);
                ok =!(Vs.v.length() > eV || Vs.w.length() > eOmg);
             }
-            std::cout<<"iter: "<<i<<std::endl;
             return ok;
         }
         else
@@ -138,7 +137,7 @@ public:
             while (!ok && i < _ikMaxIter)
             {
                i++;
-               Mat_<6,jointNum,double> jacPinv = jacobi(joint0).pseudoInvert();
+               Mat_<jointNum,6,double> jacPinv = jacobi(joint0).pseudoInvert();
                joint0 = joint0 + jacPinv.mulVec(Vb.toVector());
                for (int i = 0; i < jointNum; ++i)
                {

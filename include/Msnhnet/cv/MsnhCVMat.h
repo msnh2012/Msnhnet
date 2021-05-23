@@ -68,7 +68,7 @@ public:
     }
 
     template<typename T>
-    inline void setPixel(const Vec2I32 &pos, const T &val)
+    inline void setPixel(const Vec2I32 &pos, const T &val) const
     {
         int array   = DataType<T>::array;
         int fmt     = DataType<T>::fmt;
@@ -182,8 +182,78 @@ public:
         }
     }
 
+    inline Mat getColS_(const int& col)const
+    {
+        Mat mCol(1,this->_height,this->_matType);
+
+        int colStep     = col*this->_step;
+
+        for (int i = 0; i < this->_height; ++i)
+        {
+            memcpy( mCol.getBytes() + i*_step, getBytes() + i*_width*_step + colStep, _step);
+        }
+
+        return mCol;
+    }
+
+    inline void setColS_(const int& col, const Mat& mat) const
+    {
+        if(col <0)
+        {
+            throw Exception(1, "[Mat] col should > 0" , __FILE__, __LINE__,__FUNCTION__);
+        }
+
+        if(col >= this->_width)
+        {
+            throw Exception(1, "[Mat] col should < width col-width:(" + std::to_string(col) + ":" + std::to_string(this->_width) + ")" , __FILE__, __LINE__,__FUNCTION__);
+        }
+
+        if(mat.getHeight()!=this->_height || mat.getWidth()!=1)
+        {
+            throw Exception(1, "[Mat] input width should == 1 && input height should equal mat height.  in.height-height:(" + std::to_string(mat.getHeight()) + ":" + std::to_string(this->_height) + ")" , __FILE__, __LINE__,__FUNCTION__);
+        }
+
+        int colStep     = col*this->_step;
+
+        for (int i = 0; i < this->_height; ++i)
+        {
+            memcpy(getBytes() + i*_width*_step + colStep, mat.getBytes() + i*_step, _step);
+        }
+
+    }
+
+    inline Mat getRowS_(const int& row)const
+    {
+        Mat mRow(this->_width,1,this->_matType);
+
+        memcpy( mRow.getBytes() , getBytes() + row*_width*_step, _step*_width);
+
+        return mRow;
+    }
+
+    inline void setRowS_(const int& row, const Mat& mat) const
+    {
+        if(row <0)
+        {
+            throw Exception(1, "[Mat] row should > 0" , __FILE__, __LINE__,__FUNCTION__);
+        }
+
+        if(row >= this->_height)
+        {
+            throw Exception(1, "[Mat] row should < height row-height:(" + std::to_string(row) + ":" + std::to_string(this->_height) + ")" , __FILE__, __LINE__,__FUNCTION__);
+        }
+
+        if(mat.getHeight()!=1 || mat.getWidth()!=this->_width)
+        {
+            throw Exception(1, "[Mat] input height should == 1 && input width should equal mat width.  in.width-width:(" + std::to_string(mat.getWidth()) + ":" + std::to_string(this->_width) + ")" , __FILE__, __LINE__,__FUNCTION__);
+        }
+
+        memcpy(getBytes() + row*_width*_step,  mat.getBytes() ,_step*_width);
+
+    }
+
     template<typename T>
-    inline Mat getCol_(const int& col)
+    inline Mat getCol_(const int& col) const
     {
         if(col <0)
         {
@@ -200,11 +270,12 @@ public:
             T val = this->getPixel<T>({col,i});
             mCol.setPixel<T>({0, i},val);
         }
+
         return mCol;
     }
 
     template<typename T>
-    inline void setCol_(const int& col, const Mat& mat)
+    inline void setCol_(const int& col, const Mat& mat) const
     {
         if(col <0)
         {
@@ -274,6 +345,41 @@ public:
             T val = mat.getPixel<T>({i,0});
             this->setPixel<T>({i,row},val);
         }
+    }
+
+    template<typename T>
+    inline VectorX<T> mulVec(const VectorX<T> &vec)
+    {
+        if(this->_width != vec.getN())
+        {
+            throw Exception(1, "[Mat] vec size must equal mat width, now: " + std::to_string(this->_width) + "!=" +  std::to_string(vec.getN()), __FILE__, __LINE__,__FUNCTION__);
+        }
+
+        VectorX<T> res(this->_height);
+
+        for (int i = 0; i < this->_height; ++i)
+        {
+            T val = 0;
+            for (int j = 0; j < this->_width; ++j)
+            {
+                val += *(((T*)this->_data.u8)+i*this->_width +j)*vec[j];
+            }
+
+            res[i] = val;
+        }
+
+        return res;
+    }
+
+    template<typename T>
+    inline void setData(const std::vector<T> &val)
+    {
+        if((val.size()*sizeof(T))!=this->getByteNum())
+        {
+            throw Exception(1,"[Mat]: set data bytes num must equal mat bytes num! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
+
+        memcpy(this->getBytes(), val.data(),val.size()*sizeof(T));
     }
 
     void checkPixelType(const int &array, const int &fmt) const;
@@ -1032,118 +1138,12 @@ public:
     {
         fillPixel<T>(t);
     }
-
-    inline Vector<h,T> mulVec(const Vector<w,T> &vec)
-    {
-        Vector<h,T> res;
-        for (int i = 0; i < h; ++i)
-        {
-            T val = 0;
-            for (int j = 0; j < w; ++j)
-            {
-                val += this->getValAtRowCol(i,j)*vec[j];
-            }
-
-            res[i] = val;
-        }
-
-        return res;
-    }
 };
 
 typedef Mat_<3,3,double> RotationMatD;
 typedef Mat_<3,3,double> Matrix3x3D;
 typedef Mat_<3,3,float> RotationMatF;
 typedef Mat_<3,3,float> Matrix3x3F;
-
-class MsnhNet_API QuaternionD
-{
-public:
-    QuaternionD(){}
-    QuaternionD(const QuaternionD &q);
-    QuaternionD(const double& q0, const double& q1, const double& q2, const double& q3);
-    QuaternionD(const std::vector<double> &val);
-
-    void setVal(const std::vector<double> &val);
-
-    std::vector<double> getVal() const;
-
-    double mod() const;
-
-    QuaternionD invert() const;
-
-    double getQ0() const;
-    double getQ1() const;
-    double getQ2() const;
-    double getQ3() const;
-
-    void print();
-
-    std::string toString();
-
-    std::string toHtmlString();
-
-    double operator[] (const uint8_t& index);
-
-    QuaternionD& operator=(const QuaternionD& q);
-
-    bool operator== (const QuaternionD& q);
-
-    MsnhNet_API friend QuaternionD operator- (const QuaternionD &A, const QuaternionD &B);
-    MsnhNet_API friend QuaternionD operator+ (const QuaternionD &A, const QuaternionD &B);
-    MsnhNet_API friend QuaternionD operator* (const QuaternionD &A, const QuaternionD &B);
-    MsnhNet_API friend QuaternionD operator/ (const QuaternionD &A, const QuaternionD &B);
-private:
-    double _q0 = 0;
-    double _q1 = 0;
-    double _q2 = 0;
-    double _q3 = 0;
-};
-
-class MsnhNet_API QuaternionF
-{
-public:
-    QuaternionF(){}
-    QuaternionF(const QuaternionF &q);
-    QuaternionF(const float& q0, const float& q1, const float& q2, const float& q3);
-    QuaternionF(const std::vector<float> &val);
-
-    void setVal(const std::vector<float> &val);
-
-    std::vector<float> getVal() const;
-
-    float mod() const;
-
-    QuaternionF invert() const;
-
-    void print();
-
-    std::string toString();
-
-    std::string toHtmlString();
-
-    float operator[] (const uint8_t& index);
-
-    QuaternionF& operator=(const QuaternionF& q);
-
-    bool operator ==(const QuaternionF& q);
-
-    MsnhNet_API friend QuaternionF operator- (const QuaternionF &A, const QuaternionF &B);
-    MsnhNet_API friend QuaternionF operator+ (const QuaternionF &A, const QuaternionF &B);
-    MsnhNet_API friend QuaternionF operator* (const QuaternionF &A, const QuaternionF &B);
-    MsnhNet_API friend QuaternionF operator/ (const QuaternionF &A, const QuaternionF &B);
-
-    float getQ0() const;
-    float getQ1() const;
-    float getQ2() const;
-    float getQ3() const;
-
-private:
-    float _q0 = 0;
-    float _q1 = 0;
-    float _q2 = 0;
-    float _q3 = 0;
-};
 
 }
 

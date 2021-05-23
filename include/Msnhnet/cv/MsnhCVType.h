@@ -33,16 +33,6 @@ enum MatEncodeType
     MAT_ENCODE_PNG
 };
 
-enum RotSequence
-{
-    ROT_XYZ,
-    ROT_XZY,
-    ROT_YXZ,
-    ROT_YZX,
-    ROT_ZXY,
-    ROT_ZYX,
-};
-
 enum CvtColorType
 {
     CVT_RGB2GRAY,

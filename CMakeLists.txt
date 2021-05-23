@@ -105,6 +105,11 @@ set(SRCS
     src/core/MsnhGemm.cpp
     src/core/MsnhSimd.cpp
     src/core/MsnhMemoryManager.cpp
+    src/math/MsnhGeometryS.cpp
+    src/math/MsnhHomTransMatS.cpp
+    src/math/MsnhQuaternionS.cpp
+    src/math/MsnhRotationMatS.cpp
+    src/math/MsnhVector3S.cpp
     src/io/MsnhIO.cpp
     src/io/MsnhParser.cpp
     src/layers/MsnhActivationLayer.cpp
@@ -153,6 +158,17 @@ set(SRCS
     src/layers/arm/armv7a/MsnhBatchNorm.cpp
     src/layers/arm/armv7a/MsnhPadding.cpp
     src/layers/arm/armv7a/MsnhActivation.cpp
+    src/3rdparty/nlopt/general.c
+    src/3rdparty/nlopt/mt19937ar.c
+    src/3rdparty/nlopt/optimize.c
+    src/3rdparty/nlopt/options.c
+    src/3rdparty/nlopt/slsqp.c
+    src/3rdparty/nlopt/stop.c
+    src/3rdparty/nlopt/timer.c
+    src/3rdparty/nlopt/nlopt-internal.h
+    src/3rdparty/nlopt/nlopt-util.h
+    src/3rdparty/nlopt/nlopt_config.h
+    src/3rdparty/nlopt/slsqp.h
     src/3rdparty/yaml_cpp/binary.cpp
     src/3rdparty/yaml_cpp/contrib/graphbuilder.cpp
     src/3rdparty/yaml_cpp/contrib/graphbuilderadapter.cpp
@@ -213,11 +229,11 @@ set(SRCS
     src/cv/MsnhCVMat.cpp 
     src/cv/MsnhCVMatOp.cpp 
     src/cv/MsnhCVVideo.cpp
+    src/cv/MsnhCVQuaternion.cpp
     src/robot/MsnhJoint.cpp
     src/robot/MsnhFrame.cpp
     src/robot/MsnhChain.cpp
     src/robot/MsnhSegment.cpp
-    src/robot/MsnhChainFK.cpp
     src/utils/MsnhCVUtil.cpp
     src/robot/MsnhSpatialMath.cpp
     )

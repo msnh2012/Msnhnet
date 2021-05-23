@@ -3,72 +3,36 @@
 namespace Msnhnet
 {
 
-Frame::Frame(const Mat &mat)
+void Twist::print()
 {
-    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
-
-    {
-        throw Exception(1, "[Frame] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F64", __FILE__, __LINE__,__FUNCTION__);
-    }
-    release();
-    this->_channel  = mat.getChannel();
-    this->_width    = mat.getWidth();
-    this->_height   = mat.getHeight();
-    this->_step     = mat.getStep();
-    this->_matType  = mat.getMatType();
-
-    if(mat.getBytes()!=nullptr)
-    {
-        uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-        memcpy(u8Ptr, mat.getBytes(), this->_width*this->_height*this->_step);
-        this->_data.u8 =u8Ptr;
-    }
-
+    std::cout<<"================== Twist ==================="<<std::endl;
+    v.print();
+    omg.print();
+    std::cout<<"============================================"<<std::endl;
 }
 
-Frame::Frame(Mat &&mat)
+MatSDS Twist::toMat()
 {
-    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
-
-    {
-        throw Exception(1, "[Frame] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F64", __FILE__, __LINE__,__FUNCTION__);
-    }
-    release();
-    this->_channel  = mat.getChannel();
-    this->_width    = mat.getWidth();
-    this->_height   = mat.getHeight();
-    this->_step     = mat.getStep();
-    this->_matType  = mat.getMatType();
-    this->_data.u8  = mat.getBytes();
-    mat.setDataNull();
+    MatSDS mat(1,6);
+    mat[0] = v[0];
+    mat[1] = v[1];
+    mat[2] = v[2];
+    mat[3] = omg[0];
+    mat[4] = omg[1];
+    mat[5] = omg[2];
+    return mat;
 }
 
-Frame::Frame(const RotationMatD &rotMat)
+VectorXSDS Twist::toVec()
 {
-    setRotationMat(rotMat);
-}
-
-Frame::Frame(const TranslationD &trans)
-{
-    setTranslation(trans);
-}
-
-Frame::Frame(const RotationMatD &rotMat, const TranslationD &trans)
-{
-    setRotationMat(rotMat);
-    setTranslation(trans);
-}
-
-Frame Frame::fastInvert()
-{
-    RotationMatD rotMat = getRotationMat();
-    TranslationD trans  = getTranslation();
-    trans = trans * -1;
-
-    rotMat = rotMat.transpose();
-    trans = rotMat.mulVec(trans);
-
-    return  Frame(rotMat,trans);
+    VectorXSDS vec(6);
+    vec[0] = v[0];
+    vec[1] = v[1];
+    vec[2] = v[2];
+    vec[3] = omg[0];
+    vec[4] = omg[1];
+    vec[5] = omg[2];
+    return vec;
 }
 
 Frame Frame::SDH(double a, double alpha, double d, double theta)
@@ -86,14 +50,14 @@ Frame Frame::SDH(double a, double alpha, double d, double theta)
     sa = sin(alpha);
     ca = cos(alpha);
 
-    RotationMatD rotMat({   ct,    -st*ca,   st*sa,
+    RotationMatDS rotMat({  ct,    -st*ca,   st*sa,
                             st,     ct*ca,  -ct*sa,
                             0,        sa,      ca  });
 
-    TranslationD trans({a*ct,   a*st,   d});
+    TranslationDS trans(a*ct,   a*st,   d);
 
-    frame.setRotationMat(rotMat);
-    frame.setTranslation(trans);
+    frame.rotMat = rotMat;
+    frame.trans  = trans;
 
     return frame;
 }
@@ -112,74 +76,39 @@ Frame Frame::MDH(double a, double alpha, double d, double theta)
     sa = sin(alpha);
     ca = cos(alpha);
 
-    RotationMatD rotMat({   ct,       -st,     0,
+    RotationMatDS rotMat({   ct,       -st,     0,
                             st*ca,  ct*ca,   -sa,
                             st*sa,  ct*sa,    ca });
 
-    TranslationD trans({a,  -sa*d,  ca*d});
+    TranslationDS trans(a,  -sa*d,  ca*d);
 
-    frame.setRotationMat(rotMat);
-    frame.setTranslation(trans);
+    frame.rotMat = rotMat;
+    frame.trans  = trans;
 
     return frame;
 }
 
-QuaternionD Frame::getQuaternion() const
+Twist Frame::diff(const Frame &base2A, const Frame &base2B)
 {
-    return Geometry::rotMat2Quaternion(getRotationMat());
+    TranslationDS diffP  = base2B.trans - base2A.trans;
+
+    RotationMatDS A2B    =  base2A.rotMat.inverse()*base2B.rotMat;
+
+    Vector3DS diffR      = base2A.rotMat*A2B.getRot();
+
+    return Twist(diffP, diffR);
 }
 
-Frame &Frame::operator=(const Mat &mat)
+Twist Frame::diffRelative(const Frame &base2A, const Frame &base2B)
 {
-    if(mat.getWidth()!=4 || mat.getHeight()!=4 || mat.getChannel()!=1 || mat.getStep()!=8 || mat.getMatType()!= MatType::MAT_GRAY_F64)
+    TranslationDS diffP  = base2B.trans - base2A.trans;
 
-    {
-        throw Exception(1, "[Frame] mat should be: wxh==4x4 channel==1 step==8 matType==MAT_GRAY_F64", __FILE__, __LINE__,__FUNCTION__);
-    }
+    RotationMatDS A2B    =  base2A.rotMat.inverse()*base2B.rotMat;
 
-    if(this!=&mat)
-    {
-        release();
-        this->_channel  = mat.getChannel();
-        this->_width    = mat.getWidth();
-        this->_height   = mat.getHeight();
-        this->_step     = mat.getStep();
-        this->_matType  = mat.getMatType();
+    Vector3DS diffR      = base2A.rotMat*A2B.getRot();
 
-        if(mat.getData().u8!=nullptr)
-        {
-            uint8_t *u8Ptr =  new uint8_t[this->_width*this->_height*this->_step]();
-            memcpy(u8Ptr, mat.getData().u8, this->_width*this->_height*this->_step);
-            this->_data.u8 =u8Ptr;
-        }
-    }
-    return *this;
-}
-
-Twist::Twist(const Twist &twist)
-{
-    this->v     = twist.v;
-    this->omg   = twist.omg;
-}
-
-Twist &Twist::operator=(const Twist &twist)
-{
-    this->omg = twist.omg;
-    this->v   = twist.v;
-    return *this;
-}
-
-void Twist::zero()
-{
-    v.zero();
-    omg.zero();
-}
-
-void Twist::reverseSign()
-{
-    v.reverseSign();
-    omg.reverseSign();
+    RotationMatDS aIn =  base2A.rotMat.inverse();
+    return Twist(aIn*diffP, aIn*diffR);
 }
 
 }
-

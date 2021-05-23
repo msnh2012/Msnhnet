@@ -5,6 +5,8 @@
 /** IO **/
 #include "Msnhnet/net/MsnhNetBuilder.h"
 #include "Msnhnet/io/MsnhIO.h"
+/** Math **/
+#include "Msnhnet/math/MsnhMath.h"
 /** Utils **/
 #include "Msnhnet/utils/MsnhCVUtil.h"
 #include "Msnhnet/utils/MsnhOpencvUtil.h"

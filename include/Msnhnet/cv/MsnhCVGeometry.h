@@ -4,14 +4,7 @@
 #include "Msnhnet/cv/MsnhCVMat.h"
 #include "Msnhnet/cv/MsnhCVVector.h"
 #include "Msnhnet/cv/MsnhCVMatOp.h"
-
-#ifndef M_PI
-#define M_PI 3.14159265453
-#endif
-
-#ifndef ROT_EPS
-#define ROT_EPS 0.00001
-#endif
+#include "Msnhnet/cv/MsnhCVQuaternion.h"
 
 namespace Msnhnet
 {
