@@ -499,7 +499,7 @@ int Chain::ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twi
 
 void Chain::cartSumSquaredErr(const std::vector<double> &x, double error[])
 {
-    if(_stopImmediately || _optStatus != -3)
+    if(_optStatus != -3)
     {
         _opt.force_stop();
         return;
@@ -705,10 +705,6 @@ int Chain::ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Tw
 
     return q;
 }
-
-    auto joints          =  outJoints;
-
-                outJoints = joints;
 
 void Chain::changeRefPoint(MatSDS &src, const Vector3DS &baseAB) const
 {
