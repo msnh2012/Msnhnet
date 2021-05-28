@@ -1351,7 +1351,7 @@ Matrix3x3D Matrix4x4D::normalMatrix()
 
     Matrix3x3D mat3x3 = Mat::eye(3,MatType::MAT_GRAY_F64);
     double det = this->det();
-    if(abs(det)<MSNH_F64_EPS)
+    if(std::abs(det)<MSNH_F64_EPS)
     {
         return mat3x3;
     }
@@ -1806,7 +1806,7 @@ Matrix3x3F Matrix4x4F::normalMatrix()
 
     Matrix3x3F mat3x3 = Mat::eye(3,MatType::MAT_GRAY_F32);
     float det = static_cast<float>(this->det());
-    if(abs(det)<MSNH_F32_EPS)
+    if(std::abs(det)<MSNH_F32_EPS)
     {
         return mat3x3;
     }

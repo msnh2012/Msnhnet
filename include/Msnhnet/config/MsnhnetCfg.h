@@ -67,7 +67,7 @@
 
 #define rad2degd(deg) ((double)(deg/MSNH_PI*180.0))
 
-#define closeToZeroD(x) (abs(x)<MSNH_F64_EPS)
+#define closeToZeroD(x) (fabs(x)<MSNH_F64_EPS)
 
 #define closeToZeroF(x) (fabsf(x)<MSNH_F32_EPS)
 

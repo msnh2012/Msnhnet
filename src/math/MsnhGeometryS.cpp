@@ -662,9 +662,9 @@ QuaternionFS GeometryS::rotVec2Quaternion(const RotationVecFS &rotVec)
     const float ky = Ry/theta;
     const float kz = Rz/theta;
 
-    const float sinTh = sinf(0.5*theta);
+    const float sinTh = sinf(0.5f*theta);
 
-    float q0 = cosf(0.5*theta);
+    float q0 = cosf(0.5f*theta);
     float q1 = kx*sinTh;
     float q2 = ky*sinTh;
     float q3 = kz*sinTh;
@@ -699,7 +699,7 @@ RotationVecFS GeometryS::quaternion2RotVec(const QuaternionFS &q)
         return RotationVecFS(0,0,0);
     }
 
-    const float sinTh = sinf(0.5*theta);
+    const float sinTh = sinf(0.5f*theta);
 
     const float kx    = q.q1/sinTh;
     const float ky    = q.q2/sinTh;

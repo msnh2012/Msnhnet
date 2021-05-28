@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 namespace Msnhnet
 {
@@ -75,9 +76,9 @@ public :
 
     inline friend bool operator ==(const Vector3DS& A, const Vector3DS& B)
     {
-        if(abs(A.val[0]-B.val[0]) < MSNH_F64_EPS &&
-                abs(A.val[1]-B.val[1]) < MSNH_F64_EPS &&
-                abs(A.val[2]-B.val[2]) < MSNH_F64_EPS)
+        if(std::abs(A.val[0]-B.val[0]) < MSNH_F64_EPS &&
+                std::abs(A.val[1]-B.val[1]) < MSNH_F64_EPS &&
+                std::abs(A.val[2]-B.val[2]) < MSNH_F64_EPS)
         {
             return true;
         }
@@ -89,9 +90,9 @@ public :
 
     inline friend bool operator !=(const Vector3DS& A, const Vector3DS& B)
     {
-        if(abs(A.val[0]-B.val[0]) < MSNH_F64_EPS &&
-                abs(A.val[1]-B.val[1]) < MSNH_F64_EPS &&
-                abs(A.val[2]-B.val[2]) < MSNH_F64_EPS)
+        if(std::abs(A.val[0]-B.val[0]) < MSNH_F64_EPS &&
+                std::abs(A.val[1]-B.val[1]) < MSNH_F64_EPS &&
+                std::abs(A.val[2]-B.val[2]) < MSNH_F64_EPS)
         {
             return false;
         }
@@ -105,7 +106,7 @@ public :
     {
         for (int i = 0; i < 3; ++i)
         {
-            if(abs(val[i])>MSNH_F64_EPS)
+            if(std::abs(val[i])>MSNH_F64_EPS)
             {
                 return false;
             }
@@ -129,7 +130,7 @@ public :
     {
         for (int i = 0; i < 3; ++i)
         {
-            if(abs(val[i]-eps)>MSNH_F64_EPS)
+            if(std::abs(val[i]-eps)>MSNH_F64_EPS)
             {
                 return false;
             }
@@ -320,12 +321,12 @@ public :
 
         double len = val[0]*val[0] + val[1]*val[1] + val[2]*val[2];
 
-        if(abs(len - 1.0) < MSNH_F64_EPS)
+        if(std::abs(len - 1.0) < MSNH_F64_EPS)
         {
             return *this;
         }
 
-        if(abs(len) < MSNH_F64_EPS)
+        if(std::abs(len) < MSNH_F64_EPS)
         {
             return vec;
         }
@@ -342,7 +343,7 @@ public :
     {
         double len = val[0]*val[0] + val[1]*val[1] + val[2]*val[2];
 
-        if(abs(len - 1.0) < MSNH_F64_EPS || abs(len) < MSNH_F64_EPS)
+        if(std::abs(len - 1.0) < MSNH_F64_EPS || std::abs(len) < MSNH_F64_EPS)
         {
             return;
         }
@@ -553,7 +554,7 @@ public :
     {
         for (int i = 0; i < 3; ++i)
         {
-            if(abs(val[i]-eps)>MSNH_F32_EPS)
+            if(std::abs(val[i]-eps)>MSNH_F32_EPS)
             {
                 return false;
             }
@@ -744,7 +745,7 @@ public :
 
         float len = val[0]*val[0] + val[1]*val[1] + val[2]*val[2];
 
-        if(fabsf(len - 1.0) < MSNH_F32_EPS)
+        if(fabsf(len - 1.0f) < MSNH_F32_EPS)
         {
             return *this;
         }
@@ -766,7 +767,7 @@ public :
     {
         float len = val[0]*val[0] + val[1]*val[1] + val[2]*val[2];
 
-        if(fabsf(len - 1.0) < MSNH_F32_EPS || fabsf(len) < MSNH_F32_EPS)
+        if(fabsf(len - 1.0f) < MSNH_F32_EPS || fabsf(len) < MSNH_F32_EPS)
         {
             return;
         }

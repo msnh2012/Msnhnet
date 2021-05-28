@@ -110,6 +110,7 @@ set(SRCS
     src/math/MsnhQuaternionS.cpp
     src/math/MsnhRotationMatS.cpp
     src/math/MsnhVector3S.cpp
+    src/hardware/MsnhSerialPort.cpp 
     src/io/MsnhIO.cpp
     src/io/MsnhParser.cpp
     src/layers/MsnhActivationLayer.cpp
@@ -169,6 +170,12 @@ set(SRCS
     src/3rdparty/nlopt/nlopt-util.h
     src/3rdparty/nlopt/nlopt_config.h
     src/3rdparty/nlopt/slsqp.h
+    src/3rdparty/serial/impl/list_ports/list_ports_linux.cpp 
+    src/3rdparty/serial/impl/list_ports/list_ports_osx.cpp 
+    src/3rdparty/serial/impl/list_ports/list_ports_win.cpp 
+    src/3rdparty/serial/impl/unix.cpp 
+    src/3rdparty/serial/impl/win.cpp 
+    src/3rdparty/serial/serial.cpp 
     src/3rdparty/yaml_cpp/binary.cpp
     src/3rdparty/yaml_cpp/contrib/graphbuilder.cpp
     src/3rdparty/yaml_cpp/contrib/graphbuilderadapter.cpp
@@ -398,7 +405,7 @@ endif()
 
 # dshow
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC gdi32 ole32 strmiids oleaut32 user32 shlwapi)
+    target_link_libraries(${PROJECT_NAME} PUBLIC gdi32 ole32 strmiids oleaut32 user32 shlwapi setupapi)
 endif()
 
 # opengl

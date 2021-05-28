@@ -3294,8 +3294,8 @@ bool Mat::isHomTransMatrix() const
 
     if(this->_matType == MAT_GRAY_F64)
     {
-        if(abs(this->getFloat64()[12])>MSNH_F64_EPS || abs(this->getFloat64()[13])>MSNH_F64_EPS ||
-                abs(this->getFloat64()[14])>MSNH_F64_EPS || abs(this->getFloat64()[15]-1)>MSNH_F64_EPS)
+        if(std::abs(this->getFloat64()[12])>MSNH_F64_EPS || std::abs(this->getFloat64()[13])>MSNH_F64_EPS ||
+                std::abs(this->getFloat64()[14])>MSNH_F64_EPS || std::abs(this->getFloat64()[15]-1)>MSNH_F64_EPS)
         {
             return false;
         }
@@ -3325,8 +3325,8 @@ bool Mat::isHomTransMatrix() const
     }
     else
     {
-        if(abs(this->getFloat32()[12])>MSNH_F32_EPS || abs(this->getFloat32()[13])>MSNH_F32_EPS ||
-                abs(this->getFloat32()[14])>MSNH_F32_EPS || abs(this->getFloat32()[15]-1)>MSNH_F32_EPS)
+        if(fabsf(this->getFloat32()[12])>MSNH_F32_EPS || fabsf(this->getFloat32()[13])>MSNH_F32_EPS ||
+                fabsf(this->getFloat32()[14])>MSNH_F32_EPS || fabsf(this->getFloat32()[15]-1)>MSNH_F32_EPS)
         {
             return false;
         }

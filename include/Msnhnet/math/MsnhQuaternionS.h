@@ -74,10 +74,10 @@ public:
 
     inline bool operator== (const QuaternionDS& q)
     {
-        if(abs(q0-q.q0)<MSNH_F64_EPS&&
-                abs(q1-q.q1)<MSNH_F64_EPS&&
-                abs(q2-q.q2)<MSNH_F64_EPS&&
-                abs(q3-q.q3)<MSNH_F64_EPS)
+        if(std::fabs(q0-q.q0)<MSNH_F64_EPS&&
+                std::fabs(q1-q.q1)<MSNH_F64_EPS&&
+                std::fabs(q2-q.q2)<MSNH_F64_EPS&&
+                std::fabs(q3-q.q3)<MSNH_F64_EPS)
         {
             return true;
         }
@@ -89,10 +89,10 @@ public:
 
     inline bool operator!= (const QuaternionDS& q)
     {
-        if(abs(q0-q.q0)<MSNH_F64_EPS&&
-                abs(q1-q.q1)<MSNH_F64_EPS&&
-                abs(q2-q.q2)<MSNH_F64_EPS&&
-                abs(q3-q.q3)<MSNH_F64_EPS)
+        if(std::fabs(q0-q.q0)<MSNH_F64_EPS&&
+                std::fabs(q1-q.q1)<MSNH_F64_EPS&&
+                std::fabs(q2-q.q2)<MSNH_F64_EPS&&
+                std::fabs(q3-q.q3)<MSNH_F64_EPS)
         {
             return false;
         }
@@ -199,10 +199,10 @@ public:
 
     inline bool operator== (const QuaternionFS& q)
     {
-        if(abs(q0-q.q0)<MSNH_F32_EPS&&
-                abs(q1-q.q1)<MSNH_F32_EPS&&
-                abs(q2-q.q2)<MSNH_F32_EPS&&
-                abs(q3-q.q3)<MSNH_F32_EPS)
+        if(fabsf(q0-q.q0)<MSNH_F32_EPS&&
+                fabsf(q1-q.q1)<MSNH_F32_EPS&&
+                fabsf(q2-q.q2)<MSNH_F32_EPS&&
+                fabsf(q3-q.q3)<MSNH_F32_EPS)
         {
             return true;
         }
@@ -214,10 +214,10 @@ public:
 
     inline bool operator!= (const QuaternionFS& q)
     {
-        if(abs(q0-q.q0)<MSNH_F32_EPS&&
-                abs(q1-q.q1)<MSNH_F32_EPS&&
-                abs(q2-q.q2)<MSNH_F32_EPS&&
-                abs(q3-q.q3)<MSNH_F32_EPS)
+        if(fabsf(q0-q.q0)<MSNH_F32_EPS&&
+                fabsf(q1-q.q1)<MSNH_F32_EPS&&
+                fabsf(q2-q.q2)<MSNH_F32_EPS&&
+                fabsf(q3-q.q3)<MSNH_F32_EPS)
         {
             return false;
         }

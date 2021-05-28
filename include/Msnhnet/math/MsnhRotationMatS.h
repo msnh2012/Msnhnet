@@ -2,7 +2,6 @@
 #define MSNHROTATIONMAT_H
 
 #include "Msnhnet/math/MsnhVector3S.h"
-
 namespace Msnhnet
 {
 class MsnhNet_API RotationMatDS
@@ -118,9 +117,9 @@ public :
 
     inline friend bool operator ==(const RotationMatDS& A, const RotationMatDS& B)
     {
-        if(abs(A.val[0]-B.val[0]) < MSNH_F64_EPS && abs(A.val[1]-B.val[1]) < MSNH_F64_EPS && abs(A.val[2]-B.val[2]) < MSNH_F64_EPS &&
-                abs(A.val[3]-B.val[3]) < MSNH_F64_EPS && abs(A.val[4]-B.val[4]) < MSNH_F64_EPS && abs(A.val[5]-B.val[5]) < MSNH_F64_EPS &&
-                abs(A.val[6]-B.val[6]) < MSNH_F64_EPS && abs(A.val[7]-B.val[7]) < MSNH_F64_EPS && abs(A.val[8]-B.val[8]) < MSNH_F64_EPS)
+        if(std::fabs(A.val[0]-B.val[0]) < MSNH_F64_EPS && std::fabs(A.val[1]-B.val[1]) < MSNH_F64_EPS && std::fabs(A.val[2]-B.val[2]) < MSNH_F64_EPS &&
+                std::fabs(A.val[3]-B.val[3]) < MSNH_F64_EPS && std::fabs(A.val[4]-B.val[4]) < MSNH_F64_EPS && std::fabs(A.val[5]-B.val[5]) < MSNH_F64_EPS &&
+                std::fabs(A.val[6]-B.val[6]) < MSNH_F64_EPS && std::fabs(A.val[7]-B.val[7]) < MSNH_F64_EPS && std::fabs(A.val[8]-B.val[8]) < MSNH_F64_EPS)
         {
             return true;
         }
@@ -132,9 +131,9 @@ public :
 
     inline friend bool operator !=(const RotationMatDS& A, const RotationMatDS& B)
     {
-        if(abs(A.val[0]-B.val[0]) < MSNH_F64_EPS && abs(A.val[1]-B.val[1]) < MSNH_F64_EPS && abs(A.val[2]-B.val[2]) < MSNH_F64_EPS &&
-                abs(A.val[3]-B.val[3]) < MSNH_F64_EPS && abs(A.val[4]-B.val[4]) < MSNH_F64_EPS && abs(A.val[5]-B.val[5]) < MSNH_F64_EPS &&
-                abs(A.val[6]-B.val[6]) < MSNH_F64_EPS && abs(A.val[7]-B.val[7]) < MSNH_F64_EPS && abs(A.val[8]-B.val[8]) < MSNH_F64_EPS)
+        if(std::fabs(A.val[0]-B.val[0]) < MSNH_F64_EPS && std::fabs(A.val[1]-B.val[1]) < MSNH_F64_EPS && std::fabs(A.val[2]-B.val[2]) < MSNH_F64_EPS &&
+                std::fabs(A.val[3]-B.val[3]) < MSNH_F64_EPS && std::fabs(A.val[4]-B.val[4]) < MSNH_F64_EPS && std::fabs(A.val[5]-B.val[5]) < MSNH_F64_EPS &&
+                std::fabs(A.val[6]-B.val[6]) < MSNH_F64_EPS && std::fabs(A.val[7]-B.val[7]) < MSNH_F64_EPS && std::fabs(A.val[8]-B.val[8]) < MSNH_F64_EPS)
         {
             return false;
         }
@@ -146,9 +145,9 @@ public :
 
     inline bool isFuzzyNull() const
     {
-        if(abs(val[0]) < MSNH_F64_EPS && abs(val[1]) < MSNH_F64_EPS && abs(val[2]) < MSNH_F64_EPS &&
-                abs(val[3]) < MSNH_F64_EPS && abs(val[4]) < MSNH_F64_EPS && abs(val[5]) < MSNH_F64_EPS &&
-                abs(val[6]) < MSNH_F64_EPS && abs(val[7]) < MSNH_F64_EPS && abs(val[8]) < MSNH_F64_EPS)
+        if(std::fabs(val[0]) < MSNH_F64_EPS && std::fabs(val[1]) < MSNH_F64_EPS && std::fabs(val[2]) < MSNH_F64_EPS &&
+                std::fabs(val[3]) < MSNH_F64_EPS && std::fabs(val[4]) < MSNH_F64_EPS && std::fabs(val[5]) < MSNH_F64_EPS &&
+                std::fabs(val[6]) < MSNH_F64_EPS && std::fabs(val[7]) < MSNH_F64_EPS && std::fabs(val[8]) < MSNH_F64_EPS)
         {
             return true;
         }
@@ -157,9 +156,9 @@ public :
 
     inline bool closeToEps(const double &eps)
     {
-        if(abs(val[0]-eps) < MSNH_F64_EPS && abs(val[1]-eps) < MSNH_F64_EPS && abs(val[2]-eps) < MSNH_F64_EPS &&
-                abs(val[3]-eps) < MSNH_F64_EPS && abs(val[4]-eps) < MSNH_F64_EPS && abs(val[5]-eps) < MSNH_F64_EPS &&
-                abs(val[6]-eps) < MSNH_F64_EPS && abs(val[7]-eps) < MSNH_F64_EPS && abs(val[8]-eps) < MSNH_F64_EPS)
+        if(std::fabs(val[0]-eps) < MSNH_F64_EPS && std::fabs(val[1]-eps) < MSNH_F64_EPS && std::fabs(val[2]-eps) < MSNH_F64_EPS &&
+                std::fabs(val[3]-eps) < MSNH_F64_EPS && std::fabs(val[4]-eps) < MSNH_F64_EPS && std::fabs(val[5]-eps) < MSNH_F64_EPS &&
+                std::fabs(val[6]-eps) < MSNH_F64_EPS && std::fabs(val[7]-eps) < MSNH_F64_EPS && std::fabs(val[8]-eps) < MSNH_F64_EPS)
         {
             return true;
         }

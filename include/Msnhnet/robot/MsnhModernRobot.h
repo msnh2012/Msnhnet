@@ -38,7 +38,7 @@ public:
 
             for (int i = jointNum-1; i >= 0; i--)
             {
-                if(abs(joints[i])<MSNH_F64_EPS)
+                if(std::abs(joints[i])<MSNH_F64_EPS)
                 {
                     continue;
                 }
@@ -50,7 +50,7 @@ public:
 
             for (int i = 0; i < jointNum; i++)
             {
-                if(abs(joints[i])<MSNH_F64_EPS)
+                if(std::abs(joints[i])<MSNH_F64_EPS)
                 {
                     continue;
                 }

@@ -1000,7 +1000,7 @@ void GifEncoder::gifQuantize(uint8_t *rgba, const int &rgbaSize, int sample, uin
                 for (int k = 0; k < numColors; k++)
                 {
                     int *n = network[k];
-                    int dist = abs(n[0] - r) + abs(n[1] - g) + abs(n[2] - b);
+                    int dist = std::abs(n[0] - r) + std::abs(n[1] - g) + std::abs(n[2] - b);
 
                     if (dist < bestd)
                     {

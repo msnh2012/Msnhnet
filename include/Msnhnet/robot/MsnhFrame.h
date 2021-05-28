@@ -15,7 +15,7 @@ public:
     AngularVelDS omg;
 
     Twist(){}
-    inline Twist(const LinearVelDS &v, const LinearVelDS &omg):v(v),omg(omg){}
+    inline Twist(const LinearVelDS &v, const AngularVelDS &omg):v(v),omg(omg){}
     inline Twist(const Twist &twist) 
 
     {
@@ -38,10 +38,21 @@ public:
         return Twist(this->v + Vector3DS::crossProduct(this->omg,vBaseAB), this->omg);
     }
 
+    inline double length()
+    {
+        return sqrt(v[0]*v[0]+
+                    v[1]*v[1]+
+                    v[2]*v[2]+
+                    omg[0]*omg[0]+
+                    omg[1]*omg[1]+
+                    omg[2]*omg[2]
+                );
+    }
+
     bool closeToEps(const double &eps = MSNH_F64_EPS) const
     {
-        if(abs(v[0])<eps && abs(v[1])<eps && abs(v[2])<eps &&
-                abs(omg[0])<eps && abs(omg[1])<eps  && abs(omg[2])<eps)
+        if(std::abs(v[0])<eps && std::abs(v[1])<eps && std::abs(v[2])<eps &&
+                std::abs(omg[0])<eps && std::abs(omg[1])<eps  && std::abs(omg[2])<eps)
         {
             return true;
         }
@@ -51,7 +62,21 @@ public:
         }
     }
 
-    inline friend Twist operator* (RotationMatDS rot, const Twist& twist)
+    inline friend Twist operator* (const Twist& A, const Twist& B)
+    {
+        Twist C;
+        C.v[0] = A.v[0]*B.v[0];
+        C.v[1] = A.v[1]*B.v[1];
+        C.v[2] = A.v[2]*B.v[2];
+
+        C.omg[0] = A.omg[0]*B.omg[0];
+        C.omg[1] = A.omg[1]*B.omg[1];
+        C.omg[2] = A.omg[2]*B.omg[2];
+
+        return C;
+    }
+
+    inline friend Twist operator* (const RotationMatDS& rot, const Twist& twist)
     {
         return Twist(rot*twist.v, rot*twist.omg);
     }
@@ -71,6 +96,8 @@ public:
     void print();
 
     MatSDS toMat();
+
+    MatSDS toDiagMat();
 
     VectorXSDS toVec();
 };

@@ -1064,7 +1064,7 @@ ScrewD SE3D::log()
 
 SE3D SE3D::exp(const ScrewD &screw, double theta)
 {
-    if(abs(screw.w.length()-1)>MSNH_F64_EPS && abs(screw.w.length())>MSNH_F64_EPS)
+    if(std::abs(screw.w.length()-1)>MSNH_F64_EPS && std::abs(screw.w.length())>MSNH_F64_EPS)
     {
         throw Exception(1, "[SE3D] given theta, OMG must be a unit vector ", __FILE__, __LINE__,__FUNCTION__);
     }

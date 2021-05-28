@@ -40,10 +40,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[4*i+0] = data[4*i+0];
-            mValue[4*i+1] = data[4*i+1];
-            mValue[4*i+2] = data[4*i+2];
-            mValue[4*i+3] = data[4*i+3];
+            mValue[(i<<2)+0] = data[(i<<2)+0];
+            mValue[(i<<2)+1] = data[(i<<2)+1];
+            mValue[(i<<2)+2] = data[(i<<2)+2];
+            mValue[(i<<2)+3] = data[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -60,10 +60,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[4*i+0] = mat.mValue[4*i+0];
-            mValue[4*i+1] = mat.mValue[4*i+1];
-            mValue[4*i+2] = mat.mValue[4*i+2];
-            mValue[4*i+3] = mat.mValue[4*i+3];
+            mValue[(i<<2)+0] = mat.mValue[(i<<2)+0];
+            mValue[(i<<2)+1] = mat.mValue[(i<<2)+1];
+            mValue[(i<<2)+2] = mat.mValue[(i<<2)+2];
+            mValue[(i<<2)+3] = mat.mValue[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -82,10 +82,10 @@ public:
 
             for (int i = 0; i < mN/4; ++i)
             {
-                mValue[4*i+0] = mat.mValue[4*i+0];
-                mValue[4*i+1] = mat.mValue[4*i+1];
-                mValue[4*i+2] = mat.mValue[4*i+2];
-                mValue[4*i+3] = mat.mValue[4*i+3];
+                mValue[(i<<2)+0] = mat.mValue[(i<<2)+0];
+                mValue[(i<<2)+1] = mat.mValue[(i<<2)+1];
+                mValue[(i<<2)+2] = mat.mValue[(i<<2)+2];
+                mValue[(i<<2)+3] = mat.mValue[(i<<2)+3];
             }
 
             for (int i = 4*(mN/4); i < mN; ++i)
@@ -141,10 +141,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            tmp.mValue[4*i+0] = randUniform((T)(-1),(T)(1));
-            tmp.mValue[4*i+1] = randUniform((T)(-1),(T)(1));
-            tmp.mValue[4*i+2] = randUniform((T)(-1),(T)(1));
-            tmp.mValue[4*i+3] = randUniform((T)(-1),(T)(1));
+            tmp.mValue[(i<<2)+0] = randUniform((T)(-1),(T)(1));
+            tmp.mValue[(i<<2)+1] = randUniform((T)(-1),(T)(1));
+            tmp.mValue[(i<<2)+2] = randUniform((T)(-1),(T)(1));
+            tmp.mValue[(i<<2)+3] = randUniform((T)(-1),(T)(1));
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -196,15 +196,35 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[4*i+0] = value;
-            mValue[4*i+1] = value;
-            mValue[4*i+2] = value;
-            mValue[4*i+3] = value;
+            mValue[(i<<2)+0] = value;
+            mValue[(i<<2)+1] = value;
+            mValue[(i<<2)+2] = value;
+            mValue[(i<<2)+3] = value;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
         {
             mValue[i] = value;
+        }
+    }
+
+    inline void setVal(const std::vector<T> &val)
+    {
+        assert(dataNum()==val.size());
+
+        int mN = dataNum();
+
+        for (int i = 0; i < mN/4; ++i)
+        {
+            mValue[(i<<2)+0] = val[(i<<2)+0];
+            mValue[(i<<2)+1] = val[(i<<2)+1];
+            mValue[(i<<2)+2] = val[(i<<2)+2];
+            mValue[(i<<2)+3] = val[(i<<2)+3];
+        }
+
+        for (int i = 4*(mN/4); i < mN; ++i)
+        {
+            mValue[i] = val[i];
         }
     }
 
@@ -215,7 +235,7 @@ public:
 
     inline MatS transpose() const
     {
-        MatS tmpMat(mWidth,mHeight);
+        MatS tmpMat(mHeight,mWidth);
 
 #ifdef USE_OMP
         uint64_t dataLen   = this->mHeight*this->mWidth;
@@ -783,8 +803,8 @@ public:
     inline double PYTHAG(double a,double b)
     {
         double at,bt,ct;
-        at = fabs(a);
-        bt = fabs(b);
+        at = std::fabs(a);
+        bt = std::fabs(b);
         if (at > bt ) {
             ct=bt/at;
             return at*sqrt(1.0+ct*ct);
@@ -800,7 +820,7 @@ public:
 
     inline double SIGN(double a,double b)
     {
-        return (((b) >= 0.0 && abs(b) >MSNH_F64_EPS) ? fabs(a) : -fabs(a));
+        return (((b) >= 0.0 && std::fabs(b) >MSNH_F64_EPS) ? std::fabs(a) : -std::fabs(a));
     }
 
     int householderSVD(std::vector<VectorXSDS>& U,VectorXSDS& D,std::vector<VectorXSDS>& V,int maxiter)
@@ -953,7 +973,7 @@ public:
                     if (z < 0.0)
                     {   /* Singular value is made nonnegative. */
 
-                        if(abs(z) > MSNH_F64_EPS)
+                        if(std::fabs(z) > MSNH_F64_EPS)
                         {
                             D(k) = -z;
                             for (j=0;j<width;j++) V[j](k)=-V[j](k);
@@ -1067,7 +1087,7 @@ public:
                     for (int k = 0; k < m; k++)
                         p += (double)Ai[k] * Aj[k];
 
-                    if (std::abs(p) <= eps * std::sqrt((double)a*b))
+                    if (std::fabs(p) <= eps * std::sqrt((double)a*b))
                         continue;
 
                     p *= 2;
@@ -1150,7 +1170,7 @@ public:
             _W.mValue[i] = (T)W[i];
         }
 
-        srand(time(nullptr));
+        srand((unsigned int)time(nullptr));
 
         for (int i = 0; i < n1; i++)
         {
@@ -1185,7 +1205,7 @@ public:
                         {
                             T t = (T)(At.mValue[i*m+k]- sd*At.mValue[j*m+k]);
                             At.mValue[i*m+k] = t;
-                            asum += std::abs(t);
+                            asum += std::fabs(t);
                         }
                         asum = asum > eps * 100 ? 1 / asum : 0;
 
@@ -1262,10 +1282,10 @@ public:
 
             for (int i = 0; i < mN/4; ++i)
             {
-                AMatNew.mValue[4*i+0] = AMat.mValue[4*i+0];
-                AMatNew.mValue[4*i+1] = AMat.mValue[4*i+1];
-                AMatNew.mValue[4*i+2] = AMat.mValue[4*i+2];
-                AMatNew.mValue[4*i+3] = AMat.mValue[4*i+3];
+                AMatNew.mValue[(i<<2)+0] = AMat.mValue[(i<<2)+0];
+                AMatNew.mValue[(i<<2)+1] = AMat.mValue[(i<<2)+1];
+                AMatNew.mValue[(i<<2)+2] = AMat.mValue[(i<<2)+2];
+                AMatNew.mValue[(i<<2)+3] = AMat.mValue[(i<<2)+3];
             }
 
             for (int i = 4*(mN/4); i < mN; ++i)
@@ -1298,10 +1318,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            tmp[4*i+0] = mValue[(4*i+0)*mWidth+col];
-            tmp[4*i+1] = mValue[(4*i+1)*mWidth+col];
-            tmp[4*i+2] = mValue[(4*i+2)*mWidth+col];
-            tmp[4*i+3] = mValue[(4*i+3)*mWidth+col];
+            tmp[(i<<2)+0] = mValue[((i<<2)+0)*mWidth+col];
+            tmp[(i<<2)+1] = mValue[((i<<2)+1)*mWidth+col];
+            tmp[(i<<2)+2] = mValue[((i<<2)+2)*mWidth+col];
+            tmp[(i<<2)+3] = mValue[((i<<2)+3)*mWidth+col];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1320,10 +1340,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[(4*i+0)*mWidth+col] = mat[4*i+0];
-            mValue[(4*i+1)*mWidth+col] = mat[4*i+1];
-            mValue[(4*i+2)*mWidth+col] = mat[4*i+2];
-            mValue[(4*i+3)*mWidth+col] = mat[4*i+3];
+            mValue[((i<<2)+0)*mWidth+col] = mat[(i<<2)+0];
+            mValue[((i<<2)+1)*mWidth+col] = mat[(i<<2)+1];
+            mValue[((i<<2)+2)*mWidth+col] = mat[(i<<2)+2];
+            mValue[((i<<2)+3)*mWidth+col] = mat[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1343,10 +1363,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            tmp[4*i+0] = mValue[line+4*i+0];
-            tmp[4*i+1] = mValue[line+4*i+1];
-            tmp[4*i+2] = mValue[line+4*i+2];
-            tmp[4*i+3] = mValue[line+4*i+3];
+            tmp[(i<<2)+0] = mValue[line+(i<<2)+0];
+            tmp[(i<<2)+1] = mValue[line+(i<<2)+1];
+            tmp[(i<<2)+2] = mValue[line+(i<<2)+2];
+            tmp[(i<<2)+3] = mValue[line+(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1366,10 +1386,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[line+4*i+0] = mat[4*i+0];
-            mValue[line+4*i+1] = mat[4*i+1];
-            mValue[line+4*i+2] = mat[4*i+2];
-            mValue[line+4*i+3] = mat[4*i+3];
+            mValue[line+(i<<2)+0] = mat[(i<<2)+0];
+            mValue[line+(i<<2)+1] = mat[(i<<2)+1];
+            mValue[line+(i<<2)+2] = mat[(i<<2)+2];
+            mValue[line+(i<<2)+3] = mat[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1634,6 +1654,60 @@ public:
         return std::is_same<T,double>::value;
     }
 
+    inline T L1() const
+    {
+        T l1 = 0;
+
+        int mN = dataNum();
+
+        for (int i = 0; i < mN/4; ++i)
+        {
+           l1 += mValue[(i<<2)+0];
+           l1 += mValue[(i<<2)+1];
+           l1 += mValue[(i<<2)+2];
+           l1 += mValue[(i<<2)+3];
+        }
+
+        for (int i = 4*(mN/4); i < mN; ++i)
+        {
+            l1 += mValue[i];
+        }
+
+        return l1;
+    }
+
+    inline T L2() const
+    {
+        T l2 = 0;
+        int mN = dataNum();
+        for (int i = 0; i < mN/4; ++i)
+        {
+           l2 += mValue[(i<<2)+0]*value[(i<<2)+0];
+           l2 += mValue[(i<<2)+1]*value[(i<<2)+1];
+           l2 += mValue[(i<<2)+2]*value[(i<<2)+2];
+           l2 += mValue[(i<<2)+3]*value[(i<<2)+3];
+        }
+
+        for (int i = 4*(mN/4); i < mN; ++i)
+        {
+            l2 += mValue[i]*mValue[i];
+        }
+
+        return sqrt(l2);
+    }
+
+    inline T LInf() const
+    {
+        std::vector<T> val;
+
+        for (int i = 0; i < dataNum(); ++i)
+        {
+            val.push_back(std::abs(mValue[i]));
+        }
+
+        return *std::max_element(val.begin(),val.end());
+    }
+
     inline bool isFuzzyNull() const
     {
         if(this->isF32Mat())
@@ -1690,6 +1764,54 @@ public:
         return mValue[index];
     }
 
+    inline static MatS eleWiseMul(const MatS &A, const MatS &B)
+    {
+        assert(A.mWidth==B.mWidth && A.mHeight==B.mHeight);
+
+        MatS mat(A.mWidth,A.mHeight);
+
+        int mN = mat.dataNum();
+
+        for (int i = 0; i < mN/4; ++i)
+        {
+            mat[(i<<2)+0] = A[(i<<2)+0]*B[(i<<2)+0];
+            mat[(i<<2)+1] = A[(i<<2)+1]*B[(i<<2)+1];
+            mat[(i<<2)+2] = A[(i<<2)+2]*B[(i<<2)+2];
+            mat[(i<<2)+3] = A[(i<<2)+3]*B[(i<<2)+3];
+        }
+
+        for (int i = 4*(mN/4); i < mN; ++i)
+        {
+            mat[i] = A[i]*B[i];
+        }
+
+        return mat;
+    }
+
+    inline static MatS eleWiseDiv(const MatS &A, const MatS &B)
+    {
+        assert(A.mWidth==B.mWidth && A.mHeight==B.mHeight);
+
+        MatS mat(A.mWidth,A.mHeight);
+
+        int mN = mat.dataNum();
+
+        for (int i = 0; i < mN/4; ++i)
+        {
+            mat[(i<<2)+0] = A[(i<<2)+0]/B[(i<<2)+0];
+            mat[(i<<2)+1] = A[(i<<2)+1]/B[(i<<2)+1];
+            mat[(i<<2)+2] = A[(i<<2)+2]/B[(i<<2)+2];
+            mat[(i<<2)+3] = A[(i<<2)+3]/B[(i<<2)+3];
+        }
+
+        for (int i = 4*(mN/4); i < mN; ++i)
+        {
+            mat[i] = A[i]/B[i];
+        }
+
+        return mat;
+    }
+
     inline friend MatS operator+ (const MatS &A, const MatS &B)
     {
         assert(A.mWidth==B.mWidth && A.mHeight==B.mHeight);
@@ -1700,10 +1822,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mat[4*i+0] = A[4*i+0]+B[4*i+0];
-            mat[4*i+1] = A[4*i+1]+B[4*i+1];
-            mat[4*i+2] = A[4*i+2]+B[4*i+2];
-            mat[4*i+3] = A[4*i+3]+B[4*i+3];
+            mat[(i<<2)+0] = A[(i<<2)+0]+B[(i<<2)+0];
+            mat[(i<<2)+1] = A[(i<<2)+1]+B[(i<<2)+1];
+            mat[(i<<2)+2] = A[(i<<2)+2]+B[(i<<2)+2];
+            mat[(i<<2)+3] = A[(i<<2)+3]+B[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1721,10 +1843,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mat[4*i+0] = A[4*i+0]+a;
-            mat[4*i+1] = A[4*i+1]+a;
-            mat[4*i+2] = A[4*i+2]+a;
-            mat[4*i+3] = A[4*i+3]+a;
+            mat[(i<<2)+0] = A[(i<<2)+0]+a;
+            mat[(i<<2)+1] = A[(i<<2)+1]+a;
+            mat[(i<<2)+2] = A[(i<<2)+2]+a;
+            mat[(i<<2)+3] = A[(i<<2)+3]+a;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1742,10 +1864,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mat[4*i+0] = A[4*i+0]+a;
-            mat[4*i+1] = A[4*i+1]+a;
-            mat[4*i+2] = A[4*i+2]+a;
-            mat[4*i+3] = A[4*i+3]+a;
+            mat[(i<<2)+0] = A[(i<<2)+0]+a;
+            mat[(i<<2)+1] = A[(i<<2)+1]+a;
+            mat[(i<<2)+2] = A[(i<<2)+2]+a;
+            mat[(i<<2)+3] = A[(i<<2)+3]+a;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1766,10 +1888,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mat[4*i+0] = A[4*i+0]-B[4*i+0];
-            mat[4*i+1] = A[4*i+1]-B[4*i+1];
-            mat[4*i+2] = A[4*i+2]-B[4*i+2];
-            mat[4*i+3] = A[4*i+3]-B[4*i+3];
+            mat[(i<<2)+0] = A[(i<<2)+0]-B[(i<<2)+0];
+            mat[(i<<2)+1] = A[(i<<2)+1]-B[(i<<2)+1];
+            mat[(i<<2)+2] = A[(i<<2)+2]-B[(i<<2)+2];
+            mat[(i<<2)+3] = A[(i<<2)+3]-B[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1787,10 +1909,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mat[4*i+0] = -A[4*i+0];
-            mat[4*i+1] = -A[4*i+1];
-            mat[4*i+2] = -A[4*i+2];
-            mat[4*i+3] = -A[4*i+3];
+            mat[(i<<2)+0] = -A[(i<<2)+0];
+            mat[(i<<2)+1] = -A[(i<<2)+1];
+            mat[(i<<2)+2] = -A[(i<<2)+2];
+            mat[(i<<2)+3] = -A[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1808,10 +1930,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mat[4*i+0] = a-A[4*i+0];
-            mat[4*i+1] = a-A[4*i+1];
-            mat[4*i+2] = a-A[4*i+2];
-            mat[4*i+3] = a-A[4*i+3];
+            mat[(i<<2)+0] = a-A[(i<<2)+0];
+            mat[(i<<2)+1] = a-A[(i<<2)+1];
+            mat[(i<<2)+2] = a-A[(i<<2)+2];
+            mat[(i<<2)+3] = a-A[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1829,10 +1951,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mat[4*i+0] = A[4*i+0]-a;
-            mat[4*i+1] = A[4*i+1]-a;
-            mat[4*i+2] = A[4*i+2]-a;
-            mat[4*i+3] = A[4*i+3]-a;
+            mat[(i<<2)+0] = A[(i<<2)+0]-a;
+            mat[(i<<2)+1] = A[(i<<2)+1]-a;
+            mat[(i<<2)+2] = A[(i<<2)+2]-a;
+            mat[(i<<2)+3] = A[(i<<2)+3]-a;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1877,10 +1999,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mat[4*i+0] = a*A[4*i+0];
-            mat[4*i+1] = a*A[4*i+1];
-            mat[4*i+2] = a*A[4*i+2];
-            mat[4*i+3] = a*A[4*i+3];
+            mat[(i<<2)+0] = a*A[(i<<2)+0];
+            mat[(i<<2)+1] = a*A[(i<<2)+1];
+            mat[(i<<2)+2] = a*A[(i<<2)+2];
+            mat[(i<<2)+3] = a*A[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1898,10 +2020,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mat[4*i+0] = a*A[4*i+0];
-            mat[4*i+1] = a*A[4*i+1];
-            mat[4*i+2] = a*A[4*i+2];
-            mat[4*i+3] = a*A[4*i+3];
+            mat[(i<<2)+0] = a*A[(i<<2)+0];
+            mat[(i<<2)+1] = a*A[(i<<2)+1];
+            mat[(i<<2)+2] = a*A[(i<<2)+2];
+            mat[(i<<2)+3] = a*A[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1922,10 +2044,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            final += A[4*i+0]*B[4*i+0];
-            final += A[4*i+1]*B[4*i+1];
-            final += A[4*i+2]*B[4*i+2];
-            final += A[4*i+3]*B[4*i+3];
+            final += A[(i<<2)+0]*B[(i<<2)+0];
+            final += A[(i<<2)+1]*B[(i<<2)+1];
+            final += A[(i<<2)+2]*B[(i<<2)+2];
+            final += A[(i<<2)+3]*B[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1939,45 +2061,11 @@ public:
     {
         assert(A.mWidth==B.mWidth && A.mHeight==B.mHeight);
 
-        MatS mat(A.mWidth,A.mHeight);
-
-        int mN = mat.dataNum();
-
-        for (int i = 0; i < mN/4; ++i)
-        {
-            mat[4*i+0] = A[4*i+0]/B[4*i+0];
-            mat[4*i+1] = A[4*i+1]/B[4*i+1];
-            mat[4*i+2] = A[4*i+2]/B[4*i+2];
-            mat[4*i+3] = A[4*i+3]/B[4*i+3];
-        }
-
-        for (int i = 4*(mN/4); i < mN; ++i)
-        {
-            mat[i] = A[i]/B[i];
-        }
-
-        return mat;
+        return A*B.invert();
     }
     inline friend MatS operator/ (const T &a, const MatS &A)
     {
-        MatS mat(A.mWidth,A.mHeight);
-
-        int mN = mat.dataNum();
-
-        for (int i = 0; i < mN/4; ++i)
-        {
-            mat[4*i+0] = a/A[4*i+0];
-            mat[4*i+1] = a/A[4*i+1];
-            mat[4*i+2] = a/A[4*i+2];
-            mat[4*i+3] = a/A[4*i+3];
-        }
-
-        for (int i = 4*(mN/4); i < mN; ++i)
-        {
-            mat[i] = a/A[i];
-        }
-
-        return mat;
+        return a*A.invert();
     }
     inline friend MatS operator/ (const MatS &A, const T &a)
     {
@@ -1987,10 +2075,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mat[4*i+0] = A[4*i+0]/a;
-            mat[4*i+1] = A[4*i+1]/a;
-            mat[4*i+2] = A[4*i+2]/a;
-            mat[4*i+3] = A[4*i+3]/a;
+            mat[(i<<2)+0] = A[(i<<2)+0]/a;
+            mat[(i<<2)+1] = A[(i<<2)+1]/a;
+            mat[(i<<2)+2] = A[(i<<2)+2]/a;
+            mat[(i<<2)+3] = A[(i<<2)+3]/a;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -2012,7 +2100,7 @@ public:
 
         for (int i = 0; i < n; ++i)
         {
-            if(((T)abs(A[i]-B[i]))>std::numeric_limits<T>::epsilon())
+            if(((T)std::abs(A[i]-B[i]))>std::numeric_limits<T>::epsilon())
             {
                 return false;
             }
@@ -2032,7 +2120,7 @@ public:
 
         for (int i = 0; i < n; ++i)
         {
-            if(((T)abs(A[i]-B[i]))>std::numeric_limits<T>::epsilon())
+            if(((T)std::abs(A[i]-B[i]))>std::numeric_limits<T>::epsilon())
             {
                 return true;
             }

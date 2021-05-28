@@ -11,30 +11,30 @@ inline static double fRand(double min, double max)
 
 inline double minfuncSumSquared(const std::vector<double>& x, std::vector<double>& grad, void* data)
 {
-  Chain *chain = (Chain *) data;
+    Chain *chain = (Chain *) data;
 
-  std::vector<double> vals(x);
+    std::vector<double> vals(x);
 
-  double jump = 0.000001;
-  double result[1];
-  chain->cartSumSquaredErr(vals, result);
+    double jump = 0.000001;
+    double result[1];
+    chain->cartSumSquaredErr(vals, result);
 
-  if (!grad.empty())
-  {
-    double v1[1];
-    for (unsigned int i = 0; i < x.size(); i++)
+    if (!grad.empty())
     {
-      double original = vals[i];
+        double v1[1];
+        for (unsigned int i = 0; i < x.size(); i++)
+        {
+            double original = vals[i];
 
-      vals[i] = original + jump;
-      chain->cartSumSquaredErr(vals, v1);
+            vals[i] = original + jump;
+            chain->cartSumSquaredErr(vals, v1);
 
-      vals[i] = original;
-      grad[i] = (v1[0] - result[0]) / (2.0 * jump);
+            vals[i] = original;
+            grad[i] = (v1[0] - result[0]) / (2.0 * jump);
+        }
     }
-  }
 
-  return result[0];
+    return result[0];
 }
 
 Chain::Chain():
@@ -114,7 +114,7 @@ const Segment &Chain::getSegment(uint32_t idx) const
     return segments[idx];
 }
 
-MatSDS Chain::jacobi(const VectorXSDS &joints, int segNum) const
+void Chain::jacobi(MatSDS &jac, const VectorXSDS &joints, int segNum) const
 {
     int segmentNum = 0;
 
@@ -141,8 +141,6 @@ MatSDS Chain::jacobi(const VectorXSDS &joints, int segNum) const
 
     Frame fk;
     Frame tTmp;
-
-    MatSDS jac = MatSDS(6,6);
 
     int jointCnt = 0;
 
@@ -171,9 +169,6 @@ MatSDS Chain::jacobi(const VectorXSDS &joints, int segNum) const
 
         tTmp = fk;
     }
-
-    return jac;
-
 }
 
 Frame Chain::fk(const VectorXSDS &joints, int segNum)
@@ -189,8 +184,6 @@ Frame Chain::fk(const VectorXSDS &joints, int segNum)
         segmentNum = segNum;
     }
 
-    Frame frame;
-
     if(joints.mN!= _numOfJoints)
     {
         throw Exception(1,"[RobotFK] input joints num != chain's joints", __FILE__, __LINE__, __FUNCTION__);
@@ -200,6 +193,8 @@ Frame Chain::fk(const VectorXSDS &joints, int segNum)
     {
         throw Exception(1,"[RobotFK] input segments num > chain's segments", __FILE__, __LINE__, __FUNCTION__);
     }
+
+    Frame frame;
 
     int jointCnt = 0;
 
@@ -219,124 +214,112 @@ Frame Chain::fk(const VectorXSDS &joints, int segNum)
     return frame;
 }
 
-int Chain::ikNewton(const Frame &desireFrame, VectorXSDS &outJoints, double maxIter, double eps)
+int Chain::ikNewton(const Frame &desireFrame, VectorXSDS &outJoints, int maxIter, double eps, double maxTime)
 {
-    Frame frame;
-    Twist dtTwist;
 
     if(outJoints.mN != _numOfJoints)
     {
         return -2;
     }
 
+    Frame frame;
+    Twist dtTwist;
     MatSDS jac(_numOfJoints,6);
+
+    double timeM    = maxTime * 1000.0;
+    double timeNow  = 0;
+    auto joints     = outJoints;
+
+    auto st = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < maxIter; ++i)
     {
 
-        frame   = fk(outJoints);
+        auto so = std::chrono::high_resolution_clock::now();
+
+        timeNow = std::chrono::duration <double,std::milli> ((so-st)).count();
+
+        if(timeNow > timeM)
+        {
+            return -6;
+        }
+
+        frame = fk(joints);
 
         dtTwist = Frame::diff(frame, desireFrame);  
 
         if(dtTwist.closeToEps(eps))
         {
+
+            outJoints = joints;
             return i;
         }
 
-        jac = jacobi(outJoints); 
+        jacobi(jac,joints);
 
         MatSDS dtJoints = jac.pseudoInvert()*dtTwist.toMat(); 
 
-        for (int i = 0; i < outJoints.mN; ++i)
+        for (int i = 0; i < joints.mN; ++i)
         {
-            outJoints[i] = outJoints[i] + dtJoints[i];
+            joints[i] = joints[i] + dtJoints[i];
 
-            int time = (int)(outJoints[i]/MSNH_2_PI);
-            outJoints[i] -= time * MSNH_2_PI;
+            int time = (int)(joints[i]/MSNH_2_PI);
+            joints[i] -= time * MSNH_2_PI;
         }
 
     }
     return -1;
 }
 
-int Chain::ikNewtonJL(const Frame &desireFrame, VectorXSDS &outJoints, double maxIter, double eps)
+int Chain::ikNewtonJL(const Frame &desireFrame, VectorXSDS &outJoints, int maxIter, double eps)
 {
-    Frame frame;
-    Twist dtTwist;
 
     if(outJoints.mN != _numOfJoints)
     {
         return -2;
     }
 
+    Frame frame;
+    Twist dtTwist;
+    auto joints = outJoints;
+
     MatSDS jac(_numOfJoints,6);
 
     for (int i = 0; i < maxIter; ++i)
     {
 
-        frame   = fk(outJoints);
+        frame = fk(joints);
 
         dtTwist = Frame::diff(frame, desireFrame);  
 
         if(dtTwist.closeToEps(eps))
         {
+
+            outJoints = joints;
             return i;
         }
 
-        jac = jacobi(outJoints); 
+        jacobi(jac,joints);
 
-        auto UDVt = jac.svd();
-        double sum = 0;
-        VectorXSDS tmp(jac.mWidth);
+        MatSDS dtJoints = jac.pseudoInvert()*dtTwist.toMat(); 
 
-        VectorXSDS dtJoints(jac.mWidth);
-
-        for (int i = 0; i < jac.mWidth; ++i)
+        for (int i = 0; i < joints.mN; ++i)
         {
-            sum = 0;
-            for (int j = 0; j < jac.mHeight; ++j)
-            {
-                sum +=  UDVt[0](i,j)*dtTwist[j];
-            }
-
-            if(fabs(UDVt[1][i])<eps)
-            {
-                tmp[i] = 0;
-            }
-            else
-            {
-                tmp[i] = sum/UDVt[1][i];
-            }
-        }
-
-        for (int i = 0; i < jac.mWidth; ++i)
-        {
-            sum = 0;
-            for (int j=0;j<jac.mWidth;j++)
-            {
-                sum+=UDVt[2](i,j)*tmp[j];
-            }
-
-            dtJoints[i] = sum;
-        }
-
-        for (int i = 0; i < outJoints.mN; ++i)
-        {
-            outJoints[i] = outJoints[i] + dtJoints[i];
+            joints[i] = joints[i] + dtJoints[i];
 
             if(_jointMoveTypes[i] != Joint::TRANS_MOVE && _jointMoveTypes[i] != Joint::ROT_CONTINUOUS_MOVE)
             {
-                int time = (int)(outJoints[i]/MSNH_2_PI);
-                outJoints[i] -= time * MSNH_2_PI;
+                int time = (int)(joints[i]/MSNH_2_PI);
+                joints[i] -= time * MSNH_2_PI;
             }
 
-            if(outJoints[i] < _minJoints[i])
+            if(joints[i] < _minJoints[i])
             {
-                outJoints[i] = _minJoints[i];
+                joints[i] = _minJoints[i];
             }
-            else if(outJoints[i] > _maxJoints[i])
+            else if(joints[i] > _maxJoints[i])
             {
-                outJoints[i] = _maxJoints[i];
+                joints[i] = _maxJoints[i];
             }
         }
 
@@ -344,22 +327,38 @@ int Chain::ikNewtonJL(const Frame &desireFrame, VectorXSDS &outJoints, double ma
     return -1;
 }
 
-int Chain::ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twist &bounds, const bool &randomStart, const bool &wrap, double maxIter, double eps, double maxTime)
+int Chain::ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twist &bounds, const bool &randomStart, const bool &wrap, int maxIter, double eps, double maxTime)
 {
-    Frame frame;
-    Twist dtTwist;
 
     if(outJoints.mN != _numOfJoints)
     {
         return -2;
     }
 
+    Frame frame;
+    Twist dtTwist;
+    auto joints     = outJoints;
+
+    double timeM = maxTime * 1000.0;
+    double timeNow = 0;
+
     MatSDS jac(_numOfJoints,6);
+
+    auto st = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < maxIter; ++i)
     {
 
-        frame   = fk(outJoints);
+        auto so = std::chrono::high_resolution_clock::now();
+
+        timeNow = std::chrono::duration <double,std::milli> ((so-st)).count();
+
+        if(timeNow > timeM)
+        {
+            return -6;
+        }
+
+        frame = fk(joints);
 
         dtTwist = Frame::diffRelative(desireFrame,frame);  
 
@@ -383,12 +382,14 @@ int Chain::ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twi
 
         if(dtTwist.closeToEps(eps))
         {
+
+            outJoints = joints;
             return i;
         }
 
         dtTwist = Frame::diff(frame,desireFrame);
 
-        jac = jacobi(outJoints); 
+        jacobi(jac,joints);
 
         auto UDVt = jac.svd();
         double sum = 0;
@@ -425,11 +426,11 @@ int Chain::ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twi
             dtJoints[i] = sum;
         }
 
-        VectorXSDS currJoints(outJoints.mN);
+        VectorXSDS currJoints(joints.mN);
 
-        for (int i = 0; i < outJoints.mN; ++i)
+        for (int i = 0; i < joints.mN; ++i)
         {
-            currJoints[i] = outJoints[i] + dtJoints[i];
+            currJoints[i] = joints[i] + dtJoints[i];
 
             auto mtype      = _jointMoveTypes[i];
             auto minJoint   = _minJoints[i];
@@ -474,14 +475,14 @@ int Chain::ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twi
                 }
             }
 
-            outJoints[i] = outJoints[i] - currJoints[i];
+            joints[i] = joints[i] - currJoints[i];
         }
 
-        if(outJoints.isFuzzyNull(MSNH_F32_EPS))
+        if(joints.isFuzzyNull(MSNH_F32_EPS))
         {
             if(randomStart)
             {
-                for (unsigned int j = 0; j < currJoints.mN; j++)
+                for (int j = 0; j < currJoints.mN; j++)
                 {
                     if (_jointMoveTypes[j] == Joint::ROT_CONTINUOUS_MOVE)
                         currJoints[j] = fRand(currJoints[j] - MSNH_2_PI, currJoints[j] + MSNH_2_PI);
@@ -491,7 +492,7 @@ int Chain::ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twi
             }
         }
 
-        outJoints = currJoints;
+        joints = currJoints;
     }
     return -1;
 }
@@ -538,12 +539,12 @@ void Chain::cartSumSquaredErr(const std::vector<double> &x, double error[])
     if(dtTwist.closeToEps(_epsSQP))
     {
         _optStatus = 1;
-        _bestXSQP     = x;
+        _bestXSQP  = x;
         return;
     }
 }
 
-int Chain::ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Twist &bounds, double maxIter, double eps, double maxTime)
+int Chain::ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Twist &bounds, int maxIter, double eps, double maxTime)
 {
 
     if(outJoints.mN != _numOfJoints)
@@ -565,38 +566,38 @@ int Chain::ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Tw
 
     for (unsigned int i = 0; i < x.size(); i++)
     {
-      x[i] = outJoints[i];
+        x[i] = outJoints[i];
 
-      if (_jointMoveTypes[i] == Joint::ROT_CONTINUOUS_MOVE)
-        continue;
+        if (_jointMoveTypes[i] == Joint::ROT_CONTINUOUS_MOVE)
+            continue;
 
-      if (_jointMoveTypes[i] == Joint::TRANS_MOVE)
-      {
-        x[i] = std::min(x[i], _maxJoints[i]);
-        x[i] = std::max(x[i], _minJoints[i]);
-      }
-      else
-      {
-
-        if (x[i] > _maxJoints[i])
+        if (_jointMoveTypes[i] == Joint::TRANS_MOVE)
+        {
+            x[i] = std::min(x[i], _maxJoints[i]);
+            x[i] = std::max(x[i], _minJoints[i]);
+        }
+        else
         {
 
-          double diffangle = fmod(x[i] - _maxJoints[i], MSNH_2_PI);
+            if (x[i] > _maxJoints[i])
+            {
 
-          x[i] = _maxJoints[i] + diffangle - MSNH_2_PI;
+                double diffangle = fmod(x[i] - _maxJoints[i], MSNH_2_PI);
+
+                x[i] = _maxJoints[i] + diffangle - MSNH_2_PI;
+            }
+
+            if (x[i] < _minJoints[i])
+            {
+
+                double diffangle = fmod(_minJoints[i] - x[i], MSNH_2_PI);
+
+                x[i] = _minJoints[i] - diffangle + MSNH_2_PI;
+            }
+
+            if (x[i] > _maxJoints[i])
+                x[i] = (_maxJoints[i] + _minJoints[i]) / 2.0;
         }
-
-        if (x[i] < _minJoints[i])
-        {
-
-          double diffangle = fmod(_minJoints[i] - x[i], MSNH_2_PI);
-
-          x[i] = _minJoints[i] - diffangle + MSNH_2_PI;
-        }
-
-        if (x[i] > _maxJoints[i])
-          x[i] = (_maxJoints[i] + _minJoints[i]) / 2.0;
-      }
     }
 
     _bestXSQP   = x;
@@ -644,7 +645,7 @@ int Chain::ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Tw
 
     try
     {
-      _opt.optimize(x, minf);
+        _opt.optimize(x, minf);
     }
     catch (...)
     {
@@ -658,36 +659,38 @@ int Chain::ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Tw
 
     int q = 0;
 
-    if (!_stopImmediately && _optStatus < 0)
+    if (!(_optStatus < 0)) 
+
     {
 
-      for (int z = 0; z < 100; ++z)
-      {
-
-          q = z;
-          if(!(!_stopImmediately && _optStatus < 0))
-          {
-              break;
-          }
-
-        for (unsigned int i = 0; i < x.size(); i++)
+        for (int z = 0; z < 100; ++z)
         {
-            x[i] = fRand(artificialLowerLimits[i], artificialUpperLimits[i]);
+
+            q = z;
+            if(!(_optStatus < 0)) 
+
+            {
+                break;
+            }
+
+            for (unsigned int i = 0; i < x.size(); i++)
+            {
+                x[i] = fRand(artificialLowerLimits[i], artificialUpperLimits[i]);
+            }
+
+            try
+            {
+                _opt.optimize(x, minf);
+            }
+            catch (...) {}
+
+            if (_optStatus == -1) 
+
+            {
+                _optStatus = -3;
+            }
+
         }
-
-        try
-        {
-          _opt.optimize(x, minf);
-        }
-        catch (...) {}
-
-        if (_optStatus == -1) 
-
-        {
-            _optStatus = -3;
-        }
-
-      }
     }
 
     if(q == (maxIter-1))
@@ -697,11 +700,15 @@ int Chain::ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Tw
 
     for (unsigned int i = 0; i < x.size(); i++)
     {
-      outJoints[i] = _bestXSQP[i];
+        outJoints[i] = _bestXSQP[i];
     }
 
     return q;
 }
+
+    auto joints          =  outJoints;
+
+                outJoints = joints;
 
 void Chain::changeRefPoint(MatSDS &src, const Vector3DS &baseAB) const
 {

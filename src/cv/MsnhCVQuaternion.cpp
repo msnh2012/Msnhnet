@@ -131,10 +131,10 @@ QuaternionD &QuaternionD::operator=(const QuaternionD &q)
 
 bool QuaternionD::operator==(const QuaternionD &q)
 {
-    if(abs(this->_q0-q.getQ0())<MSNH_F64_EPS&&
-            abs(this->_q1-q.getQ1())<MSNH_F64_EPS&&
-            abs(this->_q2-q.getQ2())<MSNH_F64_EPS&&
-            abs(this->_q3-q.getQ3())<MSNH_F64_EPS)
+    if(fabs(this->_q0-q.getQ0())<MSNH_F64_EPS&&
+            fabs(this->_q1-q.getQ1())<MSNH_F64_EPS&&
+            fabs(this->_q2-q.getQ2())<MSNH_F64_EPS&&
+            fabs(this->_q3-q.getQ3())<MSNH_F64_EPS)
     {
         return true;
     }
@@ -284,10 +284,10 @@ QuaternionF &QuaternionF::operator=(const QuaternionF &q)
 
 bool QuaternionF::operator ==(const QuaternionF &q)
 {
-    if(abs(this->_q0-q.getQ0())<MSNH_F32_EPS&&
-            abs(this->_q1-q.getQ1())<MSNH_F32_EPS&&
-            abs(this->_q2-q.getQ2())<MSNH_F32_EPS&&
-            abs(this->_q3-q.getQ3())<MSNH_F32_EPS)
+    if(fabs(this->_q0-q.getQ0())<MSNH_F32_EPS&&
+            fabs(this->_q1-q.getQ1())<MSNH_F32_EPS&&
+            fabs(this->_q2-q.getQ2())<MSNH_F32_EPS&&
+            fabs(this->_q3-q.getQ3())<MSNH_F32_EPS)
     {
         return true;
     }

@@ -33,35 +33,37 @@ public:
 
     std::vector<Joint::MoveType> getJointMoveTypes() const;
 
-    MatSDS jacobi(const VectorXSDS &joints, int segNum = -1) const;
+    void jacobi(MatSDS &jac, const VectorXSDS &joints, int segNum = -1) const;
 
     Frame fk(const VectorXSDS &joints, int segNum = -1);
 
-    int ikNewton(const Frame &desireFrame, VectorXSDS &outJoints, double maxIter=100, double eps = 0.0001);
+    int ikNewton(const Frame &desireFrame, VectorXSDS &outJoints, int maxIter=100, double eps = 1e-5, double maxTime = 0.001);
 
-    int ikNewtonJL(const Frame &desireFrame, VectorXSDS &outJoints, double maxIter=100, double eps = 0.0001);
+    int ikNewtonJL(const Frame &desireFrame, VectorXSDS &outJoints, int maxIter=100, double eps = 1e-5);
 
     int ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twist& bounds = Twist(),
-                          const bool &randomStart = true, const bool &wrap = true, double maxIter=100, double eps = 0.0001, double maxTime = 0.005);
+                    const bool &randomStart = true, const bool &wrap = true, int maxIter=100, double eps = 1e-5, double maxTime = 0.001);
 
     void cartSumSquaredErr(const std::vector<double>& x, double error[]);
+
     int ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Twist& bounds = Twist(),
-                     double maxIter=100, double eps = 0.0001, double maxTime = 0.001);
+                     int maxIter=500, double eps = 1e-5, double maxTime = 0.001);
 
 private:
     nlopt::opt _opt;
     bool _optInited       = false;
     int  _optStatus       = -1;
-    bool _stopImmediately = false;
     int _numOfJoints;
     int _numOfSegments;
     std::vector<double> _minJoints;
     std::vector<double> _maxJoints;
     std::vector<Joint::MoveType> _jointMoveTypes;
     double _epsSQP = 0.0001;
+
     Frame _desireFrameSQP;
     std::vector<double> _bestXSQP;
     Twist _boundsSQP;
+
 };
 
 }

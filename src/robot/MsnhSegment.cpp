@@ -17,7 +17,7 @@ Segment::Segment(const std::string &name, const Joint &joint, const Frame &endTo
     else if( joint.getType()>=Joint::JOINT_ROT_XYZ && joint.getType()<Joint::JOINT_TRANS_XYZ)
     {
 
-        if(abs(_jointMin+DBL_MAX) < MSNH_F64_EPS && abs(_jointMin-DBL_MAX) < MSNH_F64_EPS)
+        if(std::abs(_jointMin+DBL_MAX) < MSNH_F64_EPS && std::abs(_jointMin-DBL_MAX) < MSNH_F64_EPS)
         {
             _moveType = Joint::ROT_CONTINUOUS_MOVE;
         }
@@ -46,7 +46,7 @@ Segment::Segment(const Joint &joint, const Frame &endToTip,  const double jointM
     else if( joint.getType()>=Joint::JOINT_ROT_XYZ && joint.getType()<Joint::JOINT_TRANS_XYZ)
     {
 
-        if(abs(_jointMin+DBL_MAX) < MSNH_F64_EPS && abs(_jointMin-DBL_MAX) < MSNH_F64_EPS)
+        if(std::abs(_jointMin+DBL_MAX) < MSNH_F64_EPS && std::abs(_jointMin-DBL_MAX) < MSNH_F64_EPS)
         {
             _moveType = Joint::ROT_CONTINUOUS_MOVE;
         }

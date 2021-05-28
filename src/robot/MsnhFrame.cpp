@@ -23,6 +23,18 @@ MatSDS Twist::toMat()
     return mat;
 }
 
+MatSDS Twist::toDiagMat()
+{
+    MatSDS mat = MatSDS::eye(6);
+    mat(0,0) = v[0];
+    mat(1,1) = v[1];
+    mat(2,2) = v[2];
+    mat(3,3) = omg[0];
+    mat(4,4) = omg[1];
+    mat(5,5) = omg[2];
+    return mat;
+}
+
 VectorXSDS Twist::toVec()
 {
     VectorXSDS vec(6);

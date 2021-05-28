@@ -283,14 +283,14 @@ public:
 
             len = sqrtf(len);
         }
-        else if(isF32Vec())
+        else if(isF64Vec())
         {
-            if(abs(len - 1.0) < MSNH_F64_EPS)
+            if(std::abs(len - 1.0) < MSNH_F64_EPS)
             {
                 return *this;
             }
 
-            if(abs(len) < MSNH_F64_EPS)
+            if(std::abs(len) < MSNH_F64_EPS)
             {
                 return vec;
             }
@@ -331,7 +331,7 @@ public:
         }
         else
         {
-            if(abs(len - 1.0) < MSNH_F64_EPS || abs(len) < MSNH_F64_EPS)
+            if(std::abs(len - 1.0) < MSNH_F64_EPS || std::abs(len) < MSNH_F64_EPS)
             {
                 return;
             }
@@ -665,10 +665,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[4*i+0] = vec[4*i+0];
-            mValue[4*i+1] = vec[4*i+1];
-            mValue[4*i+2] = vec[4*i+2];
-            mValue[4*i+3] = vec[4*i+3];
+            mValue[(i<<2)+0] = vec[(i<<2)+0];
+            mValue[(i<<2)+1] = vec[(i<<2)+1];
+            mValue[(i<<2)+2] = vec[(i<<2)+2];
+            mValue[(i<<2)+3] = vec[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -682,10 +682,10 @@ public:
         this->mN = vec.mN;
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[4*i+0] = vec.mValue[4*i+0];
-            mValue[4*i+1] = vec.mValue[4*i+1];
-            mValue[4*i+2] = vec.mValue[4*i+2];
-            mValue[4*i+3] = vec.mValue[4*i+3];
+            mValue[(i<<2)+0] = vec.mValue[(i<<2)+0];
+            mValue[(i<<2)+1] = vec.mValue[(i<<2)+1];
+            mValue[(i<<2)+2] = vec.mValue[(i<<2)+2];
+            mValue[(i<<2)+3] = vec.mValue[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -701,10 +701,10 @@ public:
             this->mN = vec.mN;
             for (int i = 0; i < mN/4; ++i)
             {
-                mValue[4*i+0] = vec.mValue[4*i+0];
-                mValue[4*i+1] = vec.mValue[4*i+1];
-                mValue[4*i+2] = vec.mValue[4*i+2];
-                mValue[4*i+3] = vec.mValue[4*i+3];
+                mValue[(i<<2)+0] = vec.mValue[(i<<2)+0];
+                mValue[(i<<2)+1] = vec.mValue[(i<<2)+1];
+                mValue[(i<<2)+2] = vec.mValue[(i<<2)+2];
+                mValue[(i<<2)+3] = vec.mValue[(i<<2)+3];
             }
 
             for (int i = 4*(mN/4); i < mN; ++i)
@@ -724,10 +724,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[4*i+0] = vec[4*i+0];
-            mValue[4*i+1] = vec[4*i+1];
-            mValue[4*i+2] = vec[4*i+2];
-            mValue[4*i+3] = vec[4*i+3];
+            mValue[(i<<2)+0] = vec[(i<<2)+0];
+            mValue[(i<<2)+1] = vec[(i<<2)+1];
+            mValue[(i<<2)+2] = vec[(i<<2)+2];
+            mValue[(i<<2)+3] = vec[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -741,10 +741,10 @@ public:
     {
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[4*i+0] = value;
-            mValue[4*i+1] = value;
-            mValue[4*i+2] = value;
-            mValue[4*i+3] = value;
+            mValue[(i<<2)+0] = value;
+            mValue[(i<<2)+1] = value;
+            mValue[(i<<2)+2] = value;
+            mValue[(i<<2)+3] = value;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -853,10 +853,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[4*i+0] = val[4*i+0];
-            mValue[4*i+1] = val[4*i+1];
-            mValue[4*i+2] = val[4*i+2];
-            mValue[4*i+3] = val[4*i+3];
+            mValue[(i<<2)+0] = val[(i<<2)+0];
+            mValue[(i<<2)+1] = val[(i<<2)+1];
+            mValue[(i<<2)+2] = val[(i<<2)+2];
+            mValue[(i<<2)+3] = val[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -875,10 +875,10 @@ public:
     {
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[4*i+0] = 0;
-            mValue[4*i+1] = 0;
-            mValue[4*i+2] = 0;
-            mValue[4*i+3] = 0;
+            mValue[(i<<2)+0] = 0;
+            mValue[(i<<2)+1] = 0;
+            mValue[(i<<2)+2] = 0;
+            mValue[(i<<2)+3] = 0;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -891,10 +891,10 @@ public:
     {
         for (int i = 0; i < mN/4; ++i)
         {
-            mValue[4*i+0] = -mValue[4*i+0];
-            mValue[4*i+1] = -mValue[4*i+1];
-            mValue[4*i+2] = -mValue[4*i+2];
-            mValue[4*i+3] = -mValue[4*i+3];
+            mValue[(i<<2)+0] = -mValue[(i<<2)+0];
+            mValue[(i<<2)+1] = -mValue[(i<<2)+1];
+            mValue[(i<<2)+2] = -mValue[(i<<2)+2];
+            mValue[(i<<2)+3] = -mValue[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -985,10 +985,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            len += this->mValue[4*i+0]*this->mValue[4*i+0];
-            len += this->mValue[4*i+1]*this->mValue[4*i+1];
-            len += this->mValue[4*i+2]*this->mValue[4*i+2];
-            len += this->mValue[4*i+3]*this->mValue[4*i+3];
+            len += this->mValue[(i<<2)+0]*this->mValue[(i<<2)+0];
+            len += this->mValue[(i<<2)+1]*this->mValue[(i<<2)+1];
+            len += this->mValue[(i<<2)+2]*this->mValue[(i<<2)+2];
+            len += this->mValue[(i<<2)+3]*this->mValue[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1010,14 +1010,14 @@ public:
 
             len = sqrtf(len);
         }
-        else if(isF32Vec())
+        else if(isF64Vec())
         {
-            if(abs(len - 1.0) < MSNH_F64_EPS)
+            if(std::abs(len - 1.0) < MSNH_F64_EPS)
             {
                 return *this;
             }
 
-            if(abs(len) < MSNH_F64_EPS)
+            if(std::abs(len) < MSNH_F64_EPS)
             {
                 return vec;
             }
@@ -1044,10 +1044,10 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-            len += this->mValue[4*i+0]*this->mValue[4*i+0];
-            len += this->mValue[4*i+1]*this->mValue[4*i+1];
-            len += this->mValue[4*i+2]*this->mValue[4*i+2];
-            len += this->mValue[4*i+3]*this->mValue[4*i+3];
+            len += this->mValue[(i<<2)+0]*this->mValue[(i<<2)+0];
+            len += this->mValue[(i<<2)+1]*this->mValue[(i<<2)+1];
+            len += this->mValue[(i<<2)+2]*this->mValue[(i<<2)+2];
+            len += this->mValue[(i<<2)+3]*this->mValue[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1066,7 +1066,7 @@ public:
         }
         else
         {
-            if(abs(len - 1.0) < MSNH_F64_EPS || abs(len) < MSNH_F64_EPS)
+            if(std::abs(len - 1.0) < MSNH_F64_EPS || std::abs(len) < MSNH_F64_EPS)
             {
                 return;
             }
@@ -1084,10 +1084,10 @@ public:
         double len = 0;
         for (int i = 0; i < mN/4; ++i)
         {
-            len += this->mValue[4*i+0]*this->mValue[4*i+0];
-            len += this->mValue[4*i+1]*this->mValue[4*i+1];
-            len += this->mValue[4*i+2]*this->mValue[4*i+2];
-            len += this->mValue[4*i+3]*this->mValue[4*i+3];
+            len += this->mValue[(i<<2)+0]*this->mValue[(i<<2)+0];
+            len += this->mValue[(i<<2)+1]*this->mValue[(i<<2)+1];
+            len += this->mValue[(i<<2)+2]*this->mValue[(i<<2)+2];
+            len += this->mValue[(i<<2)+3]*this->mValue[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1103,10 +1103,10 @@ public:
         double len = 0;
         for (int i = 0; i < mN/4; ++i)
         {
-            len += this->mValue[4*i+0]*this->mValue[4*i+0];
-            len += this->mValue[4*i+1]*this->mValue[4*i+1];
-            len += this->mValue[4*i+2]*this->mValue[4*i+2];
-            len += this->mValue[4*i+3]*this->mValue[4*i+3];
+            len += this->mValue[(i<<2)+0]*this->mValue[(i<<2)+0];
+            len += this->mValue[(i<<2)+1]*this->mValue[(i<<2)+1];
+            len += this->mValue[(i<<2)+2]*this->mValue[(i<<2)+2];
+            len += this->mValue[(i<<2)+3]*this->mValue[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1124,10 +1124,10 @@ public:
 
         for (int i = 0; i < A.mN/4; ++i)
         {
-            finalVal += A[4*i+0]*B[4*i+0];
-            finalVal += A[4*i+1]*B[4*i+1];
-            finalVal += A[4*i+2]*B[4*i+2];
-            finalVal += A[4*i+3]*B[4*i+3];
+            finalVal += A[(i<<2)+0]*B[(i<<2)+0];
+            finalVal += A[(i<<2)+1]*B[(i<<2)+1];
+            finalVal += A[(i<<2)+2]*B[(i<<2)+2];
+            finalVal += A[(i<<2)+3]*B[(i<<2)+3];
         }
 
         for (int i = 4*(A.mN/4); i < A.mN; ++i)
@@ -1170,10 +1170,10 @@ public:
 
         for (int i = 0; i < B.mN/4; ++i)
         {
-            tmp[4*i+0] = A[4*i+0]+B[4*i+0];
-            tmp[4*i+1] = A[4*i+1]+B[4*i+1];
-            tmp[4*i+2] = A[4*i+2]+B[4*i+2];
-            tmp[4*i+3] = A[4*i+3]+B[4*i+3];
+            tmp[(i<<2)+0] = A[(i<<2)+0]+B[(i<<2)+0];
+            tmp[(i<<2)+1] = A[(i<<2)+1]+B[(i<<2)+1];
+            tmp[(i<<2)+2] = A[(i<<2)+2]+B[(i<<2)+2];
+            tmp[(i<<2)+3] = A[(i<<2)+3]+B[(i<<2)+3];
         }
 
         for (int i = 4*(B.mN/4); i < B.mN; ++i)
@@ -1189,10 +1189,10 @@ public:
         VectorXS tmp(B.mN);
         for (int i = 0; i <B.mN/4; ++i)
         {
-            tmp[4*i+0] = A+B[4*i+0];
-            tmp[4*i+1] = A+B[4*i+1];
-            tmp[4*i+2] = A+B[4*i+2];
-            tmp[4*i+3] = A+B[4*i+3];
+            tmp[(i<<2)+0] = A+B[(i<<2)+0];
+            tmp[(i<<2)+1] = A+B[(i<<2)+1];
+            tmp[(i<<2)+2] = A+B[(i<<2)+2];
+            tmp[(i<<2)+3] = A+B[(i<<2)+3];
         }
 
         for (int i = 4*(B.mN/4); i < B.mN; ++i)
@@ -1207,10 +1207,10 @@ public:
         VectorXS tmp(A.mN);
         for (int i = 0; i < B.mN/4; ++i)
         {
-            tmp[4*i+0] = A[4*i+0]+B;
-            tmp[4*i+1] = A[4*i+1]+B;
-            tmp[4*i+2] = A[4*i+2]+B;
-            tmp[4*i+3] = A[4*i+3]+B;
+            tmp[(i<<2)+0] = A[(i<<2)+0]+B;
+            tmp[(i<<2)+1] = A[(i<<2)+1]+B;
+            tmp[(i<<2)+2] = A[(i<<2)+2]+B;
+            tmp[(i<<2)+3] = A[(i<<2)+3]+B;
         }
 
         for (int i = 4*(B.mN/4); i < B.mN; ++i)
@@ -1229,10 +1229,10 @@ public:
 
         for (int i = 0; i < A.mN/4; ++i)
         {
-            tmp[4*i+0] = A[4*i+0]-B[4*i+0];
-            tmp[4*i+1] = A[4*i+1]-B[4*i+1];
-            tmp[4*i+2] = A[4*i+2]-B[4*i+2];
-            tmp[4*i+3] = A[4*i+3]-B[4*i+3];
+            tmp[(i<<2)+0] = A[(i<<2)+0]-B[(i<<2)+0];
+            tmp[(i<<2)+1] = A[(i<<2)+1]-B[(i<<2)+1];
+            tmp[(i<<2)+2] = A[(i<<2)+2]-B[(i<<2)+2];
+            tmp[(i<<2)+3] = A[(i<<2)+3]-B[(i<<2)+3];
         }
 
         for (int i = 4*(A.mN/4); i < A.mN; ++i)
@@ -1248,10 +1248,10 @@ public:
         VectorXS tmp(B.mN);
         for (int i = 0; i < B.mN/4; ++i)
         {
-            tmp[4*i+0] = A-B[4*i+0];
-            tmp[4*i+1] = A-B[4*i+1];
-            tmp[4*i+2] = A-B[4*i+2];
-            tmp[4*i+3] = A-B[4*i+3];
+            tmp[(i<<2)+0] = A-B[(i<<2)+0];
+            tmp[(i<<2)+1] = A-B[(i<<2)+1];
+            tmp[(i<<2)+2] = A-B[(i<<2)+2];
+            tmp[(i<<2)+3] = A-B[(i<<2)+3];
         }
 
         for (int i = 4*(B.mN/4); i < B.mN; ++i)
@@ -1266,10 +1266,10 @@ public:
         VectorXS tmp(A.mN);
         for (int i = 0; i < A.mN/4; ++i)
         {
-            tmp[4*i+0] = A[4*i+0]-B;
-            tmp[4*i+1] = A[4*i+1]-B;
-            tmp[4*i+2] = A[4*i+2]-B;
-            tmp[4*i+3] = A[4*i+3]-B;
+            tmp[(i<<2)+0] = A[(i<<2)+0]-B;
+            tmp[(i<<2)+1] = A[(i<<2)+1]-B;
+            tmp[(i<<2)+2] = A[(i<<2)+2]-B;
+            tmp[(i<<2)+3] = A[(i<<2)+3]-B;
         }
 
         for (int i = 4*(A.mN/4); i < A.mN; ++i)
@@ -1293,10 +1293,10 @@ public:
 
         for (int i = 0; i < A.mN/4; ++i)
         {
-            tmp[4*i+0] = A[4*i+0]*B[4*i+0];
-            tmp[4*i+1] = A[4*i+1]*B[4*i+1];
-            tmp[4*i+2] = A[4*i+2]*B[4*i+2];
-            tmp[4*i+3] = A[4*i+3]*B[4*i+3];
+            tmp[(i<<2)+0] = A[(i<<2)+0]*B[(i<<2)+0];
+            tmp[(i<<2)+1] = A[(i<<2)+1]*B[(i<<2)+1];
+            tmp[(i<<2)+2] = A[(i<<2)+2]*B[(i<<2)+2];
+            tmp[(i<<2)+3] = A[(i<<2)+3]*B[(i<<2)+3];
         }
 
         for (int i = 4*(A.mN/4); i < A.mN; ++i)
@@ -1312,10 +1312,10 @@ public:
         VectorXS tmp(B.mN);
         for (int i = 0; i < B.mN/4; ++i)
         {
-            tmp[4*i+0] = A*B[4*i+0];
-            tmp[4*i+1] = A*B[4*i+1];
-            tmp[4*i+2] = A*B[4*i+2];
-            tmp[4*i+3] = A*B[4*i+3];
+            tmp[(i<<2)+0] = A*B[(i<<2)+0];
+            tmp[(i<<2)+1] = A*B[(i<<2)+1];
+            tmp[(i<<2)+2] = A*B[(i<<2)+2];
+            tmp[(i<<2)+3] = A*B[(i<<2)+3];
         }
 
         for (int i = 4*(B.mN/4); i < B.mN; ++i)
@@ -1330,10 +1330,10 @@ public:
         VectorXS tmp(A.mN);
         for (int i = 0; i < A.mN/4; ++i)
         {
-            tmp[4*i+0] = A[4*i+0]*B;
-            tmp[4*i+1] = A[4*i+1]*B;
-            tmp[4*i+2] = A[4*i+2]*B;
-            tmp[4*i+3] = A[4*i+3]*B;
+            tmp[(i<<2)+0] = A[(i<<2)+0]*B;
+            tmp[(i<<2)+1] = A[(i<<2)+1]*B;
+            tmp[(i<<2)+2] = A[(i<<2)+2]*B;
+            tmp[(i<<2)+3] = A[(i<<2)+3]*B;
         }
 
         for (int i = 4*(A.mN/4); i < A.mN; ++i)
@@ -1348,10 +1348,10 @@ public:
         VectorXS tmp(A.mN);
         for (int i = 0; i < A.mN/4; ++i)
         {
-            tmp[4*i+0] = A[4*i+0]/B;
-            tmp[4*i+1] = A[4*i+1]/B;
-            tmp[4*i+2] = A[4*i+2]/B;
-            tmp[4*i+3] = A[4*i+3]/B;
+            tmp[(i<<2)+0] = A[(i<<2)+0]/B;
+            tmp[(i<<2)+1] = A[(i<<2)+1]/B;
+            tmp[(i<<2)+2] = A[(i<<2)+2]/B;
+            tmp[(i<<2)+3] = A[(i<<2)+3]/B;
         }
 
         for (int i = 4*(A.mN/4); i < A.mN; ++i)
@@ -1369,10 +1369,10 @@ public:
 
         for (int i = 0; i < A.mN/4; ++i)
         {
-            tmp[4*i+0] = A[4*i+0]/B[4*i+0];
-            tmp[4*i+1] = A[4*i+1]/B[4*i+1];
-            tmp[4*i+2] = A[4*i+2]/B[4*i+2];
-            tmp[4*i+3] = A[4*i+3]/B[4*i+3];
+            tmp[(i<<2)+0] = A[(i<<2)+0]/B[(i<<2)+0];
+            tmp[(i<<2)+1] = A[(i<<2)+1]/B[(i<<2)+1];
+            tmp[(i<<2)+2] = A[(i<<2)+2]/B[(i<<2)+2];
+            tmp[(i<<2)+3] = A[(i<<2)+3]/B[(i<<2)+3];
         }
 
         for (int i = 4*(A.mN/4); i < A.AmN; ++i)
@@ -1469,10 +1469,10 @@ public:
     {
         for (int i = 0; i < mN/4; ++i)
         {
-            this->mValue[4*i+0] += A[4*i+0];
-            this->mValue[4*i+1] += A[4*i+1];
-            this->mValue[4*i+2] += A[4*i+2];
-            this->mValue[4*i+3] += A[4*i+3];
+            this->mValue[(i<<2)+0] += A[(i<<2)+0];
+            this->mValue[(i<<2)+1] += A[(i<<2)+1];
+            this->mValue[(i<<2)+2] += A[(i<<2)+2];
+            this->mValue[(i<<2)+3] += A[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1486,10 +1486,10 @@ public:
     {
         for (int i = 0; i < mN/4; ++i)
         {
-            this->mValue[4*i+0] += A;
-            this->mValue[4*i+1] += A;
-            this->mValue[4*i+2] += A;
-            this->mValue[4*i+3] += A;
+            this->mValue[(i<<2)+0] += A;
+            this->mValue[(i<<2)+1] += A;
+            this->mValue[(i<<2)+2] += A;
+            this->mValue[(i<<2)+3] += A;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1503,10 +1503,10 @@ public:
     {
         for (int i = 0; i < mN/4; ++i)
         {
-            this->mValue[4*i+0] -= A[4*i+0];
-            this->mValue[4*i+1] -= A[4*i+1];
-            this->mValue[4*i+2] -= A[4*i+2];
-            this->mValue[4*i+3] -= A[4*i+3];
+            this->mValue[(i<<2)+0] -= A[(i<<2)+0];
+            this->mValue[(i<<2)+1] -= A[(i<<2)+1];
+            this->mValue[(i<<2)+2] -= A[(i<<2)+2];
+            this->mValue[(i<<2)+3] -= A[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1520,10 +1520,10 @@ public:
     {
         for (int i = 0; i < mN/4; ++i)
         {
-            this->mValue[4*i+0] -= A;
-            this->mValue[4*i+1] -= A;
-            this->mValue[4*i+2] -= A;
-            this->mValue[4*i+3] -= A;
+            this->mValue[(i<<2)+0] -= A;
+            this->mValue[(i<<2)+1] -= A;
+            this->mValue[(i<<2)+2] -= A;
+            this->mValue[(i<<2)+3] -= A;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1537,10 +1537,10 @@ public:
     {
         for (int i = 0; i < mN/4; ++i)
         {
-            this->mValue[4*i+0] *= A[4*i+0];
-            this->mValue[4*i+1] *= A[4*i+1];
-            this->mValue[4*i+2] *= A[4*i+2];
-            this->mValue[4*i+3] *= A[4*i+3];
+            this->mValue[(i<<2)+0] *= A[(i<<2)+0];
+            this->mValue[(i<<2)+1] *= A[(i<<2)+1];
+            this->mValue[(i<<2)+2] *= A[(i<<2)+2];
+            this->mValue[(i<<2)+3] *= A[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1554,10 +1554,10 @@ public:
     {
         for (int i = 0; i < mN/4; ++i)
         {
-            this->mValue[4*i+0] *= A;
-            this->mValue[4*i+1] *= A;
-            this->mValue[4*i+2] *= A;
-            this->mValue[4*i+3] *= A;
+            this->mValue[(i<<2)+0] *= A;
+            this->mValue[(i<<2)+1] *= A;
+            this->mValue[(i<<2)+2] *= A;
+            this->mValue[(i<<2)+3] *= A;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1571,10 +1571,10 @@ public:
     {
         for (int i = 0; i < mN/4; ++i)
         {
-            this->mValue[4*i+0] /= A;
-            this->mValue[4*i+1] /= A;
-            this->mValue[4*i+2] /= A;
-            this->mValue[4*i+3] /= A;
+            this->mValue[(i<<2)+0] /= A;
+            this->mValue[(i<<2)+1] /= A;
+            this->mValue[(i<<2)+2] /= A;
+            this->mValue[(i<<2)+3] /= A;
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
