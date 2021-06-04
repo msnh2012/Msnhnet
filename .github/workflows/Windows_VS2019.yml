@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: configure
-      run: cmake .. -Bbuild -G"Visual Studio 16 2019"  
+      run: cmake -Bbuild -G"Visual Studio 16 2019"  
 
     - name: build
       run: cmake --build build --config Debug -j
