@@ -33,7 +33,7 @@
 namespace Msnhnet
 {
 using namespace std;
-class SimdInfo
+class MsnhNet_API SimdInfo
 {
 public:
 #ifdef USE_X86

@@ -95,12 +95,12 @@ Joint Segment::getJoint() const
 
 Frame Segment::getEndToTip() const
 {
-    return Frame(_joint.getPos(0)*_endToTip);
+    return _joint.getPos(0)*_endToTip;
 }
 
 Frame Segment::getPos(const double &q) const
 {
-    return Frame(_joint.getPos(q)*_endToTip);
+    return  _joint.getPos(q)*_endToTip;
 }
 
 Twist Segment::getTwist(const double &q, const double &qdot) const

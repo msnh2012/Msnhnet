@@ -23,6 +23,15 @@ public :
         val[6] = vec[6]; val[7] = vec[7]; val[8] = vec[8];
     }
 
+    inline RotationMatDS(const double a11, const double a12, const double a13,
+                         const double a21, const double a22, const double a23,
+                         const double a31, const double a32, const double a33)
+    {
+        val[0] = a11; val[1] = a12; val[2] = a13;
+        val[3] = a21; val[4] = a22; val[5] = a23;
+        val[6] = a31; val[7] = a32; val[8] = a33;
+    }
+
     inline RotationMatDS(const Vector3DS& x, const Vector3DS& y, const Vector3DS& z)
     {
         val[0] = x.val[0]; val[1] = y.val[0]; val[2] = z.val[0];
@@ -106,6 +115,40 @@ public :
         return Vector3DS(val[2],val[5],val[8]);
     }
 
+    inline double L1() const
+    {
+        double l1 = fabs(val[0]) + fabs(val[1]) + fabs(val[2]) +
+                fabs(val[3]) + fabs(val[4]) + fabs(val[5]) +
+                fabs(val[6]) + fabs(val[7]) + fabs(val[8]);
+
+        return l1;
+    }
+
+    inline double L2() const
+    {
+        double l2 = val[0]*val[0] + val[1]*val[1] + val[2]*val[2] +
+                val[3]*val[3] + val[4]*val[4] + val[5]*val[5] +
+                val[6]*val[6] + val[7]*val[7] + val[8]*val[8];
+
+        return std::sqrt(l2);
+    }
+
+    inline double LInf() const
+    {
+        std::vector<double> tmp;
+
+        tmp.push_back(fabs(val[0]));
+        tmp.push_back(fabs(val[1]));
+        tmp.push_back(fabs(val[2]));
+        tmp.push_back(fabs(val[3]));
+        tmp.push_back(fabs(val[4]));
+        tmp.push_back(fabs(val[5]));
+        tmp.push_back(fabs(val[6]));
+        tmp.push_back(fabs(val[7]));
+        tmp.push_back(fabs(val[8]));
+        return *std::max_element(tmp.begin(),tmp.end());
+    }
+
     double getRotAngle(Vector3DS &axis, double eps) const;
 
     inline Vector3DS getRot() const
@@ -117,9 +160,9 @@ public :
 
     inline friend bool operator ==(const RotationMatDS& A, const RotationMatDS& B)
     {
-        if(std::fabs(A.val[0]-B.val[0]) < MSNH_F64_EPS && std::fabs(A.val[1]-B.val[1]) < MSNH_F64_EPS && std::fabs(A.val[2]-B.val[2]) < MSNH_F64_EPS &&
-                std::fabs(A.val[3]-B.val[3]) < MSNH_F64_EPS && std::fabs(A.val[4]-B.val[4]) < MSNH_F64_EPS && std::fabs(A.val[5]-B.val[5]) < MSNH_F64_EPS &&
-                std::fabs(A.val[6]-B.val[6]) < MSNH_F64_EPS && std::fabs(A.val[7]-B.val[7]) < MSNH_F64_EPS && std::fabs(A.val[8]-B.val[8]) < MSNH_F64_EPS)
+        if(fabs(A.val[0]-B.val[0]) < MSNH_F64_EPS && fabs(A.val[1]-B.val[1]) < MSNH_F64_EPS && fabs(A.val[2]-B.val[2]) < MSNH_F64_EPS &&
+                fabs(A.val[3]-B.val[3]) < MSNH_F64_EPS && fabs(A.val[4]-B.val[4]) < MSNH_F64_EPS && fabs(A.val[5]-B.val[5]) < MSNH_F64_EPS &&
+                fabs(A.val[6]-B.val[6]) < MSNH_F64_EPS && fabs(A.val[7]-B.val[7]) < MSNH_F64_EPS && fabs(A.val[8]-B.val[8]) < MSNH_F64_EPS)
         {
             return true;
         }
@@ -131,9 +174,9 @@ public :
 
     inline friend bool operator !=(const RotationMatDS& A, const RotationMatDS& B)
     {
-        if(std::fabs(A.val[0]-B.val[0]) < MSNH_F64_EPS && std::fabs(A.val[1]-B.val[1]) < MSNH_F64_EPS && std::fabs(A.val[2]-B.val[2]) < MSNH_F64_EPS &&
-                std::fabs(A.val[3]-B.val[3]) < MSNH_F64_EPS && std::fabs(A.val[4]-B.val[4]) < MSNH_F64_EPS && std::fabs(A.val[5]-B.val[5]) < MSNH_F64_EPS &&
-                std::fabs(A.val[6]-B.val[6]) < MSNH_F64_EPS && std::fabs(A.val[7]-B.val[7]) < MSNH_F64_EPS && std::fabs(A.val[8]-B.val[8]) < MSNH_F64_EPS)
+        if(fabs(A.val[0]-B.val[0]) < MSNH_F64_EPS && fabs(A.val[1]-B.val[1]) < MSNH_F64_EPS && fabs(A.val[2]-B.val[2]) < MSNH_F64_EPS &&
+                fabs(A.val[3]-B.val[3]) < MSNH_F64_EPS && fabs(A.val[4]-B.val[4]) < MSNH_F64_EPS && fabs(A.val[5]-B.val[5]) < MSNH_F64_EPS &&
+                fabs(A.val[6]-B.val[6]) < MSNH_F64_EPS && fabs(A.val[7]-B.val[7]) < MSNH_F64_EPS && fabs(A.val[8]-B.val[8]) < MSNH_F64_EPS)
         {
             return false;
         }
@@ -145,9 +188,9 @@ public :
 
     inline bool isFuzzyNull() const
     {
-        if(std::fabs(val[0]) < MSNH_F64_EPS && std::fabs(val[1]) < MSNH_F64_EPS && std::fabs(val[2]) < MSNH_F64_EPS &&
-                std::fabs(val[3]) < MSNH_F64_EPS && std::fabs(val[4]) < MSNH_F64_EPS && std::fabs(val[5]) < MSNH_F64_EPS &&
-                std::fabs(val[6]) < MSNH_F64_EPS && std::fabs(val[7]) < MSNH_F64_EPS && std::fabs(val[8]) < MSNH_F64_EPS)
+        if(fabs(val[0]) < MSNH_F64_EPS && fabs(val[1]) < MSNH_F64_EPS && fabs(val[2]) < MSNH_F64_EPS &&
+                fabs(val[3]) < MSNH_F64_EPS && fabs(val[4]) < MSNH_F64_EPS && fabs(val[5]) < MSNH_F64_EPS &&
+                fabs(val[6]) < MSNH_F64_EPS && fabs(val[7]) < MSNH_F64_EPS && fabs(val[8]) < MSNH_F64_EPS)
         {
             return true;
         }
@@ -156,9 +199,9 @@ public :
 
     inline bool closeToEps(const double &eps)
     {
-        if(std::fabs(val[0]-eps) < MSNH_F64_EPS && std::fabs(val[1]-eps) < MSNH_F64_EPS && std::fabs(val[2]-eps) < MSNH_F64_EPS &&
-                std::fabs(val[3]-eps) < MSNH_F64_EPS && std::fabs(val[4]-eps) < MSNH_F64_EPS && std::fabs(val[5]-eps) < MSNH_F64_EPS &&
-                std::fabs(val[6]-eps) < MSNH_F64_EPS && std::fabs(val[7]-eps) < MSNH_F64_EPS && std::fabs(val[8]-eps) < MSNH_F64_EPS)
+        if(fabs(val[0]-eps) < MSNH_F64_EPS && fabs(val[1]-eps) < MSNH_F64_EPS && fabs(val[2]-eps) < MSNH_F64_EPS &&
+                fabs(val[3]-eps) < MSNH_F64_EPS && fabs(val[4]-eps) < MSNH_F64_EPS && fabs(val[5]-eps) < MSNH_F64_EPS &&
+                fabs(val[6]-eps) < MSNH_F64_EPS && fabs(val[7]-eps) < MSNH_F64_EPS && fabs(val[8]-eps) < MSNH_F64_EPS)
         {
             return true;
         }
@@ -322,6 +365,15 @@ public :
         val[6] = vec[6]; val[7] = vec[7]; val[8] = vec[8];
     }
 
+    inline RotationMatFS(const float a11, const float a12, const float a13,
+                         const float a21, const float a22, const float a23,
+                         const float a31, const float a32, const float a33)
+    {
+        val[0] = a11; val[1] = a12; val[2] = a13;
+        val[3] = a21; val[4] = a22; val[5] = a23;
+        val[6] = a31; val[7] = a32; val[8] = a33;
+    }
+
     inline RotationMatFS(const Vector3FS& x, const Vector3FS& y, const Vector3FS& z)
     {
         val[0] = x.val[0]; val[1] = y.val[0]; val[2] = z.val[0];
@@ -403,6 +455,41 @@ public :
     inline Vector3FS getZ() const
     {
         return Vector3FS(val[2],val[5],val[8]);
+    }
+
+    inline float L1() const
+    {
+        float l1 = fabsf(val[0]) + fabsf(val[1]) + fabsf(val[2]) +
+                fabsf(val[3]) + fabsf(val[4]) + fabsf(val[5]) +
+                fabsf(val[6]) + fabsf(val[7]) + fabsf(val[8]);
+
+        return l1;
+    }
+
+    inline float L2() const
+    {
+        float l2 = val[0]*val[0] + val[1]*val[1] + val[2]*val[2] +
+                val[3]*val[3] + val[4]*val[4] + val[5]*val[5] +
+                val[6]*val[6] + val[7]*val[7] + val[8]*val[8];
+
+        return sqrtf(l2);
+    }
+
+    inline float LInf() const
+    {
+        std::vector<float> tmp;
+
+        tmp.push_back(fabsf(val[0]));
+        tmp.push_back(fabsf(val[1]));
+        tmp.push_back(fabsf(val[2]));
+        tmp.push_back(fabsf(val[3]));
+        tmp.push_back(fabsf(val[4]));
+        tmp.push_back(fabsf(val[5]));
+        tmp.push_back(fabsf(val[6]));
+        tmp.push_back(fabsf(val[7]));
+        tmp.push_back(fabsf(val[8]));
+
+        return *std::max_element(tmp.begin(),tmp.end());
     }
 
     inline friend bool operator ==(const RotationMatFS& A, const RotationMatFS& B)

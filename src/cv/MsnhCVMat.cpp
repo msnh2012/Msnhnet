@@ -522,7 +522,7 @@ bool operator!=(const Mat &A, const Mat &B)
     {
         for (size_t i = 0; i < A.getDataNum(); ++i)
         {
-            if(std::fabs(A.getData().f64[i] - B.getData().f64[i])>MSNH_F64_EPS)
+            if(fabs(A.getData().f64[i] - B.getData().f64[i])>MSNH_F64_EPS)
             {
                 return true;
             }
@@ -564,7 +564,7 @@ bool operator==(const Mat &A, const Mat &B)
     {
         for (size_t i = 0; i < A.getDataNum(); ++i)
         {
-            if(std::fabs(A.getData().f64[i] - B.getData().f64[i])>MSNH_F64_EPS)
+            if(fabs(A.getData().f64[i] - B.getData().f64[i])>MSNH_F64_EPS)
             {
                 return false;
             }
@@ -3634,7 +3634,7 @@ bool Mat::isFuzzyNull() const
     {
         for (size_t i = 0; i < this->getDataNum(); ++i)
         {
-            if(std::fabs(this->getFloat64()[i]) > MSNH_F64_EPS)
+            if(fabs(this->getFloat64()[i]) > MSNH_F64_EPS)
             {
                 return false;
             }

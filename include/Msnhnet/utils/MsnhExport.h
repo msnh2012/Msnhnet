@@ -1,5 +1,6 @@
 ﻿#ifndef MSNHEXPORT_H
 #define MSNHEXPORT_H
+#include "Msnhnet/config/MsnhnetMacro.h"
 
 #ifdef EXPORT_MSNHNET_STATIC
     #define MsnhNet_EXPORT

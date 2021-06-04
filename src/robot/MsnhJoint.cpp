@@ -105,7 +105,7 @@ const Vector3DS Joint::getOrigin() const
 Frame Joint::getPos(const double &q) const
 {
 
-    switch (_type)
+    switch (this->_type)
     {
     case JOINT_FIXED:
         return Frame();
@@ -124,6 +124,7 @@ Frame Joint::getPos(const double &q) const
     default:
         return Frame();
     }
+    return Frame();
 }
 
 Twist Joint::getTwist(const double &qdot) const

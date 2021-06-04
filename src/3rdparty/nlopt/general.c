@@ -1,4 +1,4 @@
-/* Copyright (c) 2007-2014 Massachusetts Institute of Technology
+﻿/* Copyright (c) 2007-2014 Massachusetts Institute of Technology
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -22,15 +22,6 @@
 
 #include "nlopt-internal.h"
 #include <string.h>
-
-/*************************************************************************/
-
-void NLOPT_STDCALL nlopt_version(int *major, int *minor, int *bugfix)
-{
-    *major = MAJOR_VERSION;
-    *minor = MINOR_VERSION;
-    *bugfix = BUGFIX_VERSION;
-}
 
 /*************************************************************************/
 

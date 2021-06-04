@@ -6,10 +6,16 @@
 #include <vector>
 #include <chrono>
 #include "Msnhnet/utils/MsnhException.h"
-#include "Msnhnet/config/MsnhnetMacro.h"
-#include <math.h>
 #include <string.h>
 #include <assert.h>
+
+#ifdef __WIN32__
+#include <math.h>
+#endif
+
+#ifdef __linux__
+#include <cmath>
+#endif
 
 #ifdef USE_OMP
 #include <omp.h>

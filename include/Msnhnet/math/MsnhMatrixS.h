@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 namespace Msnhnet
 {
@@ -237,16 +238,25 @@ public:
     {
         MatS tmpMat(mHeight,mWidth);
 
-#ifdef USE_OMP
-        uint64_t dataLen   = this->mHeight*this->mWidth;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < this->mHeight; ++i)
+        if(mHeight == mWidth)
         {
-            for (int j = 0; j < this->mWidth; ++j)
+            for (int i = 0; i < this->mHeight; ++i)
             {
-                tmpMat.mValue[j*mWidth+i] = mValue[i*mWidth + j];
+                for (int j = i; j < this->mWidth; ++j)
+                {
+                    tmpMat.mValue[j*mHeight+i] = mValue[i*mWidth + j];
+                    tmpMat.mValue[i*mHeight+j] = mValue[j*mWidth + i];
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < this->mHeight; ++i)
+            {
+                for (int j = 0; j < this->mWidth; ++j)
+                {
+                    tmpMat.mValue[j*mHeight+i] = mValue[i*mWidth + j];
+                }
             }
         }
 
@@ -803,8 +813,8 @@ public:
     inline double PYTHAG(double a,double b)
     {
         double at,bt,ct;
-        at = std::fabs(a);
-        bt = std::fabs(b);
+        at = fabs(a);
+        bt = fabs(b);
         if (at > bt ) {
             ct=bt/at;
             return at*sqrt(1.0+ct*ct);
@@ -820,7 +830,7 @@ public:
 
     inline double SIGN(double a,double b)
     {
-        return (((b) >= 0.0 && std::fabs(b) >MSNH_F64_EPS) ? std::fabs(a) : -std::fabs(a));
+        return (((b) >= 0.0 && fabs(b) >MSNH_F64_EPS) ? fabs(a) : -fabs(a));
     }
 
     int householderSVD(std::vector<VectorXSDS>& U,VectorXSDS& D,std::vector<VectorXSDS>& V,int maxiter)
@@ -973,7 +983,7 @@ public:
                     if (z < 0.0)
                     {   /* Singular value is made nonnegative. */
 
-                        if(std::fabs(z) > MSNH_F64_EPS)
+                        if(fabs(z) > MSNH_F64_EPS)
                         {
                             D(k) = -z;
                             for (j=0;j<width;j++) V[j](k)=-V[j](k);
@@ -1087,7 +1097,7 @@ public:
                     for (int k = 0; k < m; k++)
                         p += (double)Ai[k] * Aj[k];
 
-                    if (std::fabs(p) <= eps * std::sqrt((double)a*b))
+                    if (fabs(p) <= eps * std::sqrt((double)a*b))
                         continue;
 
                     p *= 2;
@@ -1205,7 +1215,7 @@ public:
                         {
                             T t = (T)(At.mValue[i*m+k]- sd*At.mValue[j*m+k]);
                             At.mValue[i*m+k] = t;
-                            asum += std::fabs(t);
+                            asum += fabs(t);
                         }
                         asum = asum > eps * 100 ? 1 / asum : 0;
 
@@ -1662,15 +1672,15 @@ public:
 
         for (int i = 0; i < mN/4; ++i)
         {
-           l1 += mValue[(i<<2)+0];
-           l1 += mValue[(i<<2)+1];
-           l1 += mValue[(i<<2)+2];
-           l1 += mValue[(i<<2)+3];
+            l1 += std::abs(mValue[(i<<2)+0]);
+            l1 += std::abs(mValue[(i<<2)+1]);
+            l1 += std::abs(mValue[(i<<2)+2]);
+            l1 += std::abs(mValue[(i<<2)+3]);
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
         {
-            l1 += mValue[i];
+            l1 += std::abs(mValue[i]);
         }
 
         return l1;
@@ -1682,10 +1692,10 @@ public:
         int mN = dataNum();
         for (int i = 0; i < mN/4; ++i)
         {
-           l2 += mValue[(i<<2)+0]*value[(i<<2)+0];
-           l2 += mValue[(i<<2)+1]*value[(i<<2)+1];
-           l2 += mValue[(i<<2)+2]*value[(i<<2)+2];
-           l2 += mValue[(i<<2)+3]*value[(i<<2)+3];
+            l2 += mValue[(i<<2)+0]*mValue[(i<<2)+0];
+            l2 += mValue[(i<<2)+1]*mValue[(i<<2)+1];
+            l2 += mValue[(i<<2)+2]*mValue[(i<<2)+2];
+            l2 += mValue[(i<<2)+3]*mValue[(i<<2)+3];
         }
 
         for (int i = 4*(mN/4); i < mN; ++i)
@@ -1973,22 +1983,47 @@ public:
 
         SimdInfo::checkSimd();
 
-        if(A.isF32Mat())
+        if(B.mWidth==1)
         {
-#ifdef USE_X86
-            Gemm::cpuGemm(0,0,A.mHeight,B.mWidth,A.mWidth,1,(float*)A.mValue,A.mWidth,(float*)B.mValue,B.mWidth,1,(float*)mat.mValue,mat.mWidth, SimdInfo::supportAVX2);
-#else
-            Gemm::cpuGemm(0,0,A.mHeight,B.mWidth,A.mWidth,1,(float*)A.mValue,A.mWidth,(float*)B.mValue,B.mWidth,1,(float*)mat.mValue,mat.mWidth, false);
-#endif
+            for (int i = 0; i < A.mHeight; ++i)
+            {
+                T sum = 0;
+                for (int j = 0; j < B.mHeight/4; ++j)
+                {
+                    sum += A.mValue[i*A.mWidth+(j<<2) + 0 ]*B.mValue[(j<<2)+0];
+                    sum += A.mValue[i*A.mWidth+(j<<2) + 1 ]*B.mValue[(j<<2)+1];
+                    sum += A.mValue[i*A.mWidth+(j<<2) + 2 ]*B.mValue[(j<<2)+2];
+                    sum += A.mValue[i*A.mWidth+(j<<2) + 3 ]*B.mValue[(j<<2)+3];
+                }
+
+                for (int j = 4*(B.mHeight/4); j < B.mHeight; ++j)
+                {
+                    sum += A.mValue[i*A.mWidth+j]*B.mValue[j];
+                }
+
+                mat.mValue[i] = sum;
+            }
         }
         else
         {
+            if(A.isF32Mat())
+            {
 #ifdef USE_X86
-            Gemm::cpuGemm(0,0,A.mHeight,B.mWidth,A.mWidth,1,(double*)A.mValue,A.mWidth,(double*)B.mValue,B.mWidth,1,(double*)mat.mValue,mat.mWidth, SimdInfo::supportAVX2);
+                Gemm::cpuGemm(0,0,A.mHeight,B.mWidth,A.mWidth,1,(float*)A.mValue,A.mWidth,(float*)B.mValue,B.mWidth,1,(float*)mat.mValue,mat.mWidth, SimdInfo::supportAVX2);
 #else
-            Gemm::cpuGemm(0,0,A.mHeight,B.mWidth,A.mWidth,1,(double*)A.mValue,A.mWidth,(double*)B.mValue,B.mWidth,1,(double*)mat.mValue,mat.mWidth, false);
+                Gemm::cpuGemm(0,0,A.mHeight,B.mWidth,A.mWidth,1,(float*)A.mValue,A.mWidth,(float*)B.mValue,B.mWidth,1,(float*)mat.mValue,mat.mWidth, false);
 #endif
+            }
+            else
+            {
+#ifdef USE_X86
+                Gemm::cpuGemm(0,0,A.mHeight,B.mWidth,A.mWidth,1,(double*)A.mValue,A.mWidth,(double*)B.mValue,B.mWidth,1,(double*)mat.mValue,mat.mWidth, SimdInfo::supportAVX2);
+#else
+                Gemm::cpuGemm(0,0,A.mHeight,B.mWidth,A.mWidth,1,(double*)A.mValue,A.mWidth,(double*)B.mValue,B.mWidth,1,(double*)mat.mValue,mat.mWidth, false);
+#endif
+            }
         }
+
         return mat;
     }
     inline friend MatS operator* (const T &a, const MatS &A)
@@ -2129,7 +2164,6 @@ public:
         return false;
     }
 };
-
 typedef MatS<8,8,double>    MatSDS;
 typedef MatS<16,16,double>  MatMDS;
 

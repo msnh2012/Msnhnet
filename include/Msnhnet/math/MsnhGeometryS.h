@@ -33,14 +33,6 @@ public:
      static RotationVecDS quaternion2RotVec(const QuaternionDS& q);
      static RotationVecFS quaternion2RotVec(const QuaternionFS& q);
 
-     static RotationMatDS rotZ(double angleInRad);
-     static RotationMatDS rotY(double angleInRad);
-     static RotationMatDS rotX(double angleInRad);
-
-     static RotationMatFS rotZ(float angleInRad);
-     static RotationMatFS rotY(float angleInRad);
-     static RotationMatFS rotX(float angleInRad);
-
      static RotationMatDS rotVec2RotMat(const RotationVecDS& rotVec);
      static RotationMatFS rotVec2RotMat(const RotationVecFS& rotVec);
 
@@ -55,6 +47,89 @@ public:
 
      static TranslationDS rotatePos(const RotationMatDS& rotMat, const TranslationDS& trans);
      static TranslationFS rotatePos(const RotationMatFS& rotMat, const TranslationFS& trans);
+
+     inline static RotationMatDS rotZ(double angleInRad)
+     {
+         const double cosc  = cos(angleInRad);
+         const double sinc  = sin(angleInRad);
+
+         RotationMatDS Rz;
+
+         Rz.val[0] = cosc;
+         Rz.val[1] = -sinc;
+         Rz.val[3] = sinc;
+         Rz.val[4] = cosc;
+
+         return Rz;
+     }
+     inline static RotationMatDS rotY(double angleInRad)
+     {
+         const double cosb  = cos(angleInRad);
+         const double sinb  = sin(angleInRad);
+
+         RotationMatDS Ry;
+
+         Ry.val[0] = cosb;
+         Ry.val[2] = sinb;
+         Ry.val[6] = -sinb;
+         Ry.val[8] = cosb;
+
+         return Ry;
+     }
+     inline static RotationMatDS rotX(double angleInRad)
+     {
+         const double cosa  = cos(angleInRad);
+         const double sina  = sin(angleInRad);
+         RotationMatDS Rx;
+
+         Rx.val[4] = cosa;
+         Rx.val[5] = -sina;
+         Rx.val[7] = sina;
+         Rx.val[8] = cosa;
+
+         return Rx;
+     }
+
+     inline static RotationMatFS rotZ(float angleInRad)
+     {
+
+         const float cosc  = cosf(angleInRad);
+         const float sinc  = sinf(angleInRad);
+
+         RotationMatFS Rz;
+
+         Rz.val[0] = cosc;
+         Rz.val[1] = -sinc;
+         Rz.val[3] = sinc;
+         Rz.val[4] = cosc;
+
+         return Rz;
+     }
+     inline static RotationMatFS rotY(float angleInRad)
+     {
+         const float cosb  = cosf(angleInRad);
+         const float sinb  = sinf(angleInRad);
+
+         RotationMatFS Ry;
+         Ry.val[0] = cosb;
+         Ry.val[2] = sinb;
+         Ry.val[6] = -sinb;
+         Ry.val[8] = cosb;
+
+         return Ry;
+     }
+     inline static RotationMatFS rotX(float angleInRad)
+     {
+         const float cosa  = cosf(angleInRad);
+         const float sina  = sinf(angleInRad);
+         RotationMatFS Rx;
+         Rx.val[4] = cosa;
+         Rx.val[5] = -sina;
+         Rx.val[7] = sina;
+         Rx.val[8] = cosa;
+
+         return Rx;
+     }
 
      inline static double clamp(const double &val,const double &min,const double &max)
     {

@@ -47,6 +47,43 @@ VectorXSDS Twist::toVec()
     return vec;
 }
 
+void Frame::print()
+{
+    std::vector<double> data = {rotMat(0,0),  rotMat(0,1), rotMat(0,2),trans[0],
+                                rotMat(1,0),  rotMat(1,1), rotMat(1,2),trans[1],
+                                rotMat(2,0),  rotMat(2,1), rotMat(2,2),trans[2],
+                                0,0,0,1};
+    MatS<4,4,double> mat(4,4,data);
+    mat.print();
+}
+
+string Frame::toString() const
+{
+    std::stringstream buf;
+
+    std::vector<double> data = {rotMat(0,0),  rotMat(0,1), rotMat(0,2),trans[0],
+                                rotMat(1,0),  rotMat(1,1), rotMat(1,2),trans[1],
+                                rotMat(2,0),  rotMat(2,1), rotMat(2,2),trans[2],
+                                0,0,0,1};
+    MatS<4,4,double> mat(4,4,data);
+    buf<<mat.toString();
+
+    return buf.str();
+}
+
+string Frame::toHtmlString() const
+{
+    std::stringstream buf;
+
+    std::vector<double> data = {rotMat(0,0),  rotMat(0,1), rotMat(0,2),trans[0],
+                                rotMat(1,0),  rotMat(1,1), rotMat(1,2),trans[1],
+                                rotMat(2,0),  rotMat(2,1), rotMat(2,2),trans[2],
+                                0,0,0,1};
+    MatS<4,4,double> mat(4,4,data);
+    buf<<mat.toHtmlString();
+    return buf.str();
+}
+
 Frame Frame::SDH(double a, double alpha, double d, double theta)
 {
 
@@ -62,9 +99,9 @@ Frame Frame::SDH(double a, double alpha, double d, double theta)
     sa = sin(alpha);
     ca = cos(alpha);
 
-    RotationMatDS rotMat({  ct,    -st*ca,   st*sa,
+    RotationMatDS rotMat(   ct,    -st*ca,   st*sa,
                             st,     ct*ca,  -ct*sa,
-                            0,        sa,      ca  });
+                            0,        sa,      ca  );
 
     TranslationDS trans(a*ct,   a*st,   d);
 
@@ -88,9 +125,9 @@ Frame Frame::MDH(double a, double alpha, double d, double theta)
     sa = sin(alpha);
     ca = cos(alpha);
 
-    RotationMatDS rotMat({   ct,       -st,     0,
+    RotationMatDS rotMat(   ct,       -st,     0,
                             st*ca,  ct*ca,   -sa,
-                            st*sa,  ct*sa,    ca });
+                            st*sa,  ct*sa,    ca );
 
     TranslationDS trans(a,  -sa*d,  ca*d);
 

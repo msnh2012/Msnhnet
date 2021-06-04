@@ -26,76 +26,76 @@
 #undef HAVE_BSDGETTIMEOFDAY
 
 /* Define if the copysign function/macro is available. */
-#define HAVE_COPYSIGN
+#cmakedefine HAVE_COPYSIGN
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-/* #undef HAVE_DLFCN_H */
+#cmakedefine HAVE_DLFCN_H
 
 /* Define if the fpclassify() function/macro is available. */
-/* #undef HAVE_FPCLASSIFY */
+#cmakedefine HAVE_FPCLASSIFY
 
 /* Define to 1 if you have the <getopt.h> header file. */
-/* #undef HAVE_GETOPT_H */
+#cmakedefine HAVE_GETOPT_H
 
 /* Define to 1 if you have the getopt function in your standard libary. */
-/* #undef HAVE_GETOPT */
+#cmakedefine HAVE_GETOPT
 
 /* Define to 1 if you have the `getpid' function. */
-#define HAVE_GETPID
+#cmakedefine HAVE_GETPID
 
 /* Define if syscall(SYS_gettid) available. */
 #undef HAVE_GETTID_SYSCALL
 
 /* Define to 1 if you have the `gettimeofday' function. */
-/* #undef HAVE_GETTIMEOFDAY */
+#cmakedefine HAVE_GETTIMEOFDAY
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#define HAVE_INTTYPES_H
+#cmakedefine HAVE_INTTYPES_H
 
 /* Define if the isinf() function/macro is available. */
-/* #undef HAVE_ISINF */
+#cmakedefine HAVE_ISINF
 
 /* Define if the isnan() function/macro is available. */
-/* #undef HAVE_ISNAN */
+#cmakedefine HAVE_ISNAN
 
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
 /* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H
+#cmakedefine HAVE_MEMORY_H
 
 /* Define to 1 if you have the `qsort_r' function. */
-/* #undef HAVE_QSORT_R */
+#cmakedefine HAVE_QSORT_R
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#define HAVE_STDINT_H
+#cmakedefine HAVE_STDINT_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#define HAVE_STDLIB_H
+#cmakedefine HAVE_STDLIB_H
 
 /* Define to 1 if you have the <strings.h> header file. */
-/* #undef HAVE_STRINGS_H */
+#cmakedefine HAVE_STRINGS_H
 
 /* Define to 1 if you have the <string.h> header file. */
-#define HAVE_STRING_H
+#cmakedefine HAVE_STRING_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#define HAVE_SYS_STAT_H
+#cmakedefine HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#define HAVE_SYS_TYPES_H
+#cmakedefine HAVE_SYS_TYPES_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-/* #undef HAVE_SYS_TIME_H */
+#cmakedefine HAVE_SYS_TIME_H
 
 /* Define to 1 if you have the `time' function. */
-#define HAVE_TIME
+#cmakedefine HAVE_TIME
 
 /* Define to 1 if the system has the type `uint32_t'. */
-#define HAVE_UINT32_T
+#cmakedefine HAVE_UINT32_T
 
 /* Define to 1 if you have the <unistd.h> header file. */
-/* #undef HAVE_UNISTD_H */
+#cmakedefine HAVE_UNISTD_H
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
@@ -127,29 +127,29 @@
 #undef REPLACEMENT_HUGE_VAL
 
 /* The size of `unsigned int', as computed by sizeof. */
-#define SIZEOF_UNSIGNED_INT 4
+#define SIZEOF_UNSIGNED_INT @SIZEOF_UNSIGNED_INT@
 
 /* The size of `unsigned long', as computed by sizeof. */
-#define SIZEOF_UNSIGNED_LONG 4
+#define SIZEOF_UNSIGNED_LONG @SIZEOF_UNSIGNED_LONG@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
 /* Define to C thread-local keyword, or to nothing if this is not supported in
    your compiler. */
-#define THREADLOCAL __declspec(thread)
+#define THREADLOCAL @THREADLOCAL@
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
-/* #undef TIME_WITH_SYS_TIME */
+#cmakedefine TIME_WITH_SYS_TIME
 
 /* Version number of package */
 #undef VERSION
 
 /* Define if compiled including C++-based routines */
-/* #undef NLOPT_CXX */
+#cmakedefine NLOPT_CXX
 
 /* Define if compiled including C++11-based routines */
-/* #undef NLOPT_CXX11 */
+#cmakedefine NLOPT_CXX11
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const

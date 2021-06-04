@@ -9,14 +9,16 @@ inline static double fRand(double min, double max)
     return min + f * (max - min);
 }
 
-inline double minfuncSumSquared(const std::vector<double>& x, std::vector<double>& grad, void* data)
+double minfuncSumSquared(const std::vector<double>& x, std::vector<double>& grad, void* data)
 {
+
     Chain *chain = (Chain *) data;
 
     std::vector<double> vals(x);
 
     double jump = 0.000001;
-    double result[1];
+    double result[1] = {0};
+
     chain->cartSumSquaredErr(vals, result);
 
     if (!grad.empty())
@@ -27,8 +29,8 @@ inline double minfuncSumSquared(const std::vector<double>& x, std::vector<double
             double original = vals[i];
 
             vals[i] = original + jump;
-            chain->cartSumSquaredErr(vals, v1);
 
+            chain->cartSumSquaredErr(vals, v1);
             vals[i] = original;
             grad[i] = (v1[0] - result[0]) / (2.0 * jump);
         }
@@ -173,6 +175,7 @@ void Chain::jacobi(MatSDS &jac, const VectorXSDS &joints, int segNum) const
 
 Frame Chain::fk(const VectorXSDS &joints, int segNum)
 {
+
     int segmentNum = 0;
 
     if(segNum<0)
@@ -250,7 +253,6 @@ int Chain::ikNewton(const Frame &desireFrame, VectorXSDS &outJoints, int maxIter
 
         if(dtTwist.closeToEps(eps))
         {
-
             outJoints = joints;
             return i;
         }
@@ -294,7 +296,6 @@ int Chain::ikNewtonJL(const Frame &desireFrame, VectorXSDS &outJoints, int maxIt
 
         if(dtTwist.closeToEps(eps))
         {
-
             outJoints = joints;
             return i;
         }
@@ -382,7 +383,6 @@ int Chain::ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twi
 
         if(dtTwist.closeToEps(eps))
         {
-
             outJoints = joints;
             return i;
         }
@@ -499,6 +499,7 @@ int Chain::ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twi
 
 void Chain::cartSumSquaredErr(const std::vector<double> &x, double error[])
 {
+
     if(_optStatus != -3)
     {
         _opt.force_stop();
@@ -542,6 +543,7 @@ void Chain::cartSumSquaredErr(const std::vector<double> &x, double error[])
         _bestXSQP  = x;
         return;
     }
+
 }
 
 int Chain::ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Twist &bounds, int maxIter, double eps, double maxTime)
@@ -663,7 +665,7 @@ int Chain::ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Tw
 
     {
 
-        for (int z = 0; z < 100; ++z)
+        for (int z = 0; z < maxIter; ++z)
         {
 
             q = z;

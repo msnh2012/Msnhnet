@@ -45,60 +45,53 @@ RotationMatDS GeometryS::euler2RotMat(const EulerDS &euler, const RotSequence &s
                       0   ,  0    , 1
                   });
         */
-    RotationMatDS R;
 
     switch (seq)
     {
     case ROT_XYZ:
-        R.setVal({
-                     cosb*cosc,                   -sinc*cosb,                 sinb,
-                     sina*sinb*cosc + sinc*cosa, -sina*sinb*sinc + cosa*cosc, -sina*cosb,
-                     sina*sinc - sinb*cosa*cosc, sina*cosc + sinb*sinc*cosa, cosa*cosb
-                 });
-        return R;
+        return RotationMatDS(
+                    cosb*cosc,                   -sinc*cosb,                 sinb,
+                    sina*sinb*cosc + sinc*cosa, -sina*sinb*sinc + cosa*cosc, -sina*cosb,
+                    sina*sinc - sinb*cosa*cosc, sina*cosc + sinb*sinc*cosa, cosa*cosb
+                    );
+
     case ROT_XZY:
-        R.setVal({
-                     cosb*cosc,                  -sinc,                       sinb*cosc,
-                     sina*sinb + sinc*cosa*cosb, cosa*cosc, -sina*cosb + sinb*sinc*cosa,
-                     sina*sinc*cosb - sinb*cosa, sina*cosc, sina*sinb*sinc + cosa*cosb
-                 });
-        return R;
+        return RotationMatDS(
+                    cosb*cosc,                  -sinc,                       sinb*cosc,
+                    sina*sinb + sinc*cosa*cosb, cosa*cosc, -sina*cosb + sinb*sinc*cosa,
+                    sina*sinc*cosb - sinb*cosa, sina*cosc, sina*sinb*sinc + cosa*cosb
+                    );
     case ROT_YXZ:
-        R.setVal({
-                     sina*sinb*sinc + cosb*cosc, sina*sinb*cosc - sinc*cosb, sinb*cosa,
-                     sinc*cosa, cosa*cosc, -sina,
-                     sina*sinc*cosb - sinb*cosc, sina*cosb*cosc + sinb*sinc, cosa*cosb
-                 });
-        return R;
+        return RotationMatDS(
+                    sina*sinb*sinc + cosb*cosc, sina*sinb*cosc - sinc*cosb, sinb*cosa,
+                    sinc*cosa, cosa*cosc, -sina,
+                    sina*sinc*cosb - sinb*cosc, sina*cosb*cosc + sinb*sinc, cosa*cosb
+                    );
     case ROT_YZX:
-        R.setVal({
-                     cosb*cosc, sina*sinb - sinc*cosa*cosb, sina*sinc*cosb + sinb*cosa,
-                     sinc,                     cosa*cosc,           -sina*cosc,
-                     -sinb*cosc, sina*cosb + sinb*sinc*cosa, -sina*sinb*sinc + cosa*cosb
-                 });
-        return R;
+        return RotationMatDS(
+                    cosb*cosc, sina*sinb - sinc*cosa*cosb, sina*sinc*cosb + sinb*cosa,
+                    sinc,                     cosa*cosc,           -sina*cosc,
+                    -sinb*cosc, sina*cosb + sinb*sinc*cosa, -sina*sinb*sinc + cosa*cosb
+                    );
     case ROT_ZXY:
-        R.setVal({
-                     -sina*sinb*sinc + cosb*cosc, -sinc*cosa, sina*sinc*cosb + sinb*cosc,
-                     sina*sinb*cosc + sinc*cosb, cosa*cosc, -sina*cosb*cosc + sinb*sinc,
-                     -sinb*cosa,                  sina,                cosa*cosb
-                 });
-        return R;
+        return RotationMatDS(
+                    -sina*sinb*sinc + cosb*cosc, -sinc*cosa, sina*sinc*cosb + sinb*cosc,
+                    sina*sinb*cosc + sinc*cosb, cosa*cosc, -sina*cosb*cosc + sinb*sinc,
+                    -sinb*cosa,                  sina,                cosa*cosb
+                    );
     case ROT_ZYX:
-        R.setVal({
-                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
-                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
-                     -sinb,               sina*cosb,              cosa*cosb
-                 });
-        return R;
+        return RotationMatDS(
+                    cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
+                    sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
+                    -sinb,               sina*cosb,              cosa*cosb
+                    );
     default:
 
-        R.setVal({
-                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
-                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
-                     -sinb,               sina*cosb,              cosa*cosb
-                 });
-        return R;
+        return RotationMatDS(
+                    cosb*cosc,                   -sinc*cosb,                 sinb,
+                    sina*sinb*cosc + sinc*cosa, -sina*sinb*sinc + cosa*cosc, -sina*cosb,
+                    sina*sinc - sinb*cosa*cosc, sina*cosc + sinb*sinc*cosa, cosa*cosb
+                    );
     }
 }
 
@@ -144,60 +137,52 @@ RotationMatFS GeometryS::euler2RotMat(const EulerFS &euler, const RotSequence &s
                       0   ,  0    , 1
                   });
         */
-    RotationMatFS R;
-
     switch (seq)
     {
     case ROT_XYZ:
-        R.setVal({
-                     cosb*cosc,                   -sinc*cosb,                 sinb,
-                     sina*sinb*cosc + sinc*cosa, -sina*sinb*sinc + cosa*cosc, -sina*cosb,
-                     sina*sinc - sinb*cosa*cosc, sina*cosc + sinb*sinc*cosa, cosa*cosb
-                 });
-        return R;
+        return RotationMatFS(
+                    cosb*cosc,                   -sinc*cosb,                 sinb,
+                    sina*sinb*cosc + sinc*cosa, -sina*sinb*sinc + cosa*cosc, -sina*cosb,
+                    sina*sinc - sinb*cosa*cosc, sina*cosc + sinb*sinc*cosa, cosa*cosb
+                    );
+
     case ROT_XZY:
-        R.setVal({
-                     cosb*cosc,                  -sinc,                       sinb*cosc,
-                     sina*sinb + sinc*cosa*cosb, cosa*cosc, -sina*cosb + sinb*sinc*cosa,
-                     sina*sinc*cosb - sinb*cosa, sina*cosc, sina*sinb*sinc + cosa*cosb
-                 });
-        return R;
+        return RotationMatFS(
+                    cosb*cosc,                  -sinc,                       sinb*cosc,
+                    sina*sinb + sinc*cosa*cosb, cosa*cosc, -sina*cosb + sinb*sinc*cosa,
+                    sina*sinc*cosb - sinb*cosa, sina*cosc, sina*sinb*sinc + cosa*cosb
+                    );
     case ROT_YXZ:
-        R.setVal({
-                     sina*sinb*sinc + cosb*cosc, sina*sinb*cosc - sinc*cosb, sinb*cosa,
-                     sinc*cosa, cosa*cosc, -sina,
-                     sina*sinc*cosb - sinb*cosc, sina*cosb*cosc + sinb*sinc, cosa*cosb
-                 });
-        return R;
+        return RotationMatFS(
+                    sina*sinb*sinc + cosb*cosc, sina*sinb*cosc - sinc*cosb, sinb*cosa,
+                    sinc*cosa, cosa*cosc, -sina,
+                    sina*sinc*cosb - sinb*cosc, sina*cosb*cosc + sinb*sinc, cosa*cosb
+                    );
     case ROT_YZX:
-        R.setVal({
-                     cosb*cosc, sina*sinb - sinc*cosa*cosb, sina*sinc*cosb + sinb*cosa,
-                     sinc,                     cosa*cosc,           -sina*cosc,
-                     -sinb*cosc, sina*cosb + sinb*sinc*cosa, -sina*sinb*sinc + cosa*cosb
-                 });
-        return R;
+        return RotationMatFS(
+                    cosb*cosc, sina*sinb - sinc*cosa*cosb, sina*sinc*cosb + sinb*cosa,
+                    sinc,                     cosa*cosc,           -sina*cosc,
+                    -sinb*cosc, sina*cosb + sinb*sinc*cosa, -sina*sinb*sinc + cosa*cosb
+                    );
     case ROT_ZXY:
-        R.setVal({
-                     -sina*sinb*sinc + cosb*cosc, -sinc*cosa, sina*sinc*cosb + sinb*cosc,
-                     sina*sinb*cosc + sinc*cosb, cosa*cosc, -sina*cosb*cosc + sinb*sinc,
-                     -sinb*cosa,                  sina,                cosa*cosb
-                 });
-        return R;
+        return RotationMatFS(
+                    -sina*sinb*sinc + cosb*cosc, -sinc*cosa, sina*sinc*cosb + sinb*cosc,
+                    sina*sinb*cosc + sinc*cosb, cosa*cosc, -sina*cosb*cosc + sinb*sinc,
+                    -sinb*cosa,                  sina,                cosa*cosb
+                    );
     case ROT_ZYX:
-        R.setVal({
-                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
-                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
-                     -sinb,               sina*cosb,              cosa*cosb
-                 });
-        return R;
+        return RotationMatFS(
+                    cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
+                    sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
+                    -sinb,               sina*cosb,              cosa*cosb
+                    );
     default:
 
-        R.setVal({
-                     cosb*cosc, sina*sinb*cosc - sinc*cosa, sina*sinc + sinb*cosa*cosc,
-                     sinc*cosb, sina*sinb*sinc + cosa*cosc, -sina*cosc + sinb*sinc*cosa,
-                     -sinb,               sina*cosb,              cosa*cosb
-                 });
-        return R;
+        return RotationMatFS(
+                    cosb*cosc,                   -sinc*cosb,                 sinb,
+                    sina*sinb*cosc + sinc*cosa, -sina*sinb*sinc + cosa*cosc, -sina*cosb,
+                    sina*sinc - sinb*cosa*cosc, sina*cosc + sinb*sinc*cosa, cosa*cosb
+                    );
     }
 }
 
@@ -591,14 +576,12 @@ RotationMatDS GeometryS::quaternion2RotMat(const QuaternionDS &q)
     const double q2 = q.q2;
     const double q3 = q.q3;
 
-    RotationMatDS rotMat;
-    rotMat.setVal({
-                      1.0-2*(q2*q2+q3*q3),  2.0*(q1*q2-q0*q3),     2.0*(q1*q3+q0*q2),
-                      2.0*(q1*q2+q0*q3),    1.0-2*(q1*q1+q3*q3),   2.0*(q2*q3-q0*q1),
-                      2.0*(q1*q3-q0*q2),    2.0*(q2*q3+q0*q1),     1.0-2*(q1*q1+q2*q2)
-                  });
+    return RotationMatDS(
+                             1.0-2*(q2*q2+q3*q3),  2.0*(q1*q2-q0*q3),     2.0*(q1*q3+q0*q2),
+                             2.0*(q1*q2+q0*q3),    1.0-2*(q1*q1+q3*q3),   2.0*(q2*q3-q0*q1),
+                             2.0*(q1*q3-q0*q2),    2.0*(q2*q3+q0*q1),     1.0-2*(q1*q1+q2*q2)
+                         );
 
-    return rotMat;
 }
 
 RotationMatFS GeometryS::quaternion2RotMat(const QuaternionFS &q)
@@ -608,14 +591,12 @@ RotationMatFS GeometryS::quaternion2RotMat(const QuaternionFS &q)
     const float q2 = q.q2;
     const float q3 = q.q3;
 
-    RotationMatFS rotMat;
-    rotMat.setVal({
-                      1.0f-2*(q2*q2+q3*q3),  2.0f*(q1*q2-q0*q3),     2.0f*(q1*q3+q0*q2),
-                      2.0f*(q1*q2+q0*q3),    1.0f-2*(q1*q1+q3*q3),   2.0f*(q2*q3-q0*q1),
-                      2.0f*(q1*q3-q0*q2),    2.0f*(q2*q3+q0*q1),     1.0f-2*(q1*q1+q2*q2)
-                  });
+    return RotationMatFS(
+                             1.0f-2*(q2*q2+q3*q3),  2.0f*(q1*q2-q0*q3),     2.0f*(q1*q3+q0*q2),
+                             2.0f*(q1*q2+q0*q3),    1.0f-2*(q1*q1+q3*q3),   2.0f*(q2*q3-q0*q1),
+                             2.0f*(q1*q3-q0*q2),    2.0f*(q2*q3+q0*q1),     1.0f-2*(q1*q1+q2*q2)
+                         );
 
-    return rotMat;
 }
 
 QuaternionDS GeometryS::rotVec2Quaternion(const RotationVecDS &rotVec)
@@ -706,93 +687,6 @@ RotationVecFS GeometryS::quaternion2RotVec(const QuaternionFS &q)
     const float kz    = q.q3/sinTh;
 
     return RotationVecFS(kx*theta,ky*theta,kz*theta);
-}
-
-RotationMatDS GeometryS::rotZ(double angleInRad)
-{
-    const double cosc  = cos(angleInRad);
-    const double sinc  = sin(angleInRad);
-
-    RotationMatDS Rz;
-
-    Rz.setVal({
-                  cosc , -sinc , 0 ,
-                  sinc , cosc  , 0 ,
-                  0   ,  0    , 1
-              });
-    return Rz;
-}
-
-RotationMatDS GeometryS::rotY(double angleInRad)
-{
-    const double cosb  = cos(angleInRad);
-    const double sinb  = sin(angleInRad);
-
-    RotationMatDS Ry;
-    Ry.setVal({
-                  cosb , 0 , sinb ,
-                  0   , 1 ,   0  ,
-                  -sinb , 0 , cosb
-              });
-
-    return Ry;
-}
-
-RotationMatDS GeometryS::rotX(double angleInRad)
-{
-    const double cosa  = cos(angleInRad);
-    const double sina  = sin(angleInRad);
-    RotationMatDS Rx;
-    Rx.setVal({
-                  1 ,  0   ,   0   ,
-                  0 , cosa , -sina ,
-                  0 , sina ,  cosa
-              });
-    return Rx;
-}
-
-RotationMatFS GeometryS::rotZ(float angleInRad)
-{
-
-    const float cosc  = cosf(angleInRad);
-    const float sinc  = sinf(angleInRad);
-
-    RotationMatFS Rz;
-
-    Rz.setVal({
-                  cosc , -sinc , 0 ,
-                  sinc , cosc  , 0 ,
-                  0   ,  0    , 1
-              });
-    return Rz;
-}
-
-RotationMatFS GeometryS::rotY(float angleInRad)
-{
-    const float cosb  = cosf(angleInRad);
-    const float sinb  = sinf(angleInRad);
-
-    RotationMatFS Ry;
-    Ry.setVal({
-                  cosb , 0 , sinb ,
-                  0   , 1 ,   0  ,
-                  -sinb , 0 , cosb
-              });
-
-    return Ry;
-}
-
-RotationMatFS GeometryS::rotX(float angleInRad)
-{
-    const float cosa  = cosf(angleInRad);
-    const float sina  = sinf(angleInRad);
-    RotationMatFS Rx;
-    Rx.setVal({
-                  1 ,  0   ,   0   ,
-                  0 , cosa , -sina ,
-                  0 , sina ,  cosa
-              });
-    return Rx;
 }
 
 RotationMatDS GeometryS::rotVec2RotMat(const RotationVecDS &rotVec)

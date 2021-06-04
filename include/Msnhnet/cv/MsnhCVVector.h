@@ -258,7 +258,7 @@ public:
         {
             for (int i = 0; i < _n; ++i)
             {
-                if(std::fabs(this->_value[i])>MSNH_F64_EPS)
+                if(fabs(this->_value[i])>MSNH_F64_EPS)
                 {
                     return false;
                 }
@@ -332,12 +332,12 @@ public:
         }
         else if(isF64Vec())
         {
-            if(std::fabs(len - 1.0) < MSNH_F64_EPS)
+            if(fabs(len - 1.0) < MSNH_F64_EPS)
             {
                 return *this;
             }
 
-            if(std::fabs(len) < MSNH_F64_EPS)
+            if(fabs(len) < MSNH_F64_EPS)
             {
                 return vec;
             }
@@ -378,7 +378,7 @@ public:
         }
         else
         {
-            if(std::fabs(len - 1.0) < MSNH_F64_EPS || std::fabs(len) < MSNH_F64_EPS)
+            if(fabs(len - 1.0) < MSNH_F64_EPS || fabs(len) < MSNH_F64_EPS)
             {
                 return;
             }

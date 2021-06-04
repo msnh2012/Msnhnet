@@ -4,6 +4,8 @@
 #include "Msnhnet/robot/MsnhSegment.h"
 #include "Msnhnet/3rdparty/nlopt/nlopt.hpp"
 
+#include <mutex>
+
 namespace Msnhnet
 {
 
@@ -37,17 +39,17 @@ public:
 
     Frame fk(const VectorXSDS &joints, int segNum = -1);
 
-    int ikNewton(const Frame &desireFrame, VectorXSDS &outJoints, int maxIter=100, double eps = 1e-5, double maxTime = 0.001);
+    int ikNewton(const Frame &desireFrame, VectorXSDS &outJoints, int maxIter=100, double eps = 1e-6, double maxTime = 0.001);
 
-    int ikNewtonJL(const Frame &desireFrame, VectorXSDS &outJoints, int maxIter=100, double eps = 1e-5);
+    int ikNewtonJL(const Frame &desireFrame, VectorXSDS &outJoints, int maxIter=100, double eps = 1e-6);
 
     int ikNewtonRR(const Frame &desireFrame, VectorXSDS &outJoints, const Twist& bounds = Twist(),
-                    const bool &randomStart = true, const bool &wrap = true, int maxIter=100, double eps = 1e-5, double maxTime = 0.001);
+                    const bool &randomStart = true, const bool &wrap = true, int maxIter=100, double eps = 1e-6, double maxTime = 0.001);
 
     void cartSumSquaredErr(const std::vector<double>& x, double error[]);
 
     int ikSQPSumSqr(const Frame &desireFrame, VectorXSDS &outJoints, const Twist& bounds = Twist(),
-                     int maxIter=500, double eps = 1e-5, double maxTime = 0.001);
+                     int maxIter=500, double eps = 1e-6, double maxTime = 0.001);
 
 private:
     nlopt::opt _opt;

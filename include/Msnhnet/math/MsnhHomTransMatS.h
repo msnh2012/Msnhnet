@@ -89,7 +89,7 @@ public:
         return tmp;
     }
 
-    inline friend HomTransMatDS operator *(const HomTransMatDS& A, const HomTransMatDS& B)
+     inline friend HomTransMatDS operator *(const HomTransMatDS& A, const HomTransMatDS& B)
     {
         return HomTransMatDS(A.rotMat*B.rotMat, A.rotMat*B.trans+A.trans);
     }

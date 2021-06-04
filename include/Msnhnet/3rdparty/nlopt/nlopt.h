@@ -185,8 +185,6 @@ NLOPT_EXTERN(nlopt_result) nlopt_result_from_string(const char *name);
 NLOPT_EXTERN(void) nlopt_srand(unsigned long seed);
 NLOPT_EXTERN(void) nlopt_srand_time(void);
 
-NLOPT_EXTERN(void) nlopt_version(int *major, int *minor, int *bugfix);
-
 /*************************** OBJECT-ORIENTED API **************************/
 /* The style here is that we create an nlopt_opt "object" (an opaque pointer),
    then set various optimization parameters, and then execute the
