@@ -17,4 +17,4 @@ jobs:
       run: cmake .. -Bbuild -G"Visual Studio 16 2019"  
 
     - name: build
-      run: cmake --build build --config Debug -j4
+      run: cmake --build build --config Debug -j
