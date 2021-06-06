@@ -150,6 +150,7 @@ if(BUILD_USE_MSNHCV_GUI MATCHES ON)
         src/3rdparty/imgui/imgui_draw.cpp
         src/3rdparty/imgui/imgui_impl_glfw.cpp
         src/3rdparty/imgui/imgui_impl_opengl3.cpp
+        src/3rdparty/imgui/imgui_tables.cpp
         src/3rdparty/imgui/imgui_widgets.cpp
         src/3rdparty/imgui/imnodes.cpp
         src/3rdparty/imgui/implot.cpp
