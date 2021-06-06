@@ -96,6 +96,7 @@ std::thread Gui::th;
 std::map<std::string,Mat> Gui::mats;
 std::map<std::string,bool> Gui::matInited;
 std::map<std::string,unsigned int> Gui::matTextures;
+std::map< std::string, std::map< std::string, Plot > > Gui::xyDatas;
 
 #ifdef _WIN32
 BOOL exitWinGui( DWORD fdwCtrlType )
@@ -127,6 +128,7 @@ void Gui::startIt()
 
 void Gui::imShow(const std::string &title, Mat &mat)
 {
+    std::string tmpTitle = title + "_img";
     if(!Gui::started)
     {
         Gui::startIt();
@@ -145,10 +147,43 @@ void Gui::imShow(const std::string &title, Mat &mat)
 
     mutex.lock();
 
-    mats[title] = tmpMat;
-    matInited[title] = false;
-    matTextures[title] = -1;
+    mats[tmpTitle] = tmpMat;
+    matInited[tmpTitle] = false;
+    matTextures[tmpTitle] = -1;
     mutex.unlock();
+}
+
+void Gui::plotXYData(const std::string &title, const std::string &plotName, const Plot &data, const std::string &xLabel, const std::string &yLabel)
+{
+    if(!Gui::started)
+    {
+        Gui::startIt();
+        Gui::started = true;
+    }
+
+    std::string tmpTitle = title + "_plot¤"+xLabel+"¤"+yLabel;
+    mutex.lock();
+    xyDatas[tmpTitle][plotName] = data;
+    mutex.unlock();
+}
+
+void Gui::plotLine(const std::string &title, const std::string &lineName, const std::vector<Vec2F32> &data)
+{
+    Plot p1;
+    p1.plotType = PLOT_LINE;
+    p1.marker   = ImPlotMarker_Circle;
+    p1.withPoint = true;
+    p1.data     = data;
+    plotXYData(title, lineName, p1);
+}
+
+void Gui::plotPoints(const std::string &title, const std::string &pointsName, const std::vector<Vec2F32> &data)
+{
+    Plot p2;
+    p2.plotType = PLOT_POINTS;
+    p2.marker   = ImPlotMarker_Circle;
+    p2.data     = data;
+    plotXYData(title, pointsName, p2);
 }
 
 void Gui::stopIt()
@@ -244,7 +279,7 @@ void Gui::run()
 
 #endif
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "MsnhCV GUI", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "MsnhCV GUI (Press esc in terminal to exit!)", NULL, NULL);
     if (window == NULL)
         return;
     glfwMakeContextCurrent(window);
@@ -277,9 +312,11 @@ void Gui::run()
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
+
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-    ImGui::StyleColorsDark();
+    ImGui::StyleColorsClassic();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
@@ -294,6 +331,57 @@ void Gui::run()
         ImGui::NewFrame();
 
         mutex.lock();
+
+        for (auto &line : xyDatas)
+        {
+            std::string tmp = line.first;
+            std::vector<std::string> listStr;
+            ExString::split(listStr, tmp, "¤");
+
+            ImGui::Begin(listStr[0].c_str());
+            ImGui::SetWindowSize(ImVec2(600, 350));
+
+            std::map< std::string, Plot > lineTmp = line.second;
+
+            if (ImPlot::BeginPlot(line.first.c_str(),listStr[1].c_str(),listStr[2].c_str()))
+            {
+                ImPlot::GetStyle().AntiAliasedLines = true;
+                for(auto &l : lineTmp)
+                {
+                    Plot p = l.second;
+                    std::vector<Vec2F32> data = p.data;
+
+                    std::vector<float> x;
+                    std::vector<float> y;
+
+                    for (int i = 0; i < data.size(); ++i)
+                    {
+                        x.push_back(data[i].x1);
+                        y.push_back(data[i].x2);
+                    }
+
+                    if(p.plotType == PLOT_LINE)
+                    {
+                        if(p.withPoint)
+                        {
+                            ImPlot::SetNextMarkerStyle(p.marker);
+                        }
+
+                        ImPlot::PlotLine(l.first.c_str(), x.data(), y.data(), x.size());
+                    }
+                    else if(p.plotType == PLOT_POINTS)
+                    {
+                        ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
+                        ImPlot::SetNextMarkerStyle(p.marker, 2, ImVec4(0,1,0,0.5f), IMPLOT_AUTO, ImVec4(0,1,0,1));
+                        ImPlot::PlotScatter(l.first.c_str(), x.data(), y.data(), x.size());
+                    }
+
+                }
+                ImPlot::EndPlot();
+            }
+            ImGui::End();
+        }
+
         for (auto &init : matInited)
         {
             if(!init.second)
@@ -318,10 +406,10 @@ void Gui::run()
 
                 ImGui::SetWindowSize(ImVec2(width+20, height+50));
                 ImGui::Image((void*)(intptr_t)matTextures[init.first], ImVec2(width, height));
-
                 ImGui::End();
             }
         }
+
         mutex.unlock();
 
         ImGui::Render();
@@ -337,6 +425,7 @@ void Gui::run()
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
