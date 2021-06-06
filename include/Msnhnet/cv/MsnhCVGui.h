@@ -54,6 +54,7 @@ public:
     static void stopIt();
     static void wait(int i=0);
     static bool waitEnterKey();
+    static void setFont(const std::string& fontPath, const float &size = 16);
 private:
 
     static void startIt();
@@ -69,6 +70,8 @@ private:
     static bool isRunning;
     static bool started;
     static std::mutex mutex;
+    static std::string fontPath;
+    static float fontSize;
 };
 }
 #endif

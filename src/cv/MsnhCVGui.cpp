@@ -97,6 +97,8 @@ std::map<std::string,Mat> Gui::mats;
 std::map<std::string,bool> Gui::matInited;
 std::map<std::string,unsigned int> Gui::matTextures;
 std::map< std::string, std::map< std::string, Plot > > Gui::xyDatas;
+std::string Gui::fontPath = "";
+float Gui::fontSize = 12.f;
 
 #ifdef _WIN32
 BOOL exitWinGui( DWORD fdwCtrlType )
@@ -161,7 +163,7 @@ void Gui::plotXYData(const std::string &title, const std::string &plotName, cons
         Gui::started = true;
     }
 
-    std::string tmpTitle = title + "_plot¤"+xLabel+"¤"+yLabel;
+    std::string tmpTitle = title + "_plot"+u8"¤"+xLabel+u8"¤"+yLabel;
     mutex.lock();
     xyDatas[tmpTitle][plotName] = data;
     mutex.unlock();
@@ -255,6 +257,12 @@ bool Gui::waitEnterKey()
     return false;
 }
 
+void Gui::setFont(const std::string &fontPath, const float &size)
+{
+    Gui::fontPath = fontPath;
+    Gui::fontSize = size;
+}
+
 void Gui::run()
 {
 
@@ -316,6 +324,9 @@ void Gui::run()
 
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
+    if(fontPath!="")
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+
     ImGui::StyleColorsClassic();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -336,14 +347,14 @@ void Gui::run()
         {
             std::string tmp = line.first;
             std::vector<std::string> listStr;
-            ExString::split(listStr, tmp, "¤");
+            ExString::split(listStr, tmp, u8"¤");
 
             ImGui::Begin(listStr[0].c_str());
             ImGui::SetWindowSize(ImVec2(600, 350));
 
             std::map< std::string, Plot > lineTmp = line.second;
 
-            if (ImPlot::BeginPlot(line.first.c_str(),listStr[1].c_str(),listStr[2].c_str()))
+            if (ImPlot::BeginPlot(listStr[0].c_str(),listStr[1].c_str(),listStr[2].c_str()))
             {
                 ImPlot::GetStyle().AntiAliasedLines = true;
                 for(auto &l : lineTmp)
