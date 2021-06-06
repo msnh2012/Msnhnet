@@ -22,8 +22,8 @@
 
 // ImPlot v0.10 WIP
 
-#include <Msnhnet/3rdparty/imgui/implot.h>
-#include <Msnhnet/3rdparty/imgui/implot_internal.h>
+#include "Msnhnet/3rdparty/imgui/implot.h"
+#include "Msnhnet/3rdparty/imgui/implot_internal.h"
 
 #ifdef _MSC_VER
 #define sprintf sprintf_s
