@@ -325,7 +325,7 @@ void Gui::run()
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
     if(fontPath!="")
-        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize, NULL, io.Fonts->GetGlyphRangesChineseFull());
 
     ImGui::StyleColorsClassic();
 

@@ -77,18 +77,33 @@ public:
             Mat::createMat<T>(src.getWidth(),src.getHeight(),1,G);
             Mat::createMat<T>(src.getWidth(),src.getHeight(),1,B);
 
-#ifdef USE_OMP
             uint64_t dataLen   = src.getHeight()*src.getWidth();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getHeight(); ++i)
+
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < src.getWidth(); ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getHeight(); ++i)
                 {
-                    reinterpret_cast<T*>(R.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*3 + 0];
-                    reinterpret_cast<T*>(G.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*3 + 1];
-                    reinterpret_cast<T*>(B.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*3 + 2];
+                    for (int j = 0; j < src.getWidth(); ++j)
+                    {
+                        reinterpret_cast<T*>(R.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*3 + 0];
+                        reinterpret_cast<T*>(G.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*3 + 1];
+                        reinterpret_cast<T*>(B.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*3 + 2];
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < src.getHeight(); ++i)
+                {
+                    for (int j = 0; j < src.getWidth(); ++j)
+                    {
+                        reinterpret_cast<T*>(R.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*3 + 0];
+                        reinterpret_cast<T*>(G.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*3 + 1];
+                        reinterpret_cast<T*>(B.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*3 + 2];
+                    }
                 }
             }
             dst.push_back(R);
@@ -107,21 +122,37 @@ public:
             Mat::createMat<T>(src.getWidth(),src.getHeight(),1,B);
             Mat::createMat<T>(src.getWidth(),src.getHeight(),1,A);
 
-#ifdef USE_OMP
             uint64_t dataLen   = src.getHeight()*src.getWidth();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getHeight(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < src.getWidth(); ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getHeight(); ++i)
                 {
-                    reinterpret_cast<T*>(R.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 0];
-                    reinterpret_cast<T*>(G.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 1];
-                    reinterpret_cast<T*>(B.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 2];
-                    reinterpret_cast<T*>(A.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 3];
+                    for (int j = 0; j < src.getWidth(); ++j)
+                    {
+                        reinterpret_cast<T*>(R.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 0];
+                        reinterpret_cast<T*>(G.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 1];
+                        reinterpret_cast<T*>(B.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 2];
+                        reinterpret_cast<T*>(A.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 3];
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getHeight(); ++i)
+                {
+                    for (int j = 0; j < src.getWidth(); ++j)
+                    {
+                        reinterpret_cast<T*>(R.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 0];
+                        reinterpret_cast<T*>(G.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 1];
+                        reinterpret_cast<T*>(B.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 2];
+                        reinterpret_cast<T*>(A.getBytes())[i*src.getWidth() + j] = reinterpret_cast<T*>(src.getBytes())[(i*src.getWidth() + j)*4 + 3];
+                    }
+                }
+            }
+
             dst.push_back(R);
             dst.push_back(G);
             dst.push_back(B);
@@ -146,39 +177,68 @@ public:
         else if(src.size()==3)
         {
             Mat::createMat<T>(width,height,3,dst);
-
-#ifdef USE_OMP
             uint64_t dataLen   = width*height;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < height; ++i)
+
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < height; ++i)
                 {
-                    reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*3 + 0] =  reinterpret_cast<T*>(src[0].getBytes())[i*width + j];
-                    reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*3 + 1] =  reinterpret_cast<T*>(src[1].getBytes())[i*width + j];
-                    reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*3 + 2] =  reinterpret_cast<T*>(src[2].getBytes())[i*width + j];
+                    for (int j = 0; j < width; ++j)
+                    {
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*3 + 0] =  reinterpret_cast<T*>(src[0].getBytes())[i*width + j];
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*3 + 1] =  reinterpret_cast<T*>(src[1].getBytes())[i*width + j];
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*3 + 2] =  reinterpret_cast<T*>(src[2].getBytes())[i*width + j];
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < height; ++i)
+                {
+                    for (int j = 0; j < width; ++j)
+                    {
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*3 + 0] =  reinterpret_cast<T*>(src[0].getBytes())[i*width + j];
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*3 + 1] =  reinterpret_cast<T*>(src[1].getBytes())[i*width + j];
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*3 + 2] =  reinterpret_cast<T*>(src[2].getBytes())[i*width + j];
+                    }
                 }
             }
         }
         else if(src.size()==4)
         {
             Mat::createMat<T>(width,height,4,dst);
-
-#ifdef USE_OMP
             uint64_t dataLen   = width*height;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < height; ++i)
+
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < height; ++i)
                 {
-                    reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 0] =  reinterpret_cast<T*>(src[0].getBytes())[i*width + j];
-                    reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 1] =  reinterpret_cast<T*>(src[1].getBytes())[i*width + j];
-                    reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 2] =  reinterpret_cast<T*>(src[2].getBytes())[i*width + j];
-                    reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 3] =  reinterpret_cast<T*>(src[3].getBytes())[i*width + j];
+                    for (int j = 0; j < width; ++j)
+                    {
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 0] =  reinterpret_cast<T*>(src[0].getBytes())[i*width + j];
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 1] =  reinterpret_cast<T*>(src[1].getBytes())[i*width + j];
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 2] =  reinterpret_cast<T*>(src[2].getBytes())[i*width + j];
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 3] =  reinterpret_cast<T*>(src[3].getBytes())[i*width + j];
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < height; ++i)
+                {
+                    for (int j = 0; j < width; ++j)
+                    {
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 0] =  reinterpret_cast<T*>(src[0].getBytes())[i*width + j];
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 1] =  reinterpret_cast<T*>(src[1].getBytes())[i*width + j];
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 2] =  reinterpret_cast<T*>(src[2].getBytes())[i*width + j];
+                        reinterpret_cast<T*>(dst.getBytes())[(i*width + j)*4 + 3] =  reinterpret_cast<T*>(src[3].getBytes())[i*width + j];
+                    }
                 }
             }
         }

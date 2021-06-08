@@ -9,14 +9,23 @@ void Blas::cpuCopy(const int &inputN, float *const &input, const int &inputStep,
 #ifdef USE_OPEN_BLAS
     cblas_scopy(inputN, input, inputStep, output, outputStep);
 #else
-#ifdef USE_OMP
     uint64_t dataLen   = inputN;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for(int i=0; i < inputN ; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        output[i*outputStep] = input[i*inputStep];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i < inputN ; ++i)
+        {
+            output[i*outputStep] = input[i*inputStep];
+        }
+    }
+    else
+    {
+        for(int i=0; i < inputN ; ++i)
+        {
+            output[i*outputStep] = input[i*inputStep];
+        }
     }
 #endif
 
@@ -25,14 +34,24 @@ void Blas::cpuCopy(const int &inputN, float *const &input, const int &inputStep,
 void Blas::cpuFill(const int &inputN, const float &alpha, float *const &x, const int &step)
 {
 
-#ifdef USE_OMP
     uint64_t dataLen   = inputN;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for(int i=0; i<inputN; ++i)
+
+    if(dataLen > MIN_OMP_DATA)
     {
-        x[i*step] = alpha;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            x[i*step] = alpha;
+        }
+    }
+    else
+    {
+        for(int i=0; i<inputN; ++i)
+        {
+            x[i*step] = alpha;
+        }
     }
 }
 
@@ -48,20 +67,35 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
     {
 #ifdef USE_NEON
         int i=0;
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(i=0; i<inputN/4; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            float32x4_t a, b, c, result;
-            a = vdupq_n_f32(alpha);
-            b = vld1q_f32(x+(i*4));
-            c = vld1q_f32(y+(i*4));
-            result = vmulq_f32(a,b);
-            result = vaddq_f32(result, c);
-            vst1q_f32(y+(i*4),result);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(i=0; i<inputN/4; ++i)
+            {
+                float32x4_t a, b, c, result;
+                a = vdupq_n_f32(alpha);
+                b = vld1q_f32(x+(i*4));
+                c = vld1q_f32(y+(i*4));
+                result = vmulq_f32(a,b);
+                result = vaddq_f32(result, c);
+                vst1q_f32(y+(i*4),result);
+            }
+        }
+        else
+        {
+            for(i=0; i<inputN/4; ++i)
+            {
+                float32x4_t a, b, c, result;
+                a = vdupq_n_f32(alpha);
+                b = vld1q_f32(x+(i*4));
+                c = vld1q_f32(y+(i*4));
+                result = vmulq_f32(a,b);
+                result = vaddq_f32(result, c);
+                vst1q_f32(y+(i*4),result);
+            }
         }
 
         for(int j=(inputN/4)*4;j<inputN;++j)
@@ -70,28 +104,46 @@ void Blas::cpuAxpy(const int &inputN, const float &alpha, float *const &x,
         }
 #else
 
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            y[i]  = y[i] + alpha * x[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                y[i]  = y[i] + alpha * x[i];
+            }
+        }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                y[i]  = y[i] + alpha * x[i];
+            }
         }
 #endif
 
     }
     else
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            y[i*stepY]  = y[i*stepY] + alpha * x[i*stepX];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                y[i*stepY]  = y[i*stepY] + alpha * x[i*stepX];
+            }
+        }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                y[i*stepY]  = y[i*stepY] + alpha * x[i*stepX];
+            }
         }
     }
 #endif
@@ -101,75 +153,135 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
 {
     if(type == Arithmetic::ARITH_ADD)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = x[i*stepX] + y[i*stepY];
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] + y[i*stepY];
+            }
+        }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] + y[i*stepY];
+            }
         }
     }
     else if(type == Arithmetic::ARITH_SUB)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = x[i*stepX] - y[i*stepY];
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] - y[i*stepY];
+            }
+        }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] - y[i*stepY];
+            }
         }
     }
     else if(type == Arithmetic::ARITH_SUB_INV)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = y[i*stepY] - x[i*stepX];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = y[i*stepY] - x[i*stepX];
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = y[i*stepY] - x[i*stepX];
+            }
+        }
+
     }
     else if(type == Arithmetic::ARITH_MUL)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = x[i*stepX] * y[i*stepY];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] * y[i*stepY];
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] * y[i*stepY];
+            }
+        }
+
     }
     else if(type == Arithmetic::ARITH_DIV)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]      = x[i*stepX] / y[i*stepY];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]      = x[i*stepX] / y[i*stepY];
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]      = x[i*stepX] / y[i*stepY];
+            }
+        }
+
     }
     else if(type == Arithmetic::ARITH_DIV_INV)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]      = y[i*stepY] / x[i*stepX];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]      = y[i*stepY] / x[i*stepX];
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]      = y[i*stepY] / x[i*stepX];
+            }
+        }
+
     }
 
 }
@@ -178,75 +290,134 @@ void Blas::cpuArithmetic(const Arithmetic &type, const int &inputN, float * cons
 {
     if(type == Arithmetic::ARITH_ADD)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = x[i*stepX] + alpha;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] + alpha;
+            }
+        }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] + alpha;
+            }
         }
     }
     else if(type == Arithmetic::ARITH_SUB)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = x[i*stepX] - alpha;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] - alpha;
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] - alpha;
+            }
+        }
+
     }
     else if(type == Arithmetic::ARITH_SUB_INV)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = alpha - x[i*stepX];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = alpha - x[i*stepX];
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = alpha - x[i*stepX];
+            }
+        }
+
     }
     else if(type == Arithmetic::ARITH_MUL)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = x[i*stepX] * alpha;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] * alpha;
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = x[i*stepX] * alpha;
+            }
+        }
+
     }
     else if(type == Arithmetic::ARITH_DIV)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]      = x[i*stepX] / alpha;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]      = x[i*stepX] / alpha;
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]      = x[i*stepX] / alpha;
+            }
+        }
+
     }
     else if(type == Arithmetic::ARITH_DIV_INV)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]      = alpha / x[i*stepX];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]      = alpha / x[i*stepX];
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]      = alpha / x[i*stepX];
+            }
+        }
+
     }
 
 }
@@ -255,85 +426,156 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 {
     if(type == Scientific::SCI_ABS)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = fabs(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = fabs(x[i*stepX]);
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = fabs(x[i*stepX]);
+            }
+        }
+
     }
     else if(type == Scientific::SCI_ACOS)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = acosf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = acosf(x[i*stepX]);
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = acosf(x[i*stepX]);
+            }
+        }
+
     }
     else if(type == Scientific::SCI_ASIN)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = asinf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = asinf(x[i*stepX]);
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = asinf(x[i*stepX]);
+            }
+        }
+
     }
     else if(type == Scientific::SCI_ATAN)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = atanf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = atanf(x[i*stepX]);
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = atanf(x[i*stepX]);
+            }
+        }
+
     }
     else if(type == Scientific::SCI_COS)
     {
 #ifdef USE_X86
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/8; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                __m256 load         = _mm256_loadu_ps(&x[i*8]);
-                load                = cos256_ps(load);
-                _mm256_storeu_ps(&out[i*8],load);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = cos256_ps(load);
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = cosf(x[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = cos256_ps(load);
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = cosf(x[i]);
+                }
             }
 
-            for (int i = (inputN/8)*8; i < inputN; ++i)
-            {
-                out[i] = cosf(x[i]);
-            }
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = cosf(x[i*stepX]);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = cosf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = cosf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
 
@@ -342,95 +584,174 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         {
 #ifdef USE_NEON
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/4; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float32x4_t load    = vld1q_f32(&x[i*4]);
-                load                = cos_ps(load);
-                vst1q_f32(&out[i*4],load);
-            }
+#ifdef USE_OMP
 
-            for (int i = (inputN/4)*4; i < inputN; ++i)
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+                    load                = cos_ps(load);
+                    vst1q_f32(&out[i*4],load);
+                }
+
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = cosf(x[i]);
+                }
+            }
+            else
             {
-                out[i] = cosf(x[i]);
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+                    load                = cos_ps(load);
+                    vst1q_f32(&out[i*4],load);
+                }
+
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = cosf(x[i]);
+                }
             }
 
 #else
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i]  = cosf(x[i]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = cosf(x[i]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = cosf(x[i]);
+                }
+            }
+
 #endif
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = cosf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = cosf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = cosf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
     }
     else if(type == Scientific::SCI_COSH)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = coshf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = coshf(x[i*stepX]);
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = coshf(x[i*stepX]);
+            }
+        }
+
     }
     else if(type == Scientific::SCI_SIN)
     {
 #ifdef USE_X86
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/8; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                __m256 load         = _mm256_loadu_ps(&x[i*8]);
-                load                = sin256_ps(load);
-                _mm256_storeu_ps(&out[i*8],load);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = sin256_ps(load);
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = sinf(x[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = sin256_ps(load);
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = sinf(x[i]);
+                }
             }
 
-            for (int i = (inputN/8)*8; i < inputN; ++i)
-            {
-                out[i] = sinf(x[i]);
-            }
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = sinf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = sinf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = sinf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
 
@@ -439,95 +760,174 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         {
 #ifdef USE_NEON
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/4; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float32x4_t load    = vld1q_f32(&x[i*4]);
-                load                = sin_ps(load);
-                vst1q_f32(&out[i*4],load);
-            }
+#ifdef USE_OMP
 
-            for (int i = (inputN/4)*4; i < inputN; ++i)
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+                    load                = sin_ps(load);
+                    vst1q_f32(&out[i*4],load);
+                }
+
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = sinf(x[i]);
+                }
+            }
+            else
             {
-                out[i] = sinf(x[i]);
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+                    load                = sin_ps(load);
+                    vst1q_f32(&out[i*4],load);
+                }
+
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = sinf(x[i]);
+                }
             }
 
 #else
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i]  = sinf(x[i]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = sinf(x[i]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = sinf(x[i]);
+                }
+            }
+
 #endif
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = sinf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = sinf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = sinf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
     }
     else if(type == Scientific::SCI_SINH)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = sinhf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = sinhf(x[i*stepX]);
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = sinhf(x[i*stepX]);
+            }
+        }
+
     }
     else if(type == Scientific::SCI_TAN)
     {
 #ifdef USE_X86
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/8; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                __m256 load         = _mm256_loadu_ps(&x[i*8]);
-                load                = _mm256_div_ps(sin256_ps(load),cos256_ps(load));
-                _mm256_storeu_ps(&out[i*8],load);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = _mm256_div_ps(sin256_ps(load),cos256_ps(load));
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = tanf(x[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = _mm256_div_ps(sin256_ps(load),cos256_ps(load));
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = tanf(x[i]);
+                }
             }
 
-            for (int i = (inputN/8)*8; i < inputN; ++i)
-            {
-                out[i] = tanf(x[i]);
-            }
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = tanf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = tanf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = tanf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
 
@@ -536,101 +936,186 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         {
 #ifdef USE_NEON
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/4; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float32x4_t load    = vld1q_f32(&x[i*4]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
 #ifdef __aarch64__
-                load                = vdivq_f32(sin_ps(load),cos_ps(load));
+                    load                = vdivq_f32(sin_ps(load),cos_ps(load));
 #else
-                float32x4_t recip0  = vrecpeq_f32(cos_ps(load));
-                float32x4_t recip1  = vmulq_f32(recip0, vrecpsq_f32(recip0,(cos_ps(load))));
-                load                = vmulq_f32(sin_ps(load), recip1);
+                    float32x4_t recip0  = vrecpeq_f32(cos_ps(load));
+                    float32x4_t recip1  = vmulq_f32(recip0, vrecpsq_f32(recip0,(cos_ps(load))));
+                    load                = vmulq_f32(sin_ps(load), recip1);
 #endif
-                vst1q_f32(&out[i*4],load);
-            }
+                    vst1q_f32(&out[i*4],load);
+                }
 
-            for (int i = (inputN/4)*4; i < inputN; ++i)
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = tanf(x[i]);
+                }
+            }
+            else
             {
-                out[i] = tanf(x[i]);
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+#ifdef __aarch64__
+                    load                = vdivq_f32(sin_ps(load),cos_ps(load));
+#else
+                    float32x4_t recip0  = vrecpeq_f32(cos_ps(load));
+                    float32x4_t recip1  = vmulq_f32(recip0, vrecpsq_f32(recip0,(cos_ps(load))));
+                    load                = vmulq_f32(sin_ps(load), recip1);
+#endif
+                    vst1q_f32(&out[i*4],load);
+                }
+
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = tanf(x[i]);
+                }
             }
 
 #else
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i]  = tanf(x[i]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = tanf(x[i]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = tanf(x[i]);
+                }
+            }
+
 #endif
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
+            if(dataLen > MIN_OMP_DATA)
+            {
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = tanf(x[i*stepX]);
+                }
+            }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = tanf(x[i*stepX]);
+                }
+            }
+
+        }
+#endif
+    }
+    else if(type == Scientific::SCI_TANH)
+    {
+        uint64_t dataLen   = inputN;
+        if(dataLen > MIN_OMP_DATA)
+        {
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
 #endif
             for(int i=0; i<inputN; ++i)
             {
                 out[i*stepOut]  = tanf(x[i*stepX]);
             }
         }
-#endif
-    }
-    else if(type == Scientific::SCI_TANH)
-    {
-#ifdef USE_OMP
-        uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        else
         {
-            out[i*stepOut]  = tanf(x[i*stepX]);
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = tanf(x[i*stepX]);
+            }
         }
+
     }
     else if(type == Scientific::SCI_EXP)
     {
 #ifdef USE_X86
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/8; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                __m256 load         = _mm256_loadu_ps(&x[i*8]);
-                load                = exp256_ps(load);
-                _mm256_storeu_ps(&out[i*8],load);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = exp256_ps(load);
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = expf(x[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = exp256_ps(load);
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = expf(x[i]);
+                }
             }
 
-            for (int i = (inputN/8)*8; i < inputN; ++i)
-            {
-                out[i] = expf(x[i]);
-            }
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = expf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = expf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = expf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
 
@@ -639,47 +1124,86 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         {
 #ifdef USE_NEON
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/4; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float32x4_t load    = vld1q_f32(&x[i*4]);
-                load                = exp_ps(load);
-                vst1q_f32(&out[i*4],load);
-            }
+#ifdef USE_OMP
 
-            for (int i = (inputN/4)*4; i < inputN; ++i)
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+                    load                = exp_ps(load);
+                    vst1q_f32(&out[i*4],load);
+                }
+
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = expf(x[i]);
+                }
+            }
+            else
             {
-                out[i] = expf(x[i]);
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+                    load                = exp_ps(load);
+                    vst1q_f32(&out[i*4],load);
+                }
+
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = expf(x[i]);
+                }
             }
 
 #else
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i]  = expf(x[i]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = expf(x[i]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = expf(x[i]);
+                }
+            }
+
 #endif
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = expf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = expf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = expf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
     }
@@ -688,34 +1212,63 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #ifdef USE_X86
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/8; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                __m256 load         = _mm256_loadu_ps(&x[i*8]);
-                load                = pow_ps(load, _mm256_set1_ps(alpha));
-                _mm256_storeu_ps(&out[i*8],load);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = pow_ps(load, _mm256_set1_ps(alpha));
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = powf(x[i],alpha);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = pow_ps(load, _mm256_set1_ps(alpha));
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = powf(x[i],alpha);
+                }
             }
 
-            for (int i = (inputN/8)*8; i < inputN; ++i)
-            {
-                out[i] = powf(x[i],alpha);
-            }
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = powf(x[i*stepX],alpha);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = powf(x[i*stepX],alpha);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = powf(x[i*stepX],alpha);
+                }
+            }
+
         }
 #endif
 
@@ -724,47 +1277,86 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         {
 #ifdef USE_NEON
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/4; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float32x4_t load    = vld1q_f32(&x[i*4]);
-                load                = pow_ps(load,vdupq_n_f32(alpha));
-                vst1q_f32(&out[i*4],load);
-            }
+#ifdef USE_OMP
 
-            for (int i = (inputN/4)*4; i < inputN; ++i)
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+                    load                = pow_ps(load,vdupq_n_f32(alpha));
+                    vst1q_f32(&out[i*4],load);
+                }
+
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = powf(x[i],alpha);
+                }
+            }
+            else
             {
-                out[i] = powf(x[i],alpha);
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+                    load                = pow_ps(load,vdupq_n_f32(alpha));
+                    vst1q_f32(&out[i*4],load);
+                }
+
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = powf(x[i],alpha);
+                }
             }
 
 #else
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i]  = powf(x[i],alpha);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = powf(x[i],alpha);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = powf(x[i],alpha);
+                }
+            }
+
 #endif
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = powf(x[i*stepX],alpha);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = powf(x[i*stepX],alpha);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = powf(x[i*stepX],alpha);
+                }
+            }
+
         }
 #endif
     }
@@ -773,34 +1365,63 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
 #ifdef USE_X86
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/8; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                __m256 load         = _mm256_loadu_ps(&x[i*8]);
-                load                = log256_ps(load);
-                _mm256_storeu_ps(&out[i*8],load);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = log256_ps(load);
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = logf(x[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = log256_ps(load);
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = logf(x[i]);
+                }
             }
 
-            for (int i = (inputN/8)*8; i < inputN; ++i)
-            {
-                out[i] = logf(x[i]);
-            }
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = logf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = logf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = logf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
 
@@ -809,95 +1430,173 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         {
 #ifdef USE_NEON
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
+            if(dataLen > MIN_OMP_DATA)
+            {
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-            for (int i = 0; i < inputN/4; ++i)
-            {
-                float32x4_t load    = vld1q_f32(&x[i*4]);
-                load                = log_ps(load);
-                vst1q_f32(&out[i*4],load);
-            }
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+                    load                = log_ps(load);
+                    vst1q_f32(&out[i*4],load);
+                }
 
-            for (int i = (inputN/4)*4; i < inputN; ++i)
-            {
-                out[i] = logf(x[i]);
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = logf(x[i]);
+                }
             }
+            else
+            {
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+                    load                = log_ps(load);
+                    vst1q_f32(&out[i*4],load);
+                }
 
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = logf(x[i]);
+                }
+            }
 #else
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i]  = logf(x[i]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = logf(x[i]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = logf(x[i]);
+                }
+            }
+
 #endif
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = logf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = logf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = logf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
     }
     else if(type == Scientific::SCI_LOG10)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = inputN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int i=0; i<inputN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            out[i*stepOut]  = log10f(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = log10f(x[i*stepX]);
+            }
         }
+        else
+        {
+            for(int i=0; i<inputN; ++i)
+            {
+                out[i*stepOut]  = log10f(x[i*stepX]);
+            }
+        }
+
     }
     else if(type == Scientific::SCI_SQRT)
     {
 #ifdef USE_X86
         if(supportAvx && stepOut == 1 && stepX == 1)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/8; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                __m256 load         = _mm256_loadu_ps(&x[i*8]);
-                load                = _mm256_sqrt_ps(load);
-                _mm256_storeu_ps(&out[i*8],load);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = _mm256_sqrt_ps(load);
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = sqrtf(x[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < inputN/8; ++i)
+                {
+                    __m256 load         = _mm256_loadu_ps(&x[i*8]);
+                    load                = _mm256_sqrt_ps(load);
+                    _mm256_storeu_ps(&out[i*8],load);
+                }
+
+                for (int i = (inputN/8)*8; i < inputN; ++i)
+                {
+                    out[i] = sqrtf(x[i]);
+                }
             }
 
-            for (int i = (inputN/8)*8; i < inputN; ++i)
-            {
-                out[i] = sqrtf(x[i]);
-            }
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = sqrtf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = sqrtf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = sqrtf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
 
@@ -906,56 +1605,99 @@ void Blas::cpuScientific(const Scientific &type, const int &inputN, float * cons
         {
 #ifdef USE_NEON
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < inputN/4; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float32x4_t load    = vld1q_f32(&x[i*4]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
 #ifdef __aarch64__
-                load                = vsqrtq_f32(load);
+                    load                = vsqrtq_f32(load);
 #else
-                load                = vrsqrteq_f32(load);
-                load                = vrecpeq_f32(load);
+                    load                = vrsqrteq_f32(load);
+                    load                = vrecpeq_f32(load);
 #endif
-                vst1q_f32(&out[i*4],load);
-            }
+                    vst1q_f32(&out[i*4],load);
+                }
 
-            for (int i = (inputN/4)*4; i < inputN; ++i)
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = sqrtf(x[i]);
+                }
+            }
+            else
             {
-                out[i] = sqrtf(x[i]);
+                for (int i = 0; i < inputN/4; ++i)
+                {
+                    float32x4_t load    = vld1q_f32(&x[i*4]);
+#ifdef __aarch64__
+                    load                = vsqrtq_f32(load);
+#else
+                    load                = vrsqrteq_f32(load);
+                    load                = vrecpeq_f32(load);
+#endif
+                    vst1q_f32(&out[i*4],load);
+                }
+
+                for (int i = (inputN/4)*4; i < inputN; ++i)
+                {
+                    out[i] = sqrtf(x[i]);
+                }
             }
 
 #else
 
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i]  = sqrtf(x[i]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = sqrtf(x[i]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i]  = sqrtf(x[i]);
+                }
+            }
+
 #endif
         }
         else
         {
-#ifdef USE_OMP
             uint64_t dataLen   = inputN;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for(int i=0; i<inputN; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                out[i*stepOut]  = sqrtf(x[i*stepX]);
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = sqrtf(x[i*stepX]);
+                }
             }
+            else
+            {
+                for(int i=0; i<inputN; ++i)
+                {
+                    out[i*stepOut]  = sqrtf(x[i*stepX]);
+                }
+            }
+
         }
 #endif
     }
-
 }
 
 void Blas::cpuScale(const int &inputN, const float &alpha, float *const &x, const int &stepX)
@@ -963,14 +1705,23 @@ void Blas::cpuScale(const int &inputN, const float &alpha, float *const &x, cons
 #ifdef USE_OPEN_BLAS
     cblas_sscal(inputN, alpha, x, stepX);
 #else
-#ifdef USE_OMP
     uint64_t dataLen   = inputN;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for(int i=0; i<inputN; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        x[i*stepX] = x[i*stepX] * alpha;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<inputN; ++i)
+        {
+            x[i*stepX] = x[i*stepX] * alpha;
+        }
+    }
+    else
+    {
+        for(int i=0; i<inputN; ++i)
+        {
+            x[i*stepX] = x[i*stepX] * alpha;
+        }
     }
 #endif
 }
@@ -979,29 +1730,54 @@ void Blas::cpuMean(float *const &x, const int &batch, const int &filters, const 
 {
     float scale  =  1.f/(batch * outSize); 
 
-#ifdef USE_OMP
     uint64_t dataLen   = filters*batch*outSize;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for(int i=0; i<filters; ++i) 
 
+    if(dataLen > MIN_OMP_DATA)
     {
-        mean[i]  = 0;
-
-        for(int j=0; j<batch; ++j) 
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<filters; ++i) 
 
         {
-            for(int k=0; k<outSize; ++k) 
+            mean[i]  = 0;
+
+            for(int j=0; j<batch; ++j) 
 
             {
+                for(int k=0; k<outSize; ++k) 
 
-                int index = j*filters*outSize + i*outSize + k;
-                mean[index] += x[index];
+                {
+
+                    int index = j*filters*outSize + i*outSize + k;
+                    mean[index] += x[index];
+                }
             }
-        }
 
-        mean[i] = mean[i]*scale;
+            mean[i] = mean[i]*scale;
+        }
+    }
+    else
+    {
+        for(int i=0; i<filters; ++i) 
+
+        {
+            mean[i]  = 0;
+
+            for(int j=0; j<batch; ++j) 
+
+            {
+                for(int k=0; k<outSize; ++k) 
+
+                {
+
+                    int index = j*filters*outSize + i*outSize + k;
+                    mean[index] += x[index];
+                }
+            }
+
+            mean[i] = mean[i]*scale;
+        }
     }
 
 }
@@ -1010,26 +1786,45 @@ void Blas::cpuVariance(float *const &x, float *const &mean, const int &batch,
                        const int &filters, const int &outSize, float *const &variance)
 {
     float scale  =  1.f/(batch * outSize -1);
-
-#ifdef USE_OMP
     uint64_t dataLen   = filters*batch*outSize;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for(int i=0; i<filters; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        variance[i] = 0;
-
-        for(int j=0; j<batch; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for(int i=0; i<filters; ++i)
         {
-            for(int k=0; k<outSize;++k)
-            {
-                int index = j*filters*outSize + i*outSize + k;
+            variance[i] = 0;
 
-                variance[i] = variance[i] + pow((x[index] - mean[i]),2);
+            for(int j=0; j<batch; ++j)
+            {
+                for(int k=0; k<outSize;++k)
+                {
+                    int index = j*filters*outSize + i*outSize + k;
+
+                    variance[i] = variance[i] + pow((x[index] - mean[i]),2);
+                }
             }
+            variance[i] = variance[i] * scale;
         }
-        variance[i] = variance[i] * scale;
+    }
+    else
+    {
+        for(int i=0; i<filters; ++i)
+        {
+            variance[i] = 0;
+
+            for(int j=0; j<batch; ++j)
+            {
+                for(int k=0; k<outSize;++k)
+                {
+                    int index = j*filters*outSize + i*outSize + k;
+
+                    variance[i] = variance[i] + pow((x[index] - mean[i]),2);
+                }
+            }
+            variance[i] = variance[i] * scale;
+        }
     }
 
 }
@@ -1040,18 +1835,32 @@ void Blas::cpuNorm(float *const &x, float *const &mean, float *const &variance,
 
     for(int b=0; b<batch; ++b)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = filters*outSize;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for(int f=0; f<filters; ++f)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for(int i=0; i<outSize; ++i)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for(int f=0; f<filters; ++f)
             {
-                int index = b*filters*outSize + f*outSize + i;
+                for(int i=0; i<outSize; ++i)
+                {
+                    int index = b*filters*outSize + f*outSize + i;
 
-                x[index]  = (x[index] - mean[f])/(sqrt(variance[f] + eps));
+                    x[index]  = (x[index] - mean[f])/(sqrt(variance[f] + eps));
+                }
+            }
+        }
+        else
+        {
+            for(int f=0; f<filters; ++f)
+            {
+                for(int i=0; i<outSize; ++i)
+                {
+                    int index = b*filters*outSize + f*outSize + i;
+
+                    x[index]  = (x[index] - mean[f])/(sqrt(variance[f] + eps));
+                }
             }
         }
     }
@@ -1059,57 +1868,103 @@ void Blas::cpuNorm(float *const &x, float *const &mean, float *const &variance,
 
 void Blas::cpuSmoothL1(const int &n, float * const &pred, float * const &truth, float * const &delta, float * const &error)
 {
-#ifdef USE_OMP
     uint64_t dataLen   = n;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < n; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        float diff      = truth[i] - pred[i];
-        float absVal    = fabs(diff);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < n; ++i)
+        {
+            float diff      = truth[i] - pred[i];
+            float absVal    = fabs(diff);
 
-        if(absVal < 1)
-        {
-            error[i] = diff * diff;
-            delta[i] = diff;
-        }
-        else
-        {
-            error[i] = 2*absVal - 1.f;
-            delta[i] = (diff > 0)? 1.f : -1.f;
+            if(absVal < 1)
+            {
+                error[i] = diff * diff;
+                delta[i] = diff;
+            }
+            else
+            {
+                error[i] = 2*absVal - 1.f;
+                delta[i] = (diff > 0)? 1.f : -1.f;
+            }
         }
     }
+    else
+    {
+        for (int i = 0; i < n; ++i)
+        {
+            float diff      = truth[i] - pred[i];
+            float absVal    = fabs(diff);
+
+            if(absVal < 1)
+            {
+                error[i] = diff * diff;
+                delta[i] = diff;
+            }
+            else
+            {
+                error[i] = 2*absVal - 1.f;
+                delta[i] = (diff > 0)? 1.f : -1.f;
+            }
+        }
+    }
+
 }
 
 void Blas::cpuL1(const int &n, float * const &pred, float * const &truth, float * const &delta, float * const &error)
 {
-#ifdef USE_OMP
     uint64_t dataLen   = n;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < n; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        float diff = truth[i] - pred[i];
-        error[i] = fabs(diff);
-        delta[i] = diff > 0 ? 1.f : -1.f;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < n; ++i)
+        {
+            float diff = truth[i] - pred[i];
+            error[i] = fabs(diff);
+            delta[i] = diff > 0 ? 1.f : -1.f;
+        }
     }
+    else
+    {
+        for (int i = 0; i < n; ++i)
+        {
+            float diff = truth[i] - pred[i];
+            error[i] = fabs(diff);
+            delta[i] = diff > 0 ? 1.f : -1.f;
+        }
+    }
+
 }
 
 void Blas::cpuL2(const int &n, float * const &pred, float * const &truth, float * const &delta, float * const &error)
 {
-#ifdef USE_OMP
     uint64_t dataLen   = n;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < n; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        float diff  = truth[i] - pred[i];
-        error[i]    = diff * diff;
-        delta[i]    = diff;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < n; ++i)
+        {
+            float diff  = truth[i] - pred[i];
+            error[i]    = diff * diff;
+            delta[i]    = diff;
+        }
     }
+    else
+    {
+        for (int i = 0; i < n; ++i)
+        {
+            float diff  = truth[i] - pred[i];
+            error[i]    = diff * diff;
+            delta[i]    = diff;
+        }
+    }
+
 }
 
 void Blas::softmax(float * const &input, const int &num, const float &temperature,  const int &stride, float * const &output, const bool &useAvx)
@@ -1187,21 +2042,37 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
 
             __m256 sumNN = _mm256_broadcast_ss(&sum);
 
-#ifdef USE_OMP
             uint64_t dataLen   = num;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
+            if(dataLen > MIN_OMP_DATA)
+            {
+#ifdef USE_OMP      
+#pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-            for (int i = 0; i < num/8; ++i)
-            {
-                __m256 load     = _mm256_loadu_ps(&output[i*8]);
-                load            = _mm256_div_ps(load, sumNN);
-                _mm256_storeu_ps(&output[i*8],load);
-            }
+                for (int i = 0; i < num/8; ++i)
+                {
+                    __m256 load     = _mm256_loadu_ps(&output[i*8]);
+                    load            = _mm256_div_ps(load, sumNN);
+                    _mm256_storeu_ps(&output[i*8],load);
+                }
 
-            for (int i = (num/8)*8; i < num; ++i)
+                for (int i = (num/8)*8; i < num; ++i)
+                {
+                    output[i] /= sum;
+                }
+            }
+            else
             {
-                output[i] /= sum;
+                for (int i = 0; i < num/8; ++i)
+                {
+                    __m256 load     = _mm256_loadu_ps(&output[i*8]);
+                    load            = _mm256_div_ps(load, sumNN);
+                    _mm256_storeu_ps(&output[i*8],load);
+                }
+
+                for (int i = (num/8)*8; i < num; ++i)
+                {
+                    output[i] /= sum;
+                }
             }
 
         }
@@ -1214,15 +2085,25 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
                 output[i] =   e;
             }
 
-#ifdef USE_OMP
             uint64_t dataLen   = num;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < num; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                output[i] /= sum;
+#ifdef USE_OMP 
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < num; ++i)
+                {
+                    output[i] /= sum;
+                }
             }
+            else
+            {
+                for (int i = 0; i < num; ++i)
+                {
+                    output[i] /= sum;
+                }
+            }
+
         }
 #endif
 
@@ -1303,26 +2184,48 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
 
         float32x4_t sumNN       = vdupq_n_f32(sum);
 
-#ifdef USE_OMP
         uint64_t dataLen   = num;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
+
+        if(dataLen > MIN_OMP_DATA)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
 #endif
-        for (int i = 0; i < num/4; ++i)
+            for (int i = 0; i < num/4; ++i)
+            {
+                float32x4_t load    = vld1q_f32(&output[i*4]);
+
+                float32x4_t recip00 = vrecpeq_f32(sumNN);
+                float32x4_t recip11 = vmulq_f32(recip00, vrecpsq_f32(recip00, sumNN));
+
+                load                = vmulq_f32(load, recip11);
+                vst1q_f32(&output[i*4],load);
+            }
+
+            for (int i = (num/4)*4; i < num; ++i)
+            {
+                output[i] /= sum;
+            }
+        }
+        else
         {
-            float32x4_t load    = vld1q_f32(&output[i*4]);
+            for (int i = 0; i < num/4; ++i)
+            {
+                float32x4_t load    = vld1q_f32(&output[i*4]);
 
-            float32x4_t recip00 = vrecpeq_f32(sumNN);
-            float32x4_t recip11 = vmulq_f32(recip00, vrecpsq_f32(recip00, sumNN));
+                float32x4_t recip00 = vrecpeq_f32(sumNN);
+                float32x4_t recip11 = vmulq_f32(recip00, vrecpsq_f32(recip00, sumNN));
 
-            load                = vmulq_f32(load, recip11);
-            vst1q_f32(&output[i*4],load);
+                load                = vmulq_f32(load, recip11);
+                vst1q_f32(&output[i*4],load);
+            }
+
+            for (int i = (num/4)*4; i < num; ++i)
+            {
+                output[i] /= sum;
+            }
         }
 
-        for (int i = (num/4)*4; i < num; ++i)
-        {
-            output[i] /= sum;
-        }
 #else
         for (int i = 0; i < num; ++i)
         {
@@ -1331,15 +2234,25 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
             input[i] =   e;
         }
 
-#ifdef USE_OMP
         uint64_t dataLen   = num;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < num; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            output[i] /= sum;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < num; ++i)
+            {
+                output[i] /= sum;
+            }
         }
+        else
+        {
+            for (int i = 0; i < num; ++i)
+            {
+                output[i] /= sum;
+            }
+        }
+
 #endif
 
 #endif
@@ -1347,16 +2260,29 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
     }
     else
     {
-#ifdef USE_OMP
         uint64_t dataLen   = num;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < num; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            if(input[i*stride] > largest)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < num; ++i)
             {
-                largest = input[i*stride];
+                if(input[i*stride] > largest)
+                {
+                    largest = input[i*stride];
+                }
+            }
+
+        }
+        else
+        {
+            for (int i = 0; i < num; ++i)
+            {
+                if(input[i*stride] > largest)
+                {
+                    largest = input[i*stride];
+                }
             }
         }
 
@@ -1367,15 +2293,25 @@ void Blas::softmax(float * const &input, const int &num, const float &temperatur
             input[i*stride] =   e;
         }
 
-#ifdef USE_OMP
         dataLen   = num;
-        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < num; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            output[i*stride] /= sum;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < num; ++i)
+            {
+                output[i*stride] /= sum;
+            }
         }
+        else
+        {
+            for (int i = 0; i < num; ++i)
+            {
+                output[i*stride] /= sum;
+            }
+        }
+
     }
 }
 
@@ -1418,27 +2354,46 @@ void Blas::cpuLogisticCorssEntropy(const int &num, float * const &pred, float * 
 void Blas::cpuUpSample(float * const &in, const int &width, const int &height, const int &channel, const int &batch, const int &strideX,
                        const int &strideY, const float &scale, float * const &out)
 {
+    uint64_t dataLen   = channel * height * strideY * width * strideX;
 
     for (int b = 0; b < batch; ++b)
     {
-#ifdef USE_OMP
-        uint64_t dataLen   = channel * height * strideY * width * strideX;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int k = 0; k < channel; ++k)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < height * strideY; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int k = 0; k < channel; ++k)
             {
-                for (int i = 0; i < width * strideX; ++i)
+                for (int j = 0; j < height * strideY; ++j)
                 {
-                    int inIndex     =   b*width*height*channel + k*width*height + (j/strideY)*width + i/strideX;
-                    int outIndex    =   b*width*height*channel*strideX*strideY + k*width*height*strideX*strideY + j*width*strideX + i;
+                    for (int i = 0; i < width * strideX; ++i)
+                    {
+                        int inIndex     =   b*width*height*channel + k*width*height + (j/strideY)*width + i/strideX;
+                        int outIndex    =   b*width*height*channel*strideX*strideY + k*width*height*strideX*strideY + j*width*strideX + i;
 
-                    out[outIndex]   =   scale*in[inIndex];
+                        out[outIndex]   =   scale*in[inIndex];
+                    }
                 }
             }
         }
+        else
+        {
+            for (int k = 0; k < channel; ++k)
+            {
+                for (int j = 0; j < height * strideY; ++j)
+                {
+                    for (int i = 0; i < width * strideX; ++i)
+                    {
+                        int inIndex     =   b*width*height*channel + k*width*height + (j/strideY)*width + i/strideX;
+                        int outIndex    =   b*width*height*channel*strideX*strideY + k*width*height*strideX*strideY + j*width*strideX + i;
+
+                        out[outIndex]   =   scale*in[inIndex];
+                    }
+                }
+            }
+        }
+
     }
 }
 
@@ -1457,54 +2412,103 @@ void Blas::cpuBilinearResize(float * const &in, const int &width, const int &hei
     const size_t inSize  = width*height;
     const size_t outSize = outWidth*outHeight;
 
-#ifdef USE_OMP
     uint64_t dataLen   = outWidth;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < outSize; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        const int h2 = i / outWidth;
-        const int w2 = i % outWidth;
-        float h1r = 0;
-        float w1r = 0;
-
-        if(alignCorners==0)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < outSize; ++i)
         {
-            const float inIdxH =  rHeight*(h2+0.5f)-0.5f;
-            h1r = inIdxH<0?0:inIdxH;
+            const int h2 = i / outWidth;
+            const int w2 = i % outWidth;
+            float h1r = 0;
+            float w1r = 0;
 
-            const float inIdxW =  rWidth*(w2+0.5f)-0.5f;
-            w1r = inIdxW<0?0:inIdxW;
+            if(alignCorners==0)
+            {
+                const float inIdxH =  rHeight*(h2+0.5f)-0.5f;
+                h1r = inIdxH<0?0:inIdxH;
+
+                const float inIdxW =  rWidth*(w2+0.5f)-0.5f;
+                w1r = inIdxW<0?0:inIdxW;
+            }
+            else
+            {
+                h1r = rHeight*h2;
+                w1r = rWidth *w2;
+            }
+
+            const int h1 = static_cast<int>(h1r);
+            const int w1 = static_cast<int>(w1r);
+
+            const int h1p = (h1 < (height - 1))?1:0;
+            const int w1p = (w1 < (width  - 1))?1:0;
+
+            const float h1Lamd =  h1r - h1;
+            const float h0Lamd =  1.0f - h1Lamd;
+
+            const float w1Lamd =  w1r - w1;
+            const float w0Lamd =  1.0f - w1Lamd;
+
+            const float *inPtr = in  + h1*width + w1;
+            float *outPtr      = out + i;
+
+            for (int c = 0; c < channel*batch; ++c)
+            {
+                const float* inTmp = inPtr + c*inSize;
+                *(outPtr + c*outSize) = h0Lamd * (w0Lamd*(*inTmp) + w1Lamd*(*(inTmp + w1p)))
+                        +h1Lamd * (w0Lamd*(*(inTmp + h1p*width))+w1Lamd * (*(inTmp + h1p*width + w1p)));
+            }
+
         }
-        else
+    }
+    else
+    {
+        for (int i = 0; i < outSize; ++i)
         {
-            h1r = rHeight*h2;
-            w1r = rWidth *w2;
+            const int h2 = i / outWidth;
+            const int w2 = i % outWidth;
+            float h1r = 0;
+            float w1r = 0;
+
+            if(alignCorners==0)
+            {
+                const float inIdxH =  rHeight*(h2+0.5f)-0.5f;
+                h1r = inIdxH<0?0:inIdxH;
+
+                const float inIdxW =  rWidth*(w2+0.5f)-0.5f;
+                w1r = inIdxW<0?0:inIdxW;
+            }
+            else
+            {
+                h1r = rHeight*h2;
+                w1r = rWidth *w2;
+            }
+
+            const int h1 = static_cast<int>(h1r);
+            const int w1 = static_cast<int>(w1r);
+
+            const int h1p = (h1 < (height - 1))?1:0;
+            const int w1p = (w1 < (width  - 1))?1:0;
+
+            const float h1Lamd =  h1r - h1;
+            const float h0Lamd =  1.0f - h1Lamd;
+
+            const float w1Lamd =  w1r - w1;
+            const float w0Lamd =  1.0f - w1Lamd;
+
+            const float *inPtr = in  + h1*width + w1;
+            float *outPtr      = out + i;
+
+            for (int c = 0; c < channel*batch; ++c)
+            {
+                const float* inTmp = inPtr + c*inSize;
+                *(outPtr + c*outSize) = h0Lamd * (w0Lamd*(*inTmp) + w1Lamd*(*(inTmp + w1p)))
+                        +h1Lamd * (w0Lamd*(*(inTmp + h1p*width))+w1Lamd * (*(inTmp + h1p*width + w1p)));
+            }
+
         }
-
-        const int h1 = static_cast<int>(h1r);
-        const int w1 = static_cast<int>(w1r);
-
-        const int h1p = (h1 < (height - 1))?1:0;
-        const int w1p = (w1 < (width  - 1))?1:0;
-
-        const float h1Lamd =  h1r - h1;
-        const float h0Lamd =  1.0f - h1Lamd;
-
-        const float w1Lamd =  w1r - w1;
-        const float w0Lamd =  1.0f - w1Lamd;
-
-        const float *inPtr = in  + h1*width + w1;
-        float *outPtr      = out + i;
-
-        for (int c = 0; c < channel*batch; ++c)
-        {
-            const float* inTmp = inPtr + c*inSize;
-            *(outPtr + c*outSize) = h0Lamd * (w0Lamd*(*inTmp) + w1Lamd*(*(inTmp + w1p)))
-                    +h1Lamd * (w0Lamd*(*(inTmp + h1p*width))+w1Lamd * (*(inTmp + h1p*width + w1p)));
-        }
-
     }
 
 }

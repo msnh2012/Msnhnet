@@ -1,6 +1,6 @@
 ﻿#ifndef MSNHNETLIB_H
 #define MSNHNETLIB_H
-#ifdef USE_OPENCV
+
 #include "Msnhnet/utils/MsnhExport.h"
 #include "Msnhnet/Msnhnet.h"
 #include <iostream>
@@ -59,5 +59,4 @@ extern "C" MsnhNet_API int withCUDNN(int *CUDNN);
 extern "C" MsnhNet_API int getCpuForwardTime(float *time);
 extern "C" MsnhNet_API int getGpuForwardTime(float *time);
 extern "C" MsnhNet_API int getInputDim(int *width, int *heigth, int *channel);
-#endif
 #endif

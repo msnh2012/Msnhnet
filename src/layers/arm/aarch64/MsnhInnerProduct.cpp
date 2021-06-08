@@ -31,7 +31,6 @@ namespace Msnhnet
 
             const float* src0 = src;
 
-
 #if USE_ARM
             float32x4_t _sum0 = vdupq_n_f32(0.f);
             float32x4_t _sum1 = vdupq_n_f32(0.f);
@@ -82,7 +81,6 @@ namespace Msnhnet
                     // "st1        {v7.4s}, [%7]           \n"
                     // "st1        {v8.4s}, [%8]           \n"
                     // "st1        {v9.4s}, [%9]           \n"
-
 
                     : "=r"(src0),   // %0
                     "=r"(w0),       // %1

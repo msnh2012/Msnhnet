@@ -28,4 +28,3 @@ BadFile::~BadFile() YAML_CPP_NOEXCEPT {}
 
 #undef YAML_CPP_NOEXCEPT
 
-

@@ -117,7 +117,6 @@ void BiasLayerArm::BiasInplaceV8(float* src, const int &inWidth, const int &inHe
             );
         }
 
-
 #endif
         for(; remain > 0; remain--){
             (*srcptr) = (*srcptr) + Bias;

@@ -83,7 +83,6 @@ void AbsValLayerArm::AbsValInplaceV8(float* src, const int &inWidth, const int &
             );
         }
 
-
 #endif
         for(; remain > 0; remain--){
             (*srcptr) = (*srcptr) > 0 ? (*srcptr) : -(*srcptr);

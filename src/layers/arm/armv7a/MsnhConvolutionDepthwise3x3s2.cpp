@@ -40,7 +40,7 @@ namespace Msnhnet
 #endif 
 
             int i = 0;
-            
+
             for(; i < outHeight; i++){
 #if USE_NEON
                 int nn = outWidth >> 2;
@@ -96,7 +96,6 @@ namespace Msnhnet
 
                             "vmla.f32   q11, q1, %f12[0]    \n"
 
-
                             "vadd.f32   q0, q0, q10         \n"
                             "vadd.f32   q0, q0, q11         \n"
 
@@ -104,8 +103,6 @@ namespace Msnhnet
 
                             "subs       %0, #1              \n"
                             "bne        0b                  \n"
-
-
 
                             // OutputOperands 
                             : "=r"(nn),     // %0
@@ -148,7 +145,7 @@ namespace Msnhnet
                     a = vpadd_f32(a, a);
                     *destptr0 = vget_lane_f32(a, 0);
 #endif
-                   
+
 #else
                     float sum1 = 0.f;
                     sum1 += r0[0] * k0[0];

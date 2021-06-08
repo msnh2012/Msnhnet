@@ -40,8 +40,6 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
             const float* r2 = src0 + inWidth * 2;
             const float* r3 = src0 + inWidth * 3;
 
-
-
 #if USE_NEON
             float32x4_t k012 = vld1q_f32(k0);
             float32x4_t k345 = vld1q_f32(k0 + 3);
@@ -54,14 +52,13 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
 
             int i = 0;
             for(; i + 1 < outHeight; i += 2){
-                
+
 #if USE_NEON
                 int nn = outWidth >> 2;
                 int remain = outWidth - (nn << 2);
 #else
                 int remain = outWidth;
 #endif
-
 
 #if USE_NEON
 
@@ -79,14 +76,14 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         "vld1.f32   {d16-d18}, [%5] \n" // r0
                         //r0->e
 						"add        %5, #16             \n"
-						
+
 						// r3 [a3, b3, c3, d3, e3, f3]
                         "pld        [%8, #192]          \n"
                         // d28 -> [a3, b3], d29 -> [c3, d3], d30 -> [e3, f3]
 						"vld1.f32   {d28-d30}, [%8]     \n" // r3
 						//r3->e3
                         "add        %8, #16             \n"
-						
+
                         /********* conv output1->chanel q output **********/
 						// q8 = [d16, d17] = [a, b, c, d]
 						// q9 = [d18, d19] = [e, f, *, *]
@@ -96,7 +93,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
 						// q15 = [d30, d31] = [e3, f3, *, *]
 						// q11 = [c3, d3, e3, f3]
                         "vext.32    q11, q14, q15, #2   \n"
-						
+
 						// sum0
                         "pld        [%1, #128]          \n"
                         "vld1.f32   {d12-d13}, [%1] \n" 
@@ -113,7 +110,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
 						//sum0next
                         "pld        [%3, #128]          \n"
                         "vld1.f32   {d24-d25}, [%3]     \n"
-						
+
 						//sumnext
                         "pld        [%4, #128]          \n"
                         "vld1.f32   {d26-d27}, [%4]     \n"
@@ -131,7 +128,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
 						// q15 = [d30, d31] = [e3, f3, *, *]
 						// q9  = [b3, c3, d3, e3] ****
 						"vext.32    q9, q14, q15, #1    \n"
-						
+
                         //q8[c, d, e, f]只和k012的第三个元素相乘并累加到q6
                         "vmla.f32   q6, q8, %f18[0]     \n"
                         //q8[c, d, e, f]只和k012_next的第三个元素相乘并累加到q7
@@ -140,7 +137,6 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         "vmla.f32   q12, q9, %e20[1]    \n"
                         //q9[b3, c3, d3, e3]只和k678_next的第二个元素相乘并累加到q13
                         "vmla.f32   q13, q9, %e23[1]    \n"
-
 
                         /********* conv output2->chanel q output **********/
                         //r1 [a1, b1, c1, d1, e1, f1]
@@ -200,7 +196,6 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         "vmla.f32   q12, q11, %f18[0]   \n"
                         // q11[c1, d1, e1, f1] 和 k012_next的第三个元素相乘并累加到q7
                         "vmla.f32   q13, q11, %f21[0]   \n"
-
 
                         "vext.32    q10, q8, q9, #1     \n"
 
@@ -289,7 +284,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                     sum1next = vmlaq_f32(sum1next, r20, k345_next);
                     sum0next = vmlaq_f32(sum0next, r30, k678);
                     sum1next = vmlaq_f32(sum1next, r30, k678_next);
-                    
+
                     // use *destptr0 's data repalce sum0[3]
                     sum0 = vsetq_lane_f32(*destptr0, sum0, 3);
                     sum1 = vsetq_lane_f32(*destptr1, sum1, 3);
@@ -319,7 +314,6 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                     *destptr1_next = vget_lane_f32(_ss01next, 1);      
 
 #endif
-
 
 #else
 
@@ -400,10 +394,10 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                 destptr0_next += outWidth;
                 destptr1_next += outWidth;
             }
-            
+
             //deal three lines and get one output in a feature map
             for(; i < outHeight; i++){
-                
+
 #if USE_NEON
                 int nn = outWidth >> 2;
                 int remain = outWidth - (nn << 2);
@@ -426,7 +420,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         // d16=[a, b], d17=[c, d], d18=[e, f]
                         "vld1.f32   {d16-d18}, [%3]     \n"
                         "add        %3, #16             \n"
-                        
+
                         //sum0
                         "pld        [%1, #128]          \n"
                         "vld1.f32   {d12-d13}, [%1]     \n"
@@ -544,7 +538,6 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                     sum0 = vmlaq_f32(sum0, r20, k678);
                     sum1 = vmlaq_f32(sum1, r20, k678_next);
 
-
                     // use *destptr0 's data repalce sum0[3]
                     sum0 = vsetq_lane_f32(*destptr0, sum0, 3);
                     sum1 = vsetq_lane_f32(*destptr1, sum1, 3);
@@ -605,7 +598,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                 r1 += 2;
                 r2 += 2;
             }
-            
+
             //mov conv kernel
             k0 += 9;
             k1 += 9;
@@ -616,7 +609,6 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
 #if USE_OMP
 #pragma omp parallel for num_threads(OMP_THREAD)
 #endif 
-
 
     for(int cc = ccRemainOutChannel; cc < outChannel; cc++){
         int c = cc;
@@ -666,7 +658,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         "pld        [%3, #192]          \n"
                         "vld1.f32   {d18-d20}, [%3] \n" 
                         "add        %3, #16             \n"
-                        
+
                         // q9 = [a, b, c, d]
                         // q10 = [e, f, *, *]
                         // q11 = [b, c, d, e]
@@ -741,7 +733,6 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         "subs       %0, #1              \n"
                         "bne        0b                  \n"
 
-
                         : "=r"(nn),      // %0
                         "=r"(destptr0),  // %1
                         "=r"(destptr1), // %2
@@ -793,7 +784,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                     *destptr0 = vget_lane_f32(_ss01, 0);
                     *destptr1 = vget_lane_f32(_ss01, 1);
 #endif      
-                
+
 #else
                     float sum0 = 0;
                     float sum1 = 0;
@@ -879,7 +870,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
 
                         "vext.32    q10, q8, q9, #1     \n"
                         "vext.32    q11, q8, q9, #2     \n"
-                        
+
                         "vmla.f32   q7, q8, %e11[0]     \n"
                         "vmla.f32   q13, q10, %e11[1]   \n"
                         "vmla.f32   q14, q11, %f11[0]   \n"
@@ -920,12 +911,11 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
                         : "cc", "memory", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15");
                 } 
 #endif
-                
 
 #endif
 
                 for(; remain > 0; remain--){
-                    
+
 #if USE_NEON
                     float32x4_t r00 = vld1q_f32(r0);
                     float32x4_t r10 = vld1q_f32(r1);
@@ -974,7 +964,7 @@ void ConvolutionalLayerArm3x3s1::conv3x3s1Neon(float *const &src, const int &inW
             kernel0 += 9;
         }
     }
-    
+
 }
 
 }

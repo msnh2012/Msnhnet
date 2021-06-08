@@ -30,7 +30,7 @@ void ActivationLayerArm::reluActivateV8(float * &src, const int &inWidth, const 
 
         #if USE_ARM
             if(nn > 0){
-               
+
                 asm volatile(
                     "movi       v0.2d, #0           \n"
                     "0:                             \n"
@@ -40,7 +40,7 @@ void ActivationLayerArm::reluActivateV8(float * &src, const int &inWidth, const 
                     "st1        {v1.4s}, [%0], #16       \n"
                     "subs       %w1, %w1, #1        \n"
                     "bne        0b                  \n"
-                    
+
                     : "=r"(srcPtr), // %0
                     "=r"(nn)        // %1
                     : "0"(srcPtr),
@@ -142,7 +142,7 @@ void ActivationLayerArm::leakyActivateV8(float * &src, const int &inWidth, const
 
         #if USE_ARM
             if(nn > 0){
-                
+
                 asm volatile(
                     "movi       v0.2d, #0           \n"
                     "dup        v1.4s, %w4          \n"

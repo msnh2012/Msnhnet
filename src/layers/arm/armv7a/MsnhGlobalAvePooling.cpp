@@ -8,7 +8,6 @@ using namespace std;
 namespace Msnhnet
 {
 
-
 //bottom: src, inWidth, inHeight, inChannel
 //top: dest, outWidth, outHeight, outChannel
 void GlobalAvePoolingLayerArm::pooling(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, 
@@ -45,7 +44,7 @@ void GlobalAvePoolingLayerArm::pooling(float *const &src, const int &inWidth, co
 
                 "faddp      v0.4s, v0.4s, v0.4s     \n"
                 "faddp      v0.4s, v0.4s, v0.4s     \n"
-                
+
                 "fmov       %w2, s0            \n"
 
                 : "=r"(srcptr),     // %0
@@ -65,7 +64,7 @@ void GlobalAvePoolingLayerArm::pooling(float *const &src, const int &inWidth, co
                 "vmla.f32   q1, q0, q1          \n"
                 "subs       %0, #1              \n"
                 "bne        0b                  \n"
-                
+
                 "vpadd.f32  d4, d2, d3          \n"
                 "vpadd.f32  d5, d4, d4          \n"
 
@@ -77,7 +76,7 @@ void GlobalAvePoolingLayerArm::pooling(float *const &src, const int &inWidth, co
                 :
                 : "cc", "memory", "q0", "q1", "q2", "q3"
             );
-        
+
 #endif
         }
 
@@ -89,7 +88,6 @@ void GlobalAvePoolingLayerArm::pooling(float *const &src, const int &inWidth, co
         *destptr = sum / inSize;
     }
 }
-
 
 }
 #endif

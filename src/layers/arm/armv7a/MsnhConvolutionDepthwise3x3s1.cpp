@@ -116,7 +116,6 @@ namespace Msnhnet
                         //把第三行的[c, d, e, f] 和 k345 的第3个权值相乘，然后累加到q13寄存器上
                         "vmla.f32   q13, q12, %f15[0]   \n"
 
-
                         // 为outptr2做准备，计算第二行的 [a, b, c, d, e, f] 和 k012 的乘积
                         // 把第二行的 [a, b, c, d] 和 k012的第1个权值相乘，赋值给q8寄存器
                         "vmul.f32   q8, q9, %e14[0]     \n"
@@ -124,14 +123,14 @@ namespace Msnhnet
                         "vmul.f32   q14, q11, %e14[1]   \n"
                         // 把第二行的 [c, d, e, f] 和 k012的第3个权值相乘，赋值给q15寄存器
                         "vmul.f32   q15, q12, %f14[0]   \n"
-                        
+
                         //和上面的过程完全一致，这里是针对第三行
                         "pld        [%5, #192]          \n"
                         "vld1.f32   {d18-d20}, [%5 :64] \n" // r2
                         "add        %5, #16             \n"
                         // 把第三行的 [a, b, c, d] 和 k678 的第1个权值相乘，然后累加到q7寄存器上
                         "vmla.f32   q7, q9, %e16[0]     \n"
-                        
+
                         "vext.32    q11, q9, q10, #1    \n"
                         "vext.32    q12, q9, q10, #2    \n"
 
@@ -388,7 +387,7 @@ namespace Msnhnet
                     a = vpadd_f32(a, a);
                     *destptr0 = vget_lane_f32(a, 0);
 #endif
-                   
+
 #else
                     float sum1 = 0.f;
                     sum1 += r0[0] * k0[0];
@@ -402,7 +401,7 @@ namespace Msnhnet
                     sum1 += r2[2] * k2[2];
 
                     *destptr0 = sum1;
-                    
+
 #endif
                     r0++;
                     r1++;

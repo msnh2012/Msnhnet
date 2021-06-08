@@ -41,7 +41,7 @@ void ActivationLayerArm::reluActivate(float * &src, const int &inWidth, const in
                         "st1        {v1.4s}, [%0], #16       \n"
                         "subs       %w1, %w1, #1        \n"
                         "bne        0b                  \n"
-                        
+
                         : "=r"(srcPtr), // %0
                         "=r"(nn)        // %1
                         : "0"(srcPtr),
@@ -52,7 +52,7 @@ void ActivationLayerArm::reluActivate(float * &src, const int &inWidth, const in
                 #else
                     asm volatile(
                     "veor       q1, q0, q0          \n"
-                    
+
                     "0:                             \n"
                     "pld        [%1, #128]          \n"
                     "vld1.f32   {d0-d1}, [%1]  \n"
@@ -60,7 +60,7 @@ void ActivationLayerArm::reluActivate(float * &src, const int &inWidth, const in
                     "vst1.f32   {d0-d1}, [%1]! \n"
                     "subs       %0, #1              \n"
                     "bne        0b                  \n"
-                    
+
                     : "=r"(nn), // %0
                     "=r"(srcPtr) // %1
                     : "0"(nn),
@@ -212,7 +212,7 @@ void ActivationLayerArm::leakyActivate(float * &src, const int &inWidth, const i
                     "veor       q1, q0, q0          \n"
                     // slope
                     "vdup.f32   q2, %4              \n"
-                    
+
                     "0:                             \n"
                     "pld        [%1, #128]          \n"
                     "vld1.f32   {d0-d1}, [%1]       \n"

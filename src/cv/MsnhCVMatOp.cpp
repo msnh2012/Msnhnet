@@ -25,14 +25,23 @@ void MatOp::getROI(Mat &src, Mat &dst, const Vec2I32 &p1, const Vec2I32 &p2)
         throw Exception(1,"[MatOp]: roi point pos out of memory! \n", __FILE__, __LINE__, __FUNCTION__);
     }
 
-#ifdef USE_OMP
     uint64_t dataLen   = height*width*step;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < height; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        memcpy(u8Ptr+i*width*step, srcU8 + (p1.x2+i)*src.getWidth()*step + p1.x1*step,width*step);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < height; ++i)
+        {
+            memcpy(u8Ptr+i*width*step, srcU8 + (p1.x2+i)*src.getWidth()*step + p1.x1*step,width*step);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < height; ++i)
+        {
+            memcpy(u8Ptr+i*width*step, srcU8 + (p1.x2+i)*src.getWidth()*step + p1.x1*step,width*step);
+        }
     }
 
     dst.release();
@@ -75,14 +84,23 @@ void MatOp::setROI(Mat &srcDst, Mat &roi, const Vec2I32 &pos)
     if((pos.x2 + roiHeight)>=srcHeight)
         finalHeight = srcHeight - pos.x2;
 
-#ifdef USE_OMP
     uint64_t dataLen   = finalHeight*finalWidth*roi.getStep();
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < finalHeight; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        memcpy(srcDst.getData().u8+((pos.x1+i)*srcWidth+pos.x2)*srcDst.getStep(), roi.getData().u8 + (i*roiWidth)*roi.getStep() ,finalWidth*roi.getStep());
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < finalHeight; ++i)
+        {
+            memcpy(srcDst.getData().u8+((pos.x1+i)*srcWidth+pos.x2)*srcDst.getStep(), roi.getData().u8 + (i*roiWidth)*roi.getStep() ,finalWidth*roi.getStep());
+        }
+    }
+    else
+    {
+        for (int i = 0; i < finalHeight; ++i)
+        {
+            memcpy(srcDst.getData().u8+((pos.x1+i)*srcWidth+pos.x2)*srcDst.getStep(), roi.getData().u8 + (i*roiWidth)*roi.getStep() ,finalWidth*roi.getStep());
+        }
     }
 
 }
@@ -151,16 +169,28 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         uint8_t *u8Ptr      =  new uint8_t[outSize.x1*outSize.x2*srcStep]();
         uint8_t *srcU8      =  src.getData().u8;
 
-#ifdef USE_OMP
         uint64_t dataLen   = outSize.x1*outSize.x2;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < outSize.x2; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < outSize.x1; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < outSize.x2; ++i)
             {
-                memcpy(u8Ptr+(i*outSize.x1+j)*srcStep, srcU8 + (static_cast<int>(i*fy)*srcWidth + static_cast<int>(j*fx))*srcStep, srcStep);
+                for (int j = 0; j < outSize.x1; ++j)
+                {
+                    memcpy(u8Ptr+(i*outSize.x1+j)*srcStep, srcU8 + (static_cast<int>(i*fy)*srcWidth + static_cast<int>(j*fx))*srcStep, srcStep);
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < outSize.x2; ++i)
+            {
+                for (int j = 0; j < outSize.x1; ++j)
+                {
+                    memcpy(u8Ptr+(i*outSize.x1+j)*srcStep, srcU8 + (static_cast<int>(i*fy)*srcWidth + static_cast<int>(j*fx))*srcStep, srcStep);
+                }
             }
         }
 
@@ -187,357 +217,677 @@ void MatOp::resize(Mat &src, Mat &dst, const Vec2I32 &outSize, const ResizeType 
         {
             uint8_t* srcU8 = src.getData().u8;
 
-#ifdef USE_OMP
             uint64_t dataLen   = outSize.x1*outSize.x2;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < outSize.x2; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float srcIdxH = (i+0.5f)*fy-0.5f;
-                srcIdxH = srcIdxH<0?0:srcIdxH;
-
-                int srcIdxH0  = static_cast<int>(srcIdxH);
-                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
-
-                for (int j = 0; j < outSize.x1; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < outSize.x2; ++i)
                 {
-                    float srcIdxW = (j+0.5f)*fx-0.5f;
-                    srcIdxW = srcIdxW<0?0:srcIdxW;
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
 
-                    int srcIdxW0  = static_cast<int>(srcIdxW);
-                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
 
-                    uint16_t res  = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)])+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)]));
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
 
-                    matData.u8[i*outSize.x1+j] = static_cast<uint8_t>(res>255?255:res);
+                        uint16_t res  = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)]));
+
+                        matData.u8[i*outSize.x1+j] = static_cast<uint8_t>(res>255?255:res);
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < outSize.x2; ++i)
+                {
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                        uint16_t res  = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)]));
+
+                        matData.u8[i*outSize.x1+j] = static_cast<uint8_t>(res>255?255:res);
+                    }
+                }
+            }
+
         }
             break;
         case MAT_GRAY_F32:
         {
             float* srcF32 = src.getData().f32;
-#ifdef USE_OMP
             uint64_t dataLen   = outSize.x1*outSize.x2;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < outSize.x2; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float srcIdxH = (i+0.5f)*fy-0.5f;
-                srcIdxH = srcIdxH<0?0:srcIdxH;
-
-                int srcIdxH0  = static_cast<int>(srcIdxH);
-                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
-
-                for (int j = 0; j < outSize.x1; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < outSize.x2; ++i)
                 {
-                    float srcIdxW = (j+0.5f)*fx-0.5f;
-                    srcIdxW = srcIdxW<0?0:srcIdxW;
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
 
-                    int srcIdxW0  = static_cast<int>(srcIdxW);
-                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
 
-                    matData.f32[i*outSize.x1+j]  = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)])+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)]);
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
 
+                        matData.f32[i*outSize.x1+j]  = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)]);
+
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < outSize.x2; ++i)
+                {
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                        matData.f32[i*outSize.x1+j]  = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)]);
+
+                    }
+                }
+            }
+
         }
             break;
         case MAT_GRAY_F64:
         {
             double* srcF64 = src.getData().f64;
-#ifdef USE_OMP
             uint64_t dataLen   = outSize.x1*outSize.x2;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < outSize.x2; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                double srcIdxH = (i+0.5)*fy-0.5;
-                srcIdxH = srcIdxH<0?0:srcIdxH;
-
-                int srcIdxH0  = static_cast<int>(srcIdxH);
-                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
-
-                for (int j = 0; j < outSize.x1; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < outSize.x2; ++i)
                 {
-                    double srcIdxW = (j+0.5)*fx-0.5;
-                    srcIdxW = srcIdxW<0?0:srcIdxW;
+                    double srcIdxH = (i+0.5)*fy-0.5;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
 
-                    int srcIdxW0  = static_cast<int>(srcIdxW);
-                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
 
-                    matData.f64[i*outSize.x1+j]  = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)])+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        double srcIdxW = (j+0.5)*fx-0.5;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)]);
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
 
+                        matData.f64[i*outSize.x1+j]  = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)]);
+
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < outSize.x2; ++i)
+                {
+                    double srcIdxH = (i+0.5)*fy-0.5;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        double srcIdxW = (j+0.5)*fx-0.5;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                        matData.f64[i*outSize.x1+j]  = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)]);
+
+                    }
+                }
+            }
+
         }
             break;
         case MAT_RGB_U8:
         {
             uint8_t* srcU8 = src.getData().u8;
-#ifdef USE_OMP
             uint64_t dataLen   = outSize.x1*outSize.x2;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < outSize.x2; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float srcIdxH = (i+0.5f)*fy-0.5f;
-                srcIdxH = srcIdxH<0?0:srcIdxH;
-
-                int srcIdxH0  = static_cast<int>(srcIdxH);
-                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
-
-                for (int j = 0; j < outSize.x1; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < outSize.x2; ++i)
                 {
-                    float srcIdxW = (j+0.5f)*fx-0.5f;
-                    srcIdxW = srcIdxW<0?0:srcIdxW;
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
 
-                    int srcIdxW0  = static_cast<int>(srcIdxW);
-                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
 
-                    uint16_t resR = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]));
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
 
-                    uint16_t resG = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+                        uint16_t resR = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]));
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]));
 
-                    uint16_t resB = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+                        uint16_t resG = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]));
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]));
 
-                    matData.u8[srcStep*(i*outSize.x1+j)+0] = static_cast<uint8_t>(resR>255?255:resR);
-                    matData.u8[srcStep*(i*outSize.x1+j)+1] = static_cast<uint8_t>(resG>255?255:resG);
-                    matData.u8[srcStep*(i*outSize.x1+j)+2] = static_cast<uint8_t>(resB>255?255:resB);
+                        uint16_t resB = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]));
+
+                        matData.u8[srcStep*(i*outSize.x1+j)+0] = static_cast<uint8_t>(resR>255?255:resR);
+                        matData.u8[srcStep*(i*outSize.x1+j)+1] = static_cast<uint8_t>(resG>255?255:resG);
+                        matData.u8[srcStep*(i*outSize.x1+j)+2] = static_cast<uint8_t>(resB>255?255:resB);
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < outSize.x2; ++i)
+                {
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                        uint16_t resR = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]));
+
+                        uint16_t resG = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]));
+
+                        uint16_t resB = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]));
+
+                        matData.u8[srcStep*(i*outSize.x1+j)+0] = static_cast<uint8_t>(resR>255?255:resR);
+                        matData.u8[srcStep*(i*outSize.x1+j)+1] = static_cast<uint8_t>(resG>255?255:resG);
+                        matData.u8[srcStep*(i*outSize.x1+j)+2] = static_cast<uint8_t>(resB>255?255:resB);
+                    }
+                }
+            }
+
         }
             break;
         case MAT_RGB_F32:
         {
             float* srcF32 = src.getData().f32;
-#ifdef USE_OMP
             uint64_t dataLen   = outSize.x1*outSize.x2;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < outSize.x2; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float srcIdxH = (i+0.5f)*fy-0.5f;
-                srcIdxH = srcIdxH<0?0:srcIdxH;
-
-                int srcIdxH0  = static_cast<int>(srcIdxH);
-                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
-
-                for (int j = 0; j < outSize.x1; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < outSize.x2; ++i)
                 {
-                    float srcIdxW = (j+0.5f)*fx-0.5f;
-                    srcIdxW = srcIdxW<0?0:srcIdxW;
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
 
-                    int srcIdxW0  = static_cast<int>(srcIdxW);
-                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
 
-                    matData.f32[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
 
-                    matData.f32[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+                        matData.f32[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
 
-                    matData.f32[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+                        matData.f32[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
 
+                        matData.f32[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < outSize.x2; ++i)
+                {
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                        matData.f32[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
+
+                        matData.f32[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
+
+                        matData.f32[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+
+                    }
+                }
+            }
+
         }
             break;
         case MAT_RGB_F64:
         {
             double* srcF64 = src.getData().f64;
-#ifdef USE_OMP
             uint64_t dataLen   = outSize.x1*outSize.x2;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < outSize.x2; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                double srcIdxH = (i+0.5)*fy-0.5;
-                srcIdxH = srcIdxH<0?0:srcIdxH;
-
-                int srcIdxH0  = static_cast<int>(srcIdxH);
-                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
-
-                for (int j = 0; j < outSize.x1; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < outSize.x2; ++i)
                 {
-                    double srcIdxW = (j+0.5)*fx-0.5;
-                    srcIdxW = srcIdxW<0?0:srcIdxW;
+                    double srcIdxH = (i+0.5)*fy-0.5;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
 
-                    int srcIdxW0  = static_cast<int>(srcIdxW);
-                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
 
-                    matData.f64[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        double srcIdxW = (j+0.5)*fx-0.5;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
 
-                    matData.f64[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+                        matData.f64[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
 
-                    matData.f64[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+                        matData.f64[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
 
+                        matData.f64[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < outSize.x2; ++i)
+                {
+                    double srcIdxH = (i+0.5)*fy-0.5;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        double srcIdxW = (j+0.5)*fx-0.5;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                        matData.f64[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
+
+                        matData.f64[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
+
+                        matData.f64[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+
+                    }
+                }
+            }
+
         }
             break;
         case MAT_RGBA_U8:
         {
             uint8_t* srcU8 = src.getData().u8;
-#ifdef USE_OMP
             uint64_t dataLen   = outSize.x1*outSize.x2;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < outSize.x2; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float srcIdxH = (i+0.5f)*fy-0.5f;
-                srcIdxH = srcIdxH<0?0:srcIdxH;
-
-                int srcIdxH0  = static_cast<int>(srcIdxH);
-                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
-
-                for (int j = 0; j < outSize.x1; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < outSize.x2; ++i)
                 {
-                    float srcIdxW = (j+0.5f)*fx-0.5f;
-                    srcIdxW = srcIdxW<0?0:srcIdxW;
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
 
-                    int srcIdxW0  = static_cast<int>(srcIdxW);
-                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
 
-                    uint16_t resR = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]));
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
 
-                    uint16_t resG = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+                        uint16_t resR = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]));
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]));
 
-                    uint16_t resB = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+                        uint16_t resG = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]));
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]));
 
-                    uint16_t resA = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+3])+
+                        uint16_t resB = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+3]));
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]));
 
-                    matData.u8[srcStep*(i*outSize.x1+j)+0] = static_cast<uint8_t>(resR>255?255:resR);
-                    matData.u8[srcStep*(i*outSize.x1+j)+1] = static_cast<uint8_t>(resG>255?255:resG);
-                    matData.u8[srcStep*(i*outSize.x1+j)+2] = static_cast<uint8_t>(resB>255?255:resB);
-                    matData.u8[srcStep*(i*outSize.x1+j)+3] = static_cast<uint8_t>(resA>255?255:resA);
+                        uint16_t resA = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+3])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+3]));
+
+                        matData.u8[srcStep*(i*outSize.x1+j)+0] = static_cast<uint8_t>(resR>255?255:resR);
+                        matData.u8[srcStep*(i*outSize.x1+j)+1] = static_cast<uint8_t>(resG>255?255:resG);
+                        matData.u8[srcStep*(i*outSize.x1+j)+2] = static_cast<uint8_t>(resB>255?255:resB);
+                        matData.u8[srcStep*(i*outSize.x1+j)+3] = static_cast<uint8_t>(resA>255?255:resA);
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < outSize.x2; ++i)
+                {
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                        uint16_t resR = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]));
+
+                        uint16_t resG = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]));
+
+                        uint16_t resB = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]));
+
+                        uint16_t resA = static_cast<uint16_t>((srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+3])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcU8[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+3]));
+
+                        matData.u8[srcStep*(i*outSize.x1+j)+0] = static_cast<uint8_t>(resR>255?255:resR);
+                        matData.u8[srcStep*(i*outSize.x1+j)+1] = static_cast<uint8_t>(resG>255?255:resG);
+                        matData.u8[srcStep*(i*outSize.x1+j)+2] = static_cast<uint8_t>(resB>255?255:resB);
+                        matData.u8[srcStep*(i*outSize.x1+j)+3] = static_cast<uint8_t>(resA>255?255:resA);
+                    }
+                }
+            }
+
         }
             break;
         case MAT_RGBA_F32:
         {
             float* srcF32 = src.getData().f32;
-#ifdef USE_OMP
             uint64_t dataLen   = outSize.x1*outSize.x2;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < outSize.x2; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float srcIdxH = (i+0.5f)*fy-0.5f;
-                srcIdxH = srcIdxH<0?0:srcIdxH;
-
-                int srcIdxH0  = static_cast<int>(srcIdxH);
-                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
-
-                for (int j = 0; j < outSize.x1; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < outSize.x2; ++i)
                 {
-                    float srcIdxW = (j+0.5f)*fx-0.5f;
-                    srcIdxW = srcIdxW<0?0:srcIdxW;
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
 
-                    int srcIdxW0  = static_cast<int>(srcIdxW);
-                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
 
-                    matData.f32[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
 
-                    matData.f32[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+                        matData.f32[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
 
-                    matData.f32[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+                        matData.f32[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
 
-                    matData.f32[srcStep*(i*outSize.x1+j)+3] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+3])+
+                        matData.f32[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+3]);
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
 
+                        matData.f32[srcStep*(i*outSize.x1+j)+3] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+3])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+3]);
+
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < outSize.x2; ++i)
+                {
+                    float srcIdxH = (i+0.5f)*fy-0.5f;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        float srcIdxW = (j+0.5f)*fx-0.5f;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                        matData.f32[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
+
+                        matData.f32[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
+
+                        matData.f32[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+
+                        matData.f32[srcStep*(i*outSize.x1+j)+3] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+3])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF32[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+3]);
+
+                    }
+                }
+            }
+
         }
             break;
         case MAT_RGBA_F64:
         {
             double* srcF64 = src.getData().f64;
-#ifdef USE_OMP
             uint64_t dataLen   = outSize.x1*outSize.x2;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < outSize.x2; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                double srcIdxH = (i+0.5)*fy-0.5;
-                srcIdxH = srcIdxH<0?0:srcIdxH;
-
-                int srcIdxH0  = static_cast<int>(srcIdxH);
-                int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
-
-                for (int j = 0; j < outSize.x1; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < outSize.x2; ++i)
                 {
-                    double srcIdxW = (j+0.5)*fx-0.5;
-                    srcIdxW = srcIdxW<0?0:srcIdxW;
+                    double srcIdxH = (i+0.5)*fy-0.5;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
 
-                    int srcIdxW0  = static_cast<int>(srcIdxW);
-                    int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
 
-                    matData.f64[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        double srcIdxW = (j+0.5)*fx-0.5;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
 
-                    matData.f64[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+                        matData.f64[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
 
-                    matData.f64[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+                        matData.f64[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
 
-                    matData.f64[srcStep*(i*outSize.x1+j)+3] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+3])+
+                        matData.f64[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
 
-                            (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+3]);
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
 
+                        matData.f64[srcStep*(i*outSize.x1+j)+3] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+3])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+3]);
+
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < outSize.x2; ++i)
+                {
+                    double srcIdxH = (i+0.5)*fy-0.5;
+                    srcIdxH = srcIdxH<0?0:srcIdxH;
+
+                    int srcIdxH0  = static_cast<int>(srcIdxH);
+                    int srcIdxH1  = std::min(srcIdxH0+1, srcHeight-1);
+
+                    for (int j = 0; j < outSize.x1; ++j)
+                    {
+                        double srcIdxW = (j+0.5)*fx-0.5;
+                        srcIdxW = srcIdxW<0?0:srcIdxW;
+
+                        int srcIdxW0  = static_cast<int>(srcIdxW);
+                        int srcIdxW1  = std::min(srcIdxW0+1, srcWidth-1);
+
+                        matData.f64[srcStep*(i*outSize.x1+j)+0] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+0])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+0] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+0]);
+
+                        matData.f64[srcStep*(i*outSize.x1+j)+1] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+1])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+1] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+1]);
+
+                        matData.f64[srcStep*(i*outSize.x1+j)+2] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+2])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+2] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+2]);
+
+                        matData.f64[srcStep*(i*outSize.x1+j)+3] = (srcIdxH1-srcIdxH)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH0*srcWidth+srcIdxW1)+3])+
+
+                                (srcIdxH -srcIdxH0)*((srcIdxW1 - srcIdxW)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW0)+3] + (srcIdxW-srcIdxW0)*srcF64[srcStep*(srcIdxH1*srcWidth+srcIdxW1)+3]);
+
+                    }
+                }
+            }
+
         }
             break;
         }
@@ -596,27 +946,47 @@ double MatOp::norm(Mat &mat, const NormType &normType)
     {
         if(mat.isF32Mat())
         {
-#ifdef USE_OMP
             uint64_t dataLen   = mat.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum) reduction(+:final)
-#endif
-            for (int i = 0; i < mat.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                final += std::abs(mat.getFloat32()[i]);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+                for (int i = 0; i < mat.getDataNum(); ++i)
+                {
+                    final += std::abs(mat.getFloat32()[i]);
+                }
             }
+            else
+            {
+                for (int i = 0; i < mat.getDataNum(); ++i)
+                {
+                    final += std::abs(mat.getFloat32()[i]);
+                }
+            }
+
         }
         else if(mat.isF64Mat())
         {
-#ifdef USE_OMP
             uint64_t dataLen   = mat.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum) reduction(+:final)
-#endif
-            for (int i = 0; i < mat.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                final += std::abs(mat.getFloat64()[i]);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+                for (int i = 0; i < mat.getDataNum(); ++i)
+                {
+                    final += std::abs(mat.getFloat64()[i]);
+                }
             }
+            else
+            {
+                for (int i = 0; i < mat.getDataNum(); ++i)
+                {
+                    final += std::abs(mat.getFloat64()[i]);
+                }
+            }
+
         }
         return final;
     }
@@ -624,29 +994,51 @@ double MatOp::norm(Mat &mat, const NormType &normType)
     {
         if(mat.isF32Mat())
         {
-#ifdef USE_OMP
             uint64_t dataLen   = mat.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum) reduction(+:final)
-#endif
-            for (int i = 0; i < mat.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                float v = mat.getFloat32()[i];
-                final += v*v;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+                for (int i = 0; i < mat.getDataNum(); ++i)
+                {
+                    float v = mat.getFloat32()[i];
+                    final += v*v;
+                }
             }
+            else
+            {
+                for (int i = 0; i < mat.getDataNum(); ++i)
+                {
+                    float v = mat.getFloat32()[i];
+                    final += v*v;
+                }
+            }
+
         }
         else if(mat.isF64Mat())
         {
-#ifdef USE_OMP
             uint64_t dataLen   = mat.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum) reduction(+:final)
-#endif
-            for (int i = 0; i < mat.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                double v = mat.getFloat64()[i];
-                final += v*v;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+                for (int i = 0; i < mat.getDataNum(); ++i)
+                {
+                    double v = mat.getFloat64()[i];
+                    final += v*v;
+                }
             }
+            else
+            {
+                for (int i = 0; i < mat.getDataNum(); ++i)
+                {
+                    double v = mat.getFloat64()[i];
+                    final += v*v;
+                }
+            }
+
         }
 
         if(normType==NORM_L2_SQR)
@@ -816,71 +1208,131 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
 
         if(thType == THRESH_BINARY)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getBytes()[i]>thU8)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getBytes()[i] = maxU8;
-                }
-                else
-                {
-                    dst.getBytes()[i] = 0;
+                    if(src.getBytes()[i]>thU8)
+                    {
+                        dst.getBytes()[i] = maxU8;
+                    }
+                    else
+                    {
+                        dst.getBytes()[i] = 0;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getBytes()[i]>thU8)
+                    {
+                        dst.getBytes()[i] = maxU8;
+                    }
+                    else
+                    {
+                        dst.getBytes()[i] = 0;
+                    }
+                }
+            }
+
         }
         else if(thType == THRESH_BINARY_INV)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getBytes()[i]>thU8)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getBytes()[i] = 0;
-                }
-                else
-                {
-                    dst.getBytes()[i] = maxU8;
+                    if(src.getBytes()[i]>thU8)
+                    {
+                        dst.getBytes()[i] = 0;
+                    }
+                    else
+                    {
+                        dst.getBytes()[i] = maxU8;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getBytes()[i]>thU8)
+                    {
+                        dst.getBytes()[i] = 0;
+                    }
+                    else
+                    {
+                        dst.getBytes()[i] = maxU8;
+                    }
+                }
+            }
+
         }
         else if(thType == THRESH_TOZERO)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getBytes()[i]<thU8)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getBytes()[i] = 0;
+                    if(src.getBytes()[i]<thU8)
+                    {
+                        dst.getBytes()[i] = 0;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getBytes()[i]<thU8)
+                    {
+                        dst.getBytes()[i] = 0;
+                    }
+                }
+            }
+
         }
         else if(thType == THRESH_TOZERO_INV)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getBytes()[i]>thU8)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getBytes()[i] = 0;
+                    if(src.getBytes()[i]>thU8)
+                    {
+                        dst.getBytes()[i] = 0;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getBytes()[i]>thU8)
+                    {
+                        dst.getBytes()[i] = 0;
+                    }
+                }
+            }
+
         }
     }
     else if(src.isF32Mat())
@@ -893,71 +1345,131 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
 
         if(thType == THRESH_BINARY)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getFloat32()[i]>thF32)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getFloat32()[i] = maxF32;
-                }
-                else
-                {
-                    dst.getFloat32()[i] = 0;
+                    if(src.getFloat32()[i]>thF32)
+                    {
+                        dst.getFloat32()[i] = maxF32;
+                    }
+                    else
+                    {
+                        dst.getFloat32()[i] = 0;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getFloat32()[i]>thF32)
+                    {
+                        dst.getFloat32()[i] = maxF32;
+                    }
+                    else
+                    {
+                        dst.getFloat32()[i] = 0;
+                    }
+                }
+            }
+
         }
         else if(thType == THRESH_BINARY_INV)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getFloat32()[i]>thF32)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getFloat32()[i] = 0;
-                }
-                else
-                {
-                    dst.getFloat32()[i] = maxF32;
+                    if(src.getFloat32()[i]>thF32)
+                    {
+                        dst.getFloat32()[i] = 0;
+                    }
+                    else
+                    {
+                        dst.getFloat32()[i] = maxF32;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getFloat32()[i]>thF32)
+                    {
+                        dst.getFloat32()[i] = 0;
+                    }
+                    else
+                    {
+                        dst.getFloat32()[i] = maxF32;
+                    }
+                }
+            }
+
         }
         else if(thType == THRESH_TOZERO)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getFloat32()[i]<thF32)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getFloat32()[i] = 0;
+                    if(src.getFloat32()[i]<thF32)
+                    {
+                        dst.getFloat32()[i] = 0;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getFloat32()[i]<thF32)
+                    {
+                        dst.getFloat32()[i] = 0;
+                    }
+                }
+            }
+
         }
         else if(thType == THRESH_TOZERO_INV)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getFloat32()[i]>thF32)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getFloat32()[i] = 0;
+                    if(src.getFloat32()[i]>thF32)
+                    {
+                        dst.getFloat32()[i] = 0;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getFloat32()[i]>thF32)
+                    {
+                        dst.getFloat32()[i] = 0;
+                    }
+                }
+            }
+
         }
     }
     else if(src.isF64Mat())
@@ -970,71 +1482,130 @@ void MatOp::threshold(Mat &src, Mat &dst, const double &threshold, const double 
 
         if(thType == THRESH_BINARY)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getFloat64()[i]>thF64)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getFloat64()[i] = maxF64;
+                    if(src.getFloat64()[i]>thF64)
+                    {
+                        dst.getFloat64()[i] = maxF64;
+                    }
+                    else
+                    {
+                        dst.getFloat64()[i] = 0;
+                    }
                 }
-                else
+            }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getFloat64()[i] = 0;
+                    if(src.getFloat64()[i]>thF64)
+                    {
+                        dst.getFloat64()[i] = maxF64;
+                    }
+                    else
+                    {
+                        dst.getFloat64()[i] = 0;
+                    }
                 }
             }
         }
         else if(thType == THRESH_BINARY_INV)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getFloat64()[i]>thF64)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getFloat64()[i] = 0;
-                }
-                else
-                {
-                    dst.getFloat64()[i] = maxF64;
+                    if(src.getFloat64()[i]>thF64)
+                    {
+                        dst.getFloat64()[i] = 0;
+                    }
+                    else
+                    {
+                        dst.getFloat64()[i] = maxF64;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getFloat64()[i]>thF64)
+                    {
+                        dst.getFloat64()[i] = 0;
+                    }
+                    else
+                    {
+                        dst.getFloat64()[i] = maxF64;
+                    }
+                }
+            }
+
         }
         else if(thType == THRESH_TOZERO)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getFloat64()[i]<thF64)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getFloat64()[i] = 0;
+                    if(src.getFloat64()[i]<thF64)
+                    {
+                        dst.getFloat64()[i] = 0;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getFloat64()[i]<thF64)
+                    {
+                        dst.getFloat64()[i] = 0;
+                    }
+                }
+            }
+
         }
         else if(thType == THRESH_TOZERO_INV)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = src.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < src.getDataNum(); ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                if(src.getFloat64()[i]>thF64)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < src.getDataNum(); ++i)
                 {
-                    dst.getFloat64()[i] = 0;
+                    if(src.getFloat64()[i]>thF64)
+                    {
+                        dst.getFloat64()[i] = 0;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < src.getDataNum(); ++i)
+                {
+                    if(src.getFloat64()[i]>thF64)
+                    {
+                        dst.getFloat64()[i] = 0;
+                    }
+                }
+            }
+
         }
     }
 }
@@ -1102,15 +1673,25 @@ Mat MatOp::vContact(const Mat &A, const Mat &B)
     size_t BBytes  = B.getByteNum();
     int BWBytes = (int)(BBytes/B.getHeight());
 
-#ifdef USE_OMP
-            uint64_t dataLen   = mat.getDataNum();
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < A.getHeight(); ++i)
+    uint64_t dataLen   = mat.getDataNum();
+    if(dataLen > MIN_OMP_DATA)
     {
-        memcpy(mat.getBytes() + i*matWBytes, A.getBytes()+i*AWBytes,AWBytes);
-        memcpy(mat.getBytes() + i*matWBytes + AWBytes, B.getBytes()+i*BWBytes,BWBytes);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < A.getHeight(); ++i)
+        {
+            memcpy(mat.getBytes() + i*matWBytes, A.getBytes()+i*AWBytes,AWBytes);
+            memcpy(mat.getBytes() + i*matWBytes + AWBytes, B.getBytes()+i*BWBytes,BWBytes);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < A.getHeight(); ++i)
+        {
+            memcpy(mat.getBytes() + i*matWBytes, A.getBytes()+i*AWBytes,AWBytes);
+            memcpy(mat.getBytes() + i*matWBytes + AWBytes, B.getBytes()+i*BWBytes,BWBytes);
+        }
     }
 
     return mat;
@@ -1198,111 +1779,204 @@ void MatOp::RGB2BGR(const Mat &src, Mat &dst)
     int height  = dst.getHeight();
 
     uint64_t dataLen = 0;
-    uint16_t threadNum = 0;
 
     switch (dst.getMatType())
     {
     case MAT_RGB_U8:
-#ifdef USE_OMP
         dataLen   = height*width;
-        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = 3*(i*width+j);
-                uint8_t tmp = dst.getData().u8[pos+0];
-                dst.getData().u8[pos+0] = dst.getData().u8[pos+2];
-                dst.getData().u8[pos+2] = tmp;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 3*(i*width+j);
+                    uint8_t tmp = dst.getData().u8[pos+0];
+                    dst.getData().u8[pos+0] = dst.getData().u8[pos+2];
+                    dst.getData().u8[pos+2] = tmp;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 3*(i*width+j);
+                    uint8_t tmp = dst.getData().u8[pos+0];
+                    dst.getData().u8[pos+0] = dst.getData().u8[pos+2];
+                    dst.getData().u8[pos+2] = tmp;
+                }
+            }
+        }
+
         break;
     case MAT_RGB_F32:
-#ifdef USE_OMP
         dataLen   = height*width;
-        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = 3*(i*width+j);
-                float tmp = dst.getData().f32[pos+0];
-                dst.getData().f32[pos+0] = dst.getData().f32[pos+2];
-                dst.getData().f32[pos+2] = tmp;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 3*(i*width+j);
+                    float tmp = dst.getData().f32[pos+0];
+                    dst.getData().f32[pos+0] = dst.getData().f32[pos+2];
+                    dst.getData().f32[pos+2] = tmp;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 3*(i*width+j);
+                    float tmp = dst.getData().f32[pos+0];
+                    dst.getData().f32[pos+0] = dst.getData().f32[pos+2];
+                    dst.getData().f32[pos+2] = tmp;
+                }
+            }
+        }
+
         break;
     case MAT_RGB_F64:
-#ifdef USE_OMP
         dataLen   = height*width;
-        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = 3*(i*width+j);
-                double tmp = dst.getData().f64[pos+0];
-                dst.getData().f64[pos+0] = dst.getData().f64[pos+2];
-                dst.getData().f64[pos+2] = tmp;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 3*(i*width+j);
+                    double tmp = dst.getData().f64[pos+0];
+                    dst.getData().f64[pos+0] = dst.getData().f64[pos+2];
+                    dst.getData().f64[pos+2] = tmp;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 3*(i*width+j);
+                    double tmp = dst.getData().f64[pos+0];
+                    dst.getData().f64[pos+0] = dst.getData().f64[pos+2];
+                    dst.getData().f64[pos+2] = tmp;
+                }
             }
         }
         break;
     case MAT_RGBA_U8:
-#ifdef USE_OMP
         dataLen   = height*width;
-        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = 4*(i*width+j);
-                uint8_t tmp = dst.getData().u8[pos+0];
-                dst.getData().u8[pos+0] = dst.getData().u8[pos+2];
-                dst.getData().u8[pos+2] = tmp;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 4*(i*width+j);
+                    uint8_t tmp = dst.getData().u8[pos+0];
+                    dst.getData().u8[pos+0] = dst.getData().u8[pos+2];
+                    dst.getData().u8[pos+2] = tmp;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 4*(i*width+j);
+                    uint8_t tmp = dst.getData().u8[pos+0];
+                    dst.getData().u8[pos+0] = dst.getData().u8[pos+2];
+                    dst.getData().u8[pos+2] = tmp;
+                }
             }
         }
         break;
     case MAT_RGBA_F32:
-#ifdef USE_OMP
         dataLen   = height*width;
-        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = 4*(i*width+j);
-                float tmp = dst.getData().f32[pos+0];
-                dst.getData().f32[pos+0] = dst.getData().f32[pos+2];
-                dst.getData().f32[pos+2] = tmp;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 4*(i*width+j);
+                    float tmp = dst.getData().f32[pos+0];
+                    dst.getData().f32[pos+0] = dst.getData().f32[pos+2];
+                    dst.getData().f32[pos+2] = tmp;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 4*(i*width+j);
+                    float tmp = dst.getData().f32[pos+0];
+                    dst.getData().f32[pos+0] = dst.getData().f32[pos+2];
+                    dst.getData().f32[pos+2] = tmp;
+                }
+            }
+        }
+
         break;
     case MAT_RGBA_F64:
-#ifdef USE_OMP
         dataLen   = height*width;
-        threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = 4*(i*width+j);
-                double tmp = dst.getData().f64[pos+0];
-                dst.getData().f64[pos+0] = dst.getData().f64[pos+2];
-                dst.getData().f64[pos+2] = tmp;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 4*(i*width+j);
+                    double tmp = dst.getData().f64[pos+0];
+                    dst.getData().f64[pos+0] = dst.getData().f64[pos+2];
+                    dst.getData().f64[pos+2] = tmp;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = 4*(i*width+j);
+                    double tmp = dst.getData().f64[pos+0];
+                    dst.getData().f64[pos+0] = dst.getData().f64[pos+2];
+                    dst.getData().f64[pos+2] = tmp;
+                }
+            }
+        }
+
         break;
     }
 }
@@ -1327,17 +2001,30 @@ void MatOp::RGB2GRAY(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height]();
         uint8_t* srcU8 = src.getData().u8;
 
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = i*width+j;
-                dstData.u8[pos] = (R*srcU8[pos*3+0]+G*srcU8[pos*3+1]+B*srcU8[pos*3+2])>>8;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.u8[pos] = (R*srcU8[pos*3+0]+G*srcU8[pos*3+1]+B*srcU8[pos*3+2])>>8;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.u8[pos] = (R*srcU8[pos*3+0]+G*srcU8[pos*3+1]+B*srcU8[pos*3+2])>>8;
+                }
             }
         }
 
@@ -1359,19 +2046,33 @@ void MatOp::RGB2GRAY(Mat &src, Mat &dst)
 
         float* srcF32 = src.getData().f32;
 
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = i*width+j;
-                dstData.f32[pos] = (R*srcF32[3*pos+0]+G*srcF32[3*pos+1]+B*srcF32[3*pos+2]);
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.f32[pos] = (R*srcF32[3*pos+0]+G*srcF32[3*pos+1]+B*srcF32[3*pos+2]);
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.f32[pos] = (R*srcF32[3*pos+0]+G*srcF32[3*pos+1]+B*srcF32[3*pos+2]);
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(1);
         dst.setMatType(MAT_GRAY_F32);
@@ -1390,19 +2091,33 @@ void MatOp::RGB2GRAY(Mat &src, Mat &dst)
 
         double* srcF64 = src.getData().f64;
 
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = i*width+j;
-                dstData.f64[pos] = (R*srcF64[3*pos+0]+G*srcF64[3*pos+1]+B*srcF64[3*pos+2]);
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.f64[pos] = (R*srcF64[3*pos+0]+G*srcF64[3*pos+1]+B*srcF64[3*pos+2]);
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.f64[pos] = (R*srcF64[3*pos+0]+G*srcF64[3*pos+1]+B*srcF64[3*pos+2]);
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(1);
         dst.setMatType(MAT_GRAY_F64);
@@ -1433,17 +2148,30 @@ void MatOp::RGBA2GRAY(Mat &src, Mat &dst)
 
         dstData.u8 = new uint8_t[width*height]();
         uint8_t* srcU8 = src.getData().u8;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = i*width+j;
-                dstData.u8[pos] = (R*srcU8[pos*4+0]+G*srcU8[pos*4+1]+B*srcU8[pos*4+2])>>8;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.u8[pos] = (R*srcU8[pos*4+0]+G*srcU8[pos*4+1]+B*srcU8[pos*4+2])>>8;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.u8[pos] = (R*srcU8[pos*4+0]+G*srcU8[pos*4+1]+B*srcU8[pos*4+2])>>8;
+                }
             }
         }
 
@@ -1464,19 +2192,33 @@ void MatOp::RGBA2GRAY(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*4]();
         float* srcF32 = src.getData().f32;
 
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = i*width+j;
-                dstData.f32[pos] = (R*srcF32[4*pos+0]+G*srcF32[4*pos+1]+B*srcF32[4*pos+2]);
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.f32[pos] = (R*srcF32[4*pos+0]+G*srcF32[4*pos+1]+B*srcF32[4*pos+2]);
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.f32[pos] = (R*srcF32[4*pos+0]+G*srcF32[4*pos+1]+B*srcF32[4*pos+2]);
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(1);
         dst.setMatType(MAT_GRAY_F32);
@@ -1494,19 +2236,33 @@ void MatOp::RGBA2GRAY(Mat &src, Mat &dst)
         dstData.u8 = new uint8_t[width*height*8]();
         double* srcF64 = src.getData().f64;
 
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = i*width+j;
-                dstData.f64[pos] = (R*srcF64[4*pos+0]+G*srcF64[4*pos+1]+B*srcF64[4*pos+2]);
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.f64[pos] = (R*srcF64[4*pos+0]+G*srcF64[4*pos+1]+B*srcF64[4*pos+2]);
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = i*width+j;
+                    dstData.f64[pos] = (R*srcF64[4*pos+0]+G*srcF64[4*pos+1]+B*srcF64[4*pos+2]);
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(1);
         dst.setMatType(MAT_GRAY_F64);
@@ -1532,21 +2288,37 @@ void MatOp::GRAY2RGB(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*3]();
         uint8_t* srcU8 = src.getData().u8;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.u8[pos*3+0] = srcU8[pos];
-                dstData.u8[pos*3+1] = srcU8[pos];
-                dstData.u8[pos*3+2] = srcU8[pos];
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.u8[pos*3+0] = srcU8[pos];
+                    dstData.u8[pos*3+1] = srcU8[pos];
+                    dstData.u8[pos*3+2] = srcU8[pos];
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.u8[pos*3+0] = srcU8[pos];
+                    dstData.u8[pos*3+1] = srcU8[pos];
+                    dstData.u8[pos*3+2] = srcU8[pos];
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(3);
         dst.setMatType(MAT_RGB_U8);
@@ -1559,21 +2331,37 @@ void MatOp::GRAY2RGB(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*12]();
         float* srcF32 = src.getData().f32;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.f32[pos*3+0] = srcF32[pos];
-                dstData.f32[pos*3+1] = srcF32[pos];
-                dstData.f32[pos*3+2] = srcF32[pos];
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f32[pos*3+0] = srcF32[pos];
+                    dstData.f32[pos*3+1] = srcF32[pos];
+                    dstData.f32[pos*3+2] = srcF32[pos];
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f32[pos*3+0] = srcF32[pos];
+                    dstData.f32[pos*3+1] = srcF32[pos];
+                    dstData.f32[pos*3+2] = srcF32[pos];
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(3);
         dst.setMatType(MAT_RGB_F32);
@@ -1586,21 +2374,37 @@ void MatOp::GRAY2RGB(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*24]();
         double* srcF64 = src.getData().f64;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.f64[pos*3+0] = srcF64[pos];
-                dstData.f64[pos*3+1] = srcF64[pos];
-                dstData.f64[pos*3+2] = srcF64[pos];
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f64[pos*3+0] = srcF64[pos];
+                    dstData.f64[pos*3+1] = srcF64[pos];
+                    dstData.f64[pos*3+2] = srcF64[pos];
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f64[pos*3+0] = srcF64[pos];
+                    dstData.f64[pos*3+1] = srcF64[pos];
+                    dstData.f64[pos*3+2] = srcF64[pos];
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(3);
         dst.setMatType(MAT_RGB_F64);
@@ -1626,22 +2430,39 @@ void MatOp::GRAY2RGBA(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*4]();
         uint8_t* srcU8 = src.getData().u8;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.u8[pos*4+0] = srcU8[pos];
-                dstData.u8[pos*4+1] = srcU8[pos];
-                dstData.u8[pos*4+2] = srcU8[pos];
-                dstData.u8[pos*4+3] = 255;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.u8[pos*4+0] = srcU8[pos];
+                    dstData.u8[pos*4+1] = srcU8[pos];
+                    dstData.u8[pos*4+2] = srcU8[pos];
+                    dstData.u8[pos*4+3] = 255;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.u8[pos*4+0] = srcU8[pos];
+                    dstData.u8[pos*4+1] = srcU8[pos];
+                    dstData.u8[pos*4+2] = srcU8[pos];
+                    dstData.u8[pos*4+3] = 255;
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(4);
         dst.setMatType(MAT_RGBA_U8);
@@ -1654,22 +2475,39 @@ void MatOp::GRAY2RGBA(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*16]();
         float* srcF32 = src.getData().f32;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.f32[pos*4+0] = srcF32[pos];
-                dstData.f32[pos*4+1] = srcF32[pos];
-                dstData.f32[pos*4+2] = srcF32[pos];
-                dstData.f32[pos*4+3] = 1.f;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f32[pos*4+0] = srcF32[pos];
+                    dstData.f32[pos*4+1] = srcF32[pos];
+                    dstData.f32[pos*4+2] = srcF32[pos];
+                    dstData.f32[pos*4+3] = 1.f;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f32[pos*4+0] = srcF32[pos];
+                    dstData.f32[pos*4+1] = srcF32[pos];
+                    dstData.f32[pos*4+2] = srcF32[pos];
+                    dstData.f32[pos*4+3] = 1.f;
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(4);
         dst.setMatType(MAT_RGBA_F32);
@@ -1682,22 +2520,39 @@ void MatOp::GRAY2RGBA(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*32]();
         double* srcF64 = src.getData().f64;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.f64[pos*4+0] = srcF64[pos];
-                dstData.f64[pos*4+1] = srcF64[pos];
-                dstData.f64[pos*4+2] = srcF64[pos];
-                dstData.f64[pos*4+3] = 1.f;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f64[pos*4+0] = srcF64[pos];
+                    dstData.f64[pos*4+1] = srcF64[pos];
+                    dstData.f64[pos*4+2] = srcF64[pos];
+                    dstData.f64[pos*4+3] = 1.f;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f64[pos*4+0] = srcF64[pos];
+                    dstData.f64[pos*4+1] = srcF64[pos];
+                    dstData.f64[pos*4+2] = srcF64[pos];
+                    dstData.f64[pos*4+3] = 1.f;
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(4);
         dst.setMatType(MAT_RGBA_F64);
@@ -1723,22 +2578,39 @@ void MatOp::RGB2RGBA(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*4]();
         uint8_t* srcU8 = src.getData().u8;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.u8[pos*4+0] = srcU8[3*pos+0];
-                dstData.u8[pos*4+1] = srcU8[3*pos+1];
-                dstData.u8[pos*4+2] = srcU8[3*pos+2];
-                dstData.u8[pos*4+3] = 255;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.u8[pos*4+0] = srcU8[3*pos+0];
+                    dstData.u8[pos*4+1] = srcU8[3*pos+1];
+                    dstData.u8[pos*4+2] = srcU8[3*pos+2];
+                    dstData.u8[pos*4+3] = 255;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.u8[pos*4+0] = srcU8[3*pos+0];
+                    dstData.u8[pos*4+1] = srcU8[3*pos+1];
+                    dstData.u8[pos*4+2] = srcU8[3*pos+2];
+                    dstData.u8[pos*4+3] = 255;
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(4);
         dst.setMatType(MAT_RGBA_U8);
@@ -1751,22 +2623,39 @@ void MatOp::RGB2RGBA(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*16]();
         float* srcF32 = src.getData().f32;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.f32[pos*4+0] = srcF32[3*pos+0];
-                dstData.f32[pos*4+1] = srcF32[3*pos+1];
-                dstData.f32[pos*4+2] = srcF32[3*pos+2];
-                dstData.f32[pos*4+3] = 1.f;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f32[pos*4+0] = srcF32[3*pos+0];
+                    dstData.f32[pos*4+1] = srcF32[3*pos+1];
+                    dstData.f32[pos*4+2] = srcF32[3*pos+2];
+                    dstData.f32[pos*4+3] = 1.f;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f32[pos*4+0] = srcF32[3*pos+0];
+                    dstData.f32[pos*4+1] = srcF32[3*pos+1];
+                    dstData.f32[pos*4+2] = srcF32[3*pos+2];
+                    dstData.f32[pos*4+3] = 1.f;
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(4);
         dst.setMatType(MAT_RGBA_F32);
@@ -1779,22 +2668,39 @@ void MatOp::RGB2RGBA(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*32]();
         double* srcF64 = src.getData().f64;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.f64[pos*4+0] = srcF64[3*pos+0];
-                dstData.f64[pos*4+1] = srcF64[3*pos+1];
-                dstData.f64[pos*4+2] = srcF64[3*pos+2];
-                dstData.f64[pos*4+3] = 1.f;
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f64[pos*4+0] = srcF64[3*pos+0];
+                    dstData.f64[pos*4+1] = srcF64[3*pos+1];
+                    dstData.f64[pos*4+2] = srcF64[3*pos+2];
+                    dstData.f64[pos*4+3] = 1.f;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f64[pos*4+0] = srcF64[3*pos+0];
+                    dstData.f64[pos*4+1] = srcF64[3*pos+1];
+                    dstData.f64[pos*4+2] = srcF64[3*pos+2];
+                    dstData.f64[pos*4+3] = 1.f;
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(4);
         dst.setMatType(MAT_RGBA_F64);
@@ -1820,21 +2726,37 @@ void MatOp::RGBA2RGB(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*3]();
         uint8_t* srcU8 = src.getData().u8;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.u8[pos*3+0] = srcU8[pos*4+0];
-                dstData.u8[pos*3+1] = srcU8[pos*4+1];
-                dstData.u8[pos*3+2] = srcU8[pos*4+2];
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.u8[pos*3+0] = srcU8[pos*4+0];
+                    dstData.u8[pos*3+1] = srcU8[pos*4+1];
+                    dstData.u8[pos*3+2] = srcU8[pos*4+2];
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.u8[pos*3+0] = srcU8[pos*4+0];
+                    dstData.u8[pos*3+1] = srcU8[pos*4+1];
+                    dstData.u8[pos*3+2] = srcU8[pos*4+2];
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(3);
         dst.setMatType(MAT_RGB_U8);
@@ -1847,21 +2769,37 @@ void MatOp::RGBA2RGB(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*12]();
         float* srcF32 = src.getData().f32;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.f32[pos*3+0] = srcF32[pos*4+0];
-                dstData.f32[pos*3+1] = srcF32[pos*4+1];
-                dstData.f32[pos*3+2] = srcF32[pos*4+2];
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f32[pos*3+0] = srcF32[pos*4+0];
+                    dstData.f32[pos*3+1] = srcF32[pos*4+1];
+                    dstData.f32[pos*3+2] = srcF32[pos*4+2];
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f32[pos*3+0] = srcF32[pos*4+0];
+                    dstData.f32[pos*3+1] = srcF32[pos*4+1];
+                    dstData.f32[pos*3+2] = srcF32[pos*4+2];
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(3);
         dst.setMatType(MAT_RGB_F32);
@@ -1874,21 +2812,37 @@ void MatOp::RGBA2RGB(Mat &src, Mat &dst)
     {
         dstData.u8 = new uint8_t[width*height*24]();
         double* srcF64 = src.getData().f64;
-#ifdef USE_OMP
         uint64_t dataLen   = height*width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < height; ++i)
             {
-                int pos = (i*width+j);
-                dstData.f64[pos*3+0] = srcF64[pos*4+0];
-                dstData.f64[pos*3+1] = srcF64[pos*4+1];
-                dstData.f64[pos*3+2] = srcF64[pos*4+2];
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f64[pos*3+0] = srcF64[pos*4+0];
+                    dstData.f64[pos*3+1] = srcF64[pos*4+1];
+                    dstData.f64[pos*3+2] = srcF64[pos*4+2];
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    int pos = (i*width+j);
+                    dstData.f64[pos*3+0] = srcF64[pos*4+0];
+                    dstData.f64[pos*3+1] = srcF64[pos*4+1];
+                    dstData.f64[pos*3+2] = srcF64[pos*4+2];
+                }
+            }
+        }
+
         dst.release();
         dst.setChannel(3);
         dst.setMatType(MAT_RGB_F64);

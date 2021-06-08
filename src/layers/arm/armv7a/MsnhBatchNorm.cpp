@@ -83,7 +83,6 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
                         "subs       %0, #1              \n"
                         "bne        0b                  \n"
 
-
                         : "=r"(nn),     // %0
                         "=r"(srcPtr), // %1
                         "=r"(destPtr)     // %2
@@ -96,7 +95,7 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
                         );
             #endif
         }
-        
+
         for(; remain > 0; remain--){
             *destPtr = b * (*srcPtr) + a;
             srcPtr++;
@@ -115,7 +114,7 @@ void BatchNormLayerArm::BatchNorm(float *const &src, const int &inWidth, const i
 void BatchNormLayerArm::BatchNormInplace(float* src, const int &inWidth, const int &inHeight,  const int &inChannel,
                                   float *const &Scales, float *const &rollMean, float *const &rollVariance, float *const &biases, const float &eps )
 {
-    
+
     const int in_size = inWidth * inHeight;
     float *srcPtr0 = src ;
 #if USE_OMP
@@ -138,7 +137,7 @@ void BatchNormLayerArm::BatchNormInplace(float* src, const int &inWidth, const i
 
 #if USE_NEON
         if(nn > 0){
-            
+
             #if __aarch64__ 
                 asm volatile(
                     "dup        v0.4s, %w4          \n"
@@ -180,7 +179,6 @@ void BatchNormLayerArm::BatchNormInplace(float* src, const int &inWidth, const i
                 //             "subs       %0, #1              \n"
                 //             "bne        0b                  \n"
 
-
                 //             : "=r"(nn),     // %0
                 //             "=r"(srcPtr) // %1
 
@@ -212,7 +210,7 @@ void BatchNormLayerArm::BatchNormInplace(float* src, const int &inWidth, const i
             #endif
 
         }
-        
+
         for(; remain > 0; remain--){
             *srcPtr = b * (*srcPtr) + a;
             srcPtr++;
@@ -225,7 +223,7 @@ void BatchNormLayerArm::BatchNormInplace(float* src, const int &inWidth, const i
 #endif
 
     }
-    
+
 }
 
 }

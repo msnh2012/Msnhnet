@@ -5,13 +5,13 @@ namespace Msnhnet
 {
     void PaddingLayerArm::paddingV8(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel,
                                         float* &dest, const int &top, const int &down, const int &left, const int &right, const int &val){
-        
+
         const int outWidth  = inWidth + left + right;
         const int outHeight = inHeight + top + down;
         const int inSize    = inHeight * inWidth;
         const int outSize   = outHeight * outWidth;
         float pval          = static_cast<float>(val);
-        
+
 #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
 #endif
@@ -56,7 +56,6 @@ namespace Msnhnet
             }
 
             // fill center
-
 
             for(int i = top; i < top + inHeight; i++){
                 const float *srcptr = src + c * inSize +  (i - top) * inWidth;

@@ -66,7 +66,7 @@ void BatchNormLayerArm::BatchNormV8(float *const &src, const int &inWidth, const
                 : "cc", "memory", "v0", "v1", "v2"
             );
         }
-        
+
         for(; remain > 0; remain--){
             *destPtr = b * (*srcPtr) + a;
             srcPtr++;
@@ -85,7 +85,7 @@ void BatchNormLayerArm::BatchNormV8(float *const &src, const int &inWidth, const
 void BatchNormLayerArm::BatchNormInplaceV8(float* src, const int &inWidth, const int &inHeight,  const int &inChannel,
                                   float *const &Scales, float *const &rollMean, float *const &rollVariance, float *const &biases, const float &eps )
 {
-    
+
     const int in_size = inWidth * inHeight;
     float *srcPtr0 = src ;
 #if USE_OMP
@@ -108,8 +108,7 @@ void BatchNormLayerArm::BatchNormInplaceV8(float* src, const int &inWidth, const
 
 #if USE_ARM
         if(nn > 0){
-            
-           
+
             asm volatile(
                 "dup        v0.4s, %w4          \n"
                 "dup        v1.4s, %w5          \n"
@@ -133,9 +132,8 @@ void BatchNormLayerArm::BatchNormInplaceV8(float* src, const int &inWidth, const
                 : "cc", "memory", "v0", "v1", "v2"
             );
 
-
         }
-        
+
         for(; remain > 0; remain--){
             *srcPtr = b * (*srcPtr) + a;
             srcPtr++;
@@ -148,7 +146,7 @@ void BatchNormLayerArm::BatchNormInplaceV8(float* src, const int &inWidth, const
 #endif
 
     }
-    
+
 }
 
 }

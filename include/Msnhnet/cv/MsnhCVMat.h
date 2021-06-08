@@ -372,7 +372,7 @@ public:
     }
 
     template<typename T>
-    inline void setData(const std::vector<T> &val)
+    inline void setListData(const std::vector<T> &val)
     {
         if((val.size()*sizeof(T))!=this->getByteNum())
         {
@@ -380,6 +380,48 @@ public:
         }
 
         memcpy(this->getBytes(), val.data(),val.size()*sizeof(T));
+    }
+
+    template<typename T>
+    inline std::vector<T> getListData() const
+    {
+        std::vector<T> data;
+        data.resize(this->getByteNum()/sizeof(T));
+
+        memcpy(data.data(), this->_data.u8,this->getByteNum());
+
+        return data;
+    }
+
+    template<typename T>
+    inline std::vector<T> getDiagList() const
+    {
+        std::vector<T> data;
+
+        int m = _width<_height?_width:_height;
+
+        for (int i = 0; i < m; ++i)
+        {
+            data.push_back(getPixel<T>({i,i}));
+        }
+        return data;
+    }
+
+    template<typename T>
+    inline static std::vector<T> linspace(const T& min, const T& max, const int& len)
+    {
+        assert(min<max);
+
+        std::vector<T> list;
+
+        T step = (max-min)/len;
+
+        for (int i = 0; i < len; ++i)
+        {
+            list.push_back(min+i*step);
+        }
+
+        return list;
     }
 
     void checkPixelType(const int &array, const int &fmt) const;
@@ -478,6 +520,10 @@ public:
     }
 
     Mat transpose() const;
+
+    double sum() const;
+
+    double norm(const NormType& normalType);
 
     double det() const;
 

@@ -8,7 +8,6 @@ using namespace std;
 namespace Msnhnet
 {
 
-
 //bottom: src, inWidth, inHeight, inChannel
 //top: dest, outWidth, outHeight, outChannel
 void GlobalAvePoolingLayerArm::poolingV8(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, 
@@ -31,7 +30,6 @@ void GlobalAvePoolingLayerArm::poolingV8(float *const &src, const int &inWidth, 
 #if USE_ARM
         if(nn > 0){
 
-
             asm volatile(
                 "movi       v0.2d, #0           \n"
 
@@ -45,7 +43,7 @@ void GlobalAvePoolingLayerArm::poolingV8(float *const &src, const int &inWidth, 
 
                 "faddp      v0.4s, v0.4s, v0.4s     \n"
                 "faddp      v0.4s, v0.4s, v0.4s     \n"
-                
+
                 "fmov       %w2, s0            \n"
 
                 : "=r"(srcptr),     // %0
@@ -67,7 +65,6 @@ void GlobalAvePoolingLayerArm::poolingV8(float *const &src, const int &inWidth, 
         *destptr = sum / inSize;
     }
 }
-
 
 }
 #endif

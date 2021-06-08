@@ -31,7 +31,6 @@ namespace Msnhnet
 
             const float* src0 = src;
 
-
 #if USE_NEON
             float32x4_t _sum0 = vdupq_n_f32(0.f);
             float32x4_t _sum1 = vdupq_n_f32(0.f);

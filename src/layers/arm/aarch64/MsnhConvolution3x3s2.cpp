@@ -37,8 +37,6 @@ void ConvolutionalLayerArmV8_3x3s2::conv3x3s2Neon(float *const &src, const int &
                 const float* r1 = src0 + inWidth;
                 const float* r2 = src0 + inWidth * 2;
 
-
-
     #if USE_ARM
                 float32x4_t k012 = vld1q_f32(k0);
                 float32x4_t k345 = vld1q_f32(k0 + 3);
@@ -50,10 +48,10 @@ void ConvolutionalLayerArmV8_3x3s2::conv3x3s2Neon(float *const &src, const int &
     #endif
 
                 int i = 0;
-                
+
                 //deal three lines and get one output in a feature map
                 for(; i < outHeight; i++){
-                    
+
     #if USE_ARM
                     int nn = outWidth >> 2;
                     int remain = outWidth - (nn << 2);
@@ -98,7 +96,7 @@ void ConvolutionalLayerArmV8_3x3s2::conv3x3s2Neon(float *const &src, const int &
                             // v10.4s [i, k, m, o]
                             // v14.4s [c, e, g, i]
                             "ext    v14.16b, v8.16b, v10.16b, #4\n"
-                            
+
                             // v9.4s [b, d, g, h] 和k012_next的第二个元素相乘并累加到v7.4s
                             "fmla   v7.4s, v9.4s, %15.s[1]      \n"
 
@@ -221,7 +219,6 @@ void ConvolutionalLayerArmV8_3x3s2::conv3x3s2Neon(float *const &src, const int &
                         sum0 = vmlaq_f32(sum0, r20, k678);
                         sum1 = vmlaq_f32(sum1, r20, k678_next);
 
-
                         // use *destptr0 's data repalce sum0[3]
                         sum0 = vsetq_lane_f32(*destptr0, sum0, 3);
                         sum1 = vsetq_lane_f32(*destptr1, sum1, 3);
@@ -282,7 +279,7 @@ void ConvolutionalLayerArmV8_3x3s2::conv3x3s2Neon(float *const &src, const int &
                     r1 += 2 * (inWidth - outWidth);
                     r2 += 2 * (inWidth - outWidth);
                 }
-                
+
                 //mov conv kernel
                 k0 += 9;
                 k1 += 9;
@@ -293,7 +290,6 @@ void ConvolutionalLayerArmV8_3x3s2::conv3x3s2Neon(float *const &src, const int &
     #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
     #endif 
-
 
         for(int cc = ccRemainOutChannel; cc < outChannel; cc++){
 
@@ -324,7 +320,6 @@ void ConvolutionalLayerArmV8_3x3s2::conv3x3s2Neon(float *const &src, const int &
     #endif
 
                 int i = 0;
-                
 
                 for(; i < outHeight; i++){
     #if USE_ARM
@@ -403,12 +398,11 @@ void ConvolutionalLayerArmV8_3x3s2::conv3x3s2Neon(float *const &src, const int &
                             "w"(k678)  // %12
                             : "cc", "memory", "v0", "v1", "v2", "v3", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15");
                     }
-                    
 
     #endif
 
                     for(; remain > 0; remain--){
-                        
+
     #if USE_ARM
                         float32x4_t r00 = vld1q_f32(r0);
                         float32x4_t r10 = vld1q_f32(r1);

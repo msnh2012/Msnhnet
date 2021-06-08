@@ -9,7 +9,7 @@ namespace Msnhnet
     // shape[c, h, w]: [outChannel / 8 + (outChannel %8)/4 + outChannel%4， 8 * kernelSize， inChannel]
     void ConvolutionLayerArmV8Sgemm::convolutionTransformKernel(float *const &kernel, const int &kernelW, const int &kernelH, float* &dest, const int &inChannel,
                             const int &outChannel){
-        
+
         int kernelSize = kernelH * kernelW;
         int ccOutChannel = 0;
         int ccRemainOutChannel = 0;
@@ -84,7 +84,7 @@ namespace Msnhnet
         }
 
         ccRemainOutChannel += ccOutChannel << 2;
-        
+
         for(int cc = ccRemainOutChannel; cc < outChannel; cc++){
             int c = cc;
             const float* k0 = kernel + c * inChannel * kernelSize;
@@ -103,7 +103,7 @@ namespace Msnhnet
         // 1. im2col
         // src_im2col : width=outWidth * outHeight, height=kernelH * kernelW * inChannel
         float *src_im2col = new float[outWidth * outHeight * kernelH * kernelW * inChannel];
-        
+
         const int Stride = kernelW * kernelH * outHeight * outWidth;
         //const int inSize = inHeight * inWidth;
         const int outSize = outHeight * outWidth; 
@@ -143,7 +143,6 @@ namespace Msnhnet
 
         // pack 8x8
         // preapare
-
 
         const int packChannel = outSize / 8 + outSize % 8;
         const int packHeight = inChannel;    
@@ -236,11 +235,9 @@ namespace Msnhnet
         //int M = outChannel;
         int N = outHeight * outWidth;
         int K = kernelSize * inChannel;
-        
+
         int ccOutChannel = 0;
         int ccRemainOutChannel = 0;
-
-
 
 #if USE_NEON && __aarch64__
         ccOutChannel = outChannel >> 3;
@@ -267,7 +264,7 @@ namespace Msnhnet
                 const float *ptrA = kernel_im2col_pack + (c / 8) * kernelPackHeight * kernelPackWidth;
 #if __aarch64__
                 asm volatile(
-                    
+
                     "eor v16.16b, v16.16b, v16.16b   \n"
                     "eor v17.16b, v17.16b, v17.16b   \n"
                     "eor v18.16b, v18.16b, v18.16b   \n"
@@ -516,8 +513,6 @@ namespace Msnhnet
 
 #if USE_NEON
 
-
-
 #else
                 float sum0[8] = {0};
                 float sum1[8] = {0};
@@ -619,9 +614,8 @@ namespace Msnhnet
 #else
                 const float *ptrA = kernel_im2col_pack + (c / 4) * kernelPackHeight * kernelPackWidth;
 #endif
-                
-#if USE_NEON
 
+#if USE_NEON
 
 #else 
                 float sum0 = 0;

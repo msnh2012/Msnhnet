@@ -611,19 +611,35 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*4]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        float val = static_cast<float>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]);
-                        data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            float val = static_cast<float>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]);
+                            data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            float val = static_cast<float>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]);
+                            data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
                     }
                 }
             }
@@ -660,19 +676,35 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*4]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        float val = 1.0f*this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c]/255;
-                        data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            float val = 1.0f*this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c]/255;
+                            data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            float val = 1.0f*this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c]/255;
+                            data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
                     }
                 }
             }
@@ -715,19 +747,35 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*4]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        float val = static_cast<float>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]);
-                        data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            float val = static_cast<float>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]);
+                            data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            float val = static_cast<float>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]);
+                            data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
                     }
                 }
             }
@@ -764,19 +812,35 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*4]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        float val = static_cast<float>(this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c]);
-                        data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            float val = static_cast<float>(this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c]);
+                            data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            float val = static_cast<float>(this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c]);
+                            data.f32[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
                     }
                 }
             }
@@ -818,21 +882,39 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         else if(this->isF32Mat())
         {
             uint8_t* u8Ptr = new uint8_t[this->_width*this->_height*this->_channel]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        int val = static_cast<int>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]*255);
-                        uint8_t finalVal = val>255?255:val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            int val = static_cast<int>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]*255);
+                            uint8_t finalVal = val>255?255:val;
 
-                        u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                            u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            int val = static_cast<int>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]*255);
+                            uint8_t finalVal = val>255?255:val;
+
+                            u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                        }
                     }
                 }
             }
@@ -868,21 +950,39 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         else if(this->isF64Mat())
         {
             uint8_t* u8Ptr = new uint8_t[this->_width*this->_height*this->_channel]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        int val = static_cast<int>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]*255);
-                        uint8_t finalVal = val>255?255:val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            int val = static_cast<int>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]*255);
+                            uint8_t finalVal = val>255?255:val;
 
-                        u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                            u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            int val = static_cast<int>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]*255);
+                            uint8_t finalVal = val>255?255:val;
+
+                            u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                        }
                     }
                 }
             }
@@ -924,21 +1024,39 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         else if(this->isF32Mat())
         {
             uint8_t* u8Ptr = new uint8_t[this->_width*this->_height*this->_channel]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        int val = static_cast<int>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]);
-                        uint8_t finalVal = val>255?255:val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            int val = static_cast<int>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]);
+                            uint8_t finalVal = val>255?255:val;
 
-                        u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                            u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            int val = static_cast<int>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]);
+                            uint8_t finalVal = val>255?255:val;
+
+                            u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                        }
                     }
                 }
             }
@@ -974,21 +1092,39 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         else if(this->isF64Mat())
         {
             uint8_t* u8Ptr = new uint8_t[this->_width*this->_height*this->_channel]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        int val = static_cast<int>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]);
-                        uint8_t finalVal = val>255?255:val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            int val = static_cast<int>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]);
+                            uint8_t finalVal = val>255?255:val;
 
-                        u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                            u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            int val = static_cast<int>(this->_data.f64[i*this->_width*this->_channel + j*this->_channel + c]);
+                            uint8_t finalVal = val>255?255:val;
+
+                            u8Ptr[i*this->_width*this->_channel + j*this->_channel + c] = finalVal;
+                        }
                     }
                 }
             }
@@ -1031,19 +1167,35 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*8]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        double val = static_cast<double>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]);
-                        data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            double val = static_cast<double>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]);
+                            data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            double val = static_cast<double>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]);
+                            data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
                     }
                 }
             }
@@ -1080,19 +1232,35 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*8]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        double val = 1.0*this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c]/255;
-                        data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            double val = 1.0*this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c]/255;
+                            data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            double val = 1.0*this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c]/255;
+                            data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
                     }
                 }
             }
@@ -1134,19 +1302,35 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*8]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        double val = static_cast<double>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]);
-                        data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            double val = static_cast<double>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]);
+                            data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            double val = static_cast<double>(this->_data.f32[i*this->_width*this->_channel + j*this->_channel + c]);
+                            data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
                     }
                 }
             }
@@ -1183,19 +1367,35 @@ void Mat::convertTo(Mat &dst, const CvtDataType &cvtDataType)
         {
             MatData data;
             data.u8 = new uint8_t[this->_width*this->_height*this->_channel*8]();
-#ifdef USE_OMP
             uint64_t dataLen = this->_height*this->_width*this->_channel;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int i = 0; i < this->_height; ++i)
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int i = 0; i < this->_height; ++i)
                 {
-                    for (int c = 0; c < this->_channel; ++c)
+                    for (int j = 0; j < this->_width; ++j)
                     {
-                        double val = 1.0*this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c];
-                        data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            double val = 1.0*this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c];
+                            data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this->_height; ++i)
+                {
+                    for (int j = 0; j < this->_width; ++j)
+                    {
+                        for (int c = 0; c < this->_channel; ++c)
+                        {
+                            double val = 1.0*this->_data.u8[i*this->_width*this->_channel + j*this->_channel + c];
+                            data.f64[i*this->_width*this->_channel + j*this->_channel + c] = val;
+                        }
                     }
                 }
             }
@@ -1405,38 +1605,67 @@ Mat Mat::eye(const int &num, const MatType &matType)
 
     if(matType == MAT_GRAY_U8)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = tmp.getHeight();
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < tmp.getHeight(); ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmp.getData().u8[i*tmp.getWidth()+i] = 1;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().u8[i*tmp.getWidth()+i] = 1;
+            }
         }
+        else
+        {
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().u8[i*tmp.getWidth()+i] = 1;
+            }
+        }
+
     }
     else if(matType == MAT_GRAY_F32)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = tmp.getHeight();
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < tmp.getHeight(); ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmp.getData().f32[i*tmp.getWidth()+i] = 1.f;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().f32[i*tmp.getWidth()+i] = 1.f;
+            }
         }
+        else
+        {
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().f32[i*tmp.getWidth()+i] = 1.f;
+            }
+        }
+
     }
     else if(matType == MAT_GRAY_F64)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = tmp.getHeight();
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < tmp.getHeight(); ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmp.getData().f64[i*tmp.getWidth()+i] = 1.0;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().f64[i*tmp.getWidth()+i] = 1.0;
+            }
+        }
+        else
+        {
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().f64[i*tmp.getWidth()+i] = 1.0;
+            }
         }
     }
 
@@ -1455,48 +1684,87 @@ Mat Mat::dense(const int &width, const int &height, const MatType &matType, cons
 
     if(matType == MAT_GRAY_U8)
     {
-#ifdef USE_OMP
-        uint64_t dataLen   = tmp.getHeight()*tmp.getWidth();;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < tmp.getHeight(); ++i)
+        uint64_t dataLen   = tmp.getHeight()*tmp.getWidth();
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < tmp.getWidth(); ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < tmp.getHeight(); ++i)
             {
-                tmp.getData().u8[i*tmp.getWidth()+j] = static_cast<uint8_t>(val) ;
+                for (int j = 0; j < tmp.getWidth(); ++j)
+                {
+                    tmp.getData().u8[i*tmp.getWidth()+j] = static_cast<uint8_t>(val) ;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                for (int j = 0; j < tmp.getWidth(); ++j)
+                {
+                    tmp.getData().u8[i*tmp.getWidth()+j] = static_cast<uint8_t>(val) ;
+                }
+            }
+        }
+
     }
     else if(matType == MAT_GRAY_F32)
     {
-#ifdef USE_OMP
-        uint64_t dataLen   = tmp.getHeight()*tmp.getWidth();;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < tmp.getHeight(); ++i)
+        uint64_t dataLen   = tmp.getHeight()*tmp.getWidth();
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < tmp.getWidth(); ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < tmp.getHeight(); ++i)
             {
-                tmp.getData().f32[i*tmp.getWidth()+j] = val;
+                for (int j = 0; j < tmp.getWidth(); ++j)
+                {
+                    tmp.getData().f32[i*tmp.getWidth()+j] = val;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                for (int j = 0; j < tmp.getWidth(); ++j)
+                {
+                    tmp.getData().f32[i*tmp.getWidth()+j] = val;
+                }
+            }
+        }
+
     }
     else if(matType == MAT_GRAY_F64)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = tmp.getHeight()*tmp.getWidth();
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < tmp.getHeight(); ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < tmp.getWidth(); ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < tmp.getHeight(); ++i)
             {
-                tmp.getData().f64[i*tmp.getWidth()+j] = val;
+                for (int j = 0; j < tmp.getWidth(); ++j)
+                {
+                    tmp.getData().f64[i*tmp.getWidth()+j] = val;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                for (int j = 0; j < tmp.getWidth(); ++j)
+                {
+                    tmp.getData().f64[i*tmp.getWidth()+j] = val;
+                }
+            }
+        }
+
     }
     return tmp;
 }
@@ -1512,39 +1780,69 @@ Mat Mat::diag(const int &num, const MatType &matType, const float &val)
 
     if(matType == MAT_GRAY_U8)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = tmp.getHeight();
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < tmp.getHeight(); ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmp.getData().u8[i*tmp.getWidth()+i] = static_cast<uint8_t>(val) ;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().u8[i*tmp.getWidth()+i] = static_cast<uint8_t>(val) ;
+            }
         }
+        else
+        {
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().u8[i*tmp.getWidth()+i] = static_cast<uint8_t>(val) ;
+            }
+        }
+
     }
     else if(matType == MAT_GRAY_F32)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = tmp.getHeight();
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < tmp.getHeight(); ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmp.getData().f32[i*tmp.getWidth()+i] = val;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().f32[i*tmp.getWidth()+i] = val;
+            }
         }
+        else
+        {
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().f32[i*tmp.getWidth()+i] = val;
+            }
+        }
+
     }
     else if(matType == MAT_GRAY_F64)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = tmp.getHeight();
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < tmp.getHeight(); ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmp.getData().f64[i*tmp.getWidth()+i] = val;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().f64[i*tmp.getWidth()+i] = val;
+            }
         }
+        else
+        {
+            for (int i = 0; i < tmp.getHeight(); ++i)
+            {
+                tmp.getData().f64[i*tmp.getWidth()+i] = val;
+            }
+        }
+
     }
 
     return tmp;
@@ -1646,50 +1944,331 @@ Mat Mat::transpose() const
 
     if(isU8Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = this->_height*this->_width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < this->_height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < this->_width; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < this->_height; ++i)
             {
-                tmpMat.getData().u8[j*tmpMat.getWidth()+i] = this->_data.u8[i*this->_width + j];
+                for (int j = 0; j < this->_width; ++j)
+                {
+                    tmpMat.getData().u8[j*tmpMat.getWidth()+i] = this->_data.u8[i*this->_width + j];
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < this->_height; ++i)
+            {
+                for (int j = 0; j < this->_width; ++j)
+                {
+                    tmpMat.getData().u8[j*tmpMat.getWidth()+i] = this->_data.u8[i*this->_width + j];
+                }
+            }
+        }
+
+    }
+    else if(isF32Mat())
+    {
+        uint64_t dataLen   = this->_height*this->_width;
+        if(dataLen > MIN_OMP_DATA)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < this->_height; ++i)
+            {
+                for (int j = 0; j < this->_width; ++j)
+                {
+                    tmpMat.getData().f32[j*tmpMat.getWidth()+i] = this->_data.f32[i*this->_width + j];
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < this->_height; ++i)
+            {
+                for (int j = 0; j < this->_width; ++j)
+                {
+                    tmpMat.getData().f32[j*tmpMat.getWidth()+i] = this->_data.f32[i*this->_width + j];
+                }
+            }
+        }
+
+    }
+    else if(isF64Mat())
+    {
+        uint64_t dataLen   = this->_height*this->_width;
+        if(dataLen > MIN_OMP_DATA)
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < this->_height; ++i)
+            {
+                for (int j = 0; j < this->_width; ++j)
+                {
+                    tmpMat.getData().f64[j*tmpMat.getWidth()+i] = this->_data.f64[i*this->_width + j];
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < this->_height; ++i)
+            {
+                for (int j = 0; j < this->_width; ++j)
+                {
+                    tmpMat.getData().f64[j*tmpMat.getWidth()+i] = this->_data.f64[i*this->_width + j];
+                }
+            }
+        }
+
+    }
+    return tmpMat;
+}
+
+double Mat::sum() const
+{
+    double final = 0;
+    uint64_t dataLen   = getDataNum();
+    if(isU8Mat())
+    {
+        if(dataLen > MIN_OMP_DATA)
+        {
+    #ifdef USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+    #endif
+            for (int i = 0; i < getDataNum(); ++i)
+            {
+                final += getBytes()[i];
+            }
+        }
+        else
+        {
+            for (int i = 0; i < getDataNum(); ++i)
+            {
+                final += getBytes()[i];
             }
         }
     }
     else if(isF32Mat())
     {
-#ifdef USE_OMP
-        uint64_t dataLen   = this->_height*this->_width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < this->_height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < this->_width; ++j)
+    #ifdef USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+    #endif
+            for (int i = 0; i < getDataNum(); ++i)
             {
-                tmpMat.getData().f32[j*tmpMat.getWidth()+i] = this->_data.f32[i*this->_width + j];
+                final += getFloat32()[i];
+            }
+        }
+        else
+        {
+            for (int i = 0; i < getDataNum(); ++i)
+            {
+                final += getFloat32()[i];
             }
         }
     }
     else if(isF64Mat())
     {
-#ifdef USE_OMP
-        uint64_t dataLen   = this->_height*this->_width;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < this->_height; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int j = 0; j < this->_width; ++j)
+    #ifdef USE_OMP
+    #pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+    #endif
+            for (int i = 0; i < getDataNum(); ++i)
             {
-                tmpMat.getData().f64[j*tmpMat.getWidth()+i] = this->_data.f64[i*this->_width + j];
+                final += getFloat64()[i];
+            }
+        }
+        else
+        {
+            for (int i = 0; i < getDataNum(); ++i)
+            {
+                final += getFloat64()[i];
             }
         }
     }
-    return tmpMat;
+
+    return final;
+}
+
+double Mat::norm(const NormType &normType)
+{
+    Mat mat = *this;
+
+    if(isU8Mat())
+    {
+        convertTo(mat, CVT_DATA_TO_F32_DIRECTLY);
+    }
+
+    double final = 0;
+
+    if(normType==NORM_L1)
+    {
+        if(isF32Mat())
+        {
+            uint64_t dataLen   = getDataNum();
+            if(dataLen > MIN_OMP_DATA)
+            {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+                for (int i = 0; i < getDataNum(); ++i)
+                {
+                    final += std::abs(getFloat32()[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < getDataNum(); ++i)
+                {
+                    final += std::abs(getFloat32()[i]);
+                }
+            }
+
+        }
+        else if(isF64Mat())
+        {
+            uint64_t dataLen   = getDataNum();
+            if(dataLen > MIN_OMP_DATA)
+            {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+                for (int i = 0; i < getDataNum(); ++i)
+                {
+                    final += std::abs(getFloat64()[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < getDataNum(); ++i)
+                {
+                    final += std::abs(getFloat64()[i]);
+                }
+            }
+
+        }
+        return final;
+    }
+    else if(normType==NORM_L2 || normType==NORM_L2_SQR)
+    {
+        if(isF32Mat())
+        {
+            uint64_t dataLen   = getDataNum();
+            if(dataLen > MIN_OMP_DATA)
+            {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+                for (int i = 0; i < getDataNum(); ++i)
+                {
+                    float v = getFloat32()[i];
+                    final += v*v;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < getDataNum(); ++i)
+                {
+                    float v = getFloat32()[i];
+                    final += v*v;
+                }
+            }
+
+        }
+        else if(isF64Mat())
+        {
+            uint64_t dataLen   = getDataNum();
+            if(dataLen > MIN_OMP_DATA)
+            {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:final)
+#endif
+                for (int i = 0; i < getDataNum(); ++i)
+                {
+                    double v = getFloat64()[i];
+                    final += v*v;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < getDataNum(); ++i)
+                {
+                    double v = getFloat64()[i];
+                    final += v*v;
+                }
+            }
+
+        }
+
+        if(normType==NORM_L2_SQR)
+        {
+            return final;
+        }
+        else if(normType==NORM_L2)
+        {
+            return  std::sqrt(final);
+        }
+    }
+    else if(normType==NORM_INF)
+    {
+#ifdef USE_OMP
+        std::vector<double> tmpMax(OMP_THREAD,0);
+#endif
+        if(isF32Mat())
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < getDataNum(); ++i)
+            {
+                double v = std::abs(getFloat32()[i]);
+#ifdef USE_OMP
+                if(v>tmpMax[omp_get_thread_num()])
+                {
+                    tmpMax[omp_get_thread_num()] = v;
+                }
+#else
+                if(v > final)
+                {
+                    final = v;
+                }
+#endif
+            }
+        }
+        else if(isF64Mat())
+        {
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < getDataNum(); ++i)
+            {
+                double v = std::abs(getFloat64()[i]);
+#ifdef USE_OMP
+                if(v>tmpMax[omp_get_thread_num()])
+                {
+                    tmpMax[omp_get_thread_num()] = v;
+                }
+#else
+                if(v > final)
+                {
+                    final = v;
+                }
+#endif
+            }
+        }
+#ifdef USE_OMP
+        return  *std::max_element(tmpMax.begin(), tmpMax.end());
+#else
+        return final;
+#endif
+    }
 }
 
 double Mat::det() const
@@ -3399,53 +3978,97 @@ Mat Mat::eleWiseDiv(const Mat &A, const Mat &B)
 
     if(tmpMat.isU8Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int div = 0;
-
-            if(A._data.u8[i] == 0 || B._data.u8[i] == 0)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
             {
-                div = 0;
+                int div = 0;
+
+                if(A._data.u8[i] == 0 || B._data.u8[i] == 0)
+                {
+                    div = 0;
+                }
+                else
+                {
+                    div = A._data.u8[i] / B._data.u8[i];
+                }
+
+                div = (div>255)?255:div;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(div);
+
             }
-            else
-            {
-                div = A._data.u8[i] / B._data.u8[i];
-            }
-
-            div = (div>255)?255:div;
-
-            tmpMat._data.u8[i] = static_cast<uint8_t>(div);
-
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int div = 0;
+
+                if(A._data.u8[i] == 0 || B._data.u8[i] == 0)
+                {
+                    div = 0;
+                }
+                else
+                {
+                    div = A._data.u8[i] / B._data.u8[i];
+                }
+
+                div = (div>255)?255:div;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(div);
+            }
+        }
+
     }
     else if(tmpMat.isF32Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f32[i] = A._data.f32[i] / B._data.f32[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i] / B._data.f32[i];
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i] / B._data.f32[i];
+            }
+        }
+
     }
     else if(tmpMat.isF64Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f64[i] = A._data.f64[i] / B._data.f64[i];
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i] / B._data.f64[i];
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i] / B._data.f64[i];
+            }
+        }
+
     }
     return tmpMat;
 }
@@ -3474,44 +4097,78 @@ Mat Mat::eleWiseMul(const Mat &A, const Mat &B)
 
     if(tmpMat.isU8Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int mul = A._data.u8[i] * B._data.u8[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                int mul = A._data.u8[i] * B._data.u8[i];
 
-            mul = (mul>255)?255:mul;
+                mul = (mul>255)?255:mul;
 
-            tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
-
+                tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int mul = A._data.u8[i] * B._data.u8[i];
+
+                mul = (mul>255)?255:mul;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
+
+            }
+        }
+
     }
     else if(tmpMat.isF32Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f32[i] = A._data.f32[i] * B._data.f32[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i] * B._data.f32[i];
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i] * B._data.f32[i];
+            }
+        }
+
     }
     else if(tmpMat.isF64Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f64[i] = A._data.f64[i] * B._data.f64[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i] * B._data.f64[i];
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i] * B._data.f64[i];
+            }
+        }
+
     }
     return tmpMat;
 }
@@ -3539,47 +4196,82 @@ double Mat::dotProduct(const Mat &A, const Mat &B)
     if(A.isU8Mat())
     {
         uint8_t finalVal = 0;
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum) reduction(+:finalVal)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int mul = A._data.u8[i] * B._data.u8[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                int mul = A._data.u8[i] * B._data.u8[i];
 
-            finalVal += mul;
+                finalVal += mul;
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int mul = A._data.u8[i] * B._data.u8[i];
+
+                finalVal += mul;
+            }
+        }
+
         return finalVal;
     }
     else if(A.isF32Mat())
     {
         float finalVal = 0;
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum) reduction(+:finalVal)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            float mul= A._data.f32[i] * B._data.f32[i];
-            finalVal += mul;
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                float mul= A._data.f32[i] * B._data.f32[i];
+                finalVal += mul;
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                float mul= A._data.f32[i] * B._data.f32[i];
+                finalVal += mul;
+            }
+        }
+
         return finalVal;
     }
     else if(A.isF64Mat())
     {
         double finalVal = 0;
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum) reduction(+:finalVal)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            double mul = A._data.f64[i] * B._data.f64[i];
-            finalVal += mul;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD) reduction(+:finalVal)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                double mul = A._data.f64[i] * B._data.f64[i];
+                finalVal += mul;
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                double mul = A._data.f64[i] * B._data.f64[i];
+                finalVal += mul;
+            }
+        }
+
         return finalVal;
     }
 }
@@ -3704,44 +4396,77 @@ Mat operator +(const Mat &A, const Mat &B)
 
     if(tmpMat.isU8Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int add = A._data.u8[i] + B._data.u8[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                int add = A._data.u8[i] + B._data.u8[i];
 
-            add = (add>255)?255:add;
+                add = (add>255)?255:add;
 
-            tmpMat._data.u8[i] = static_cast<uint8_t>(add);
-
+                tmpMat._data.u8[i] = static_cast<uint8_t>(add);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int add = A._data.u8[i] + B._data.u8[i];
+
+                add = (add>255)?255:add;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(add);
+            }
+        }
+
     }
     else if(tmpMat.isF32Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f32[i] = A._data.f32[i]+B._data.f32[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]+B._data.f32[i];
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]+B._data.f32[i];
+            }
+        }
+
     }
     else if(tmpMat.isF64Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f64[i] = A._data.f64[i]+B._data.f64[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]+B._data.f64[i];
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]+B._data.f64[i];
+            }
+        }
+
     }
     return tmpMat;
 }
@@ -3763,44 +4488,77 @@ Mat operator +(const double &a, const Mat &A)
         int addVal = static_cast<int>(a);
         addVal = addVal>255?255:addVal;
 
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int add = A._data.u8[i] + addVal;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                int add = A._data.u8[i] + addVal;
 
-            add = (add>255)?255:add;
+                add = (add>255)?255:add;
 
-            tmpMat._data.u8[i] = static_cast<uint8_t>(add);
-
+                tmpMat._data.u8[i] = static_cast<uint8_t>(add);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int add = A._data.u8[i] + addVal;
+
+                add = (add>255)?255:add;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(add);
+            }
+        }
+
     }
     else if(tmpMat.isF32Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f32[i] = A._data.f32[i]+ static_cast<float>(a);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]+ static_cast<float>(a);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]+ static_cast<float>(a);
+            }
+        }
+
     }
     else if(tmpMat.isF64Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f64[i] = A._data.f64[i]+ a;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]+ a;
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]+ a;
+            }
+        }
+
     }
     return tmpMat;
 }
@@ -3826,44 +4584,77 @@ Mat operator +(const Mat &A, const double &a)
         int addVal = static_cast<int>(a);
         addVal = addVal>255?255:addVal;
 
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int add = A._data.u8[i] + addVal;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                int add = A._data.u8[i] + addVal;
 
-            add = (add>255)?255:add;
+                add = (add>255)?255:add;
 
-            tmpMat._data.u8[i] = static_cast<uint8_t>(add);
-
+                tmpMat._data.u8[i] = static_cast<uint8_t>(add);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int add = A._data.u8[i] + addVal;
+
+                add = (add>255)?255:add;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(add);
+            }
+        }
+
     }
     else if(tmpMat.isF32Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f32[i] = A._data.f32[i]+ static_cast<float>(a);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]+ static_cast<float>(a);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]+ static_cast<float>(a);
+            }
+        }
+
     }
     else if(tmpMat.isF64Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f64[i] = A._data.f64[i]+ a;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]+ a;
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]+ a;
+            }
+        }
+
     }
     return tmpMat;
 }
@@ -3902,43 +4693,77 @@ Mat operator -(const Mat &A, const Mat &B)
 
     if(tmpMat.isU8Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int sub = A._data.u8[i] - B._data.u8[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                int sub = A._data.u8[i] - B._data.u8[i];
 
-            sub = (sub<0)?0:sub;
+                sub = (sub<0)?0:sub;
 
-            tmpMat._data.u8[i] = static_cast<uint8_t>(sub);
+                tmpMat._data.u8[i] = static_cast<uint8_t>(sub);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int sub = A._data.u8[i] - B._data.u8[i];
+
+                sub = (sub<0)?0:sub;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(sub);
+            }
+        }
+
     }
     else if(tmpMat.isF32Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f32[i] = A._data.f32[i]-B._data.f32[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]-B._data.f32[i];
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]-B._data.f32[i];
+            }
+        }
+
     }
     else if(tmpMat.isF64Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f64[i] = A._data.f64[i]-B._data.f64[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]-B._data.f64[i];
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]-B._data.f64[i];
+            }
+        }
+
     }
     return tmpMat;
 }
@@ -3963,43 +4788,78 @@ Mat operator -(const double &a, const Mat &A)
     {
         int subVal = static_cast<int>(a);
         subVal = subVal>255?255:subVal;
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int sub = subVal - A._data.u8[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                int sub = subVal - A._data.u8[i];
 
-            sub = (sub<0)?0:sub;
+                sub = (sub<0)?0:sub;
 
-            tmpMat._data.u8[i] = static_cast<uint8_t>(sub);
+                tmpMat._data.u8[i] = static_cast<uint8_t>(sub);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int sub = subVal - A._data.u8[i];
+
+                sub = (sub<0)?0:sub;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(sub);
+            }
+        }
+
     }
     else if(tmpMat.isF32Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f32[i] = static_cast<float>(a) - A._data.f32[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = static_cast<float>(a) - A._data.f32[i];
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = static_cast<float>(a) - A._data.f32[i];
+            }
+        }
+
     }
     else if(tmpMat.isF64Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f64[i] = a - A._data.f64[i];
+#ifdef USE_OMP
+
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = a - A._data.f64[i];
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = a - A._data.f64[i];
+            }
+        }
+
     }
     return tmpMat;
 }
@@ -4024,43 +4884,77 @@ Mat operator -(const Mat &A, const double &a)
     {
         int subVal = static_cast<int>(a);
         subVal = subVal>255?255:subVal;
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int sub = A._data.u8[i]-subVal;
-            sub = (sub>255)?255:sub;
-            sub = (sub<0)?0:sub;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                int sub = A._data.u8[i]-subVal;
+                sub = (sub>255)?255:sub;
+                sub = (sub<0)?0:sub;
 
-            tmpMat._data.u8[i] = static_cast<uint8_t>(sub);
+                tmpMat._data.u8[i] = static_cast<uint8_t>(sub);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int sub = A._data.u8[i]-subVal;
+                sub = (sub>255)?255:sub;
+                sub = (sub<0)?0:sub;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(sub);
+            }
+        }
+
     }
     else if(tmpMat.isF32Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f32[i] = A._data.f32[i] - static_cast<float>(a);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i] - static_cast<float>(a);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i] - static_cast<float>(a);
+            }
+        }
+
     }
     else if(tmpMat.isF64Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f64[i] = A._data.f64[i] - a;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i] - a;
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i] - a;
+            }
+        }
+
     }
     return tmpMat;
 }
@@ -4129,47 +5023,81 @@ Mat operator *(const Mat &A, const Mat &B)
             if(A.isU8Mat())
             {
                 uint8_t finalVal = 0;
-#ifdef USE_OMP
                 uint64_t dataLen   = dataN;
-                uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)  reduction(+:finalVal)
-#endif
-                for (int i = 0; i < dataN; ++i)
+                if(dataLen > MIN_OMP_DATA)
                 {
-                    int mul = A._data.u8[i] * B._data.u8[i];
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)  reduction(+:finalVal)
+#endif
+                    for (int i = 0; i < dataN; ++i)
+                    {
+                        int mul = A._data.u8[i] * B._data.u8[i];
 
-                    finalVal += mul;
+                        finalVal += mul;
+                    }
                 }
+                else
+                {
+                    for (int i = 0; i < dataN; ++i)
+                    {
+                        int mul = A._data.u8[i] * B._data.u8[i];
+
+                        finalVal += mul;
+                    }
+                }
+
                 return Mat(1,1,MAT_GRAY_U8, &finalVal);
             }
             else if(A.isF32Mat())
             {
                 float finalVal = 0;
-#ifdef USE_OMP
                 uint64_t dataLen   = dataN;
-                uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)  reduction(+:finalVal)
-#endif
-                for (int i = 0; i < dataN; ++i)
+                if(dataLen > MIN_OMP_DATA)
                 {
-                    float mul= A._data.f32[i] * B._data.f32[i];
-                    finalVal += mul;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)  reduction(+:finalVal)
+#endif
+                    for (int i = 0; i < dataN; ++i)
+                    {
+                        float mul= A._data.f32[i] * B._data.f32[i];
+                        finalVal += mul;
+                    }
                 }
+                else
+                {
+                    for (int i = 0; i < dataN; ++i)
+                    {
+                        float mul= A._data.f32[i] * B._data.f32[i];
+                        finalVal += mul;
+                    }
+                }
+
                 return Mat(1,1,MAT_GRAY_F32, &finalVal);
             }
             else if(A.isF64Mat())
             {
                 double finalVal = 0;
-#ifdef USE_OMP
                 uint64_t dataLen   = dataN;
-                uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)  reduction(+:finalVal)
-#endif
-                for (int i = 0; i < dataN; ++i)
+                if(dataLen > MIN_OMP_DATA)
                 {
-                    double mul = A._data.f64[i] * B._data.f64[i];
-                    finalVal += mul;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)  reduction(+:finalVal)
+#endif
+                    for (int i = 0; i < dataN; ++i)
+                    {
+                        double mul = A._data.f64[i] * B._data.f64[i];
+                        finalVal += mul;
+                    }
                 }
+                else
+                {
+                    for (int i = 0; i < dataN; ++i)
+                    {
+                        double mul = A._data.f64[i] * B._data.f64[i];
+                        finalVal += mul;
+                    }
+                }
+
                 return Mat(1,1,MAT_GRAY_F64, &finalVal);
             }
 
@@ -4233,44 +5161,79 @@ Mat operator *(const double &a, const Mat &A)
 
     if(tmpMat.isU8Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int mul = static_cast<int>(A._data.u8[i]* a);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                int mul = static_cast<int>(A._data.u8[i]* a);
 
-            mul = (mul>255)?255:mul;
-            mul = (mul<0)?0:mul;
+                mul = (mul>255)?255:mul;
+                mul = (mul<0)?0:mul;
 
-            tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
+                tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int mul = static_cast<int>(A._data.u8[i]* a);
+
+                mul = (mul>255)?255:mul;
+                mul = (mul<0)?0:mul;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
+            }
+        }
+
     }
     else if(tmpMat.isF32Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f32[i] = A._data.f32[i]*static_cast<float>(a);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]*static_cast<float>(a);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]*static_cast<float>(a);
+            }
+        }
+
     }
     else if(tmpMat.isF64Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f64[i] = A._data.f64[i]*a;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]*a;
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]*a;
+            }
+        }
+
     }
     return tmpMat;
 }
@@ -4288,45 +5251,79 @@ Mat operator *(const Mat &A, const double &a)
 
     if(tmpMat.isU8Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            int mul = static_cast<int>(A._data.u8[i]* a);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                int mul = static_cast<int>(A._data.u8[i]* a);
 
-            mul = (mul>255)?255:mul;
-            mul = (mul<0)?0:mul;
+                mul = (mul>255)?255:mul;
+                mul = (mul<0)?0:mul;
 
-            tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
-
+                tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                int mul = static_cast<int>(A._data.u8[i]* a);
+
+                mul = (mul>255)?255:mul;
+                mul = (mul<0)?0:mul;
+
+                tmpMat._data.u8[i] = static_cast<uint8_t>(mul);
+            }
+        }
+
     }
     else if(tmpMat.isF32Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f32[i] = A._data.f32[i]*static_cast<float>(a);
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]*static_cast<float>(a);
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f32[i] = A._data.f32[i]*static_cast<float>(a);
+            }
+        }
+
     }
     else if(tmpMat.isF64Mat())
     {
-#ifdef USE_OMP
         uint64_t dataLen   = dataN;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < dataN; ++i)
+        if(dataLen > MIN_OMP_DATA)
         {
-            tmpMat._data.f64[i] = A._data.f64[i]*a;
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]*a;
+            }
         }
+        else
+        {
+            for (int i = 0; i < dataN; ++i)
+            {
+                tmpMat._data.f64[i] = A._data.f64[i]*a;
+            }
+        }
+
     }
     return tmpMat;
 }

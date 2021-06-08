@@ -8,7 +8,6 @@ using namespace std;
 namespace Msnhnet
 {
 
-
 //bottom: src, inWidth, inHeight, inChannel
 //top: dest, outWidth, outHeight, outChannel
 void MaxPooling2x2s2Arm::poolingV8(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, 
@@ -83,7 +82,6 @@ void MaxPooling2x2s2Arm::poolingV8(float *const &src, const int &inWidth, const 
 
         }
     }
-
 
 }
 #endif

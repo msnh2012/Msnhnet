@@ -54,33 +54,62 @@ void Gemm::cpuIm2col(float * const &input, const int &channelNum, const int &hei
     const int widthCol   = (width  + 2*padding - kSize) / stride + 1;
 
     const int chCols     = channelNum * kSize * kSize;
-#ifdef USE_OMP
     uint64_t dataLen   = chCols*heightCol*widthCol;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int ch = 0; ch < chCols; ++ch)
+
+    if(dataLen > MIN_OMP_DATA)
     {
-
-        int wOffset = ch % kSize;
-        int hOffset = (ch / kSize) % kSize;
-        int chOff   = ch / kSize / kSize;
-
-        for (int h = 0; h < heightCol; ++h)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int ch = 0; ch < chCols; ++ch)
         {
-            for (int w = 0; w < widthCol; ++w)
+
+            int wOffset = ch % kSize;
+            int hOffset = (ch / kSize) % kSize;
+            int chOff   = ch / kSize / kSize;
+
+            for (int h = 0; h < heightCol; ++h)
             {
+                for (int w = 0; w < widthCol; ++w)
+                {
 
-                int imRow           = hOffset + h*stride;
-                int imCol           = wOffset + w*stride;
+                    int imRow           = hOffset + h*stride;
+                    int imCol           = wOffset + w*stride;
 
-                int colIndex        = (ch*heightCol + h)*widthCol + w;
+                    int colIndex        = (ch*heightCol + h)*widthCol + w;
 
-                output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                    output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
 
+                }
             }
         }
     }
+    else
+    {
+        for (int ch = 0; ch < chCols; ++ch)
+        {
+
+            int wOffset = ch % kSize;
+            int hOffset = (ch / kSize) % kSize;
+            int chOff   = ch / kSize / kSize;
+
+            for (int h = 0; h < heightCol; ++h)
+            {
+                for (int w = 0; w < widthCol; ++w)
+                {
+
+                    int imRow           = hOffset + h*stride;
+                    int imCol           = wOffset + w*stride;
+
+                    int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                    output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+
+                }
+            }
+        }
+    }
+
 }
 
 void Gemm::cpuCol2Im(float * const &input, const int &channelNum, const int &height, const int &width, const int &kSizeX, const int &kSizeY,
@@ -147,62 +176,117 @@ void Gemm::cpuIm2colEx(float *input, const int &channelNum, const int &height, c
     {
 NEXT:        
 
+        uint64_t dataLen   = kernelH*kernelW*outputH*outputW;
         for (int channel = 0 ; channel++<channelNum; input += channelSize) 
 
         {
-#ifdef USE_OMP
-            uint64_t dataLen   = kernelH*kernelW*outputH*outputW;
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int kernelRow = 0; kernelRow < kernelH; kernelRow++)   
-
+            if(dataLen > MIN_OMP_DATA)
             {
-                for (int kernelCol = 0; kernelCol < kernelW; kernelCol++) 
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int kernelRow = 0; kernelRow < kernelH; kernelRow++)   
 
                 {
+                    for (int kernelCol = 0; kernelCol < kernelW; kernelCol++) 
 
-                    int inputRow = -padH + kernelRow * dilationH;
-
-                    for (int outputRow = 0; outputRow < outputH; ++outputRow)
                     {
-                        if (!is_a_ge_zero_and_a_lt_b(inputRow + outputRow*strideH, height)) 
 
+                        int inputRow = -padH + kernelRow * dilationH;
+
+                        for (int outputRow = 0; outputRow < outputH; ++outputRow)
                         {
-                            for (int outputCol = 0; outputCol < outputW; ++outputCol) 
+                            if (!is_a_ge_zero_and_a_lt_b(inputRow + outputRow*strideH, height)) 
 
                             {
-                                output[ (channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
-                                        kernelCol*outputH*outputW + outputRow*outputW + outputCol] = 0;
-                            }
-                        }
-                        else
-                        {
-                            int inputCol = -padW + kernelCol * dilationW; 
-
-                            for (int outputCol = 0 ; outputCol<outputW; ++outputCol)
-                            {
-                                if (is_a_ge_zero_and_a_lt_b(inputCol + strideW*outputCol, width)) 
+                                for (int outputCol = 0; outputCol < outputW; ++outputCol) 
 
                                 {
                                     output[ (channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
-                                            kernelCol*outputH*outputW + outputRow*outputW + outputCol]
-                                            = input[(inputRow + outputRow*strideH) * width + inputCol + strideW*outputCol]; 
-
+                                            kernelCol*outputH*outputW + outputRow*outputW + outputCol] = 0;
                                 }
-                                else    
+                            }
+                            else
+                            {
+                                int inputCol = -padW + kernelCol * dilationW; 
 
+                                for (int outputCol = 0 ; outputCol<outputW; ++outputCol)
                                 {
-                                    output[(channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
-                                            kernelCol*outputH*outputW + outputRow*outputW + outputCol] = 0; 
+                                    if (is_a_ge_zero_and_a_lt_b(inputCol + strideW*outputCol, width)) 
 
+                                    {
+                                        output[ (channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
+                                                kernelCol*outputH*outputW + outputRow*outputW + outputCol]
+                                                = input[(inputRow + outputRow*strideH) * width + inputCol + strideW*outputCol]; 
+
+                                    }
+                                    else    
+
+                                    {
+                                        output[(channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
+                                                kernelCol*outputH*outputW + outputRow*outputW + outputCol] = 0; 
+
+                                    }
                                 }
                             }
                         }
-                    }
 
+                    }
                 }
             }
+            else
+            {
+                for (int kernelRow = 0; kernelRow < kernelH; kernelRow++)   
+
+                {
+                    for (int kernelCol = 0; kernelCol < kernelW; kernelCol++) 
+
+                    {
+
+                        int inputRow = -padH + kernelRow * dilationH;
+
+                        for (int outputRow = 0; outputRow < outputH; ++outputRow)
+                        {
+                            if (!is_a_ge_zero_and_a_lt_b(inputRow + outputRow*strideH, height)) 
+
+                            {
+                                for (int outputCol = 0; outputCol < outputW; ++outputCol) 
+
+                                {
+                                    output[ (channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
+                                            kernelCol*outputH*outputW + outputRow*outputW + outputCol] = 0;
+                                }
+                            }
+                            else
+                            {
+                                int inputCol = -padW + kernelCol * dilationW; 
+
+                                for (int outputCol = 0 ; outputCol<outputW; ++outputCol)
+                                {
+                                    if (is_a_ge_zero_and_a_lt_b(inputCol + strideW*outputCol, width)) 
+
+                                    {
+                                        output[ (channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
+                                                kernelCol*outputH*outputW + outputRow*outputW + outputCol]
+                                                = input[(inputRow + outputRow*strideH) * width + inputCol + strideW*outputCol]; 
+
+                                    }
+                                    else    
+
+                                    {
+                                        output[(channel-1)*kernelH*kernelW*outputH*outputW + kernelRow *kernelW*outputH*outputW +
+                                                kernelCol*outputH*outputW + outputRow*outputW + outputCol] = 0; 
+
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+            }
+
         }
     }
 }
@@ -273,105 +357,206 @@ void Gemm::cpuIm2colWithAvx(float * const &input, const int &channelNum, const i
 
         if(heightCol == height && widthCol == width && stride == 1 && padding == 1)
         {
-#ifdef USE_OMP
             uint64_t dataLen   = chCols*(heightCol - padding)*(widthCol - padding - 8);
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int ch = 0; ch < chCols; ++ch)
+            if(dataLen > MIN_OMP_DATA)
             {
-                int h       = 0;
-                int w       = 0;
-                int wOffset = ch % kSize;
-                int hOffset = (ch / kSize) % kSize;
-                int chOff   = ch / kSize / kSize;
-
-                for (h = padding; h < heightCol - padding; ++h)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int ch = 0; ch < chCols; ++ch)
                 {
-                    for (w = padding; w < widthCol - padding - 8; w+=8)
+                    int h       = 0;
+                    int w       = 0;
+                    int wOffset = ch % kSize;
+                    int hOffset = (ch / kSize) % kSize;
+                    int chOff   = ch / kSize / kSize;
+
+                    for (h = padding; h < heightCol - padding; ++h)
                     {
+                        for (w = padding; w < widthCol - padding - 8; w+=8)
+                        {
 
-                        int imRow           = hOffset + h - padding;
-                        int imCol           = wOffset + w - padding;
+                            int imRow           = hOffset + h - padding;
+                            int imCol           = wOffset + w - padding;
 
-                        int colIndex        = (ch*heightCol + h)*widthCol + w;
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
 
-                        __m256 src256       = _mm256_loadu_ps(static_cast<float*>((&input[imCol + width*(imRow + heightCol * chOff)])));
+                            __m256 src256       = _mm256_loadu_ps(static_cast<float*>((&input[imCol + width*(imRow + heightCol * chOff)])));
 
-                        _mm256_storeu_ps(&output[colIndex], src256);
+                            _mm256_storeu_ps(&output[colIndex], src256);
+                        }
+
+                        for (; w < widthCol - padding; ++w)
+                        {
+                            int imRow           = hOffset + h - padding;
+                            int imCol           = wOffset + w - padding;
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            output[colIndex]    = input[imCol + width*(imRow + heightCol * chOff)];
+                        }
                     }
 
-                    for (; w < widthCol - padding; ++w)
-                    {
-                        int imRow           = hOffset + h - padding;
-                        int imCol           = wOffset + w - padding;
-                        int colIndex        = (ch*heightCol + h)*widthCol + w;
+                    {   
 
-                        output[colIndex]    = input[imCol + width*(imRow + heightCol * chOff)];
+                        w = 0;
+                        for (h = 0; h < heightCol; ++h)
+                        {
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                        }
                     }
+
+                    {   
+
+                        w = widthCol - 1;
+                        for (h = 0; h < heightCol; ++h)
+                        {
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                        }
+                    }
+
+                    {
+
+                        h = 0;
+                        for (w = 0; w < widthCol; ++w)
+                        {
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                        }
+                    }
+
+                    {
+
+                        h = heightCol - 1;
+                        for (w = 0; w < widthCol; ++w)
+                        {
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                        }
+                    }
+
                 }
-
-                {   
-
-                    w = 0;
-                    for (h = 0; h < heightCol; ++h)
-                    {
-
-                        int imRow           = hOffset + h*stride;
-                        int imCol           = wOffset + w*stride;
-
-                        int colIndex        = (ch*heightCol + h)*widthCol + w;
-
-                        output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
-                    }
-                }
-
-                {   
-
-                    w = widthCol - 1;
-                    for (h = 0; h < heightCol; ++h)
-                    {
-
-                        int imRow           = hOffset + h*stride;
-                        int imCol           = wOffset + w*stride;
-
-                        int colIndex        = (ch*heightCol + h)*widthCol + w;
-
-                        output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
-                    }
-                }
-
+            }
+            else
+            {
+                for (int ch = 0; ch < chCols; ++ch)
                 {
+                    int h       = 0;
+                    int w       = 0;
+                    int wOffset = ch % kSize;
+                    int hOffset = (ch / kSize) % kSize;
+                    int chOff   = ch / kSize / kSize;
 
-                    h = 0;
-                    for (w = 0; w < widthCol; ++w)
+                    for (h = padding; h < heightCol - padding; ++h)
+                    {
+                        for (w = padding; w < widthCol - padding - 8; w+=8)
+                        {
+
+                            int imRow           = hOffset + h - padding;
+                            int imCol           = wOffset + w - padding;
+
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            __m256 src256       = _mm256_loadu_ps(static_cast<float*>((&input[imCol + width*(imRow + heightCol * chOff)])));
+
+                            _mm256_storeu_ps(&output[colIndex], src256);
+                        }
+
+                        for (; w < widthCol - padding; ++w)
+                        {
+                            int imRow           = hOffset + h - padding;
+                            int imCol           = wOffset + w - padding;
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            output[colIndex]    = input[imCol + width*(imRow + heightCol * chOff)];
+                        }
+                    }
+
+                    {   
+
+                        w = 0;
+                        for (h = 0; h < heightCol; ++h)
+                        {
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                        }
+                    }
+
+                    {   
+
+                        w = widthCol - 1;
+                        for (h = 0; h < heightCol; ++h)
+                        {
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                        }
+                    }
+
                     {
 
-                        int imRow           = hOffset + h*stride;
-                        int imCol           = wOffset + w*stride;
+                        h = 0;
+                        for (w = 0; w < widthCol; ++w)
+                        {
 
-                        int colIndex        = (ch*heightCol + h)*widthCol + w;
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
 
-                        output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                        }
                     }
-                }
 
-                {
-
-                    h = heightCol - 1;
-                    for (w = 0; w < widthCol; ++w)
                     {
 
-                        int imRow           = hOffset + h*stride;
-                        int imCol           = wOffset + w*stride;
+                        h = heightCol - 1;
+                        for (w = 0; w < widthCol; ++w)
+                        {
 
-                        int colIndex        = (ch*heightCol + h)*widthCol + w;
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
 
-                        output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                            int colIndex        = (ch*heightCol + h)*widthCol + w;
+
+                            output[colIndex]    = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+                        }
                     }
+
                 }
 
             }
+
         }
     }
     else
@@ -404,132 +589,262 @@ void Gemm::cpuIm2colBinWithAvx(float * const &input, const int &channelNum, cons
                                                      static_cast<int>(0x80000000), static_cast<int>(0x80000000), static_cast<int>(0x80000000), static_cast<int>(0x80000000));
             __m256  floatZero256  = _mm256_set1_ps(0.00);
             int newLdb            = bitAlign;
-#ifdef USE_OMP
+
             uint64_t dataLen   = chCols*(heightCol - padding)*(widthCol - padding - 8);
-            uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-            for (int ch = 0; ch < chCols; ++ch)
+
+            if(dataLen > MIN_OMP_DATA)
             {
-                int h       = 0;
-                int w       = 0;
-                int wOffset = ch % kSize;
-                int hOffset = (ch / kSize) % kSize;
-                int chOff   = ch / kSize / kSize;
-
-                for (h = padding; h < heightCol - padding; ++h)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+                for (int ch = 0; ch < chCols; ++ch)
                 {
-                    for (w = padding; w < widthCol - padding - 8; w+=8)
+                    int h       = 0;
+                    int w       = 0;
+                    int wOffset = ch % kSize;
+                    int hOffset = (ch / kSize) % kSize;
+                    int chOff   = ch / kSize / kSize;
+
+                    for (h = padding; h < heightCol - padding; ++h)
                     {
-
-                        int imRow           = hOffset + h - padding;
-                        int imCol           = wOffset + w - padding;
-
-                        int colIndex        = ch*newLdb + h*widthCol + w;
-
-                        __m256 src256       = _mm256_loadu_ps(static_cast<float*>((&input[imCol + width*(imRow + heightCol * chOff)])));
-                        __m256 result256    = _mm256_cmp_ps(src256, floatZero256, _CMP_GT_OS);
-                        uint16_t mask       = _mm256_movemask_ps(result256); 
-
-                        uint16_t* dstPtr = (uint16_t*)&((uint8_t*)output)[colIndex / 8];
-                        *dstPtr |= (mask << (colIndex % 8));
-                    }
-
-                    for (; w < widthCol - padding; ++w)
-                    {
-                        int imRow           = hOffset + h - padding;
-                        int imCol           = wOffset + w - padding;
-                        int colIndex        = ch*newLdb + h*widthCol + w;
-
-                        float value         = input[imCol + width*(imRow + height*chOff)];
-                        if(value>0)
+                        for (w = padding; w < widthCol - padding - 8; w+=8)
                         {
 
-                            setBit((uint8_t*)output,colIndex);
+                            int imRow           = hOffset + h - padding;
+                            int imCol           = wOffset + w - padding;
+
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            __m256 src256       = _mm256_loadu_ps(static_cast<float*>((&input[imCol + width*(imRow + heightCol * chOff)])));
+                            __m256 result256    = _mm256_cmp_ps(src256, floatZero256, _CMP_GT_OS);
+                            uint16_t mask       = _mm256_movemask_ps(result256); 
+
+                            uint16_t* dstPtr = (uint16_t*)&((uint8_t*)output)[colIndex / 8];
+                            *dstPtr |= (mask << (colIndex % 8));
+                        }
+
+                        for (; w < widthCol - padding; ++w)
+                        {
+                            int imRow           = hOffset + h - padding;
+                            int imCol           = wOffset + w - padding;
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            float value         = input[imCol + width*(imRow + height*chOff)];
+                            if(value>0)
+                            {
+
+                                setBit((uint8_t*)output,colIndex);
+                            }
                         }
                     }
-                }
 
-                {   
+                    {   
 
-                    w = 0;
-                    for (h = 0; h < heightCol; ++h)
-                    {
-
-                        int imRow           = hOffset + h*stride;
-                        int imCol           = wOffset + w*stride;
-
-                        int colIndex        = ch*newLdb + h*widthCol + w;
-
-                        float value          = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
-
-                        if(value>0)
+                        w = 0;
+                        for (h = 0; h < heightCol; ++h)
                         {
-                            setBit((uint8_t*)output,colIndex);
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            float value          = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+
+                            if(value>0)
+                            {
+                                setBit((uint8_t*)output,colIndex);
+                            }
                         }
                     }
-                }
 
-                {   
+                    {   
 
-                    w = widthCol - 1;
-                    for (h = 0; h < heightCol; ++h)
-                    {
-
-                        int imRow           = hOffset + h*stride;
-                        int imCol           = wOffset + w*stride;
-
-                        int colIndex        = ch*newLdb + h*widthCol + w;
-
-                        float value         = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
-
-                        if(value>0)
+                        w = widthCol - 1;
+                        for (h = 0; h < heightCol; ++h)
                         {
-                            setBit((uint8_t*)output,colIndex);
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            float value         = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+
+                            if(value>0)
+                            {
+                                setBit((uint8_t*)output,colIndex);
+                            }
                         }
                     }
-                }
 
-                {
-
-                    h = 0;
-                    for (w = 0; w < widthCol; ++w)
                     {
 
-                        int imRow           = hOffset + h*stride;
-                        int imCol           = wOffset + w*stride;
-
-                        int colIndex        = ch*newLdb + h*widthCol + w;
-
-                        float value         = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
-
-                        if(value>0)
+                        h = 0;
+                        for (w = 0; w < widthCol; ++w)
                         {
-                            setBit((uint8_t*)output,colIndex);
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            float value         = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+
+                            if(value>0)
+                            {
+                                setBit((uint8_t*)output,colIndex);
+                            }
                         }
                     }
-                }
 
-                {
-
-                    h = heightCol - 1;
-                    for (w = 0; w < widthCol; ++w)
                     {
 
-                        int imRow           = hOffset + h*stride;
-                        int imCol           = wOffset + w*stride;
-
-                        int colIndex        = ch*newLdb + h*widthCol + w;
-
-                        float value         = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
-
-                        if(value>0)
+                        h = heightCol - 1;
+                        for (w = 0; w < widthCol; ++w)
                         {
-                            setBit((uint8_t*)output,colIndex);
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            float value         = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+
+                            if(value>0)
+                            {
+                                setBit((uint8_t*)output,colIndex);
+                            }
                         }
                     }
                 }
             }
+            else
+            {
+                for (int ch = 0; ch < chCols; ++ch)
+                {
+                    int h       = 0;
+                    int w       = 0;
+                    int wOffset = ch % kSize;
+                    int hOffset = (ch / kSize) % kSize;
+                    int chOff   = ch / kSize / kSize;
+
+                    for (h = padding; h < heightCol - padding; ++h)
+                    {
+                        for (w = padding; w < widthCol - padding - 8; w+=8)
+                        {
+
+                            int imRow           = hOffset + h - padding;
+                            int imCol           = wOffset + w - padding;
+
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            __m256 src256       = _mm256_loadu_ps(static_cast<float*>((&input[imCol + width*(imRow + heightCol * chOff)])));
+                            __m256 result256    = _mm256_cmp_ps(src256, floatZero256, _CMP_GT_OS);
+                            uint16_t mask       = _mm256_movemask_ps(result256); 
+
+                            uint16_t* dstPtr = (uint16_t*)&((uint8_t*)output)[colIndex / 8];
+                            *dstPtr |= (mask << (colIndex % 8));
+                        }
+
+                        for (; w < widthCol - padding; ++w)
+                        {
+                            int imRow           = hOffset + h - padding;
+                            int imCol           = wOffset + w - padding;
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            float value         = input[imCol + width*(imRow + height*chOff)];
+                            if(value>0)
+                            {
+
+                                setBit((uint8_t*)output,colIndex);
+                            }
+                        }
+                    }
+
+                    {   
+
+                        w = 0;
+                        for (h = 0; h < heightCol; ++h)
+                        {
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            float value          = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+
+                            if(value>0)
+                            {
+                                setBit((uint8_t*)output,colIndex);
+                            }
+                        }
+                    }
+
+                    {   
+
+                        w = widthCol - 1;
+                        for (h = 0; h < heightCol; ++h)
+                        {
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            float value         = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+
+                            if(value>0)
+                            {
+                                setBit((uint8_t*)output,colIndex);
+                            }
+                        }
+                    }
+
+                    {
+
+                        h = 0;
+                        for (w = 0; w < widthCol; ++w)
+                        {
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            float value         = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+
+                            if(value>0)
+                            {
+                                setBit((uint8_t*)output,colIndex);
+                            }
+                        }
+                    }
+
+                    {
+
+                        h = heightCol - 1;
+                        for (w = 0; w < widthCol; ++w)
+                        {
+
+                            int imRow           = hOffset + h*stride;
+                            int imCol           = wOffset + w*stride;
+
+                            int colIndex        = ch*newLdb + h*widthCol + w;
+
+                            float value         = img2ColGetPixel(input, height, width, imRow, imCol, chOff, padding);
+
+                            if(value>0)
+                            {
+                                setBit((uint8_t*)output,colIndex);
+                            }
+                        }
+                    }
+                }
+
+            }
+
         }
 
     }
@@ -766,42 +1081,81 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
 #ifdef USE_X86
     if(supportAvxAndFma)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = M*K*N;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < M; ++i)         
-
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int k = 0; k < K; ++k)     
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < M; ++i)         
 
             {
-                __m256 a256, b256, c256, result256;    
-
-                float A_PART =  ALPHA*A[i*lda + k];     
-
-                a256         =  _mm256_set1_ps(A_PART);
-                for (int j = 0; j < N - 8; j += 8)     
+                for (int k = 0; k < K; ++k)     
 
                 {
-                    b256 = _mm256_loadu_ps(&B[k*ldb + j]); 
+                    __m256 a256, b256, c256, result256;    
 
-                    c256 = _mm256_loadu_ps(&C[i*ldc + j]); 
+                    float A_PART =  ALPHA*A[i*lda + k];     
 
-                    result256 = _mm256_mul_ps(a256, b256);     
+                    a256         =  _mm256_set1_ps(A_PART);
+                    for (int j = 0; j < N - 8; j += 8)     
 
-                    result256 = _mm256_add_ps(result256, c256);
+                    {
+                        b256 = _mm256_loadu_ps(&B[k*ldb + j]); 
 
-                    _mm256_storeu_ps(&C[i*ldc + j], result256);
+                        c256 = _mm256_loadu_ps(&C[i*ldc + j]); 
+
+                        result256 = _mm256_mul_ps(a256, b256);     
+
+                        result256 = _mm256_add_ps(result256, c256);
+
+                        _mm256_storeu_ps(&C[i*ldc + j], result256);
+                    }
+
+                    int prevEnd = (N % 8 == 0) ? (N - 8) : (N / 8) * 8; 
+
+                    for (int j = prevEnd; j < N; ++j)   
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
                 }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < M; ++i)         
 
-                int prevEnd = (N % 8 == 0) ? (N - 8) : (N / 8) * 8; 
-
-                for (int j = prevEnd; j < N; ++j)   
+            {
+                for (int k = 0; k < K; ++k)     
 
                 {
-                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    __m256 a256, b256, c256, result256;    
+
+                    float A_PART =  ALPHA*A[i*lda + k];     
+
+                    a256         =  _mm256_set1_ps(A_PART);
+                    for (int j = 0; j < N - 8; j += 8)     
+
+                    {
+                        b256 = _mm256_loadu_ps(&B[k*ldb + j]); 
+
+                        c256 = _mm256_loadu_ps(&C[i*ldc + j]); 
+
+                        result256 = _mm256_mul_ps(a256, b256);     
+
+                        result256 = _mm256_add_ps(result256, c256);
+
+                        _mm256_storeu_ps(&C[i*ldc + j], result256);
+                    }
+
+                    int prevEnd = (N % 8 == 0) ? (N - 8) : (N / 8) * 8; 
+
+                    for (int j = prevEnd; j < N; ++j)   
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
                 }
             }
         }
@@ -809,26 +1163,47 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
     else
     {
 
-#ifdef USE_OMP
         uint64_t dataLen   = M*K*N;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < M; ++i)   
-
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int k = 0; k < K; ++k)     
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < M; ++i)   
 
             {
-                float A_PART =  ALPHA*A[i*lda + k];     
-
-                for (int j = 0; j < N; ++j)  
+                for (int k = 0; k < K; ++k)     
 
                 {
-                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    float A_PART =  ALPHA*A[i*lda + k];     
+
+                    for (int j = 0; j < N; ++j)  
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
                 }
             }
         }
+        else
+        {
+            for (int i = 0; i < M; ++i)   
+
+            {
+                for (int k = 0; k < K; ++k)     
+
+                {
+                    float A_PART =  ALPHA*A[i*lda + k];     
+
+                    for (int j = 0; j < N; ++j)  
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+        }
+
     }
 #endif
 
@@ -838,8 +1213,8 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
     (void) supportAvxAndFma;
 #ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
+
+#pragma omp parallel for num_threads(OMP_THREAD)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -878,8 +1253,8 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const float &ALPH
     (void) supportAvxAndFma;
 #ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
+
+#pragma omp parallel for num_threads(OMP_THREAD)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -907,69 +1282,130 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const double &ALP
 #ifdef USE_X86
     if(supportAvxAndFma)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = M*K*N;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < M; ++i)         
-
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int k = 0; k < K; ++k)     
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < M; ++i)         
 
             {
-                __m256d a256, b256, c256, result256;    
-
-                double A_PART =  ALPHA*A[i*lda + k];     
-
-                a256         =  _mm256_set1_pd(A_PART);
-                for (int j = 0; j < N - 4; j += 4)     
+                for (int k = 0; k < K; ++k)     
 
                 {
-                    b256 = _mm256_loadu_pd(&B[k*ldb + j]); 
+                    __m256d a256, b256, c256, result256;    
 
-                    c256 = _mm256_loadu_pd(&C[i*ldc + j]); 
+                    double A_PART =  ALPHA*A[i*lda + k];     
 
-                    result256 = _mm256_mul_pd(a256, b256);     
+                    a256         =  _mm256_set1_pd(A_PART);
+                    for (int j = 0; j < N - 4; j += 4)     
 
-                    result256 = _mm256_add_pd(result256, c256);
+                    {
+                        b256 = _mm256_loadu_pd(&B[k*ldb + j]); 
 
-                    _mm256_storeu_pd(&C[i*ldc + j], result256);
-                }
+                        c256 = _mm256_loadu_pd(&C[i*ldc + j]); 
 
-                int prevEnd = (N % 4 == 0) ? (N - 4) : (N / 4) * 4; 
+                        result256 = _mm256_mul_pd(a256, b256);     
 
-                for (int j = prevEnd; j < N; ++j)   
+                        result256 = _mm256_add_pd(result256, c256);
 
-                {
-                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                        _mm256_storeu_pd(&C[i*ldc + j], result256);
+                    }
+
+                    int prevEnd = (N % 4 == 0) ? (N - 4) : (N / 4) * 4; 
+
+                    for (int j = prevEnd; j < N; ++j)   
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
                 }
             }
+        }
+        else
+        {
+            for (int i = 0; i < M; ++i)         
+
+            {
+                for (int k = 0; k < K; ++k)     
+
+                {
+                    __m256d a256, b256, c256, result256;    
+
+                    double A_PART =  ALPHA*A[i*lda + k];     
+
+                    a256         =  _mm256_set1_pd(A_PART);
+                    for (int j = 0; j < N - 4; j += 4)     
+
+                    {
+                        b256 = _mm256_loadu_pd(&B[k*ldb + j]); 
+
+                        c256 = _mm256_loadu_pd(&C[i*ldc + j]); 
+
+                        result256 = _mm256_mul_pd(a256, b256);     
+
+                        result256 = _mm256_add_pd(result256, c256);
+
+                        _mm256_storeu_pd(&C[i*ldc + j], result256);
+                    }
+
+                    int prevEnd = (N % 4 == 0) ? (N - 4) : (N / 4) * 4; 
+
+                    for (int j = prevEnd; j < N; ++j)   
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+
         }
     }
     else
     {
 
-#ifdef USE_OMP
         uint64_t dataLen   = M*K*N;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < M; ++i)   
-
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int k = 0; k < K; ++k)     
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < M; ++i)   
 
             {
-                double A_PART =  ALPHA*A[i*lda + k];     
-
-                for (int j = 0; j < N; ++j)  
+                for (int k = 0; k < K; ++k)     
 
                 {
-                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    double A_PART =  ALPHA*A[i*lda + k];     
+
+                    for (int j = 0; j < N; ++j)  
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
                 }
             }
         }
+        else
+        {
+            for (int i = 0; i < M; ++i)   
+
+            {
+                for (int k = 0; k < K; ++k)     
+
+                {
+                    double A_PART =  ALPHA*A[i*lda + k];     
+
+                    for (int j = 0; j < N; ++j)  
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+        }
+
     }
 #endif
 
@@ -978,8 +1414,8 @@ void Gemm::cpuGemmNN(const int &M, const int &N, const int &K, const double &ALP
     (void) supportAvxAndFma;
 #ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
+
+#pragma omp parallel for num_threads(OMP_THREAD)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -1010,67 +1446,127 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPH
 
     if(supportAvxAndFma)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = M*K*N;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < M; ++i)         
-
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int k = 0; k < K; ++k)     
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < M; ++i)         
 
             {
-                __m256 a256, b256, c256, result256;    
-
-                float A_PART =  ALPHA*A[k*lda + i];     
-
-                a256         =  _mm256_set1_ps(A_PART);
-                for (int j = 0; j < N - 8; j += 8)     
+                for (int k = 0; k < K; ++k)     
 
                 {
-                    b256 = _mm256_loadu_ps(&B[k*ldb + j]); 
+                    __m256 a256, b256, c256, result256;    
 
-                    c256 = _mm256_loadu_ps(&C[i*ldc + j]); 
+                    float A_PART =  ALPHA*A[k*lda + i];     
 
-                    result256 = _mm256_mul_ps(a256, b256);     
+                    a256         =  _mm256_set1_ps(A_PART);
+                    for (int j = 0; j < N - 8; j += 8)     
 
-                    result256 = _mm256_add_ps(result256, c256);
+                    {
+                        b256 = _mm256_loadu_ps(&B[k*ldb + j]); 
 
-                    _mm256_storeu_ps(&C[i*ldc + j], result256);
-                }
-                int prevEnd = (N % 8 == 0) ? (N - 8) : (N / 8) * 8; 
+                        c256 = _mm256_loadu_ps(&C[i*ldc + j]); 
 
-                for (int j = prevEnd; j < N; ++j)   
+                        result256 = _mm256_mul_ps(a256, b256);     
 
-                {
-                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                        result256 = _mm256_add_ps(result256, c256);
+
+                        _mm256_storeu_ps(&C[i*ldc + j], result256);
+                    }
+                    int prevEnd = (N % 8 == 0) ? (N - 8) : (N / 8) * 8; 
+
+                    for (int j = prevEnd; j < N; ++j)   
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
                 }
             }
+        }
+        else
+        {
+            for (int i = 0; i < M; ++i)         
+
+            {
+                for (int k = 0; k < K; ++k)     
+
+                {
+                    __m256 a256, b256, c256, result256;    
+
+                    float A_PART =  ALPHA*A[k*lda + i];     
+
+                    a256         =  _mm256_set1_ps(A_PART);
+                    for (int j = 0; j < N - 8; j += 8)     
+
+                    {
+                        b256 = _mm256_loadu_ps(&B[k*ldb + j]); 
+
+                        c256 = _mm256_loadu_ps(&C[i*ldc + j]); 
+
+                        result256 = _mm256_mul_ps(a256, b256);     
+
+                        result256 = _mm256_add_ps(result256, c256);
+
+                        _mm256_storeu_ps(&C[i*ldc + j], result256);
+                    }
+                    int prevEnd = (N % 8 == 0) ? (N - 8) : (N / 8) * 8; 
+
+                    for (int j = prevEnd; j < N; ++j)   
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+
         }
     }
     else
     {
-#ifdef USE_OMP
         uint64_t dataLen   = M*K*N;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < M; ++i)   
-
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int k = 0; k < K; ++k)     
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < M; ++i)   
 
             {
-                float A_PART =  ALPHA*A[k*lda + i];     
-
-                for (int j = 0; j < N; ++j)  
+                for (int k = 0; k < K; ++k)     
 
                 {
-                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    float A_PART =  ALPHA*A[k*lda + i];     
+
+                    for (int j = 0; j < N; ++j)  
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
                 }
             }
         }
+        else
+        {
+            for (int i = 0; i < M; ++i)   
+
+            {
+                for (int k = 0; k < K; ++k)     
+
+                {
+                    float A_PART =  ALPHA*A[k*lda + i];     
+
+                    for (int j = 0; j < N; ++j)  
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+        }
+
     }
 #endif
 
@@ -1080,8 +1576,8 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPH
     (void) supportAvxAndFma;
 #ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
+
+#pragma omp parallel for num_threads(OMP_THREAD)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -1120,8 +1616,8 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const float &ALPH
     (void) supportAvxAndFma;
 #ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
+
+#pragma omp parallel for num_threads(OMP_THREAD)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -1150,67 +1646,128 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const double &ALP
 
     if(supportAvxAndFma)
     {
-#ifdef USE_OMP
         uint64_t dataLen   = M*K*N;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < M; ++i)         
-
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int k = 0; k < K; ++k)     
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < M; ++i)         
 
             {
-                __m256d a256, b256, c256, result256;    
-
-                double A_PART =  ALPHA*A[k*lda + i];     
-
-                a256         =  _mm256_set1_pd(A_PART);
-                for (int j = 0; j < N - 4; j += 4)     
+                for (int k = 0; k < K; ++k)     
 
                 {
-                    b256 = _mm256_loadu_pd(&B[k*ldb + j]); 
+                    __m256d a256, b256, c256, result256;    
 
-                    c256 = _mm256_loadu_pd(&C[i*ldc + j]); 
+                    double A_PART =  ALPHA*A[k*lda + i];     
 
-                    result256 = _mm256_mul_pd(a256, b256);     
+                    a256         =  _mm256_set1_pd(A_PART);
+                    for (int j = 0; j < N - 4; j += 4)     
 
-                    result256 = _mm256_add_pd(result256, c256);
+                    {
+                        b256 = _mm256_loadu_pd(&B[k*ldb + j]); 
 
-                    _mm256_storeu_pd(&C[i*ldc + j], result256);
-                }
-                int prevEnd = (N % 4 == 0) ? (N - 4) : (N / 4) * 4; 
+                        c256 = _mm256_loadu_pd(&C[i*ldc + j]); 
 
-                for (int j = prevEnd; j < N; ++j)   
+                        result256 = _mm256_mul_pd(a256, b256);     
 
-                {
-                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                        result256 = _mm256_add_pd(result256, c256);
+
+                        _mm256_storeu_pd(&C[i*ldc + j], result256);
+                    }
+                    int prevEnd = (N % 4 == 0) ? (N - 4) : (N / 4) * 4; 
+
+                    for (int j = prevEnd; j < N; ++j)   
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
                 }
             }
         }
+        else
+        {
+            for (int i = 0; i < M; ++i)         
+
+            {
+                for (int k = 0; k < K; ++k)     
+
+                {
+                    __m256d a256, b256, c256, result256;    
+
+                    double A_PART =  ALPHA*A[k*lda + i];     
+
+                    a256         =  _mm256_set1_pd(A_PART);
+                    for (int j = 0; j < N - 4; j += 4)     
+
+                    {
+                        b256 = _mm256_loadu_pd(&B[k*ldb + j]); 
+
+                        c256 = _mm256_loadu_pd(&C[i*ldc + j]); 
+
+                        result256 = _mm256_mul_pd(a256, b256);     
+
+                        result256 = _mm256_add_pd(result256, c256);
+
+                        _mm256_storeu_pd(&C[i*ldc + j], result256);
+                    }
+                    int prevEnd = (N % 4 == 0) ? (N - 4) : (N / 4) * 4; 
+
+                    for (int j = prevEnd; j < N; ++j)   
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+
+        }
+
     }
     else
     {
-#ifdef USE_OMP
         uint64_t dataLen   = M*K*N;
-        uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-        for (int i = 0; i < M; ++i)   
-
+        if(dataLen > MIN_OMP_DATA)
         {
-            for (int k = 0; k < K; ++k)     
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+            for (int i = 0; i < M; ++i)   
 
             {
-                double A_PART =  ALPHA*A[k*lda + i];     
-
-                for (int j = 0; j < N; ++j)  
+                for (int k = 0; k < K; ++k)     
 
                 {
-                    C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    double A_PART =  ALPHA*A[k*lda + i];     
+
+                    for (int j = 0; j < N; ++j)  
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
                 }
             }
         }
+        else
+        {
+            for (int i = 0; i < M; ++i)   
+
+            {
+                for (int k = 0; k < K; ++k)     
+
+                {
+                    double A_PART =  ALPHA*A[k*lda + i];     
+
+                    for (int j = 0; j < N; ++j)  
+
+                    {
+                        C[i*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+        }
+
     }
 #endif
 
@@ -1218,8 +1775,8 @@ void Gemm::cpuGemmTN(const int &M, const int &N, const int &K, const double &ALP
     (void) supportAvxAndFma;
 #ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
+
+#pragma omp parallel for num_threads(OMP_THREAD)
 #endif
     for (int i = 0; i < M; ++i)   
 
@@ -1247,50 +1804,90 @@ void Gemm::cpuGemmNT(const int &M, const int &N, const int &K, const float &ALPH
 {
 
     (void)supportAvxAndFma;
-#ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < M; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        for (int j = 0; j < N; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < M; ++i)
         {
-            float sum = 0;
-
-            for (int k = 0; k < K; ++k)
+            for (int j = 0; j < N; ++j)
             {
-                sum += ALPHA*A[i*lda + k]*B[j*ldb + k];
-            }
+                float sum = 0;
 
-            C[i*ldc + j] += sum;
+                for (int k = 0; k < K; ++k)
+                {
+                    sum += ALPHA*A[i*lda + k]*B[j*ldb + k];
+                }
+
+                C[i*ldc + j] += sum;
+            }
         }
     }
+    else
+    {
+        for (int i = 0; i < M; ++i)
+        {
+            for (int j = 0; j < N; ++j)
+            {
+                float sum = 0;
+
+                for (int k = 0; k < K; ++k)
+                {
+                    sum += ALPHA*A[i*lda + k]*B[j*ldb + k];
+                }
+
+                C[i*ldc + j] += sum;
+            }
+        }
+    }
+
 }
 
 void Gemm::cpuGemmNT(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc, const bool &supportAvxAndFma)
 {
 
     (void)supportAvxAndFma;
-#ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < M; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-        for (int j = 0; j < N; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < M; ++i)
         {
-            double sum = 0;
-
-            for (int k = 0; k < K; ++k)
+            for (int j = 0; j < N; ++j)
             {
-                sum += ALPHA*A[i*lda + k]*B[j*ldb + k];
-            }
+                double sum = 0;
 
-            C[i*ldc + j] += sum;
+                for (int k = 0; k < K; ++k)
+                {
+                    sum += ALPHA*A[i*lda + k]*B[j*ldb + k];
+                }
+
+                C[i*ldc + j] += sum;
+            }
         }
     }
+    else
+    {
+        for (int i = 0; i < M; ++i)
+        {
+            for (int j = 0; j < N; ++j)
+            {
+                double sum = 0;
+
+                for (int k = 0; k < K; ++k)
+                {
+                    sum += ALPHA*A[i*lda + k]*B[j*ldb + k];
+                }
+
+                C[i*ldc + j] += sum;
+            }
+        }
+    }
+
 }
 
 void Gemm::cpuGemmTT(const int &M, const int &N, const int &K, const float &ALPHA,
@@ -1301,48 +1898,87 @@ void Gemm::cpuGemmTT(const int &M, const int &N, const int &K, const float &ALPH
 {
 
     (void)supportAvxAndFma;
-#ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < M; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-
-        for (int j = 0; j < N; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < M; ++i)
         {
-            float sum = 0;
-            for (int k = 0; k < K; ++k)
-            {
-                sum += ALPHA*A[i + k*lda ]*B[k + j*ldb];
-            }
 
-            C[i*ldc + j] += sum;
+            for (int j = 0; j < N; ++j)
+            {
+                float sum = 0;
+                for (int k = 0; k < K; ++k)
+                {
+                    sum += ALPHA*A[i + k*lda ]*B[k + j*ldb];
+                }
+
+                C[i*ldc + j] += sum;
+            }
         }
     }
+    else
+    {
+        for (int i = 0; i < M; ++i)
+        {
+
+            for (int j = 0; j < N; ++j)
+            {
+                float sum = 0;
+                for (int k = 0; k < K; ++k)
+                {
+                    sum += ALPHA*A[i + k*lda ]*B[k + j*ldb];
+                }
+
+                C[i*ldc + j] += sum;
+            }
+        }
+    }
+
 }
 
 void Gemm::cpuGemmTT(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc, const bool &supportAvxAndFma)
 {
 
     (void)supportAvxAndFma;
-#ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < M; ++i)
+    if(dataLen > MIN_OMP_DATA)
     {
-
-        for (int j = 0; j < N; ++j)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < M; ++i)
         {
-            double sum = 0;
-            for (int k = 0; k < K; ++k)
-            {
-                sum += ALPHA*A[i + k*lda ]*B[k + j*ldb];
-            }
 
-            C[i*ldc + j] += sum;
+            for (int j = 0; j < N; ++j)
+            {
+                double sum = 0;
+                for (int k = 0; k < K; ++k)
+                {
+                    sum += ALPHA*A[i + k*lda ]*B[k + j*ldb];
+                }
+
+                C[i*ldc + j] += sum;
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < M; ++i)
+        {
+
+            for (int j = 0; j < N; ++j)
+            {
+                double sum = 0;
+                for (int k = 0; k < K; ++k)
+                {
+                    sum += ALPHA*A[i + k*lda ]*B[k + j*ldb];
+                }
+
+                C[i*ldc + j] += sum;
+            }
         }
     }
 }
@@ -1384,110 +2020,216 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
 {
 #ifdef USE_X86
 
-#ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < (M / TILE_F32_M)*TILE_F32_M; i += TILE_F32_M)
+    if(dataLen > MIN_OMP_DATA)
     {
-        for (int k = 0; k < (K / TILE_F32_K)*TILE_F32_K; k += TILE_F32_K)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < (M / TILE_F32_M)*TILE_F32_M; i += TILE_F32_M)
         {
-            for (int j = 0; j < (N / TILE_F32_N)*TILE_F32_N; j += TILE_F32_N)
+            for (int k = 0; k < (K / TILE_F32_K)*TILE_F32_K; k += TILE_F32_K)
             {
-
-                __m256 result256;
-                __m256 a256_0, b256_0;    
-
-                __m256 a256_1, b256_1;    
-
-                __m256 a256_2;
-
-                __m256 a256_3;
-
-                __m256 c256_0, c256_1, c256_2, c256_3;
-                __m256 c256_4, c256_5, c256_6, c256_7;
-
-                c256_0 = _mm256_loadu_ps(&C[(0 + i)*ldc + (0 + j)]);
-                c256_1 = _mm256_loadu_ps(&C[(1 + i)*ldc + (0 + j)]);
-                c256_2 = _mm256_loadu_ps(&C[(0 + i)*ldc + (8 + j)]);
-                c256_3 = _mm256_loadu_ps(&C[(1 + i)*ldc + (8 + j)]);
-
-                c256_4 = _mm256_loadu_ps(&C[(2 + i)*ldc + (0 + j)]);
-                c256_5 = _mm256_loadu_ps(&C[(3 + i)*ldc + (0 + j)]);
-                c256_6 = _mm256_loadu_ps(&C[(2 + i)*ldc + (8 + j)]);
-                c256_7 = _mm256_loadu_ps(&C[(3 + i)*ldc + (8 + j)]);
-
-                for (int k_d = 0; k_d < (TILE_F32_K); ++k_d)
+                for (int j = 0; j < (N / TILE_F32_N)*TILE_F32_N; j += TILE_F32_N)
                 {
-                    a256_0 = _mm256_set1_ps(ALPHA*A[(0 + i)*lda + (k_d + k)]);
-                    a256_1 = _mm256_set1_ps(ALPHA*A[(1 + i)*lda + (k_d + k)]);
 
-                    a256_2 = _mm256_set1_ps(ALPHA*A[(2 + i)*lda + (k_d + k)]);
-                    a256_3 = _mm256_set1_ps(ALPHA*A[(3 + i)*lda + (k_d + k)]);
+                    __m256 result256;
+                    __m256 a256_0, b256_0;    
 
-                    b256_0 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (0 + j)]);
-                    b256_1 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (8 + j)]);
+                    __m256 a256_1, b256_1;    
 
-                    result256 = _mm256_mul_ps(a256_0, b256_0);
-                    c256_0 = _mm256_add_ps(result256, c256_0);
+                    __m256 a256_2;
 
-                    result256 = _mm256_mul_ps(a256_1, b256_0);
-                    c256_1 = _mm256_add_ps(result256, c256_1);
+                    __m256 a256_3;
 
-                    result256 = _mm256_mul_ps(a256_0, b256_1);
-                    c256_2 = _mm256_add_ps(result256, c256_2);
+                    __m256 c256_0, c256_1, c256_2, c256_3;
+                    __m256 c256_4, c256_5, c256_6, c256_7;
 
-                    result256 = _mm256_mul_ps(a256_1, b256_1);
-                    c256_3 = _mm256_add_ps(result256, c256_3);
+                    c256_0 = _mm256_loadu_ps(&C[(0 + i)*ldc + (0 + j)]);
+                    c256_1 = _mm256_loadu_ps(&C[(1 + i)*ldc + (0 + j)]);
+                    c256_2 = _mm256_loadu_ps(&C[(0 + i)*ldc + (8 + j)]);
+                    c256_3 = _mm256_loadu_ps(&C[(1 + i)*ldc + (8 + j)]);
 
-                    result256 = _mm256_mul_ps(a256_2, b256_0);
-                    c256_4 = _mm256_add_ps(result256, c256_4);
+                    c256_4 = _mm256_loadu_ps(&C[(2 + i)*ldc + (0 + j)]);
+                    c256_5 = _mm256_loadu_ps(&C[(3 + i)*ldc + (0 + j)]);
+                    c256_6 = _mm256_loadu_ps(&C[(2 + i)*ldc + (8 + j)]);
+                    c256_7 = _mm256_loadu_ps(&C[(3 + i)*ldc + (8 + j)]);
 
-                    result256 = _mm256_mul_ps(a256_3, b256_0);
-                    c256_5 = _mm256_add_ps(result256, c256_5);
+                    for (int k_d = 0; k_d < (TILE_F32_K); ++k_d)
+                    {
+                        a256_0 = _mm256_set1_ps(ALPHA*A[(0 + i)*lda + (k_d + k)]);
+                        a256_1 = _mm256_set1_ps(ALPHA*A[(1 + i)*lda + (k_d + k)]);
 
-                    result256 = _mm256_mul_ps(a256_2, b256_1);
-                    c256_6 = _mm256_add_ps(result256, c256_6);
+                        a256_2 = _mm256_set1_ps(ALPHA*A[(2 + i)*lda + (k_d + k)]);
+                        a256_3 = _mm256_set1_ps(ALPHA*A[(3 + i)*lda + (k_d + k)]);
 
-                    result256 = _mm256_mul_ps(a256_3, b256_1);
-                    c256_7 = _mm256_add_ps(result256, c256_7);
+                        b256_0 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (0 + j)]);
+                        b256_1 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (8 + j)]);
+
+                        result256 = _mm256_mul_ps(a256_0, b256_0);
+                        c256_0 = _mm256_add_ps(result256, c256_0);
+
+                        result256 = _mm256_mul_ps(a256_1, b256_0);
+                        c256_1 = _mm256_add_ps(result256, c256_1);
+
+                        result256 = _mm256_mul_ps(a256_0, b256_1);
+                        c256_2 = _mm256_add_ps(result256, c256_2);
+
+                        result256 = _mm256_mul_ps(a256_1, b256_1);
+                        c256_3 = _mm256_add_ps(result256, c256_3);
+
+                        result256 = _mm256_mul_ps(a256_2, b256_0);
+                        c256_4 = _mm256_add_ps(result256, c256_4);
+
+                        result256 = _mm256_mul_ps(a256_3, b256_0);
+                        c256_5 = _mm256_add_ps(result256, c256_5);
+
+                        result256 = _mm256_mul_ps(a256_2, b256_1);
+                        c256_6 = _mm256_add_ps(result256, c256_6);
+
+                        result256 = _mm256_mul_ps(a256_3, b256_1);
+                        c256_7 = _mm256_add_ps(result256, c256_7);
+                    }
+                    _mm256_storeu_ps(&C[(0 + i)*ldc + (0 + j)], c256_0);
+                    _mm256_storeu_ps(&C[(1 + i)*ldc + (0 + j)], c256_1);
+                    _mm256_storeu_ps(&C[(0 + i)*ldc + (8 + j)], c256_2);
+                    _mm256_storeu_ps(&C[(1 + i)*ldc + (8 + j)], c256_3);
+
+                    _mm256_storeu_ps(&C[(2 + i)*ldc + (0 + j)], c256_4);
+                    _mm256_storeu_ps(&C[(3 + i)*ldc + (0 + j)], c256_5);
+                    _mm256_storeu_ps(&C[(2 + i)*ldc + (8 + j)], c256_6);
+                    _mm256_storeu_ps(&C[(3 + i)*ldc + (8 + j)], c256_7);
                 }
-                _mm256_storeu_ps(&C[(0 + i)*ldc + (0 + j)], c256_0);
-                _mm256_storeu_ps(&C[(1 + i)*ldc + (0 + j)], c256_1);
-                _mm256_storeu_ps(&C[(0 + i)*ldc + (8 + j)], c256_2);
-                _mm256_storeu_ps(&C[(1 + i)*ldc + (8 + j)], c256_3);
 
-                _mm256_storeu_ps(&C[(2 + i)*ldc + (0 + j)], c256_4);
-                _mm256_storeu_ps(&C[(3 + i)*ldc + (0 + j)], c256_5);
-                _mm256_storeu_ps(&C[(2 + i)*ldc + (8 + j)], c256_6);
-                _mm256_storeu_ps(&C[(3 + i)*ldc + (8 + j)], c256_7);
+                for (int j = (N / TILE_F32_N)*TILE_F32_N; j < N; ++j)
+                {
+                    for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
+                    {
+                        for (int k_d = k; k_d < (k + TILE_F32_K); ++k_d)
+                        {
+                            float A_PART = ALPHA*A[i_d*lda + k_d];
+                            C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        }
+                    }
+                }
             }
 
-            for (int j = (N / TILE_F32_N)*TILE_F32_N; j < N; ++j)
+            for (int k = (K / TILE_F32_K)*TILE_F32_K; k < K; ++k)
             {
                 for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
                 {
-                    for (int k_d = k; k_d < (k + TILE_F32_K); ++k_d)
+                    float A_PART = ALPHA*A[i_d*lda + k];
+                    for (int j = 0; j < N; ++j)
                     {
-                        float A_PART = ALPHA*A[i_d*lda + k_d];
-                        C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        C[i_d*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < (M / TILE_F32_M)*TILE_F32_M; i += TILE_F32_M)
+        {
+            for (int k = 0; k < (K / TILE_F32_K)*TILE_F32_K; k += TILE_F32_K)
+            {
+                for (int j = 0; j < (N / TILE_F32_N)*TILE_F32_N; j += TILE_F32_N)
+                {
+
+                    __m256 result256;
+                    __m256 a256_0, b256_0;    
+
+                    __m256 a256_1, b256_1;    
+
+                    __m256 a256_2;
+
+                    __m256 a256_3;
+
+                    __m256 c256_0, c256_1, c256_2, c256_3;
+                    __m256 c256_4, c256_5, c256_6, c256_7;
+
+                    c256_0 = _mm256_loadu_ps(&C[(0 + i)*ldc + (0 + j)]);
+                    c256_1 = _mm256_loadu_ps(&C[(1 + i)*ldc + (0 + j)]);
+                    c256_2 = _mm256_loadu_ps(&C[(0 + i)*ldc + (8 + j)]);
+                    c256_3 = _mm256_loadu_ps(&C[(1 + i)*ldc + (8 + j)]);
+
+                    c256_4 = _mm256_loadu_ps(&C[(2 + i)*ldc + (0 + j)]);
+                    c256_5 = _mm256_loadu_ps(&C[(3 + i)*ldc + (0 + j)]);
+                    c256_6 = _mm256_loadu_ps(&C[(2 + i)*ldc + (8 + j)]);
+                    c256_7 = _mm256_loadu_ps(&C[(3 + i)*ldc + (8 + j)]);
+
+                    for (int k_d = 0; k_d < (TILE_F32_K); ++k_d)
+                    {
+                        a256_0 = _mm256_set1_ps(ALPHA*A[(0 + i)*lda + (k_d + k)]);
+                        a256_1 = _mm256_set1_ps(ALPHA*A[(1 + i)*lda + (k_d + k)]);
+
+                        a256_2 = _mm256_set1_ps(ALPHA*A[(2 + i)*lda + (k_d + k)]);
+                        a256_3 = _mm256_set1_ps(ALPHA*A[(3 + i)*lda + (k_d + k)]);
+
+                        b256_0 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (0 + j)]);
+                        b256_1 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (8 + j)]);
+
+                        result256 = _mm256_mul_ps(a256_0, b256_0);
+                        c256_0 = _mm256_add_ps(result256, c256_0);
+
+                        result256 = _mm256_mul_ps(a256_1, b256_0);
+                        c256_1 = _mm256_add_ps(result256, c256_1);
+
+                        result256 = _mm256_mul_ps(a256_0, b256_1);
+                        c256_2 = _mm256_add_ps(result256, c256_2);
+
+                        result256 = _mm256_mul_ps(a256_1, b256_1);
+                        c256_3 = _mm256_add_ps(result256, c256_3);
+
+                        result256 = _mm256_mul_ps(a256_2, b256_0);
+                        c256_4 = _mm256_add_ps(result256, c256_4);
+
+                        result256 = _mm256_mul_ps(a256_3, b256_0);
+                        c256_5 = _mm256_add_ps(result256, c256_5);
+
+                        result256 = _mm256_mul_ps(a256_2, b256_1);
+                        c256_6 = _mm256_add_ps(result256, c256_6);
+
+                        result256 = _mm256_mul_ps(a256_3, b256_1);
+                        c256_7 = _mm256_add_ps(result256, c256_7);
+                    }
+                    _mm256_storeu_ps(&C[(0 + i)*ldc + (0 + j)], c256_0);
+                    _mm256_storeu_ps(&C[(1 + i)*ldc + (0 + j)], c256_1);
+                    _mm256_storeu_ps(&C[(0 + i)*ldc + (8 + j)], c256_2);
+                    _mm256_storeu_ps(&C[(1 + i)*ldc + (8 + j)], c256_3);
+
+                    _mm256_storeu_ps(&C[(2 + i)*ldc + (0 + j)], c256_4);
+                    _mm256_storeu_ps(&C[(3 + i)*ldc + (0 + j)], c256_5);
+                    _mm256_storeu_ps(&C[(2 + i)*ldc + (8 + j)], c256_6);
+                    _mm256_storeu_ps(&C[(3 + i)*ldc + (8 + j)], c256_7);
+                }
+
+                for (int j = (N / TILE_F32_N)*TILE_F32_N; j < N; ++j)
+                {
+                    for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
+                    {
+                        for (int k_d = k; k_d < (k + TILE_F32_K); ++k_d)
+                        {
+                            float A_PART = ALPHA*A[i_d*lda + k_d];
+                            C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        }
+                    }
+                }
+            }
+
+            for (int k = (K / TILE_F32_K)*TILE_F32_K; k < K; ++k)
+            {
+                for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
+                {
+                    float A_PART = ALPHA*A[i_d*lda + k];
+                    for (int j = 0; j < N; ++j)
+                    {
+                        C[i_d*ldc + j] += A_PART*B[k*ldb + j];
                     }
                 }
             }
         }
 
-        for (int k = (K / TILE_F32_K)*TILE_F32_K; k < K; ++k)
-        {
-            for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
-            {
-                float A_PART = ALPHA*A[i_d*lda + k];
-                for (int j = 0; j < N; ++j)
-                {
-                    C[i_d*ldc + j] += A_PART*B[k*ldb + j];
-                }
-            }
-        }
     }
 
     for (int i = (M / TILE_F32_M)*TILE_F32_M; i < M; ++i)
@@ -1521,110 +2263,216 @@ void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const float &
 void Gemm::cpuGemmNNFast(const int &M, const int &N, const int &K, const double &ALPHA, double * const &A, const int &lda, double * const &B, const int &ldb, double * const &C, const int &ldc)
 {
 #ifdef USE_X86
-#ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < (M / TILE_F64_M)*TILE_F64_M; i += TILE_F64_M)
+    if(dataLen > MIN_OMP_DATA)
     {
-        for (int k = 0; k < (K / TILE_F64_K)*TILE_F64_K; k += TILE_F64_K)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < (M / TILE_F64_M)*TILE_F64_M; i += TILE_F64_M)
         {
-            for (int j = 0; j < (N / TILE_F64_N)*TILE_F64_N; j += TILE_F64_N)
+            for (int k = 0; k < (K / TILE_F64_K)*TILE_F64_K; k += TILE_F64_K)
             {
-
-                __m256d result256;
-                __m256d a256_0, b256_0;    
-
-                __m256d a256_1, b256_1;    
-
-                __m256d a256_2;
-
-                __m256d a256_3;
-
-                __m256d c256_0, c256_1, c256_2, c256_3;
-                __m256d c256_4, c256_5, c256_6, c256_7;
-
-                c256_0 = _mm256_loadu_pd(&C[(0 + i)*ldc + (0 + j)]);
-                c256_1 = _mm256_loadu_pd(&C[(1 + i)*ldc + (0 + j)]);
-                c256_2 = _mm256_loadu_pd(&C[(0 + i)*ldc + (4 + j)]);
-                c256_3 = _mm256_loadu_pd(&C[(1 + i)*ldc + (4 + j)]);
-
-                c256_4 = _mm256_loadu_pd(&C[(2 + i)*ldc + (0 + j)]);
-                c256_5 = _mm256_loadu_pd(&C[(3 + i)*ldc + (0 + j)]);
-                c256_6 = _mm256_loadu_pd(&C[(2 + i)*ldc + (4 + j)]);
-                c256_7 = _mm256_loadu_pd(&C[(3 + i)*ldc + (4 + j)]);
-
-                for (int k_d = 0; k_d < (TILE_F64_K); ++k_d)
+                for (int j = 0; j < (N / TILE_F64_N)*TILE_F64_N; j += TILE_F64_N)
                 {
-                    a256_0 = _mm256_set1_pd(ALPHA*A[(0 + i)*lda + (k_d + k)]);
-                    a256_1 = _mm256_set1_pd(ALPHA*A[(1 + i)*lda + (k_d + k)]);
 
-                    a256_2 = _mm256_set1_pd(ALPHA*A[(2 + i)*lda + (k_d + k)]);
-                    a256_3 = _mm256_set1_pd(ALPHA*A[(3 + i)*lda + (k_d + k)]);
+                    __m256d result256;
+                    __m256d a256_0, b256_0;    
 
-                    b256_0 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (0 + j)]);
-                    b256_1 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (4 + j)]);
+                    __m256d a256_1, b256_1;    
 
-                    result256 = _mm256_mul_pd(a256_0, b256_0);
-                    c256_0 = _mm256_add_pd(result256, c256_0);
+                    __m256d a256_2;
 
-                    result256 = _mm256_mul_pd(a256_1, b256_0);
-                    c256_1 = _mm256_add_pd(result256, c256_1);
+                    __m256d a256_3;
 
-                    result256 = _mm256_mul_pd(a256_0, b256_1);
-                    c256_2 = _mm256_add_pd(result256, c256_2);
+                    __m256d c256_0, c256_1, c256_2, c256_3;
+                    __m256d c256_4, c256_5, c256_6, c256_7;
 
-                    result256 = _mm256_mul_pd(a256_1, b256_1);
-                    c256_3 = _mm256_add_pd(result256, c256_3);
+                    c256_0 = _mm256_loadu_pd(&C[(0 + i)*ldc + (0 + j)]);
+                    c256_1 = _mm256_loadu_pd(&C[(1 + i)*ldc + (0 + j)]);
+                    c256_2 = _mm256_loadu_pd(&C[(0 + i)*ldc + (4 + j)]);
+                    c256_3 = _mm256_loadu_pd(&C[(1 + i)*ldc + (4 + j)]);
 
-                    result256 = _mm256_mul_pd(a256_2, b256_0);
-                    c256_4 = _mm256_add_pd(result256, c256_4);
+                    c256_4 = _mm256_loadu_pd(&C[(2 + i)*ldc + (0 + j)]);
+                    c256_5 = _mm256_loadu_pd(&C[(3 + i)*ldc + (0 + j)]);
+                    c256_6 = _mm256_loadu_pd(&C[(2 + i)*ldc + (4 + j)]);
+                    c256_7 = _mm256_loadu_pd(&C[(3 + i)*ldc + (4 + j)]);
 
-                    result256 = _mm256_mul_pd(a256_3, b256_0);
-                    c256_5 = _mm256_add_pd(result256, c256_5);
+                    for (int k_d = 0; k_d < (TILE_F64_K); ++k_d)
+                    {
+                        a256_0 = _mm256_set1_pd(ALPHA*A[(0 + i)*lda + (k_d + k)]);
+                        a256_1 = _mm256_set1_pd(ALPHA*A[(1 + i)*lda + (k_d + k)]);
 
-                    result256 = _mm256_mul_pd(a256_2, b256_1);
-                    c256_6 = _mm256_add_pd(result256, c256_6);
+                        a256_2 = _mm256_set1_pd(ALPHA*A[(2 + i)*lda + (k_d + k)]);
+                        a256_3 = _mm256_set1_pd(ALPHA*A[(3 + i)*lda + (k_d + k)]);
 
-                    result256 = _mm256_mul_pd(a256_3, b256_1);
-                    c256_7 = _mm256_add_pd(result256, c256_7);
+                        b256_0 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (0 + j)]);
+                        b256_1 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (4 + j)]);
+
+                        result256 = _mm256_mul_pd(a256_0, b256_0);
+                        c256_0 = _mm256_add_pd(result256, c256_0);
+
+                        result256 = _mm256_mul_pd(a256_1, b256_0);
+                        c256_1 = _mm256_add_pd(result256, c256_1);
+
+                        result256 = _mm256_mul_pd(a256_0, b256_1);
+                        c256_2 = _mm256_add_pd(result256, c256_2);
+
+                        result256 = _mm256_mul_pd(a256_1, b256_1);
+                        c256_3 = _mm256_add_pd(result256, c256_3);
+
+                        result256 = _mm256_mul_pd(a256_2, b256_0);
+                        c256_4 = _mm256_add_pd(result256, c256_4);
+
+                        result256 = _mm256_mul_pd(a256_3, b256_0);
+                        c256_5 = _mm256_add_pd(result256, c256_5);
+
+                        result256 = _mm256_mul_pd(a256_2, b256_1);
+                        c256_6 = _mm256_add_pd(result256, c256_6);
+
+                        result256 = _mm256_mul_pd(a256_3, b256_1);
+                        c256_7 = _mm256_add_pd(result256, c256_7);
+                    }
+                    _mm256_storeu_pd(&C[(0 + i)*ldc + (0 + j)], c256_0);
+                    _mm256_storeu_pd(&C[(1 + i)*ldc + (0 + j)], c256_1);
+                    _mm256_storeu_pd(&C[(0 + i)*ldc + (4 + j)], c256_2);
+                    _mm256_storeu_pd(&C[(1 + i)*ldc + (4 + j)], c256_3);
+
+                    _mm256_storeu_pd(&C[(2 + i)*ldc + (0 + j)], c256_4);
+                    _mm256_storeu_pd(&C[(3 + i)*ldc + (0 + j)], c256_5);
+                    _mm256_storeu_pd(&C[(2 + i)*ldc + (4 + j)], c256_6);
+                    _mm256_storeu_pd(&C[(3 + i)*ldc + (4 + j)], c256_7);
                 }
-                _mm256_storeu_pd(&C[(0 + i)*ldc + (0 + j)], c256_0);
-                _mm256_storeu_pd(&C[(1 + i)*ldc + (0 + j)], c256_1);
-                _mm256_storeu_pd(&C[(0 + i)*ldc + (4 + j)], c256_2);
-                _mm256_storeu_pd(&C[(1 + i)*ldc + (4 + j)], c256_3);
 
-                _mm256_storeu_pd(&C[(2 + i)*ldc + (0 + j)], c256_4);
-                _mm256_storeu_pd(&C[(3 + i)*ldc + (0 + j)], c256_5);
-                _mm256_storeu_pd(&C[(2 + i)*ldc + (4 + j)], c256_6);
-                _mm256_storeu_pd(&C[(3 + i)*ldc + (4 + j)], c256_7);
+                for (int j = (N / TILE_F64_N)*TILE_F64_N; j < N; ++j)
+                {
+                    for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
+                    {
+                        for (int k_d = k; k_d < (k + TILE_F64_K); ++k_d)
+                        {
+                            double A_PART = ALPHA*A[i_d*lda + k_d];
+                            C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        }
+                    }
+                }
             }
 
-            for (int j = (N / TILE_F64_N)*TILE_F64_N; j < N; ++j)
+            for (int k = (K / TILE_F64_K)*TILE_F64_K; k < K; ++k)
             {
                 for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
                 {
-                    for (int k_d = k; k_d < (k + TILE_F64_K); ++k_d)
+                    double A_PART = ALPHA*A[i_d*lda + k];
+                    for (int j = 0; j < N; ++j)
                     {
-                        double A_PART = ALPHA*A[i_d*lda + k_d];
-                        C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        C[i_d*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < (M / TILE_F64_M)*TILE_F64_M; i += TILE_F64_M)
+        {
+            for (int k = 0; k < (K / TILE_F64_K)*TILE_F64_K; k += TILE_F64_K)
+            {
+                for (int j = 0; j < (N / TILE_F64_N)*TILE_F64_N; j += TILE_F64_N)
+                {
+
+                    __m256d result256;
+                    __m256d a256_0, b256_0;    
+
+                    __m256d a256_1, b256_1;    
+
+                    __m256d a256_2;
+
+                    __m256d a256_3;
+
+                    __m256d c256_0, c256_1, c256_2, c256_3;
+                    __m256d c256_4, c256_5, c256_6, c256_7;
+
+                    c256_0 = _mm256_loadu_pd(&C[(0 + i)*ldc + (0 + j)]);
+                    c256_1 = _mm256_loadu_pd(&C[(1 + i)*ldc + (0 + j)]);
+                    c256_2 = _mm256_loadu_pd(&C[(0 + i)*ldc + (4 + j)]);
+                    c256_3 = _mm256_loadu_pd(&C[(1 + i)*ldc + (4 + j)]);
+
+                    c256_4 = _mm256_loadu_pd(&C[(2 + i)*ldc + (0 + j)]);
+                    c256_5 = _mm256_loadu_pd(&C[(3 + i)*ldc + (0 + j)]);
+                    c256_6 = _mm256_loadu_pd(&C[(2 + i)*ldc + (4 + j)]);
+                    c256_7 = _mm256_loadu_pd(&C[(3 + i)*ldc + (4 + j)]);
+
+                    for (int k_d = 0; k_d < (TILE_F64_K); ++k_d)
+                    {
+                        a256_0 = _mm256_set1_pd(ALPHA*A[(0 + i)*lda + (k_d + k)]);
+                        a256_1 = _mm256_set1_pd(ALPHA*A[(1 + i)*lda + (k_d + k)]);
+
+                        a256_2 = _mm256_set1_pd(ALPHA*A[(2 + i)*lda + (k_d + k)]);
+                        a256_3 = _mm256_set1_pd(ALPHA*A[(3 + i)*lda + (k_d + k)]);
+
+                        b256_0 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (0 + j)]);
+                        b256_1 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (4 + j)]);
+
+                        result256 = _mm256_mul_pd(a256_0, b256_0);
+                        c256_0 = _mm256_add_pd(result256, c256_0);
+
+                        result256 = _mm256_mul_pd(a256_1, b256_0);
+                        c256_1 = _mm256_add_pd(result256, c256_1);
+
+                        result256 = _mm256_mul_pd(a256_0, b256_1);
+                        c256_2 = _mm256_add_pd(result256, c256_2);
+
+                        result256 = _mm256_mul_pd(a256_1, b256_1);
+                        c256_3 = _mm256_add_pd(result256, c256_3);
+
+                        result256 = _mm256_mul_pd(a256_2, b256_0);
+                        c256_4 = _mm256_add_pd(result256, c256_4);
+
+                        result256 = _mm256_mul_pd(a256_3, b256_0);
+                        c256_5 = _mm256_add_pd(result256, c256_5);
+
+                        result256 = _mm256_mul_pd(a256_2, b256_1);
+                        c256_6 = _mm256_add_pd(result256, c256_6);
+
+                        result256 = _mm256_mul_pd(a256_3, b256_1);
+                        c256_7 = _mm256_add_pd(result256, c256_7);
+                    }
+                    _mm256_storeu_pd(&C[(0 + i)*ldc + (0 + j)], c256_0);
+                    _mm256_storeu_pd(&C[(1 + i)*ldc + (0 + j)], c256_1);
+                    _mm256_storeu_pd(&C[(0 + i)*ldc + (4 + j)], c256_2);
+                    _mm256_storeu_pd(&C[(1 + i)*ldc + (4 + j)], c256_3);
+
+                    _mm256_storeu_pd(&C[(2 + i)*ldc + (0 + j)], c256_4);
+                    _mm256_storeu_pd(&C[(3 + i)*ldc + (0 + j)], c256_5);
+                    _mm256_storeu_pd(&C[(2 + i)*ldc + (4 + j)], c256_6);
+                    _mm256_storeu_pd(&C[(3 + i)*ldc + (4 + j)], c256_7);
+                }
+
+                for (int j = (N / TILE_F64_N)*TILE_F64_N; j < N; ++j)
+                {
+                    for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
+                    {
+                        for (int k_d = k; k_d < (k + TILE_F64_K); ++k_d)
+                        {
+                            double A_PART = ALPHA*A[i_d*lda + k_d];
+                            C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        }
+                    }
+                }
+            }
+
+            for (int k = (K / TILE_F64_K)*TILE_F64_K; k < K; ++k)
+            {
+                for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
+                {
+                    double A_PART = ALPHA*A[i_d*lda + k];
+                    for (int j = 0; j < N; ++j)
+                    {
+                        C[i_d*ldc + j] += A_PART*B[k*ldb + j];
                     }
                 }
             }
         }
 
-        for (int k = (K / TILE_F64_K)*TILE_F64_K; k < K; ++k)
-        {
-            for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
-            {
-                double A_PART = ALPHA*A[i_d*lda + k];
-                for (int j = 0; j < N; ++j)
-                {
-                    C[i_d*ldc + j] += A_PART*B[k*ldb + j];
-                }
-            }
-        }
     }
 
     for (int i = (M / TILE_F64_M)*TILE_F64_M; i < M; ++i)
@@ -1659,110 +2507,216 @@ void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const float &
 {
 #ifdef USE_X86
 
-#ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < (M / TILE_F32_M)*TILE_F32_M; i += TILE_F32_M)
+    if(dataLen > MIN_OMP_DATA)
     {
-        for (int k = 0; k < (K / TILE_F32_K)*TILE_F32_K; k += TILE_F32_K)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < (M / TILE_F32_M)*TILE_F32_M; i += TILE_F32_M)
         {
-            for (int j = 0; j < (N / TILE_F32_N)*TILE_F32_N; j += TILE_F32_N)
+            for (int k = 0; k < (K / TILE_F32_K)*TILE_F32_K; k += TILE_F32_K)
             {
-
-                __m256 result256;
-                __m256 a256_0, b256_0;    
-
-                __m256 a256_1, b256_1;    
-
-                __m256 a256_2;
-
-                __m256 a256_3;
-
-                __m256 c256_0, c256_1, c256_2, c256_3;
-                __m256 c256_4, c256_5, c256_6, c256_7;
-
-                c256_0 = _mm256_loadu_ps(&C[(0 + i)*ldc + (0 + j)]);
-                c256_1 = _mm256_loadu_ps(&C[(1 + i)*ldc + (0 + j)]);
-                c256_2 = _mm256_loadu_ps(&C[(0 + i)*ldc + (8 + j)]);
-                c256_3 = _mm256_loadu_ps(&C[(1 + i)*ldc + (8 + j)]);
-
-                c256_4 = _mm256_loadu_ps(&C[(2 + i)*ldc + (0 + j)]);
-                c256_5 = _mm256_loadu_ps(&C[(3 + i)*ldc + (0 + j)]);
-                c256_6 = _mm256_loadu_ps(&C[(2 + i)*ldc + (8 + j)]);
-                c256_7 = _mm256_loadu_ps(&C[(3 + i)*ldc + (8 + j)]);
-
-                for (int k_d = 0; k_d < (TILE_F32_K); ++k_d)
+                for (int j = 0; j < (N / TILE_F32_N)*TILE_F32_N; j += TILE_F32_N)
                 {
-                    a256_0 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (0 + i)]);
-                    a256_1 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (1 + i)]);
 
-                    a256_2 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (2 + i)]);
-                    a256_3 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (3 + i)]);
+                    __m256 result256;
+                    __m256 a256_0, b256_0;    
 
-                    b256_0 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (0 + j)]);
-                    b256_1 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (8 + j)]);
+                    __m256 a256_1, b256_1;    
 
-                    result256 = _mm256_mul_ps(a256_0, b256_0);
-                    c256_0 = _mm256_add_ps(result256, c256_0);
+                    __m256 a256_2;
 
-                    result256 = _mm256_mul_ps(a256_1, b256_0);
-                    c256_1 = _mm256_add_ps(result256, c256_1);
+                    __m256 a256_3;
 
-                    result256 = _mm256_mul_ps(a256_0, b256_1);
-                    c256_2 = _mm256_add_ps(result256, c256_2);
+                    __m256 c256_0, c256_1, c256_2, c256_3;
+                    __m256 c256_4, c256_5, c256_6, c256_7;
 
-                    result256 = _mm256_mul_ps(a256_1, b256_1);
-                    c256_3 = _mm256_add_ps(result256, c256_3);
+                    c256_0 = _mm256_loadu_ps(&C[(0 + i)*ldc + (0 + j)]);
+                    c256_1 = _mm256_loadu_ps(&C[(1 + i)*ldc + (0 + j)]);
+                    c256_2 = _mm256_loadu_ps(&C[(0 + i)*ldc + (8 + j)]);
+                    c256_3 = _mm256_loadu_ps(&C[(1 + i)*ldc + (8 + j)]);
 
-                    result256 = _mm256_mul_ps(a256_2, b256_0);
-                    c256_4 = _mm256_add_ps(result256, c256_4);
+                    c256_4 = _mm256_loadu_ps(&C[(2 + i)*ldc + (0 + j)]);
+                    c256_5 = _mm256_loadu_ps(&C[(3 + i)*ldc + (0 + j)]);
+                    c256_6 = _mm256_loadu_ps(&C[(2 + i)*ldc + (8 + j)]);
+                    c256_7 = _mm256_loadu_ps(&C[(3 + i)*ldc + (8 + j)]);
 
-                    result256 = _mm256_mul_ps(a256_3, b256_0);
-                    c256_5 = _mm256_add_ps(result256, c256_5);
+                    for (int k_d = 0; k_d < (TILE_F32_K); ++k_d)
+                    {
+                        a256_0 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (0 + i)]);
+                        a256_1 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (1 + i)]);
 
-                    result256 = _mm256_mul_ps(a256_2, b256_1);
-                    c256_6 = _mm256_add_ps(result256, c256_6);
+                        a256_2 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (2 + i)]);
+                        a256_3 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (3 + i)]);
 
-                    result256 = _mm256_mul_ps(a256_3, b256_1);
-                    c256_7 = _mm256_add_ps(result256, c256_7);
+                        b256_0 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (0 + j)]);
+                        b256_1 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (8 + j)]);
+
+                        result256 = _mm256_mul_ps(a256_0, b256_0);
+                        c256_0 = _mm256_add_ps(result256, c256_0);
+
+                        result256 = _mm256_mul_ps(a256_1, b256_0);
+                        c256_1 = _mm256_add_ps(result256, c256_1);
+
+                        result256 = _mm256_mul_ps(a256_0, b256_1);
+                        c256_2 = _mm256_add_ps(result256, c256_2);
+
+                        result256 = _mm256_mul_ps(a256_1, b256_1);
+                        c256_3 = _mm256_add_ps(result256, c256_3);
+
+                        result256 = _mm256_mul_ps(a256_2, b256_0);
+                        c256_4 = _mm256_add_ps(result256, c256_4);
+
+                        result256 = _mm256_mul_ps(a256_3, b256_0);
+                        c256_5 = _mm256_add_ps(result256, c256_5);
+
+                        result256 = _mm256_mul_ps(a256_2, b256_1);
+                        c256_6 = _mm256_add_ps(result256, c256_6);
+
+                        result256 = _mm256_mul_ps(a256_3, b256_1);
+                        c256_7 = _mm256_add_ps(result256, c256_7);
+                    }
+                    _mm256_storeu_ps(&C[(0 + i)*ldc + (0 + j)], c256_0);
+                    _mm256_storeu_ps(&C[(1 + i)*ldc + (0 + j)], c256_1);
+                    _mm256_storeu_ps(&C[(0 + i)*ldc + (8 + j)], c256_2);
+                    _mm256_storeu_ps(&C[(1 + i)*ldc + (8 + j)], c256_3);
+
+                    _mm256_storeu_ps(&C[(2 + i)*ldc + (0 + j)], c256_4);
+                    _mm256_storeu_ps(&C[(3 + i)*ldc + (0 + j)], c256_5);
+                    _mm256_storeu_ps(&C[(2 + i)*ldc + (8 + j)], c256_6);
+                    _mm256_storeu_ps(&C[(3 + i)*ldc + (8 + j)], c256_7);
                 }
-                _mm256_storeu_ps(&C[(0 + i)*ldc + (0 + j)], c256_0);
-                _mm256_storeu_ps(&C[(1 + i)*ldc + (0 + j)], c256_1);
-                _mm256_storeu_ps(&C[(0 + i)*ldc + (8 + j)], c256_2);
-                _mm256_storeu_ps(&C[(1 + i)*ldc + (8 + j)], c256_3);
 
-                _mm256_storeu_ps(&C[(2 + i)*ldc + (0 + j)], c256_4);
-                _mm256_storeu_ps(&C[(3 + i)*ldc + (0 + j)], c256_5);
-                _mm256_storeu_ps(&C[(2 + i)*ldc + (8 + j)], c256_6);
-                _mm256_storeu_ps(&C[(3 + i)*ldc + (8 + j)], c256_7);
+                for (int j = (N / TILE_F32_N)*TILE_F32_N; j < N; ++j)
+                {
+                    for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
+                    {
+                        for (int k_d = k; k_d < (k + TILE_F32_K); ++k_d)
+                        {
+                            float A_PART = ALPHA*A[k_d*lda + i_d];
+                            C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        }
+                    }
+                }
             }
 
-            for (int j = (N / TILE_F32_N)*TILE_F32_N; j < N; ++j)
+            for (int k = (K / TILE_F32_K)*TILE_F32_K; k < K; ++k)
             {
                 for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
                 {
-                    for (int k_d = k; k_d < (k + TILE_F32_K); ++k_d)
+                    float A_PART = ALPHA*A[k*lda + i_d];
+                    for (int j = 0; j < N; ++j)
                     {
-                        float A_PART = ALPHA*A[k_d*lda + i_d];
-                        C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        C[i_d*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < (M / TILE_F32_M)*TILE_F32_M; i += TILE_F32_M)
+        {
+            for (int k = 0; k < (K / TILE_F32_K)*TILE_F32_K; k += TILE_F32_K)
+            {
+                for (int j = 0; j < (N / TILE_F32_N)*TILE_F32_N; j += TILE_F32_N)
+                {
+
+                    __m256 result256;
+                    __m256 a256_0, b256_0;    
+
+                    __m256 a256_1, b256_1;    
+
+                    __m256 a256_2;
+
+                    __m256 a256_3;
+
+                    __m256 c256_0, c256_1, c256_2, c256_3;
+                    __m256 c256_4, c256_5, c256_6, c256_7;
+
+                    c256_0 = _mm256_loadu_ps(&C[(0 + i)*ldc + (0 + j)]);
+                    c256_1 = _mm256_loadu_ps(&C[(1 + i)*ldc + (0 + j)]);
+                    c256_2 = _mm256_loadu_ps(&C[(0 + i)*ldc + (8 + j)]);
+                    c256_3 = _mm256_loadu_ps(&C[(1 + i)*ldc + (8 + j)]);
+
+                    c256_4 = _mm256_loadu_ps(&C[(2 + i)*ldc + (0 + j)]);
+                    c256_5 = _mm256_loadu_ps(&C[(3 + i)*ldc + (0 + j)]);
+                    c256_6 = _mm256_loadu_ps(&C[(2 + i)*ldc + (8 + j)]);
+                    c256_7 = _mm256_loadu_ps(&C[(3 + i)*ldc + (8 + j)]);
+
+                    for (int k_d = 0; k_d < (TILE_F32_K); ++k_d)
+                    {
+                        a256_0 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (0 + i)]);
+                        a256_1 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (1 + i)]);
+
+                        a256_2 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (2 + i)]);
+                        a256_3 = _mm256_set1_ps(ALPHA*A[(k_d + k)*lda + (3 + i)]);
+
+                        b256_0 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (0 + j)]);
+                        b256_1 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (8 + j)]);
+
+                        result256 = _mm256_mul_ps(a256_0, b256_0);
+                        c256_0 = _mm256_add_ps(result256, c256_0);
+
+                        result256 = _mm256_mul_ps(a256_1, b256_0);
+                        c256_1 = _mm256_add_ps(result256, c256_1);
+
+                        result256 = _mm256_mul_ps(a256_0, b256_1);
+                        c256_2 = _mm256_add_ps(result256, c256_2);
+
+                        result256 = _mm256_mul_ps(a256_1, b256_1);
+                        c256_3 = _mm256_add_ps(result256, c256_3);
+
+                        result256 = _mm256_mul_ps(a256_2, b256_0);
+                        c256_4 = _mm256_add_ps(result256, c256_4);
+
+                        result256 = _mm256_mul_ps(a256_3, b256_0);
+                        c256_5 = _mm256_add_ps(result256, c256_5);
+
+                        result256 = _mm256_mul_ps(a256_2, b256_1);
+                        c256_6 = _mm256_add_ps(result256, c256_6);
+
+                        result256 = _mm256_mul_ps(a256_3, b256_1);
+                        c256_7 = _mm256_add_ps(result256, c256_7);
+                    }
+                    _mm256_storeu_ps(&C[(0 + i)*ldc + (0 + j)], c256_0);
+                    _mm256_storeu_ps(&C[(1 + i)*ldc + (0 + j)], c256_1);
+                    _mm256_storeu_ps(&C[(0 + i)*ldc + (8 + j)], c256_2);
+                    _mm256_storeu_ps(&C[(1 + i)*ldc + (8 + j)], c256_3);
+
+                    _mm256_storeu_ps(&C[(2 + i)*ldc + (0 + j)], c256_4);
+                    _mm256_storeu_ps(&C[(3 + i)*ldc + (0 + j)], c256_5);
+                    _mm256_storeu_ps(&C[(2 + i)*ldc + (8 + j)], c256_6);
+                    _mm256_storeu_ps(&C[(3 + i)*ldc + (8 + j)], c256_7);
+                }
+
+                for (int j = (N / TILE_F32_N)*TILE_F32_N; j < N; ++j)
+                {
+                    for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
+                    {
+                        for (int k_d = k; k_d < (k + TILE_F32_K); ++k_d)
+                        {
+                            float A_PART = ALPHA*A[k_d*lda + i_d];
+                            C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        }
+                    }
+                }
+            }
+
+            for (int k = (K / TILE_F32_K)*TILE_F32_K; k < K; ++k)
+            {
+                for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
+                {
+                    float A_PART = ALPHA*A[k*lda + i_d];
+                    for (int j = 0; j < N; ++j)
+                    {
+                        C[i_d*ldc + j] += A_PART*B[k*ldb + j];
                     }
                 }
             }
         }
 
-        for (int k = (K / TILE_F32_K)*TILE_F32_K; k < K; ++k)
-        {
-            for (int i_d = i; i_d < (i + TILE_F32_M); ++i_d)
-            {
-                float A_PART = ALPHA*A[k*lda + i_d];
-                for (int j = 0; j < N; ++j)
-                {
-                    C[i_d*ldc + j] += A_PART*B[k*ldb + j];
-                }
-            }
-        }
     }
 
     for (int i = (M / TILE_F32_M)*TILE_F32_M; i < M; ++i)
@@ -1797,110 +2751,216 @@ void Gemm::cpuGemmTNFast(const int &M, const int &N, const int &K, const double 
 {
 #ifdef USE_X86
 
-#ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < (M / TILE_F64_M)*TILE_F64_M; i += TILE_F64_M)
+    if(dataLen > MIN_OMP_DATA)
     {
-        for (int k = 0; k < (K / TILE_F64_K)*TILE_F64_K; k += TILE_F64_K)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < (M / TILE_F64_M)*TILE_F64_M; i += TILE_F64_M)
         {
-            for (int j = 0; j < (N / TILE_F64_N)*TILE_F64_N; j += TILE_F64_N)
+            for (int k = 0; k < (K / TILE_F64_K)*TILE_F64_K; k += TILE_F64_K)
             {
-
-                __m256d result256;
-                __m256d a256_0, b256_0;    
-
-                __m256d a256_1, b256_1;    
-
-                __m256d a256_2;
-
-                __m256d a256_3;
-
-                __m256d c256_0, c256_1, c256_2, c256_3;
-                __m256d c256_4, c256_5, c256_6, c256_7;
-
-                c256_0 = _mm256_loadu_pd(&C[(0 + i)*ldc + (0 + j)]);
-                c256_1 = _mm256_loadu_pd(&C[(1 + i)*ldc + (0 + j)]);
-                c256_2 = _mm256_loadu_pd(&C[(0 + i)*ldc + (4 + j)]);
-                c256_3 = _mm256_loadu_pd(&C[(1 + i)*ldc + (4 + j)]);
-
-                c256_4 = _mm256_loadu_pd(&C[(2 + i)*ldc + (0 + j)]);
-                c256_5 = _mm256_loadu_pd(&C[(3 + i)*ldc + (0 + j)]);
-                c256_6 = _mm256_loadu_pd(&C[(2 + i)*ldc + (4 + j)]);
-                c256_7 = _mm256_loadu_pd(&C[(3 + i)*ldc + (4 + j)]);
-
-                for (int k_d = 0; k_d < (TILE_F64_K); ++k_d)
+                for (int j = 0; j < (N / TILE_F64_N)*TILE_F64_N; j += TILE_F64_N)
                 {
-                    a256_0 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (0 + i)]);
-                    a256_1 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (1 + i)]);
 
-                    a256_2 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (2 + i)]);
-                    a256_3 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (3 + i)]);
+                    __m256d result256;
+                    __m256d a256_0, b256_0;    
 
-                    b256_0 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (0 + j)]);
-                    b256_1 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (4 + j)]);
+                    __m256d a256_1, b256_1;    
 
-                    result256 = _mm256_mul_pd(a256_0, b256_0);
-                    c256_0 = _mm256_add_pd(result256, c256_0);
+                    __m256d a256_2;
 
-                    result256 = _mm256_mul_pd(a256_1, b256_0);
-                    c256_1 = _mm256_add_pd(result256, c256_1);
+                    __m256d a256_3;
 
-                    result256 = _mm256_mul_pd(a256_0, b256_1);
-                    c256_2 = _mm256_add_pd(result256, c256_2);
+                    __m256d c256_0, c256_1, c256_2, c256_3;
+                    __m256d c256_4, c256_5, c256_6, c256_7;
 
-                    result256 = _mm256_mul_pd(a256_1, b256_1);
-                    c256_3 = _mm256_add_pd(result256, c256_3);
+                    c256_0 = _mm256_loadu_pd(&C[(0 + i)*ldc + (0 + j)]);
+                    c256_1 = _mm256_loadu_pd(&C[(1 + i)*ldc + (0 + j)]);
+                    c256_2 = _mm256_loadu_pd(&C[(0 + i)*ldc + (4 + j)]);
+                    c256_3 = _mm256_loadu_pd(&C[(1 + i)*ldc + (4 + j)]);
 
-                    result256 = _mm256_mul_pd(a256_2, b256_0);
-                    c256_4 = _mm256_add_pd(result256, c256_4);
+                    c256_4 = _mm256_loadu_pd(&C[(2 + i)*ldc + (0 + j)]);
+                    c256_5 = _mm256_loadu_pd(&C[(3 + i)*ldc + (0 + j)]);
+                    c256_6 = _mm256_loadu_pd(&C[(2 + i)*ldc + (4 + j)]);
+                    c256_7 = _mm256_loadu_pd(&C[(3 + i)*ldc + (4 + j)]);
 
-                    result256 = _mm256_mul_pd(a256_3, b256_0);
-                    c256_5 = _mm256_add_pd(result256, c256_5);
+                    for (int k_d = 0; k_d < (TILE_F64_K); ++k_d)
+                    {
+                        a256_0 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (0 + i)]);
+                        a256_1 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (1 + i)]);
 
-                    result256 = _mm256_mul_pd(a256_2, b256_1);
-                    c256_6 = _mm256_add_pd(result256, c256_6);
+                        a256_2 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (2 + i)]);
+                        a256_3 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (3 + i)]);
 
-                    result256 = _mm256_mul_pd(a256_3, b256_1);
-                    c256_7 = _mm256_add_pd(result256, c256_7);
+                        b256_0 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (0 + j)]);
+                        b256_1 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (4 + j)]);
+
+                        result256 = _mm256_mul_pd(a256_0, b256_0);
+                        c256_0 = _mm256_add_pd(result256, c256_0);
+
+                        result256 = _mm256_mul_pd(a256_1, b256_0);
+                        c256_1 = _mm256_add_pd(result256, c256_1);
+
+                        result256 = _mm256_mul_pd(a256_0, b256_1);
+                        c256_2 = _mm256_add_pd(result256, c256_2);
+
+                        result256 = _mm256_mul_pd(a256_1, b256_1);
+                        c256_3 = _mm256_add_pd(result256, c256_3);
+
+                        result256 = _mm256_mul_pd(a256_2, b256_0);
+                        c256_4 = _mm256_add_pd(result256, c256_4);
+
+                        result256 = _mm256_mul_pd(a256_3, b256_0);
+                        c256_5 = _mm256_add_pd(result256, c256_5);
+
+                        result256 = _mm256_mul_pd(a256_2, b256_1);
+                        c256_6 = _mm256_add_pd(result256, c256_6);
+
+                        result256 = _mm256_mul_pd(a256_3, b256_1);
+                        c256_7 = _mm256_add_pd(result256, c256_7);
+                    }
+                    _mm256_storeu_pd(&C[(0 + i)*ldc + (0 + j)], c256_0);
+                    _mm256_storeu_pd(&C[(1 + i)*ldc + (0 + j)], c256_1);
+                    _mm256_storeu_pd(&C[(0 + i)*ldc + (4 + j)], c256_2);
+                    _mm256_storeu_pd(&C[(1 + i)*ldc + (4 + j)], c256_3);
+
+                    _mm256_storeu_pd(&C[(2 + i)*ldc + (0 + j)], c256_4);
+                    _mm256_storeu_pd(&C[(3 + i)*ldc + (0 + j)], c256_5);
+                    _mm256_storeu_pd(&C[(2 + i)*ldc + (4 + j)], c256_6);
+                    _mm256_storeu_pd(&C[(3 + i)*ldc + (4 + j)], c256_7);
                 }
-                _mm256_storeu_pd(&C[(0 + i)*ldc + (0 + j)], c256_0);
-                _mm256_storeu_pd(&C[(1 + i)*ldc + (0 + j)], c256_1);
-                _mm256_storeu_pd(&C[(0 + i)*ldc + (4 + j)], c256_2);
-                _mm256_storeu_pd(&C[(1 + i)*ldc + (4 + j)], c256_3);
 
-                _mm256_storeu_pd(&C[(2 + i)*ldc + (0 + j)], c256_4);
-                _mm256_storeu_pd(&C[(3 + i)*ldc + (0 + j)], c256_5);
-                _mm256_storeu_pd(&C[(2 + i)*ldc + (4 + j)], c256_6);
-                _mm256_storeu_pd(&C[(3 + i)*ldc + (4 + j)], c256_7);
+                for (int j = (N / TILE_F64_N)*TILE_F64_N; j < N; ++j)
+                {
+                    for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
+                    {
+                        for (int k_d = k; k_d < (k + TILE_F64_K); ++k_d)
+                        {
+                            double A_PART = ALPHA*A[k_d*lda + i_d];
+                            C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        }
+                    }
+                }
             }
 
-            for (int j = (N / TILE_F64_N)*TILE_F64_N; j < N; ++j)
+            for (int k = (K / TILE_F64_K)*TILE_F64_K; k < K; ++k)
             {
                 for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
                 {
-                    for (int k_d = k; k_d < (k + TILE_F64_K); ++k_d)
+                    double A_PART = ALPHA*A[k*lda + i_d];
+                    for (int j = 0; j < N; ++j)
                     {
-                        double A_PART = ALPHA*A[k_d*lda + i_d];
-                        C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        C[i_d*ldc + j] += A_PART*B[k*ldb + j];
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < (M / TILE_F64_M)*TILE_F64_M; i += TILE_F64_M)
+        {
+            for (int k = 0; k < (K / TILE_F64_K)*TILE_F64_K; k += TILE_F64_K)
+            {
+                for (int j = 0; j < (N / TILE_F64_N)*TILE_F64_N; j += TILE_F64_N)
+                {
+
+                    __m256d result256;
+                    __m256d a256_0, b256_0;    
+
+                    __m256d a256_1, b256_1;    
+
+                    __m256d a256_2;
+
+                    __m256d a256_3;
+
+                    __m256d c256_0, c256_1, c256_2, c256_3;
+                    __m256d c256_4, c256_5, c256_6, c256_7;
+
+                    c256_0 = _mm256_loadu_pd(&C[(0 + i)*ldc + (0 + j)]);
+                    c256_1 = _mm256_loadu_pd(&C[(1 + i)*ldc + (0 + j)]);
+                    c256_2 = _mm256_loadu_pd(&C[(0 + i)*ldc + (4 + j)]);
+                    c256_3 = _mm256_loadu_pd(&C[(1 + i)*ldc + (4 + j)]);
+
+                    c256_4 = _mm256_loadu_pd(&C[(2 + i)*ldc + (0 + j)]);
+                    c256_5 = _mm256_loadu_pd(&C[(3 + i)*ldc + (0 + j)]);
+                    c256_6 = _mm256_loadu_pd(&C[(2 + i)*ldc + (4 + j)]);
+                    c256_7 = _mm256_loadu_pd(&C[(3 + i)*ldc + (4 + j)]);
+
+                    for (int k_d = 0; k_d < (TILE_F64_K); ++k_d)
+                    {
+                        a256_0 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (0 + i)]);
+                        a256_1 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (1 + i)]);
+
+                        a256_2 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (2 + i)]);
+                        a256_3 = _mm256_set1_pd(ALPHA*A[(k_d + k)*lda + (3 + i)]);
+
+                        b256_0 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (0 + j)]);
+                        b256_1 = _mm256_loadu_pd(&B[(k_d + k)*ldb + (4 + j)]);
+
+                        result256 = _mm256_mul_pd(a256_0, b256_0);
+                        c256_0 = _mm256_add_pd(result256, c256_0);
+
+                        result256 = _mm256_mul_pd(a256_1, b256_0);
+                        c256_1 = _mm256_add_pd(result256, c256_1);
+
+                        result256 = _mm256_mul_pd(a256_0, b256_1);
+                        c256_2 = _mm256_add_pd(result256, c256_2);
+
+                        result256 = _mm256_mul_pd(a256_1, b256_1);
+                        c256_3 = _mm256_add_pd(result256, c256_3);
+
+                        result256 = _mm256_mul_pd(a256_2, b256_0);
+                        c256_4 = _mm256_add_pd(result256, c256_4);
+
+                        result256 = _mm256_mul_pd(a256_3, b256_0);
+                        c256_5 = _mm256_add_pd(result256, c256_5);
+
+                        result256 = _mm256_mul_pd(a256_2, b256_1);
+                        c256_6 = _mm256_add_pd(result256, c256_6);
+
+                        result256 = _mm256_mul_pd(a256_3, b256_1);
+                        c256_7 = _mm256_add_pd(result256, c256_7);
+                    }
+                    _mm256_storeu_pd(&C[(0 + i)*ldc + (0 + j)], c256_0);
+                    _mm256_storeu_pd(&C[(1 + i)*ldc + (0 + j)], c256_1);
+                    _mm256_storeu_pd(&C[(0 + i)*ldc + (4 + j)], c256_2);
+                    _mm256_storeu_pd(&C[(1 + i)*ldc + (4 + j)], c256_3);
+
+                    _mm256_storeu_pd(&C[(2 + i)*ldc + (0 + j)], c256_4);
+                    _mm256_storeu_pd(&C[(3 + i)*ldc + (0 + j)], c256_5);
+                    _mm256_storeu_pd(&C[(2 + i)*ldc + (4 + j)], c256_6);
+                    _mm256_storeu_pd(&C[(3 + i)*ldc + (4 + j)], c256_7);
+                }
+
+                for (int j = (N / TILE_F64_N)*TILE_F64_N; j < N; ++j)
+                {
+                    for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
+                    {
+                        for (int k_d = k; k_d < (k + TILE_F64_K); ++k_d)
+                        {
+                            double A_PART = ALPHA*A[k_d*lda + i_d];
+                            C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+                        }
+                    }
+                }
+            }
+
+            for (int k = (K / TILE_F64_K)*TILE_F64_K; k < K; ++k)
+            {
+                for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
+                {
+                    double A_PART = ALPHA*A[k*lda + i_d];
+                    for (int j = 0; j < N; ++j)
+                    {
+                        C[i_d*ldc + j] += A_PART*B[k*ldb + j];
                     }
                 }
             }
         }
 
-        for (int k = (K / TILE_F64_K)*TILE_F64_K; k < K; ++k)
-        {
-            for (int i_d = i; i_d < (i + TILE_F64_M); ++i_d)
-            {
-                double A_PART = ALPHA*A[k*lda + i_d];
-                for (int j = 0; j < N; ++j)
-                {
-                    C[i_d*ldc + j] += A_PART*B[k*ldb + j];
-                }
-            }
-        }
     }
 
     for (int i = (M / TILE_F64_M)*TILE_F64_M; i < M; ++i)
@@ -1995,30 +3055,55 @@ void Gemm::transpose32Optimized(uint32_t * const &A, const int &num)
 void Gemm::transposeBinary(uint32_t * const &A, uint32_t * const &B, const int &n, const int &m, const int &lda, const int &ldb, const int &blockSize)
 {
     (void)blockSize;
-#ifdef USE_OMP
     uint64_t dataLen   = m*n;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < n; i+=32)
+    if(dataLen > MIN_OMP_DATA)
     {
-        int j;
-        for ( j = 0; j < m; j+=32)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < n; i+=32)
         {
-            int aIndex  = i*lda + j;
-            int bIndex  = j*ldb + i;
-
-            Gemm::transpose32x32ReversedDiag(&A[aIndex/32], &B[bIndex/32], lda/32, ldb/32);
-        }
-
-        for (; j < m; ++j)
-        {
-            if(Gemm::getBit(reinterpret_cast<const uint8_t* const>(A), i*lda+j))
+            int j;
+            for ( j = 0; j < m; j+=32)
             {
-                Gemm::setBit(reinterpret_cast<uint8_t* const>(B),j*ldb+i);
+                int aIndex  = i*lda + j;
+                int bIndex  = j*ldb + i;
+
+                Gemm::transpose32x32ReversedDiag(&A[aIndex/32], &B[bIndex/32], lda/32, ldb/32);
+            }
+
+            for (; j < m; ++j)
+            {
+                if(Gemm::getBit(reinterpret_cast<const uint8_t* const>(A), i*lda+j))
+                {
+                    Gemm::setBit(reinterpret_cast<uint8_t* const>(B),j*ldb+i);
+                }
             }
         }
     }
+    else
+    {
+        for (int i = 0; i < n; i+=32)
+        {
+            int j;
+            for ( j = 0; j < m; j+=32)
+            {
+                int aIndex  = i*lda + j;
+                int bIndex  = j*ldb + i;
+
+                Gemm::transpose32x32ReversedDiag(&A[aIndex/32], &B[bIndex/32], lda/32, ldb/32);
+            }
+
+            for (; j < m; ++j)
+            {
+                if(Gemm::getBit(reinterpret_cast<const uint8_t* const>(A), i*lda+j))
+                {
+                    Gemm::setBit(reinterpret_cast<uint8_t* const>(B),j*ldb+i);
+                }
+            }
+        }
+    }
+
 }
 
 int Gemm::binTransposeAlinInput(int k, int n, float *b, char **tBitInput, int ldbAlign, int bitAlign)
@@ -2066,81 +3151,158 @@ void Gemm::gemmNNBinMeanTrans(int M, int N, int K, float ALPHA_UNUSED, unsigned 
 {
 
     (void) ALPHA_UNUSED;
-#ifdef USE_OMP
     uint64_t dataLen   = M*K*N;
-    uint16_t threadNum = dataLen>MIN_OMP_DATA?OMP_THREAD:1;
-#pragma omp parallel for num_threads(threadNum)
-#endif
-    for (int i = 0; i < (M/2)*2; i += 2)
+    if(dataLen > MIN_OMP_DATA)
     {
-
-        float meanVal0 = meanArr[i + 0];
-        float meanVal1 = meanArr[i + 1];
-
-        for (int j = 0; j < (N/2)*2; j += 2)
+#ifdef USE_OMP
+#pragma omp parallel for num_threads(OMP_THREAD)
+#endif
+        for (int i = 0; i < (M/2)*2; i += 2)
         {
 
-            const int bitStep = 256;
-            __m256i countSum_0 = _mm256_set1_epi8(0);
-            __m256i countSum_1 = _mm256_set1_epi8(0);
-            __m256i countSum_2 = _mm256_set1_epi8(0);
-            __m256i countSum_3 = _mm256_set1_epi8(0);
+            float meanVal0 = meanArr[i + 0];
+            float meanVal1 = meanArr[i + 1];
 
-            for (int k = 0; k < K; k += bitStep) {   
-
-                __m256i aBit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((A + ((i + 0)*lda + k) / 8)));
-                __m256i bBit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((B + ((j + 0)*ldb + k) / 8)));
-
-                __m256i aBit256_1 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((A + ((i + 1)*lda + k) / 8)));
-                __m256i bBit256_1 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((B + ((j + 1)*ldb + k) / 8)));
-
-                xnorAvx2Popcnt(aBit256_0, bBit256_0, &countSum_0);
-                xnorAvx2Popcnt(aBit256_0, bBit256_1, &countSum_1);
-
-                xnorAvx2Popcnt(aBit256_1, bBit256_0, &countSum_2);
-                xnorAvx2Popcnt(aBit256_1, bBit256_1, &countSum_3);
-            }
-
-            int count0 = getCountMula(countSum_0);
-            int count1 = getCountMula(countSum_1);
-            int count2 = getCountMula(countSum_2);
-            int count3 = getCountMula(countSum_3);
-
-            const int f1 = (K % bitStep == 0) ? 0 : (bitStep - (K % bitStep));
-            count0 = count0 - f1;    
-
-            count1 = count1 - f1;
-            count2 = count2 - f1;
-            count3 = count3 - f1;
-            C[i*ldc + (j + 0)] = (2 * count0 - K) * meanVal0;
-            C[i*ldc + (j + 1)] = (2 * count1 - K) * meanVal0;
-            C[(i + 1)*ldc + (j + 0)] = (2 * count2 - K) * meanVal1;
-            C[(i + 1)*ldc + (j + 1)] = (2 * count3 - K) * meanVal1;
-        }
-
-        for (int iD = 0; iD < 2; ++iD)
-        {
-            float meanVal = meanArr[i + iD];
-            for (int j = (N / 2) * 2; j < N; j += 1)
+            for (int j = 0; j < (N/2)*2; j += 2)
             {
 
-                const int bit_step = 256;
-                __m256i count_sum = _mm256_set1_epi8(0);
+                const int bitStep = 256;
+                __m256i countSum_0 = _mm256_set1_epi8(0);
+                __m256i countSum_1 = _mm256_set1_epi8(0);
+                __m256i countSum_2 = _mm256_set1_epi8(0);
+                __m256i countSum_3 = _mm256_set1_epi8(0);
 
-                for (int k = 0; k < K; k += bit_step)
+                for (int k = 0; k < K; k += bitStep) {   
+
+                    __m256i aBit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((A + ((i + 0)*lda + k) / 8)));
+                    __m256i bBit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((B + ((j + 0)*ldb + k) / 8)));
+
+                    __m256i aBit256_1 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((A + ((i + 1)*lda + k) / 8)));
+                    __m256i bBit256_1 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((B + ((j + 1)*ldb + k) / 8)));
+
+                    xnorAvx2Popcnt(aBit256_0, bBit256_0, &countSum_0);
+                    xnorAvx2Popcnt(aBit256_0, bBit256_1, &countSum_1);
+
+                    xnorAvx2Popcnt(aBit256_1, bBit256_0, &countSum_2);
+                    xnorAvx2Popcnt(aBit256_1, bBit256_1, &countSum_3);
+                }
+
+                int count0 = getCountMula(countSum_0);
+                int count1 = getCountMula(countSum_1);
+                int count2 = getCountMula(countSum_2);
+                int count3 = getCountMula(countSum_3);
+
+                const int f1 = (K % bitStep == 0) ? 0 : (bitStep - (K % bitStep));
+                count0 = count0 - f1;    
+
+                count1 = count1 - f1;
+                count2 = count2 - f1;
+                count3 = count3 - f1;
+                C[i*ldc + (j + 0)] = (2 * count0 - K) * meanVal0;
+                C[i*ldc + (j + 1)] = (2 * count1 - K) * meanVal0;
+                C[(i + 1)*ldc + (j + 0)] = (2 * count2 - K) * meanVal1;
+                C[(i + 1)*ldc + (j + 1)] = (2 * count3 - K) * meanVal1;
+            }
+
+            for (int iD = 0; iD < 2; ++iD)
+            {
+                float meanVal = meanArr[i + iD];
+                for (int j = (N / 2) * 2; j < N; j += 1)
                 {
 
-                    __m256i a_bit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((A + ((i + iD + 0)*lda + k) / 8)));
-                    __m256i b_bit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((B + ((j + 0)*ldb + k) / 8)));
-                    xnorAvx2Popcnt(a_bit256_0, b_bit256_0, &count_sum);
-                }
-                int count = getCountMula(count_sum);
-                const int f1 = (K % bit_step == 0) ? 0 : (bit_step - (K % bit_step));
-                count = count - f1;    
+                    const int bit_step = 256;
+                    __m256i count_sum = _mm256_set1_epi8(0);
 
-                C[(i + iD)*ldc + j] = (2 * count - K) * meanVal;
+                    for (int k = 0; k < K; k += bit_step)
+                    {
+
+                        __m256i a_bit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((A + ((i + iD + 0)*lda + k) / 8)));
+                        __m256i b_bit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((B + ((j + 0)*ldb + k) / 8)));
+                        xnorAvx2Popcnt(a_bit256_0, b_bit256_0, &count_sum);
+                    }
+                    int count = getCountMula(count_sum);
+                    const int f1 = (K % bit_step == 0) ? 0 : (bit_step - (K % bit_step));
+                    count = count - f1;    
+
+                    C[(i + iD)*ldc + j] = (2 * count - K) * meanVal;
+                }
             }
         }
+    }
+    else
+    {
+        for (int i = 0; i < (M/2)*2; i += 2)
+        {
+
+            float meanVal0 = meanArr[i + 0];
+            float meanVal1 = meanArr[i + 1];
+
+            for (int j = 0; j < (N/2)*2; j += 2)
+            {
+
+                const int bitStep = 256;
+                __m256i countSum_0 = _mm256_set1_epi8(0);
+                __m256i countSum_1 = _mm256_set1_epi8(0);
+                __m256i countSum_2 = _mm256_set1_epi8(0);
+                __m256i countSum_3 = _mm256_set1_epi8(0);
+
+                for (int k = 0; k < K; k += bitStep) {   
+
+                    __m256i aBit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((A + ((i + 0)*lda + k) / 8)));
+                    __m256i bBit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((B + ((j + 0)*ldb + k) / 8)));
+
+                    __m256i aBit256_1 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((A + ((i + 1)*lda + k) / 8)));
+                    __m256i bBit256_1 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((B + ((j + 1)*ldb + k) / 8)));
+
+                    xnorAvx2Popcnt(aBit256_0, bBit256_0, &countSum_0);
+                    xnorAvx2Popcnt(aBit256_0, bBit256_1, &countSum_1);
+
+                    xnorAvx2Popcnt(aBit256_1, bBit256_0, &countSum_2);
+                    xnorAvx2Popcnt(aBit256_1, bBit256_1, &countSum_3);
+                }
+
+                int count0 = getCountMula(countSum_0);
+                int count1 = getCountMula(countSum_1);
+                int count2 = getCountMula(countSum_2);
+                int count3 = getCountMula(countSum_3);
+
+                const int f1 = (K % bitStep == 0) ? 0 : (bitStep - (K % bitStep));
+                count0 = count0 - f1;    
+
+                count1 = count1 - f1;
+                count2 = count2 - f1;
+                count3 = count3 - f1;
+                C[i*ldc + (j + 0)] = (2 * count0 - K) * meanVal0;
+                C[i*ldc + (j + 1)] = (2 * count1 - K) * meanVal0;
+                C[(i + 1)*ldc + (j + 0)] = (2 * count2 - K) * meanVal1;
+                C[(i + 1)*ldc + (j + 1)] = (2 * count3 - K) * meanVal1;
+            }
+
+            for (int iD = 0; iD < 2; ++iD)
+            {
+                float meanVal = meanArr[i + iD];
+                for (int j = (N / 2) * 2; j < N; j += 1)
+                {
+
+                    const int bit_step = 256;
+                    __m256i count_sum = _mm256_set1_epi8(0);
+
+                    for (int k = 0; k < K; k += bit_step)
+                    {
+
+                        __m256i a_bit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((A + ((i + iD + 0)*lda + k) / 8)));
+                        __m256i b_bit256_0 = _mm256_loadu_si256(reinterpret_cast<__m256i *>((B + ((j + 0)*ldb + k) / 8)));
+                        xnorAvx2Popcnt(a_bit256_0, b_bit256_0, &count_sum);
+                    }
+                    int count = getCountMula(count_sum);
+                    const int f1 = (K % bit_step == 0) ? 0 : (bit_step - (K % bit_step));
+                    count = count - f1;    
+
+                    C[(i + iD)*ldc + j] = (2 * count - K) * meanVal;
+                }
+            }
+        }
+
     }
 
     for (int i = (M / 2) * 2; i < M; i += 1)

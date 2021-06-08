@@ -36,8 +36,6 @@ namespace Msnhnet
                 const float* r1 = src0 + inWidth;
                 const float* r2 = src0 + inWidth * 2;
 
-
-
     #if USE_NEON
                 float32x4_t k012 = vld1q_f32(k0);
                 float32x4_t k345 = vld1q_f32(k0 + 3);
@@ -49,10 +47,10 @@ namespace Msnhnet
     #endif
 
                 int i = 0;
-                
+
                 //deal three lines and get one output in a feature map
                 for(; i < outHeight; i++){
-                    
+
     #if USE_NEON
                     int nn = outWidth >> 2;
                     int remain = outWidth - (nn << 2);
@@ -105,7 +103,6 @@ namespace Msnhnet
                             // q11 = [c, e, g, i] 和 k012_next的第三个元素相乘并累加到q13
                             "vmla.f32   q12, q11, %f12[0]   \n"
                             "vmla.f32   q13, q11, %f15[0]   \n"
-
 
                             // r1
                             "pld        [%4, #256]          \n"
@@ -196,7 +193,6 @@ namespace Msnhnet
                         sum0 = vmlaq_f32(sum0, r20, k678);
                         sum1 = vmlaq_f32(sum1, r20, k678_next);
 
-
                         // use *destptr0 's data repalce sum0[3]
                         sum0 = vsetq_lane_f32(*destptr0, sum0, 3);
                         sum1 = vsetq_lane_f32(*destptr1, sum1, 3);
@@ -257,7 +253,7 @@ namespace Msnhnet
                     r1 += 2 * (inWidth - outWidth);
                     r2 += 2 * (inWidth - outWidth);
                 }
-                
+
                 //mov conv kernel
                 k0 += 9;
                 k1 += 9;
@@ -268,7 +264,6 @@ namespace Msnhnet
     #if USE_OMP
     #pragma omp parallel for num_threads(OMP_THREAD)
     #endif 
-
 
         for(int cc = ccRemainOutChannel; cc < outChannel; cc++){
 
@@ -299,7 +294,6 @@ namespace Msnhnet
     #endif
 
                 int i = 0;
-                
 
                 for(; i < outHeight; i++){
     #if USE_NEON
@@ -356,7 +350,6 @@ namespace Msnhnet
 
                             "vmla.f32   q11, q1, %f12[0]    \n"
 
-
                             "vadd.f32   q0, q0, q10         \n"
                             "vadd.f32   q0, q0, q11         \n"
 
@@ -364,8 +357,6 @@ namespace Msnhnet
 
                             "subs       %0, #1              \n"
                             "bne        0b                  \n"
-
-
 
                             // OutputOperands 
                             : "=r"(nn),     // %0
@@ -385,15 +376,14 @@ namespace Msnhnet
                             // Clobbers
                             : "cc", "memory", "q0", "q1", "q2", "q3", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
                         );
-                           
+
                     } 
     #endif
-                    
 
     #endif
 
                     for(; remain > 0; remain--){
-                        
+
     #if USE_NEON
                         float32x4_t r00 = vld1q_f32(r0);
                         float32x4_t r10 = vld1q_f32(r1);

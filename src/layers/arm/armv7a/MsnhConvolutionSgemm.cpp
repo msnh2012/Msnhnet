@@ -8,12 +8,12 @@ namespace Msnhnet
     // shape[c, h, w]: [outChannel / 4 + outChannel %4， 4 * kernelSize， inChannel]
     void ConvolutionLayerSgemm::convolutionTransformKernel(float *const &kernel, const int &kernelW, const int &kernelH, float* &dest, const int &inChannel,
                             const int &outChannel){
-        
+
         int kernelSize = kernelH * kernelW;
         int ccOutChannel = 0;
         int ccRemainOutChannel = 0;
         int Stride = 0;
-        
+
         ccOutChannel = outChannel >> 2;
         ccRemainOutChannel = ccOutChannel << 2;
 
@@ -60,7 +60,7 @@ namespace Msnhnet
         // 1. im2col
         // src_im2col : width=outWidth * outHeight, height=kernelH * kernelW * inChannel
         float *src_im2col = new float[outWidth * outHeight * kernelH * kernelW * inChannel];
-        
+
         const int Stride = kernelW * kernelH * outHeight * outWidth;
         //const int inSize = inHeight * inWidth;
         const int outSize = outHeight * outWidth; 
@@ -100,7 +100,6 @@ namespace Msnhnet
 
         // pack 8x8
         // preapare
-
 
         const int packChannel = outSize / 8 + outSize % 8;
         const int packHeight = inChannel;    
@@ -198,7 +197,7 @@ namespace Msnhnet
         //int M = outChannel;
         int N = outHeight * outWidth;
         int K = kernelSize * inChannel;
-        
+
         int ccOutChannel = outChannel >> 2;
         int ccRemainOutChannel = ccOutChannel << 2;
 
@@ -239,7 +238,7 @@ namespace Msnhnet
                     "vdup.f32   q13,   d2[0]         \n"
                     "vdup.f32   q14,   d2[0]         \n"
                     "vdup.f32   q15,   d2[0]         \n"
-                    
+
                     // r4 = K >> 2
                     "lsr         r4, %12, #2        \n"
                     // 如果nn等于0，使用beq进行循环跳转，即跳转到循环1 
@@ -375,7 +374,6 @@ namespace Msnhnet
                     "vst1.f32    {d24-d27}, [%2]    \n"
                     "vst1.f32    {d28-d31}, [%3]    \n"
 
-
                     : "=r"(destptr0), // %0
                     "=r"(destptr1), // %1
                     "=r"(destptr2), // %2
@@ -494,14 +492,14 @@ namespace Msnhnet
 #else
                 const float *ptrA = kernel_im2col_pack + (c / 4) * kernelPackHeight * kernelPackWidth;
 #endif
-                
+
 #if USE_NEON
 
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
 #else
                 asm volatile(
-                    
+
                     "veor       q12, q12, q12       \n"
 
                     // r4 = K >> 2
@@ -511,7 +509,7 @@ namespace Msnhnet
 
                     // veor 异或，寄存器值初始化为0
                     // q8, q9, q10, q11 = sum0, sum1, sum2, sum3
-                    
+
                     "veor       q8, q8, q8          \n"
                     "veor       q9, q9, q9          \n"
                     "veor       q10, q10, q10       \n"
@@ -609,7 +607,6 @@ namespace Msnhnet
             }
 
         }
-
 
         //tail
 #if USE_OMP

@@ -16,7 +16,7 @@ namespace Msnhnet
 #endif 
         for(int cc = 0; cc < ccOutChannel; cc++){
             int c = cc << 2;
-            
+
             float *dest0 = dest + c * out_size;
             float *dest1 = dest + (c + 1) * out_size;
             float *dest2 = dest + (c + 2) * out_size;
@@ -55,7 +55,7 @@ namespace Msnhnet
 #else
                 int remain = out_size;
 #endif
-                
+
 #if USE_ARM
 #if __aarch64__
                 throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
@@ -102,11 +102,10 @@ namespace Msnhnet
                         "vmla.f32   q14, q6, %e21[0]        \n"
                         // float sum3_next = *r0 * kernel3[0]
                         "vmla.f32   q15, q7, %e21[0]        \n"
-                        
+
                         // const float *r1 = src1;
                         "pld        [%6, #256]              \n"
                         "vld1.f32   {d8-d11}, [%6]!         \n"
-
 
                         // float sum0 = *r0 * kernel0[0] + *r1 * kernel0[1]
                         "vmla.f32   q8, q4, %e18[1]         \n"
@@ -311,7 +310,7 @@ namespace Msnhnet
                         "vmla.f32   q14, q6, %e21[0]        \n"
                         // float sum3_next = *r0 * kernel3[0]
                         "vmla.f32   q15, q7, %e21[0]        \n"
-                        
+
                         // *destptr0 += sum0;
                         "vst1.f32   {d16-d19}, [%1]!        \n"
                         // *destptr1 += sum1;
@@ -431,16 +430,16 @@ namespace Msnhnet
                         "vmla.f32   q0, q2, %q13        \n"
 
                         "vmla.f32   q1, q3, %q13        \n"
-                        
+
                         "pld        [%4, #256]          \n"
                         "vld1.f32   {d4-d7}, [%4]!      \n"
-                        
+
                         "vmla.f32   q0, q2, %q14        \n"
                         "vmla.f32   q1, q3, %q14        \n"
-                        
+
                         "pld        [%5, #256]          \n"
                         "vld1.f32   {d4-d7}, [%5]!      \n"
-                        
+
                         "vmla.f32   q0, q2, %q15        \n"
                         "vmla.f32   q1, q3, %q15        \n"
 
@@ -510,7 +509,7 @@ namespace Msnhnet
                     "vld1.f32   {d4-d7}, [%2]!      \n"
                     "pld        [%1, #256]          \n"
                     "vld1.f32   {d0-d3}, [%1]       \n"
-                    
+
                     "vmla.f32   q0, q2, %q6         \n"
                     "vmla.f32   q1, q3, %q6         \n"
 
@@ -546,7 +545,7 @@ namespace Msnhnet
 
     void ConvolutionalLayerArm1x1::conv1x1s2Neon(float *const &src, const int &inWidth, const int &inHeight,  const int &inChannel, float *const &kernel,
                                  float* &dest, const int &outWidth, const int &outHeight, const int &outChannel){
-        
+
     }    
 
     // pack 4x4
@@ -828,7 +827,6 @@ namespace Msnhnet
                         "vmla.f32   q13, q5, d1[0]      \n"
                         "vmla.f32   q15, q5, d1[1]      \n"
 
-                        
                         "subs       r4, r4, #1          \n"
 
                         "bne        2b                  \n"
@@ -839,7 +837,6 @@ namespace Msnhnet
                         "vst1.f32   {d20-d23}, [%1]!   \n"
                         "vst1.f32   {d24-d27}, [%2]!   \n"
                         "vst1.f32   {d28-d31}, [%3]!   \n"
-                        
 
                         : "=r"(destptr0), // %0
                         "=r"(destptr1), // %1
@@ -1194,7 +1191,7 @@ namespace Msnhnet
                         // sum1 = q9 = [a2, b2, c2, d2]
                         // sum3 = q10 = [a3, b3, c3, d3]
                         // sum4 = q11 = [a4, b4, c4, d4]
-                        
+
                         // q8 = [a1+b1,c1+d1, a2+b2, c2+d2]
                         "vadd.f32   q8, q8, q9          \n"
                         // q10 = [a3+b3, c3+d3, a4+b4, c4+d4]
@@ -1229,7 +1226,6 @@ namespace Msnhnet
                         "vst1.f32   {d16[1]}, [%1]!     \n"
                         "vst1.f32   {d17[0]}, [%2]!     \n"
                         "vst1.f32   {d17[1]}, [%3]!     \n"
-
 
                         : "=r"(destptr0), // %0
                         "=r"(destptr1), // %1
@@ -1354,7 +1350,6 @@ namespace Msnhnet
                         "3:                             \n"
                         "vst1.f32   {d16-d19}, [%0]!    \n"
 
-
                         : "=r"(destptr0), // %0
                         "=r"(src_tm_ptr),  // %1
                         "=r"(kernel0)     // %2
@@ -1407,7 +1402,7 @@ namespace Msnhnet
                     const float *src_tm_ptr = src_tm + (i / 8 + (i % 8) / 4) * src_tm_size;
 
                     const float *kernel0 = kernel + (c / 4 + c % 4) *  kernelSize;
-                
+
     #if USE_ARM
 
     #if __aarch64__
@@ -1463,7 +1458,6 @@ namespace Msnhnet
                         "3:                             \n"
                         "vst1.f32   {d16-d17}, [%0]!    \n"
 
-
                         : "=r"(destptr0), // %0
                         "=r"(src_tm_ptr),  // %1
                         "=r"(kernel0)     // %2
@@ -1511,7 +1505,7 @@ namespace Msnhnet
                     throw Exception(1, "Error: armv8 temporarily not supported!", __FILE__, __LINE__, __FUNCTION__);
     #else
                     asm volatile(
-                        
+
                     );
     #endif
 
@@ -1520,7 +1514,7 @@ namespace Msnhnet
 
                     for(int q = 0; q < inChannel; q++){
                         sum0 += src_tm_ptr[0] * kernel0[0];
-                        
+
                         src_tm_ptr++;
                         kernel0++;
                     }   
@@ -1531,7 +1525,7 @@ namespace Msnhnet
     #endif
                 }
             }
-        
+
         delete [] src_tm;
 
     }
