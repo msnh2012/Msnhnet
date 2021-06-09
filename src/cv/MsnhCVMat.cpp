@@ -5008,141 +5008,43 @@ Mat operator *(const Mat &A, const Mat &B)
     else  
 
     {
-        if(A.isVector()&&B.isVector())
-
+        if(A.getMatType() != B.getMatType() || A.getChannel() != B.getChannel() || A.getStep() != B.getStep())
         {
-
-            if(A._matType != B._matType || A._channel != B._channel || A._step != B._step ||
-                    A._width != B._width || A._height != B._height)
-            {
-                throw Exception(1,"[Mat]: properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
-            }
-
-            size_t dataN = A.getDataNum();
-
-            if(A.isU8Mat())
-            {
-                uint8_t finalVal = 0;
-                uint64_t dataLen   = dataN;
-                if(dataLen > MIN_OMP_DATA)
-                {
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)  reduction(+:finalVal)
-#endif
-                    for (int i = 0; i < dataN; ++i)
-                    {
-                        int mul = A._data.u8[i] * B._data.u8[i];
-
-                        finalVal += mul;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < dataN; ++i)
-                    {
-                        int mul = A._data.u8[i] * B._data.u8[i];
-
-                        finalVal += mul;
-                    }
-                }
-
-                return Mat(1,1,MAT_GRAY_U8, &finalVal);
-            }
-            else if(A.isF32Mat())
-            {
-                float finalVal = 0;
-                uint64_t dataLen   = dataN;
-                if(dataLen > MIN_OMP_DATA)
-                {
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)  reduction(+:finalVal)
-#endif
-                    for (int i = 0; i < dataN; ++i)
-                    {
-                        float mul= A._data.f32[i] * B._data.f32[i];
-                        finalVal += mul;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < dataN; ++i)
-                    {
-                        float mul= A._data.f32[i] * B._data.f32[i];
-                        finalVal += mul;
-                    }
-                }
-
-                return Mat(1,1,MAT_GRAY_F32, &finalVal);
-            }
-            else if(A.isF64Mat())
-            {
-                double finalVal = 0;
-                uint64_t dataLen   = dataN;
-                if(dataLen > MIN_OMP_DATA)
-                {
-#ifdef USE_OMP
-#pragma omp parallel for num_threads(OMP_THREAD)  reduction(+:finalVal)
-#endif
-                    for (int i = 0; i < dataN; ++i)
-                    {
-                        double mul = A._data.f64[i] * B._data.f64[i];
-                        finalVal += mul;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < dataN; ++i)
-                    {
-                        double mul = A._data.f64[i] * B._data.f64[i];
-                        finalVal += mul;
-                    }
-                }
-
-                return Mat(1,1,MAT_GRAY_F64, &finalVal);
-            }
-
+            throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
         }
-        else  
 
+        if(!A.isF32Mat() && !A.isF64Mat() && !A.isOneChannel())
         {
-            if(A.getMatType() != B.getMatType() || A.getChannel() != B.getChannel() || A.getStep() != B.getStep())
-            {
-                throw Exception(1,"[Mat]: mat properties not equal! \n", __FILE__, __LINE__, __FUNCTION__);
-            }
+            throw Exception(1,"[Mat]: mat must be f32/f64 1 channel mat! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
 
-            if(!A.isF32Mat() && !A.isF64Mat() && !A.isOneChannel())
-            {
-                throw Exception(1,"[Mat]: mat must be f32/f64 1 channel mat! \n", __FILE__, __LINE__, __FUNCTION__);
-            }
+        if(A.getWidth() != B.getHeight())
+        {
+            throw Exception(1,"[Mat]: Mat A'W != B'H ! \n", __FILE__, __LINE__, __FUNCTION__);
+        }
 
-            if(A.getWidth() != B.getHeight())
-            {
-                throw Exception(1,"[Mat]: Mat A'W != B'H ! \n", __FILE__, __LINE__, __FUNCTION__);
-            }
+        SimdInfo::checkSimd();
 
-            SimdInfo::checkSimd();
+        if(A.isF32Mat())
+        {
 
-            if(A.isF32Mat())
-            {
-
-                Mat C(B.getWidth(),A.getHeight(),MatType::MAT_GRAY_F32);
+            Mat C(B.getWidth(),A.getHeight(),MatType::MAT_GRAY_F32);
 #ifdef USE_X86
-                Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f32,A.getWidth(),B.getData().f32,B.getWidth(),1,C.getData().f32,C.getWidth(), SimdInfo::supportAVX2);
+            Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f32,A.getWidth(),B.getData().f32,B.getWidth(),1,C.getData().f32,C.getWidth(), SimdInfo::supportAVX2);
 #else
-                Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f32,A.getWidth(),B.getData().f32,B.getWidth(),1,C.getData().f32,C.getWidth(), false);
+            Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f32,A.getWidth(),B.getData().f32,B.getWidth(),1,C.getData().f32,C.getWidth(), false);
 #endif
-                return C;
-            }
-            else
-            {
-                Mat C(B.getWidth(),A.getHeight(),MatType::MAT_GRAY_F64);
+            return C;
+        }
+        else
+        {
+            Mat C(B.getWidth(),A.getHeight(),MatType::MAT_GRAY_F64);
 #ifdef USE_X86
-                Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f64,A.getWidth(),B.getData().f64,B.getWidth(),1,C.getData().f64,C.getWidth(), SimdInfo::supportAVX2);
+            Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f64,A.getWidth(),B.getData().f64,B.getWidth(),1,C.getData().f64,C.getWidth(), SimdInfo::supportAVX2);
 #else
-                Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f64,A.getWidth(),B.getData().f64,B.getWidth(),1,C.getData().f64,C.getWidth(), false);
+            Gemm::cpuGemm(0,0,A.getHeight(),B.getWidth(),A.getWidth(),1,A.getData().f64,A.getWidth(),B.getData().f64,B.getWidth(),1,C.getData().f64,C.getWidth(), false);
 #endif
-                return C;
-            }
+            return C;
         }
     }
 
