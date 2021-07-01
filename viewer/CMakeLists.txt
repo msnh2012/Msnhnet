@@ -15,6 +15,8 @@ set(CMAKE_AUTORCC ON)
 set(SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/MsnhBlas.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/MsnhGemm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/MsnhMemoryManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/MsnhSimd.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/io/MsnhIO.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/io/MsnhParser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/layers/MsnhActivationLayer.cpp
