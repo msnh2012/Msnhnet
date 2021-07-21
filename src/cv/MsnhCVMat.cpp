@@ -5023,8 +5023,10 @@ Mat operator *(const Mat &A, const Mat &B)
             throw Exception(1,"[Mat]: Mat A'W != B'H ! \n", __FILE__, __LINE__, __FUNCTION__);
         }
 
-        SimdInfo::checkSimd();
+#ifdef USE_X86
 
+        SimdInfo::checkSimd();
+#endif
         if(A.isF32Mat())
         {
 

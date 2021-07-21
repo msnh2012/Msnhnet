@@ -1981,7 +1981,9 @@ public:
 
         MatS mat(B.mWidth, A.mHeight);
 
+#ifdef USE_X86
         SimdInfo::checkSimd();
+#endif
 
         if(B.mWidth==1)
         {
