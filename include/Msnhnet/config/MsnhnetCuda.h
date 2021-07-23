@@ -17,7 +17,7 @@
 
 namespace Msnhnet
 {
-class Cuda
+class MsnhNet_API Cuda
 {
 public:
     static cudaStream_t stream;
