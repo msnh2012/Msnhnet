@@ -256,7 +256,7 @@ std::vector<std::string> ExString::splitHex(const std::string &str)
 
 bool ExString::isNum(const std::string &s)
 {
-    const std::regex pattern("-?[0-9]*.?[0-9]*");
+    const std::regex pattern("[-+]?[0-9]*.?[0-9]+([eE][-+]?[0-9]+)?");
     return std::regex_match(s, pattern);
 }
 }
