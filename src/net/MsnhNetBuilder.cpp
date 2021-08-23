@@ -134,7 +134,7 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
         else if(_parser->params[i]->type == LayerType::ACTIVE)
         {
             ActivationParams *activationParams      =   reinterpret_cast<ActivationParams*>(_parser->params[i]);
-            layer                                   =   new ActivationLayer(params.batch, params.height, params.width, params.channels, params.inputNums, activationParams->activation, activationParams->actParams);
+            layer                                   =   new ActivationLayer(params.batch, params.width, params.height, params.channels, params.inputNums, activationParams->activation, activationParams->actParams);
         }
         else if(_parser->params[i]->type == LayerType::DECONVOLUTIONAL)
         {
