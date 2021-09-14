@@ -8,7 +8,7 @@
 #include "Msnhnet/layers/cuda/MsnhPaddingLayerGPU.h"
 #endif
 
-#ifdef USE_ARM
+#ifdef USE_ARMV7
 #include "Msnhnet/layers/arm/armv7a
 
 #endif

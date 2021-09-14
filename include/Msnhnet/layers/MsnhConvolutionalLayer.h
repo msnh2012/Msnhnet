@@ -11,7 +11,7 @@
 #include "Msnhnet/layers/cuda/MsnhConvolutionalLayerGPU.h"
 #endif
 
-#ifdef USE_ARM
+#ifdef USE_ARMV7
 #include "Msnhnet/layers/arm/armv7a/MsnhConvolution3x3s1.h"
 #include "Msnhnet/layers/arm/armv7a/MsnhConvolution3x3s2.h"
 #include "Msnhnet/layers/arm/armv7a/MsnhConvolutionSgemm.h"
