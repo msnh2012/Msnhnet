@@ -1064,8 +1064,8 @@ def _view(inData, *args):
             elif args[0] != -1 and args[1] != -1:
                 if dataSize % (args[1]*args[0]) != 0:
                     raise NotImplementedError("params error")
-                dim1 = arg[0]
-                dim2 = arg[1]
+                dim1 = args[0]
+                dim2 = args[1]
                 msnhnet.buildView(str(x._cdata),1,dim1,dim2)
             else:
                 raise NotImplementedError("params error")
