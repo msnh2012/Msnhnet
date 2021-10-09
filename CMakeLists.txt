@@ -205,6 +205,7 @@ set(SRCS
     src/layers/MsnhYoloOutLayer.cpp
     src/layers/MsnhVariableOpLayer.cpp 
     src/layers/MsnhSliceLayer.cpp 
+    src/layers/MsnhClipLayer.cpp
     src/net/MsnhNetBuilder.cpp
     src/net/MsnhNetwork.cpp
     src/utils/MsnhExString.cpp
@@ -317,6 +318,7 @@ if(BUILD_USE_GPU MATCHES ON)
         src/core/cuda/MsnhBlasGPU.cu
         src/core/cuda/MsnhGemmGPU.cu
         src/layers/cuda/MsnhActivationsGPU.cu
+        src/layers/cuda/MsnhClipLayerGPU.cu
         src/layers/cuda/MsnhConvolutionalLayerGPU.cu
         src/layers/cuda/MsnhMaxPoolLayerGPU.cu
         src/layers/cuda/MsnhLocalAvgPoolLayerGPU.cu
@@ -521,7 +523,8 @@ install(EXPORT ${PROJECT_NAME}Targets
 #install headers
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}
     DESTINATION include
-    FILES_MATCHING PATTERN "*.h")
+    FILES_MATCHING PATTERN "*.h"
+    )
 
 #install images
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/images
