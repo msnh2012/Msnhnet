@@ -17,6 +17,7 @@
 #include "Msnhnet/layers/MsnhEmptyLayer.h"
 #include "Msnhnet/layers/MsnhViewLayer.h"
 #include "Msnhnet/layers/MsnhPermuteLayer.h"
+#include "Msnhnet/layers/MsnhClipLayer.h"
 #include "Msnhnet/layers/MsnhSliceLayer.h"
 #include "Msnhnet/layers/MsnhReductionLayer.h"
 #include "Msnhnet/layers/MsnhSoftMaxLayer.h"

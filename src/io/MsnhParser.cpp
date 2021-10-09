@@ -95,6 +95,10 @@ void Parser::clearParams()
             {
                 delete reinterpret_cast<PermuteParams*>(params[i]);
             }
+            else if(params[i]->type == LayerType::CLIP)
+            {
+                delete reinterpret_cast<ClipParams*>(params[i]);
+            }
             else if(params[i]->type == LayerType::PIXEL_SHUFFLE)
             {
                 delete reinterpret_cast<PixshuffleParams*>(params[i]);
@@ -269,6 +273,19 @@ void Parser::readCfg(const std::string &path)
                     ViewParams *viewParams = new ViewParams(true);
                     parseViewParams(viewParams, it);
                     params.push_back(viewParams);
+                }
+                else
+                {
+                    throw Exception(1,"[view] content error", __FILE__, __LINE__, __FUNCTION__);
+                }
+            }
+            else if(node == "clip")
+            {
+                if(it->second.Type() == YAML::NodeType::Map)
+                {
+                    ClipParams *clipParams = new ClipParams(true);
+                    parseClipParams(clipParams, it);
+                    params.push_back(clipParams);
                 }
                 else
                 {
@@ -1594,6 +1611,38 @@ void Parser::parsePermuteParams(PermuteParams *permuteParams, YAML::const_iterat
         {
             throw Exception(1, key + " is not supported in [permute]", __FILE__, __LINE__, __FUNCTION__);
         }
+    }
+}
+
+void Parser::parseClipParams(ClipParams *clipParams, YAML::const_iterator &iter)
+{
+    for (YAML::const_iterator it = iter->second.begin(); it != iter->second.end(); ++it)
+    {
+        std::string key     =   it->first.as<std::string>();
+        std::string value   =   it->second.as<std::string>();
+
+        if(key == "min")
+        {
+            if(!ExString::strToFloat(value, clipParams->min))
+            {
+                throw Exception(1,"[clip] min can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else if(key == "max")
+        {
+            if(!ExString::strToFloat(value, clipParams->max))
+            {
+                throw Exception(1,"[clip] max can't convert to float", __FILE__, __LINE__, __FUNCTION__);
+            }
+        }
+        else
+        {
+            throw Exception(1, key + " is not supported in [clip]", __FILE__, __LINE__, __FUNCTION__);
+        }
+    }
+    if(clipParams->min > clipParams->max)
+    {
+        throw Exception(1, "[clip] min should > max [min:max]=["+std::to_string(clipParams->min) + ":" +std::to_string(clipParams->max)+"]", __FILE__, __LINE__, __FUNCTION__);
     }
 }
 

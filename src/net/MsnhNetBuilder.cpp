@@ -460,6 +460,11 @@ void NetBuilder::buildNetFromMsnhNet(const string &path)
             PermuteParams *permuteParams            =   reinterpret_cast<PermuteParams*>(_parser->params[i]);
             layer                                   =   new PermuteLayer(params.batch, params.height, params.width, params.channels, permuteParams->dim0, permuteParams->dim1, permuteParams->dim2);
         }
+        else if(_parser->params[i]->type == LayerType::CLIP)
+        {
+            ClipParams *clipParams                  =   reinterpret_cast<ClipParams*>(_parser->params[i]);
+            layer                                   =   new ClipLayer(params.batch, params.height, params.width, params.channels, clipParams->min, clipParams->max);
+        }
         else if(_parser->params[i]->type == LayerType::PIXEL_SHUFFLE)
         {
             PixshuffleParams *pixshuffleParams      =   reinterpret_cast<PixshuffleParams*>(_parser->params[i]);
@@ -1120,6 +1125,10 @@ void NetBuilder::clearLayers()
             else if(_net->layers[i]->type() == LayerType::PERMUTE)
             {
                 delete reinterpret_cast<PermuteLayer*>(_net->layers[i]);
+            }
+            else if(_net->layers[i]->type() == LayerType::CLIP)
+            {
+                delete reinterpret_cast<ClipLayer*>(_net->layers[i]);
             }
             else if(_net->layers[i]->type() == LayerType::PIXEL_SHUFFLE)
             {

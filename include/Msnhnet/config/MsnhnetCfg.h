@@ -61,6 +61,10 @@
 
 #define MSNH_PI_6 0.52359877575
 
+#define MSNH_RAD_2_DEG 57.295779495935
+
+#define MSNH_DEG_2_RAD 0.0174532925251
+
 #define clip(x,a,b) ((x<a)?a:(x>b)?b:x)
 
 #define m_swap(a,b) (a=(a)+(b),b=(a)-(b),a=(a)-(b))
@@ -148,7 +152,8 @@ enum LayerType
     RES_2_BLOCK,
     CONCAT_BLOCK,
     ADD_BLOCK,
-    PADDING
+    PADDING,
+    CLIP
 };
 
 enum Arithmetic
@@ -209,7 +214,6 @@ enum RotSequence
     ROT_ZXY,
     ROT_ZYX,
 };
-
 }
 
 #endif 
