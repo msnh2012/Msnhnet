@@ -77,11 +77,14 @@ ConnectedLayer::ConnectedLayer(const int &batch, const int &steps, const int &in
 
 ConnectedLayer::~ConnectedLayer()
 {
-    releaseArr(_weights);
-    releaseArr(_biases);
-    releaseArr(_scales);
-    releaseArr(_rollMean);
-    releaseArr(_rollVariance);
+    if (!BaseLayer::onlyUseGpu)
+    {
+        releaseArr(_weights);
+        releaseArr(_biases);
+        releaseArr(_scales);
+        releaseArr(_rollMean);
+        releaseArr(_rollVariance);
+    }
 #ifdef USE_GPU
     Cuda::freeCuda(_gpuWeights);
     Cuda::freeCuda(_gpuBiases);

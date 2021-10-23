@@ -39,9 +39,11 @@ ActivationLayer::ActivationLayer(const int &batch, const int &width, const int &
 ActivationLayer::~ActivationLayer()
 {
     if(this->_activation==ActivationType::PRELU) 
-
     {
-        releaseArr(this->_preluWeights);
+        if(BaseLayer::onlyUseGpu) 
+        {
+            releaseArr(this->_preluWeights);
+        }
 
 #ifdef USE_GPU
         Cuda::freeCuda(this->_gpuPreluWeights);
@@ -263,7 +265,6 @@ void ActivationLayer::loadAllWeigths(std::vector<float> &weights)
             }
 
             if(BaseLayer::onlyUseGpu) 
-
             {
                 releaseArr(this->_preluWeights);
             }

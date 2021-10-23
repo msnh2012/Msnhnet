@@ -320,19 +320,21 @@ ConvolutionalLayer::ConvolutionalLayer(const int &batch, const int &steps, const
 
 ConvolutionalLayer::~ConvolutionalLayer()
 {
-    releaseArr(_weights);
-    releaseArr(_biases);
-    releaseArr(_scales);
-    releaseArr(_rollMean);
-    releaseArr(_rollVariance);
-    releaseArr(_cWeights);
-    releaseArr(_binaryInputs);
-    releaseArr(_binaryWeights);
-    releaseArr(_meanArr);
-    releaseArr(_binRePackedIn);
-    releaseArr(_tBitInput);
-    releaseArr(_alignBitWeights);
-
+    if (!BaseLayer::onlyUseGpu)
+    {
+        releaseArr(_weights);
+        releaseArr(_biases);
+        releaseArr(_scales);
+        releaseArr(_rollMean);
+        releaseArr(_rollVariance);
+        releaseArr(_cWeights);
+        releaseArr(_binaryInputs);
+        releaseArr(_binaryWeights);
+        releaseArr(_meanArr);
+        releaseArr(_binRePackedIn);
+        releaseArr(_tBitInput);
+        releaseArr(_alignBitWeights);
+    }
 #ifdef USE_GPU
 #ifdef USE_CUDNN
     if(_inputDesc)

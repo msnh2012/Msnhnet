@@ -638,11 +638,14 @@ void BatchNormLayer::loadPreluWeights(float * const &weights, const int &len)
 
 BatchNormLayer::~BatchNormLayer()
 {
-    releaseArr(_scales);
-    releaseArr(_biases);
-    releaseArr(_rollMean);
-    releaseArr(_rollVariance);
-    releaseArr(_activationInput);
+    if (!BaseLayer::onlyUseGpu)
+    {
+        releaseArr(_scales);
+        releaseArr(_biases);
+        releaseArr(_rollMean);
+        releaseArr(_rollVariance);
+        releaseArr(_activationInput);
+    }
 
 #ifdef USE_GPU
     Cuda::freeCuda(_gpuScales);
