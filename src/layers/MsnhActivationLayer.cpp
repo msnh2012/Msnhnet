@@ -40,7 +40,7 @@ ActivationLayer::~ActivationLayer()
 {
     if(this->_activation==ActivationType::PRELU) 
     {
-        if(BaseLayer::onlyUseGpu) 
+        if(!BaseLayer::onlyUseGpu) 
         {
             releaseArr(this->_preluWeights);
         }
