@@ -7,10 +7,10 @@ English| [中文](ReadMe_CN.md) |[CSDN](https://blog.csdn.net/MSNH2012/article/d
 ![](readme_imgs/banner.jpg)</br>
 **OS supported** (you can check other OS by yourself)
 
-| |windows|linux|mac|
-|:---:|:---:|:---:|:---:|
-|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-passing-brightgreen.svg)|
-|gpu|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Linux](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Mac](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
+| |windows|linux|mac|loongson|
+|:---:|:---:|:---:|:---:|:--:|
+|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Loongson](https://img.shields.io/badge/build-passing-brightgreen.svg)|
+|gpu|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Linux](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Mac](https://img.shields.io/badge/build-unknown-lightgrey.svg)|![Loogson](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
 
 **CPU checked**
 | |Intel i7|raspberry 3B|raspberry 4B|Jeston NX|
