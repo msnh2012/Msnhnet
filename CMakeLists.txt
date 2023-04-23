@@ -402,6 +402,18 @@ else()
     set(USE_ARM_MACRO "")
 endif()
 
+# loongarch64
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(loongarch64)")
+    add_definitions(-DUSE_ARM) #===============
+    set(USE_ARM_MACRO "#define USE_ARM\n")
+
+    message(STATUS "Use loongarch64 arch")
+
+    set(USE_NEON_MACRO "")
+else()
+    set(USE_ARM_MACRO "")
+endif()
+
 # find 3rdparty libs
 set(USE_OPENCV_MACRO "")
 
