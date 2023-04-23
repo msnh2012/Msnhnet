@@ -10,7 +10,7 @@
 **目前测试过的操作系统** (你可以自己测试下mac os)
 | |windows|linux|mac|龙芯|
 |:---:|:---:|:---:|:---:|:--:|
-|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-unknown-lightgrey.svg)|![Loongson](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
+|checked|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![OSX](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Loongson](https://img.shields.io/badge/build-passing-brightgreen.svg)|
 |gpu|![Windows](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Linux](https://img.shields.io/badge/build-passing-brightgreen.svg)|![Mac](https://img.shields.io/badge/build-unknown-lightgrey.svg)|![Loongson](https://img.shields.io/badge/build-unknown-lightgrey.svg)|
 
 **目前测试过的CPU** (其它U出现BUG可以在issue提出)
